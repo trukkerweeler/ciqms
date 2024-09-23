@@ -13,17 +13,20 @@
 </head>
 <body>
     <header id="header"></header>
-    <!-- <form>
-        <label for="search">Enter Action Id:</label>
-        <input type="text" name="search" id="iid" value="144"> 
-        <button type="submit" id="actiondetailsearch">Search</button>
-        <button type="submit" id="editaction">Append</button>
-        <button type="submit" id="closeaction">Close</button>
-    </form> -->
     <div id="stamp">
         <div id="doit"></div>
         <p id="inspectiondate">DATE:</p>
     </div>
+    <dialog id="respDialog" class="editDialog">
+
+        <div class="dialogTitle">Edit Response</div>
+        <form class="editverf">
+            <textarea type="textarea" id="newTextResp" class="notestext" rows="4" cols="40"></textarea>
+            <button class="btnDialog" id="cancelResp" type="submit" formmethod="dialog">Cancel</button>
+            <button class="btnDialog dialogSaveBtn" id="saveResp" type="submit">Save</button>
+        </form>
+        <button id="btnCloseRespDlg" class="closedialog">Close</button>
+    </dialog>
     <dialog data-modal>
         <div>Append field - choose field:</div>
         <form class="appendmodal">

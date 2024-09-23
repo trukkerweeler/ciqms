@@ -46,7 +46,15 @@ searchbutton.addEventListener('click', async (event) => {
             // console.log(record.length);
             const detailSection = document.createElement('section');
             detailSection.setAttribute('class', 'section');
-            const elemRpt = document.createElement('h1');
+            detailSection.setAttribute('id', 'detailsection');
+            const detailHeading = document.createElement('h3');
+            detailHeading.setAttribute('id', 'detailheading');
+            detailHeading.textContent = 'Details';
+            const detailEditBtn = document.createElement('button');
+            detailEditBtn.setAttribute('id', 'editdetail');
+            detailEditBtn.textContent = 'Edit';
+
+            const actionTitle = document.createElement('h1');
             const elemId = document.createElement('h2');
             
             const elemDesc = document.createElement('p');
@@ -121,8 +129,11 @@ searchbutton.addEventListener('click', async (event) => {
             caType.setAttribute('class', 'tbl');
            
             // Create the text area headings
-            const ncTrendTitle = document.createElement('h3');
-            ncTrendTitle.setAttribute('class', 'header3');
+            const actionNotesTitle = document.createElement('h3');
+            actionNotesTitle.setAttribute('class', 'header3');
+            actionNotesTitle.setAttribute('id', 'actionNotesTitle');
+            
+
             const followupTitle = document.createElement('h3');
             followupTitle.setAttribute('class', 'header3');
             const responseTitle = document.createElement('h3');
@@ -130,8 +141,8 @@ searchbutton.addEventListener('click', async (event) => {
             const linebreak = document.createElement('br');
 
             // Create the main header and id elements
-            elemRpt.textContent = 'Action Item Detail';
-            elemRpt.setAttribute('class', 'header');
+            actionTitle.textContent = 'Action Item Detail';
+            actionTitle.setAttribute('class', 'header');
             elemId.textContent = 'Action Id: ' + record[key]['INPUT_ID'];
             elemId.setAttribute('class', 'header2');
             const collectBtn = document.createElement('button');
@@ -143,6 +154,8 @@ searchbutton.addEventListener('click', async (event) => {
 
 
             // Append fields to the detail section
+            detailSection.appendChild(detailHeading);
+            detailSection.appendChild(detailEditBtn);
             detailSection.appendChild(aiDate);
             detailSection.appendChild(aiAssTo);
             detailSection.appendChild(aiClosedDate);
@@ -150,7 +163,7 @@ searchbutton.addEventListener('click', async (event) => {
             detailSection.appendChild(reqBy);
             detailSection.appendChild(aiSubject);
 
-            ncTrendTitle.textContent = 'Action:';
+            actionNotesTitle.textContent = 'Action:';
             elemDesc.textContent = record[key]['INPUT_TEXT'];
             elemDesc.setAttribute('id', 'inputtext');
             // put in double backslashes
@@ -169,13 +182,13 @@ searchbutton.addEventListener('click', async (event) => {
             // replace the line breaks with <br> elements
             elemResponse.innerHTML = elemResponse.innerHTML.replace(/\n/g, '<br>');
 
-            main.appendChild(elemRpt);
+            main.appendChild(actionTitle);
             main.appendChild(elemId);
             main.appendChild(collectBtn);
             main.appendChild(previousBtn);
-            // main.appendChild(detailSection);
 
-            detailSection.appendChild(ncTrendTitle);
+            detailSection.appendChild(actionNotesTitle);
+            detailSection.appendChild(elemDesc);
             detailSection.appendChild(elemDesc);
             detailSection.appendChild(followupTitle);
             detailSection.appendChild(elemFUP);

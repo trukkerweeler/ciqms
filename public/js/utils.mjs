@@ -65,3 +65,39 @@ export function getFormFields(myform) {
     }
     return data;
   }
+
+  export function createNotesSection(notes) {
+    let notesSection = document.createElement("section");
+    let notesTitle = document.createElement("h3");
+    notesTitle.classList.add("notesTitle");
+    // switch case of notes
+    switch (notes) {
+      case "INPUT_TEXT":
+        notesTitle.textContent = "Action:";
+        notesTitle.id = "actionTitle";
+        break;
+      case "FOLLOWUP_TEXT":
+        notesTitle.textContent = "Follow Up";
+        notesTitle.id = "followUpTitle";
+        break;
+      case "RESPONSE_TEXT":
+        notesTitle.textContent = "Response";
+        notesTitle.id = "responseTitle";
+        break;
+      default:
+        notesTitle.textContent = "Notes";
+    }
+
+    notesSection.appendChild(notesTitle);
+
+
+    if (notes.length > 0) {
+      notesSection += "<h2>Notes</h2>";
+      notesSection += "<ul>";
+      notes.forEach((note) => {
+        notesSection += `<li>${note}</li>`;
+      });
+      notesSection += "</ul>";
+    }
+    return notesSection;
+  }
