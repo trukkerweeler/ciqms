@@ -248,27 +248,34 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
     // console.log("Params: " + req.params.id);
     // console.log(req.body);
+    // console.log(req.body['data']);
+    let mydata = req.body['data'];
     let mytable = '';
     let appended = '';
-    const myfield = Object.keys (req.body) [2]
-    // console.log(myfield);
+    // const myfield = Object.keys (req.body) [2]
+    const myfield = Object.keys (mydata) [2]
+    console.log(myfield);
+    // log the name of the third key
     switch (myfield) {
         case 'RESPONSE_TEXT':
             // console.log('Response');
             mytable = 'PPL_INPT_RSPN';
             // appended = req.body.RESPONSE_TEXT.replace(/'/g, "\\'");
-            appended = req.body.RESPONSE_TEXT;
+            // appended = req.body.RESPONSE_TEXT;
+            appended = mydata.RESPONSE_TEXT;
             break;
         case 'FOLLOWUP_TEXT':
             // console.log('Followup');
             mytable = 'PPL_INPT_FLUP';
-            appended = req.body.FOLLOWUP_TEXT.replace(/'/g, "/''");
+            // appended = req.body.FOLLOWUP_TEXT.replace(/'/g, "/''");
             // appended = req.body.FOLLOWUP_TEXT
+            appended = mydata.FOLLOWUP_TEXT;
             break;
         case 'INPUT_TEXT':
             // console.log('Input');
             mytable = 'PPL_INPT_TEXT';
-            appended = req.body.INPUT_TEXT
+            // appended = req.body.INPUT_TEXT
+            appended = mydata.INPUT_TEXT
             break;
         default:
             console.log('No match');

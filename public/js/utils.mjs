@@ -66,38 +66,85 @@ export function getFormFields(myform) {
     return data;
   }
 
-  export function createNotesSection(notes) {
-    let notesSection = document.createElement("section");
-    let notesTitle = document.createElement("h3");
-    notesTitle.classList.add("notesTitle");
-    // switch case of notes
-    switch (notes) {
-      case "INPUT_TEXT":
-        notesTitle.textContent = "Action:";
-        notesTitle.id = "actionTitle";
-        break;
-      case "FOLLOWUP_TEXT":
-        notesTitle.textContent = "Follow Up";
-        notesTitle.id = "followUpTitle";
-        break;
-      case "RESPONSE_TEXT":
-        notesTitle.textContent = "Response";
-        notesTitle.id = "responseTitle";
-        break;
-      default:
-        notesTitle.textContent = "Notes";
-    }
-
-    notesSection.appendChild(notesTitle);
-
-
-    if (notes.length > 0) {
-      notesSection += "<h2>Notes</h2>";
-      notesSection += "<ul>";
-      notes.forEach((note) => {
-        notesSection += `<li>${note}</li>`;
-      });
-      notesSection += "</ul>";
-    }
-    return notesSection;
+export async function createNotesSection(title, notes) {
+  let notesSection = document.createElement("section");
+  notesSection.classList.add("notesSection");
+  let notesTitle = document.createElement("h3");
+  let buttonid = "";
+  let buttonText = "Edit";
+  const note = document.createElement("p");
+  let noteid = "note";
+  notesTitle.classList.add("notesTitle");
+  // switch case of title to display appropriate title
+  switch (title) {
+    case "INPUT_TEXT":
+      notesTitle.textContent = "Action:";
+      notesTitle.id = "actionTitle";
+      buttonid = "editAction";
+      buttonText = "Edit Action";
+      noteid = "actionNote";
+      break;
+    case "FOLLOWUP_TEXT":
+      notesTitle.textContent = "Follow Up:";
+      notesTitle.id = "followUpTitle";
+      buttonid = "editFollowUp";
+      buttonText = "Follow Up";
+      noteid = "followUpNote";
+      break;
+    case "RESPONSE_TEXT":
+      notesTitle.textContent = "Response:";
+      notesTitle.id = "responseTitle";
+      buttonid = "editResponse";
+      buttonText = "Respond";
+      noteid = "responseNote";
+      break;
+    default:
+      notesTitle.textContent = "Notes";
   }
+
+  notesSection.appendChild(notesTitle);
+
+// append notes to notes section
+// if the length of notes replace new line characters with <br> tag
+if (notes) {
+  notes = notes.replace(/\n/g, "<br>");
+}
+note.innerHTML = notes;
+note.id = noteid
+notesSection.appendChild(note);
+
+// call createButton and append button to section
+createButton(notesSection, buttonText, buttonid, "editNoteButton");
+
+// // insert notes adjacent to #detailSection
+// const detailSection = document.querySelector("#detailSection");
+// detailSection.insertAdjacentElement("afterend", notesSection);
+
+// append notes section to main
+const main = document.querySelector("#main");
+main.appendChild(notesSection);
+  
+}
+
+  // append button to section
+export function createButton(section, buttonName, buttonId, buttonClass) {
+    let button = document.createElement("button");
+    button.textContent = buttonName;
+    button.id = buttonId;
+    button.classList.add(buttonClass);
+    button.type = "submit";
+    section.appendChild(button);
+  }
+
+  export async function createSection(title, notes)
+  {
+    const sectionTemplate = await loadTemplate("/partials/section.html");
+    const mainElement = document.querySelector("#main");
+    const data = {
+      title: title,
+      notes: notes
+    };
+
+    renderWithTemplate(sectionTemplate, mainElement, data);
+  }
+  

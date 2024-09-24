@@ -91,6 +91,7 @@ section h3 {
     grid-column: span 2;
     text-align: left;
     /* margin-left: 1rem; */
+    padding-bottom: 0;
 }
 
 section p {
@@ -584,6 +585,43 @@ input {
 
 #newTextResp{
     grid-column: span 2;
+}
+.notesSection {
+    /* grid-column: span 2; */
+    margin-top: 0px;
+    margin-bottom: 0px;
+    border-radius: 0px;
+}
+.editNoteButton {
+    grid-row-start: 1;
+    grid-column-start: 3;
+    justify-self: end;
+    align-self: end;
+    width: 85px;
+    font-weight: 300;
+    font-size: small;
+    height: 20px;
+
+
+}
+
+#detailSection {
+    margin-top: 0px;
+    margin-bottom: 0px;
+    border-bottom-left-radius: 0px;
+    border-bottom-right-radius: 0px;
+    padding-bottom: 0%;
+}
+
+/* first notesSection no top padding */
+.notesSection:first-child {
+    padding-top: 0%;
+}
+
+/* last notesSection add bottom corner radii */
+.notesSection:last-child {
+    border-bottom-left-radius: 0.25rem;
+    border-bottom-right-radius: 0.25rem;
 }
 
 
