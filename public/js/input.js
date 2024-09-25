@@ -180,6 +180,8 @@ while (main.firstChild) {
             // prepend response text with user name and date
             responseText = user + " - " + mydate + '\n' + newResponseText + '\n\n' + oldResponseText;            
             responseText = responseText.replace(/\n/g, "<br>");
+            // fix the apostrophe issue
+            responseText = responseText.replace(/'/g, "''");
 
             let data = {
                 INPUT_ID: iid,
@@ -242,6 +244,8 @@ while (main.firstChild) {
                 // prepend action text with user name and date
                 actionText = user + " - " + mydate + '\n' + newActionText + '\n\n' + oldActionText;
                 actionText = actionText.replace(/\n/g, "<br>");
+                // fix the apostrophe issue
+                actionText = actionText.replace(/'/g, "''");
 
                 let data = {
                     INPUT_ID: iid,
@@ -304,6 +308,8 @@ while (main.firstChild) {
                 // prepend follow up text with user name and date
                 followUpText = user + " - " + mydate + '\n' + newFollowUpText + '\n\n' + oldFollowUpText;
                 followUpText = followUpText.replace(/\n/g, "<br>");
+                // fix the apostrophe issue
+                followUpText = followUpText.replace(/'/g, "''");
 
                 let data = {
                     INPUT_ID: iid,
