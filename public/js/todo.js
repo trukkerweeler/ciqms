@@ -58,25 +58,32 @@ button.addEventListener('click', async (event) => {
         for (const field in row) {
             if (fieldList.includes(field)){
                 const td = document.createElement('td');
+                td.textContent = row[field];
+
                 // fix the date format
                 if (field === 'INPUT_DATE' || field === 'DUE_DATE') {
+                    // console.log("Date: " + row[field]);
                     if (row[field] === null) {
                         td.textContent = '';
                     } else {
-                    const date = new Date(row[field]);
-                    td.textContent = date.toLocaleDateString();
+                    // const date = new Date(row[field]);
+                    td.textContent = row[field].slice(0, 10);
                     }
-                } else
-                td.textContent = row[field];
-                tr.appendChild(td);
+                } 
+                    
+                if (field === 'INPUT_ID') {
+                    td.textContent = '';
+                    const a = document.createElement('a');
+                    a.href = `http://localhost:3003/input.html?id=${row[field]}`;
+                    a.textContent = row[field];
+                    td.appendChild(a);
+                } 
+            tr.appendChild(td);            
             }
             
-        }
             tbody.appendChild(tr);
-        // }
-    }
-        
-
+        }
+    }      
         table.appendChild(thead);
         table.appendChild(tbody);
         main.appendChild(table);

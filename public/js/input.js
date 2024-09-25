@@ -80,14 +80,14 @@ while (main.firstChild) {
                 aiClosedDate.textContent = 'Closed Date:' + ' ' + record[key]['CLOSED_DATE'].substring(0, 10);
                 // enable the closebutton
                 // closebutton.disabled = true;
-                console.log('closed date is NOT null');
+                // console.log('closed date is NOT null');
                 // set an id for the closed date
             }
             // toggle display of doit if recur id is not null
             const doit = document.querySelector('#doit');
             if (record[key]['RECUR_ID'] !== null) {
                 doit.style.display = 'block';
-                console.log('recur id is not null');
+                // console.log('recur id is not null');
             } else {
                 doit.style.display = 'none';
                 console.log('recur id is null');
