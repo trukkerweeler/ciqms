@@ -2,6 +2,32 @@ import { loadHeaderFooter } from './utils.mjs';
 loadHeaderFooter();
 const url = 'http://localhost:3003/recur';
 
+
+//Get the table with id of view and append the data from the API including a header row
+const view = document.querySelector('#view');
+fetch(url, { method: 'GET' })
+    .then(response => response.json())
+    .then(data => {
+        const header = document.createElement('tr');
+        for (let field in data[0]) {
+            const th = document.createElement('th');
+            th.textContent = field;
+            header.appendChild(th);
+        }
+        view.appendChild(header);
+
+        for (let record of data) {
+            const row = document.createElement('tr');
+            for (let field in record) {
+                const cell = document.createElement('td');
+                cell.textContent = record[field];
+                row.appendChild(cell);
+            }
+            view.appendChild(row);
+        }
+    });
+
+    
 // Send a POST request
 const form = document.querySelector('#entryform');
 form.addEventListener('submit', async (event) => {
@@ -13,12 +39,7 @@ form.addEventListener('submit', async (event) => {
         JSON.stringify(data);
         return data;
     })
-    console.log(nextId);
-    // const requestDate = new Date();
-    // requestDate.setDate(requestDate.getDate())
-    // let myRequestDate = requestDate.toISOString().slice(0, 19).replace('T', ' ');
-    // console.log(myRequestDate);
-    
+    console.log(nextId);    
     
     const dataJson = {
         RECUR_ID: nextId,

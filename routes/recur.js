@@ -95,4 +95,39 @@ router.get('/nextId', (req, res) => {
     }
 });
 
+// Get the records for the recurrence table
+router.get('/', (req, res) => {
+    try {
+        const connection = mysql.createConnection({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            port: 3306,
+            database: 'quality'
+        });
+        connection.connect(function(err) {
+            if (err) {
+                console.error('Error connecting: ' + err.stack);
+                return;
+            }
+        // console.log('Connected to DB');
+
+        const query = 'SELECT * FROM PPL_INPT_RCUR where STATUS = "A" order by SUBJECT ASC';
+        connection.query(query, (err, rows, fields) => {
+            if (err) {
+                console.log('Failed to query for attendance: ' + err);
+                res.sendStatus(500);
+                return;
+            }
+            res.json(rows);
+        });    
+
+        connection.end();
+        });
+    } catch (err) {
+        console.log('Error connecting to Db 128');
+        return;
+    }
+});
+
 module.exports = router;

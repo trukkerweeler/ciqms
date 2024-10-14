@@ -515,9 +515,6 @@ input {
     grid-row: 1;
     align-self: end;
     justify-self: end;
-    /* margin-left: 25%;
-    margin-right: 25%;
-    margin-bottom: 100px; */
 }
 
 .btnEdit {
@@ -579,6 +576,8 @@ input {
 }
 .notesSection {
     /* grid-column: span 2; */
+    padding-top: 0%;
+    padding-bottom: 0%;
     margin-top: 0px;
     margin-bottom: 0px;
     border-radius: 0px;
@@ -592,8 +591,6 @@ input {
     font-weight: 300;
     font-size: small;
     height: 20px;
-
-
 }
 
 #detailSection {
@@ -613,6 +610,57 @@ input {
 .notesSection:last-child {
     border-bottom-left-radius: 0.25rem;
     border-bottom-right-radius: 0.25rem;
+}
+
+#recurEntryform {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    margin-left: 25%;
+    margin-right: 25%;
+    margin-bottom: 100px;
+    border: #000 1px solid;
+    border-radius: 0.5rem;
+    /* background-color: var(--secondary-color); */
+    padding-bottom: 1rem;
+    padding-top: 1rem;
+}
+label {
+    font-weight: 600;
+    font-size: small;
+    padding-left: 5px;
+}
+
+#btnRecurs {
+    grid-column: span 2;
+    border: #000 1px solid;
+    font-weight: 600;
+    font-size: small;
+    width: 50%;
+    margin-left: 25%;
+}
+
+#freq {
+    font-size: 24px;
+    border-radius: var(--border-radius);
+    padding-right: 4px;
+    /* text-align: right; */
+    margin-bottom: 10px;
+    margin-right: 4px;
+
+}
+
+input {
+    margin-bottom: 10px;
+    margin-right: 4px;
+}
+
+#view {
+    border: #000 1px solid;
+    font-weight: 600;
+    font-size: small;
+    width: 50%;
+    margin-left: 25%;
+
 }
 
 
