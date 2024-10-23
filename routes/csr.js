@@ -1,13 +1,10 @@
-// import { getUserValue } from './utils.mjs';
 require('dotenv').config();
-// sequelize...
-
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
 
 
-router.post('/:aid', (req, res) => {
+router.post('/:iid', (req, res) => {
     try {
         const connection = mysql.createConnection({
             host: process.env.DB_HOST,
@@ -21,6 +18,13 @@ router.post('/:aid', (req, res) => {
                 console.error('Error connecting: ' + err.stack);
                 return;
             }
+
+        let key = Object.keys(req.body)[0];
+        // console.log('key: ' + key['CUSTOMER_ID']);
+        let cid = req.body[key].CUSTOMER_ID.toUpperCase();
+        let unit = req.body[key].UNIT.toUpperCase();
+
+
              
         const query = `insert into NINETYONETWENTY (COLLECT_ID
             , INPUT_ID
@@ -29,14 +33,16 @@ router.post('/:aid', (req, res) => {
             , VALUE
             , SAMPLE_DATE
             , PEOPLE_ID
-            ) values ('${req.params.aid}'
-                , '${req.body.INPUT_ID}'
-                , '${req.body.CUSTOMER_ID}'
-                , '${req.body.UNIT}'
-                , '${req.body.VALUE}'
-                , '${req.body.SAMPLE_DATE}'
-                , '${req.body.INPUT_USER}'
+            ) values ('${req.body[key].COLLECT_ID}'
+                , '${req.params.iid}'
+                , '${cid}'
+                , '${unit}'
+                , '${req.body[key].VALUE}'
+                , '${req.body[key].SAMPLE_DATE}'
+                , '${req.body[key].INPUT_USER}'
             )`;
+
+            // console.log(query);
 
         connection.query(query, (err, rows, fields) => {
             if (err) {
@@ -47,7 +53,7 @@ router.post('/:aid', (req, res) => {
             res.json(rows);
         });
 
-        const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.params.aid}' WHERE TABLE_NAME = 'NINETYONETWENTY'`;
+        const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body[key].COLLECT_ID}' WHERE TABLE_NAME = 'NINETYONETWENTY'`;
 
         connection.query(updateQuery, (err, rows, fields) => {
             if (err) {
@@ -62,7 +68,7 @@ router.post('/:aid', (req, res) => {
         });
 
     } catch (err) {
-        console.log('Error connecting to Db (changes 175)');
+        console.log('Error connecting to Db (changes 65)');
         return;
     }
 

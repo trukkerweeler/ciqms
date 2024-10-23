@@ -44,6 +44,26 @@
         </form>
         <!-- <button id="btnCloseRespDlg" class="closedialog">Close</button> -->
     </dialog>
+    <dialog id="collectDataDialog" class="editDialog">
+        <div class="dialogTitle">Data Collection</div>
+        <form class="dialogForm" id="collectForm">
+            <label for="customerid">Customer Id:</label>
+            <!-- force uppercase input -->
+
+
+
+            <input type="text" id="CUSTOMER_ID" name="CUSTOMER_ID" style="text-transform: uppercase" required>
+            <label for="unit">Unit:</label>
+            <input type="text" id="UNIT" name="UNIT" required style="text-transform: uppercase">
+            <label for="value">Value:</label>
+            <input type="text" id="VALUE" name="VALUE" required>
+            <label for="sampledate">Date:</label>
+            <input type="date" id="SAMPLE_DATE" name="SAMPLE_DATE" required>
+            <button class="btnDialog" id="cancelCollData" type="submit" formmethod="dialog">Cancel</button>
+            <button class="btnDialog dialogSaveBtn" id="saveCollData" type="submit">Save</button>
+        </form>
+        <!-- <button id="btnCloseDataDlg" class="closedialog">Close</button> -->
+    </dialog>
 
     <main id="main">
         

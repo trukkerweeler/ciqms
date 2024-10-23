@@ -567,6 +567,11 @@ input {
     padding-left: 4px;
 }
 
+#btnCollData {
+    margin-right: 2px;
+    padding-right: 4px;
+}
+
 .notesTitle {
     grid-column: span 2;
 }

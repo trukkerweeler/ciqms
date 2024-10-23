@@ -29,7 +29,7 @@ fetch(url, { method: 'GET' })
 
     
 // Send a POST request
-const form = document.querySelector('#entryform');
+const form = document.querySelector('#recurEntryform');
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
     const data = new FormData(form);

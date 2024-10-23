@@ -11,6 +11,7 @@ let iid = urlParams.get('id');
 
 const url = 'http://localhost:3003/input/' + iid;
 const inputUrl = 'http://localhost:3003/input/';
+const csrUrl = 'http://localhost:3003/csr/';
 
 const main = document.querySelector('main');
 // Delete the child nodes of the main element
@@ -48,11 +49,22 @@ while (main.firstChild) {
             btnEditDetail.setAttribute('class', 'btnEdit');
             btnEditDetail.setAttribute('id', 'btnEditDetail');
             btnEditDetail.textContent = 'Edit';
+            
+            // Create the close button
             const btnCloseDetail = document.createElement('button');
             btnCloseDetail.setAttribute('class', 'btn');
             btnCloseDetail.setAttribute('class', 'btnEdit');
             btnCloseDetail.setAttribute('id', 'btnClose');
             btnCloseDetail.textContent = 'Close';
+
+            // Create the collect data button
+            const btnCollData = document.createElement('button');
+            btnCollData.setAttribute('class', 'btn');
+            btnCollData.setAttribute('class', 'btnEdit');
+            btnCollData.setAttribute('id', 'btnCollData');
+            btnCollData.textContent = 'Collect';
+
+            detailButtons.appendChild(btnCollData);
             detailButtons.appendChild(btnCloseDetail);
             detailButtons.appendChild(btnEditDetail);
             
@@ -75,7 +87,7 @@ while (main.firstChild) {
             aiClosedDate.setAttribute('id', 'closed');
             if (record[key]['CLOSED_DATE'] === null || record[key]['CLOSED_DATE'] === '' || record[key]['CLOSED_DATE'].length === 0) {
                 aiClosedDate.textContent = 'Closed Date:' + ' ' + '';
-                console.log('closed date is null');
+                // console.log('closed date is null');
             } else {
                 aiClosedDate.textContent = 'Closed Date:' + ' ' + record[key]['CLOSED_DATE'].substring(0, 10);
                 // enable the closebutton
@@ -334,6 +346,80 @@ while (main.firstChild) {
             });
             
         });
+
+        // Collect Data=======================================================================================================
+        // listen for the Collect Data button click
+        const btnCollData = document.querySelector('#btnCollData');
+        btnCollData.addEventListener('click', async (event) => {
+            event.preventDefault();
+            // show the collect data dialog
+            const collectDataDialog = document.querySelector('#collectDataDialog');
+            collectDataDialog.showModal();
+
+            // listen for the cancel button click
+            const btnCancelCollData = document.querySelector('#cancelCollData');
+            btnCancelCollData.addEventListener('click', async (event) => {
+                collectDataDialog.close();
+            });
+
+            // listen for the save button click
+            const btnSaveCollData = document.querySelector('#saveCollData');
+            btnSaveCollData.addEventListener('click', async (event) => {
+                // prevent default action
+                event.preventDefault();
+                // get the nextId for the collect data
+                // console.log( csrUrl + 'nextCSRId')
+                const nextId = await fetch(csrUrl + 'nextCSRId', { method: 'GET' })
+                .then(response => response.json())
+                .then (data => {
+                    JSON.stringify(data);
+                    return data;
+                });
+                // get the form data
+                const collectForm = document.querySelector('#collectForm');
+                let data = new FormData(collectForm);
+                // append data with the nextId
+                // data.append('INPUT_ID', iid);
+                // data.append('INPUT_USER', user);
+
+                const dataJson = {
+                    COLLECT_ID: nextId,
+                    INPUT_USER: user,
+                };
+
+                // console log the form data
+                for (let field of data.keys()) {
+                    if (field in ["CUSTOMER_ID", "UNIT"]) {
+                        dataJson[field] = data.get(field).toUpperCase();
+                    } else {
+                    console.log(field + ': ' + data.get(field));
+                    dataJson[field] = data.get(field);
+                    }
+                }
+                console.log(dataJson);
+
+                // post the collect data text
+                const csrUrl2 = 'http://localhost:3003/csr/' + iid;
+                // console.log(csrUrl2);
+                try {
+                    await fetch(csrUrl2, {
+                        method: 'POST',
+                        headers: {
+                            'Content-Type': 'application/json'
+                        },
+                        body: JSON.stringify({ dataJson })
+                    });
+                } catch (err) {
+                    console.log('Error:', err);
+
+                }
+                // close the dialog
+                collectDataDialog.close();
+                // reload the page
+                location.reload();
+            });
+        });
+
         
         
         // listen for the close button click
