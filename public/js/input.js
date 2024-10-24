@@ -415,6 +415,8 @@ while (main.firstChild) {
                 }
                 // close the dialog
                 collectDataDialog.close();
+                // clear the form fields
+                collectForm.reset();
                 // reload the page
                 location.reload();
             });

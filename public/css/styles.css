@@ -125,7 +125,7 @@ section p {
 }
 
 table {
-    width: 100%;
+    /* width: 100%; */
     border-collapse: collapse;
     border-spacing: 0;
     border: 1px solid var(--border-color);
