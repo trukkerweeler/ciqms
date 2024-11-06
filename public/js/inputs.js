@@ -1,5 +1,21 @@
 import { loadHeaderFooter } from './utils.mjs';
 loadHeaderFooter();
+document.querySelector('#subjectFilter').addEventListener('keyup', function(event) {
+    const filter = event.target.value.toLowerCase();
+    const rows = document.querySelectorAll('tbody tr');
+    
+    rows.forEach(row => {
+        const subjectCell = row.querySelector('td:nth-child(3)'); // Assuming SUBJECT is the third column
+        if (subjectCell) {
+            const subjectText = subjectCell.textContent.toLowerCase();
+            if (subjectText.includes(filter)) {
+                row.style.display = '';
+            } else {
+                row.style.display = 'none';
+            }
+        }
+    });
+});
 
 const url = 'http://localhost:3003/input';
 

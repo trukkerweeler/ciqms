@@ -694,5 +694,11 @@ input {
     #inspectiondate {
         display: block;
     }
+    .btnEdit {
+        display: none;
+    }
+    .editNoteButton {
+        display: none;
+    }
 
 }
