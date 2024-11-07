@@ -47,11 +47,7 @@
     <dialog id="collectDataDialog" class="editDialog">
         <div class="dialogTitle">Data Collection</div>
         <form class="dialogForm" id="collectForm">
-            <label for="customerid">Customer Id:</label>
-            <!-- force uppercase input -->
-
-
-
+            <label for="CUSTOMER_ID">Customer Id:</label>
             <input type="text" id="CUSTOMER_ID" name="CUSTOMER_ID" style="text-transform: uppercase" required>
             <label for="unit">Unit:</label>
             <input type="text" id="UNIT" name="UNIT" required style="text-transform: uppercase">
@@ -62,8 +58,27 @@
             <button class="btnDialog" id="cancelCollData" type="submit" formmethod="dialog">Cancel</button>
             <button class="btnDialog dialogSaveBtn" id="saveCollData" type="submit">Save</button>
         </form>
-        <!-- <button id="btnCloseDataDlg" class="closedialog">Close</button> -->
     </dialog>
+    <!-- Edit Input dialog -->
+    <dialog id="inputDialog" class="editDialog">
+        <div class="dialogTitle">Edit Input</div>
+        <form class="dialogForm" name="inputeditform" id="editInputForm">
+            <label for="ASSIGNED_TO">Assigned to:</label>
+            <input type="text" id="ASSIGNED_TO" name="ASSIGNED_TO" required>
+            <label for="REQUESTED_BY">Req. By:</label>
+            <input type="text" id="REQUESTED_BY" required>
+            <label for="SUBJECT">Subject:</label>
+            <input type="text" id="SUBJECT" required>
+            <label for="DUE_DATE">Due Date:</label>
+            <input type="date" id="DUE_DATE" required>
+            <label for="PROJECT_ID">Project:</label>
+            <input type="text" id="PROJECT_ID">            
+            <button class="btnDialog" id="cancelEdit" type="submit" formmethod="dialog">Cancel</button>
+            <button class="btnDialog dialogSaveBtn" id="saveDetail" type="submit">Save</button>
+        </form>
+        <!-- <button id="btnCloseDlg" class="closedialog">Close</button> -->
+    </dialog>
+
 
     <main id="main">
         

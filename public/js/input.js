@@ -22,9 +22,6 @@ while (main.firstChild) {
     // }
 }
 
-    // // enable the close button
-    // closebutton.disabled = false;
-
     fetch(url, { method: 'GET' })
     .then(response => response.json())
     .then(record => {
@@ -68,21 +65,23 @@ while (main.firstChild) {
             detailButtons.appendChild(btnCloseDetail);
             detailButtons.appendChild(btnEditDetail);
             
-            const actionDesc = document.createElement('p');
             const elemFUP = document.createElement('p');
             elemFUP.setAttribute('id', 'followup');
-            const elemIaDate = document.createElement('p');
             const elemResponse = document.createElement('p');
             elemResponse.setAttribute('id', 'response');
 
-            elemIaDate.setAttribute('class', 'actiondate');
-            const elemCC = document.createElement('p');
+            // create detail p element for the input/request date
             const aiDate = document.createElement('p');
             aiDate.textContent = 'Request Date:' + ' ' + record[key]['INPUT_DATE'].substring(0, 10);
             aiDate.setAttribute('class', 'tbl');
-            const caRef = document.createElement('p');
-            caRef.textContent = 'Project:' + ' ' + record[key]['PROJECT_ID'] + ' - ' + record[key]['NAME'];
-            caRef.setAttribute('class', 'tbl');
+
+            // create detail p element for the project id
+            const projId = document.createElement('p');
+            projId.textContent = 'Project:' + ' ' + record[key]['PROJECT_ID'] + ' - ' + record[key]['NAME'];
+            projId.setAttribute('class', 'tbl');
+            projId.setAttribute('id', 'project');
+
+            // create detail p element for the closed date
             const aiClosedDate = document.createElement('p');
             aiClosedDate.setAttribute('id', 'closed');
             if (record[key]['CLOSED_DATE'] === null || record[key]['CLOSED_DATE'] === '' || record[key]['CLOSED_DATE'].length === 0) {
@@ -90,11 +89,10 @@ while (main.firstChild) {
                 // console.log('closed date is null');
             } else {
                 aiClosedDate.textContent = 'Closed Date:' + ' ' + record[key]['CLOSED_DATE'].substring(0, 10);
-                // enable the closebutton
-                // closebutton.disabled = true;
-                // console.log('closed date is NOT null');
-                // set an id for the closed date
             }
+            aiClosedDate.setAttribute('class', 'tbl');
+            aiClosedDate.setAttribute('id', 'closeddate');
+
             // toggle display of doit if recur id is not null
             const doit = document.querySelector('#doit');
             if (record[key]['RECUR_ID'] !== null) {
@@ -105,15 +103,19 @@ while (main.firstChild) {
                 console.log('recur id is null');
             }
 
-            aiClosedDate.setAttribute('class', 'tbl');
-
+            // create detail p element for the assigned to
             const aiAssTo = document.createElement('p');
             aiAssTo.textContent = 'Assigned To:' + ' ' + record[key]['ASSIGNED_TO'];
             aiAssTo.setAttribute('class', 'tbl');
+            aiAssTo.setAttribute('id', 'assignedto');
+
+            // create detail p element for the request by
             const reqBy = document.createElement('p');
             reqBy.textContent = 'Request By:' + ' ' + record[key]['PEOPLE_ID'];
             reqBy.setAttribute('class', 'tbl');
+            reqBy.setAttribute('id', 'requestby');
 
+            // create detail p element for the due date
             const due_date = document.createElement('p');
             if (record[key]['DUE_DATE'] === null) {
                 due_date.textContent = 'Due date:' + ' ' + '';
@@ -121,6 +123,14 @@ while (main.firstChild) {
             else
                 due_date.textContent = 'Due date:' + ' ' + record[key]['DUE_DATE'].substring(0, 10);
             due_date.setAttribute('class', 'tbl');
+            due_date.setAttribute('id', 'duedate');
+
+            // Create p element for the subject
+            const elemSubject = document.createElement('p');
+            elemSubject.textContent = 'Subject: ' + record[key]['SUBJECT'];
+            elemSubject.setAttribute('class', 'tbl');
+            elemSubject.setAttribute('id', 'subject');
+
 
 
             elemRpt.textContent = 'Action Item Detail';
@@ -133,12 +143,10 @@ while (main.firstChild) {
             detailSection.appendChild(aiDate);
             detailSection.appendChild(aiAssTo);
             detailSection.appendChild(aiClosedDate);
-            detailSection.appendChild(caRef);
+            detailSection.appendChild(projId);
             detailSection.appendChild(reqBy);
             detailSection.appendChild(due_date);
-            
-            const btnEditDesc = document.createElement('button');
-            const btnEditFlup = document.createElement('button');         
+            detailSection.appendChild(elemSubject);       
 
             main.appendChild(elemRpt);
             main.appendChild(elemId);
@@ -248,6 +256,11 @@ while (main.firstChild) {
                 // get the action text
                 const oldActionText = document.querySelector('#actionNote').innerHTML
                 const newActionText = document.querySelector('#newTextAction').value;
+                // warn and break if the action text is empty
+                if (newActionText.length === 0) {
+                    alert('Action text cannot be empty');
+                    return;
+                }
                 let actionText = newActionText + '\n' + oldActionText;
                 const d = new Date();
                 const date = d.toISOString().substring(0, 10);
@@ -480,63 +493,82 @@ while (main.firstChild) {
 
         });
 
-        // listen for the edit detail button click
+        // listen for the edit detail button click, populate the edit dialog fields, show the dialog
         const btnEditDetail = document.querySelector('#btnEditDetail');
         btnEditDetail.addEventListener('click', async (event) => {
             // prevent default action
             event.preventDefault();
+            // get the action item id
+            let queryString = window.location.search;
+            let urlParams = new URLSearchParams(queryString);
+            let iid = urlParams.get('id');
+            const detailDialog = document.querySelector('#inputDialog');
+            detailDialog.showModal();
+            // populate the dialog fields
+            let assignedto = document.querySelector('#assignedto').textContent;
+            assignedto = assignedto.substring(13);
+            let duedate = document.querySelector('#duedate').textContent;
+            duedate = duedate.substring(10);
+            let project = document.querySelector('#project').textContent;
+            project = project.substring(9);
+            project = project.split(' ')[0];            
+            let requestby = document.querySelector('#requestby').textContent;
+            requestby = requestby.substring(11);
+            let subject = document.querySelector('#subject').textContent;
+            subject = subject.substring(9);
+            // console.log(assignedto, duedate, project, requestby, subject);
+            // populate the dialog fields
+            document.querySelector('#ASSIGNED_TO').value = assignedto.trim();
+            document.querySelector('#DUE_DATE').value = duedate.trim();
+            document.querySelector('#PROJECT_ID').value = project.trim();
+            document.querySelector('#REQUESTED_BY').value = requestby.trim();
+            document.querySelector('#SUBJECT').value = subject.trim();
+
+    
+
+
+
+
+            // listen for the cancel button click
+            const btnCancelDetail = document.querySelector('#cancelEdit');
+            btnCancelDetail.addEventListener('click', async (event) => {
+                detailDialog.close();
+            });    
             
-            alert('Edit not ready yet');
-            return;
+            // listen for the save detail button click
+            const btnSaveDetail = document.querySelector('#saveDetail');
+            btnSaveDetail.addEventListener('click', async (event) => {
+                // prevent default action
+                event.preventDefault();
+                
 
-            // const detailDialog = document.querySelector('#detailDialog');
-            // detailDialog.showModal();
+                let data = {
+                    INPUT_ID: iid,
+                    ASSIGNED_TO: document.querySelector('#ASSIGNED_TO').value,                    
+                    DUE_DATE: document.querySelector('#DUE_DATE').value,
+                    PROJECT_ID: document.querySelector('#PROJECT_ID').value,
+                    REQUESTED_BY: document.querySelector('#REQUESTED_BY').value,
+                    SUBJECT: document.querySelector('#SUBJECT').value,
+                    MODIFIED_DATE: getDateTime(),
+                    MODIFIED_BY: user
+                };
+                    
+                // console.log(data);
 
-            // // listen for the cancel button click
-            // const btnCancelDetail = document.querySelector('#cancelDetail');
-            // btnCancelDetail.addEventListener('click', async (event) => {
-            //     detailDialog.close();
-            // });    
-            
-            // // listen for the save detail button click
-            // const btnSaveDetail = document.querySelector('#saveDetail');
-            // btnSaveDetail.addEventListener('click', async (event) => {
-            //     // prevent default action
-            //     event.preventDefault();
-            //     // alert('Save Detail button clicked');
-            //     // get the action text
-            //     const oldActionText = document.querySelector('#actionNote').innerHTML
-            //     const newActionText = document.querySelector('#newTextAction').value;
-            //     let actionText = newActionText + '\n' + oldActionText;
-            //     const d = new Date();
-            //     const date = d.toISOString().substring(0, 10);
-            //     const time = d.toLocaleTimeString();
-            //     const mydate = date + ' ' + time;
-            //     // prepend action text with user name and date
-            //     actionText = user + " - " + mydate + '\n' + newActionText + '\n\n' + oldActionText;
-            //     actionText = actionText.replace(/\n/g, "<br>");
-
-            //     let data = {
-            //         INPUT_ID: iid,
-            //         INPUT_USER: user,
-            //         INPUT_TEXT: actionText,
-            //     };
-            //     // console.log(data);
-
-            //     // update the action text
-            //     const url = 'http://localhost:3003/input/' + iid;
-            //     const response = await fetch(url, {
-            //         method: 'PUT',
-            //         headers: {
-            //             'Content-Type': 'application/json'
-            //         },
-            //         body: JSON.stringify({ data })
-            //     });
-            //     // close the dialog
-            //     detailDialog.close();
-            //     // reload the page
-            //     location.reload();
-            // });
+                // update the action text
+                const url = 'http://localhost:3003/input/detail/' + iid;
+                const response = await fetch(url, {
+                    method: 'PUT',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({ data })
+                });
+                // close the dialog
+                detailDialog.close();
+                // reload the page
+                location.reload();
+            });
         });
         
     });

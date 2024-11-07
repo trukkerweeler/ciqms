@@ -401,5 +401,51 @@ router.get('/previous/:id', (req, res) => {
     }
 });
 
+router.put('/detail/:id', (req, res) => {
+    // put the detail
+    // console.log("Params: " + req.params.id);
+    // console.log(req.body);
+    let mydata = req.body['data'];
+    try {
+        const connection = mysql.createConnection({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            port: 3306,
+            database: 'quality'
+        });
+        connection.connect(function(err) {
+            if (err) {
+                console.error('Error connecting: ' + err.stack);
+                return;
+            }
+        const query = `UPDATE PEOPLE_INPUT SET 
+        ASSIGNED_TO = '${mydata.ASSIGNED_TO}',
+        DUE_DATE = '${mydata.DUE_DATE}',
+        SUBJECT = '${mydata.SUBJECT}',
+        PROJECT_ID = '${mydata.PROJECT_ID}',
+        PEOPLE_ID = '${mydata.REQUESTED_BY}',
+        MODIFIED_DATE = '${mydata.MODIFIED_DATE}',
+        MODIFIED_BY = '${mydata.MODIFIED_BY}'
+        WHERE INPUT_ID = '${req.params.id}'`;
+        console.log(query);
+        connection.query(query, (err, rows, fields) => {
+            if (err) {
+                console.log('Failed to query for input : ' + err);
+                res.sendStatus(500);
+                return;
+            }
+            res.json(rows);
+        });
+    
+        connection.end();
+        });
+    } catch (err) {
+        console.log('Error connecting to Db INPUT 444');
+        return;
+    }
+
+});
+
 
 module.exports = router;
