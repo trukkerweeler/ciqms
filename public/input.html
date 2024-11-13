@@ -38,6 +38,8 @@
     <dialog id="respDialog" class="editDialog">
         <div class="dialogTitle">Edit Response</div>
         <form class="dialogForm">
+            <label for="RESPONSE_DATE">Response Date:</label>
+            <input type="date" id="newResponseDate" name="RESPONSE_DATE" required>
             <textarea type="textarea" id="newTextResp" class="notestext" rows="4" cols="40"></textarea>
             <button class="btnDialog" id="cancelResp" type="submit" formmethod="dialog">Cancel</button>
             <button class="btnDialog dialogSaveBtn" id="saveResp" type="submit">Save</button>

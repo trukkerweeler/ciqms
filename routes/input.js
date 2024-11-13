@@ -215,6 +215,7 @@ router.get('/:id', (req, res) => {
         , pi.CLOSED
         , pi.CLOSED_DATE
         , pit.INPUT_TEXT
+        , pi.RESPONSE_DATE
         , pir.RESPONSE_TEXT
         , pif.FOLLOWUP_TEXT 
         , p.NAME
@@ -254,7 +255,7 @@ router.put('/:id', (req, res) => {
     let appended = '';
     // const myfield = Object.keys (req.body) [2]
     const myfield = Object.keys (mydata) [2]
-    console.log(myfield);
+    console.log("257: " + myfield);
     // log the name of the third key
     switch (myfield) {
         case 'RESPONSE_TEXT':
@@ -309,11 +310,22 @@ router.put('/:id', (req, res) => {
             }
             res.json(rows);
         });
+
+        if (myfield === 'RESPONSE_TEXT') {
+            const updateQuery = `UPDATE PEOPLE_INPUT SET RESPONSE_DATE = '${mydata.RESPONSE_DATE}' WHERE INPUT_ID = '${req.params.id}'`;
+            connection.query(updateQuery, (err, rows, fields) => {
+                if (err) {
+                    console.log('Failed to query for response date update: ' + err);
+                    res.sendStatus(500);
+                    return;
+                }
+            });
+        }
     
         connection.end();
         });
     } catch (err) {
-        console.log('Error connecting to Db 83');
+        console.log('Error connecting to Db 328');
         return;
     }
 
@@ -428,7 +440,7 @@ router.put('/detail/:id', (req, res) => {
         MODIFIED_DATE = '${mydata.MODIFIED_DATE}',
         MODIFIED_BY = '${mydata.MODIFIED_BY}'
         WHERE INPUT_ID = '${req.params.id}'`;
-        console.log(query);
+        // console.log(query);
         connection.query(query, (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for input : ' + err);

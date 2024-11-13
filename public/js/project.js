@@ -21,6 +21,12 @@ fetch(url, { method: "GET" })
   .then((response) => response.json())
   .then((record) => {
     // console.log(record);
+    if (record.length === 0) {
+      const message = document.createElement("h1");
+      message.textContent = "No records found for project " + projectId;
+      main.appendChild(message);
+      return;
+    }
     const fieldList = [
       "INPUT_ID",
       "INPUT_DATE",
@@ -31,15 +37,15 @@ fetch(url, { method: "GET" })
     ];
     const descriptionSection = document.createElement("section");
     const detailParagraph = document.createElement("p");
-    detailParagraph.textContent =
-      "Project Description: " + record[0].DESCRIPTION + " ";
+    // detailParagraph.textContent =
+      // "Project Description: " + record[0].DESCRIPTION + " ";
     const leader = document.createElement("h3");
     leader.textContent = "Project Leader: " + record[0].LEADER;
     const descriptionHeader = document.createElement("h2");
     descriptionHeader.textContent = record[0].NAME;
     descriptionSection.appendChild(descriptionHeader);
     descriptionSection.appendChild(leader);
-    descriptionSection.appendChild(detailParagraph);
+    // descriptionSection.appendChild(detailParagraph);
     main.appendChild(descriptionSection);
     const actionsHeader = document.createElement("h1");
     actionsHeader.textContent = "Actions";
