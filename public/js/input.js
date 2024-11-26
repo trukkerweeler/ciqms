@@ -16,6 +16,7 @@ let iid = urlParams.get("id");
 const url = "http://localhost:3003/input/" + iid;
 const inputUrl = "http://localhost:3003/input/";
 const csrUrl = "http://localhost:3003/csr/";
+const ssrUrl = "http://localhost:3003/ssr/";
 
 const main = document.querySelector("main");
 // Delete the child nodes of the main element
@@ -417,16 +418,88 @@ fetch(url, { method: "GET" })
     const btnCollData = document.querySelector("#btnCollData");
     btnCollData.addEventListener("click", async (event) => {
       event.preventDefault();
-      // show the collect data dialog
+      // if the subject is SC then show the supplier collect data dialog
+      const subject = document.querySelector("#subject").textContent;
+      // console.log(subject);
+      if (subject.includes("SC")) {
+        // show the supplier collect data dialog
+        const collectDataDialog = document.querySelector("#collectDataDialog2");
+        collectDataDialog.showModal();
+
+        // listen for the cancel button click
+        const btnCancelCollData = document.querySelector("#cancelCollData2");
+        btnCancelCollData.addEventListener("click", async (event) => {
+          collectDataDialog.close();
+        });
+
+        // listen for the save button click
+        const btnSaveCollData = document.querySelector("#saveCollData2");
+        btnSaveCollData.addEventListener("click", async (event) => {
+          // prevent default action
+          event.preventDefault();
+          // get the nextId for the collect data
+          // console.log( ssrUrl + 'nextSSRId')
+          const nextId = await fetch(ssrUrl + "nextSSRId", { method: "GET" })
+            .then((response) => response.json())
+            .then((data) => {
+              JSON.stringify(data);
+              return data;
+            });
+          // get the form data
+          const collectForm = document.querySelector("#collectForm2");
+          let data = new FormData(collectForm);
+          // append data with the nextId
+          // data.append('INPUT_ID', iid);
+          // data.append('INPUT_USER', user);
+
+          const dataJson = {
+            VENDPERF_ID: nextId,
+            PEOPLE_ID: user,
+          };
+
+          // console log the form data
+          for (let field of data.keys()) {
+            if (field in ["SUPPLIER_ID", "UNIT", "PEOPLE_ID"]) {
+              dataJson[field] = data.get(field).toUpperCase();
+            } else {
+              console.log(field + ": " + data.get(field));
+              dataJson[field] = data.get(field);
+            }
+          }
+          console.log(dataJson);
+
+          // post the collect data text
+          const ssrUrl2 = "http://localhost:3003/ssr/" + iid;
+          // console.log(ssrUrl2);
+          try {
+            await fetch(ssrUrl2, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+              body: JSON.stringify({ dataJson }),
+            });
+          } catch (err) {
+            console.log("Error:", err);
+          }
+          // close the dialog
+          collectDataDialog.close();
+          // clear the form fields
+          collectForm.reset();
+          // reload the page
+          location.reload();
+        });
+      } else {
+      // show the customer collect data dialog
       const collectDataDialog = document.querySelector("#collectDataDialog");
       collectDataDialog.showModal();
-
+      
       // listen for the cancel button click
       const btnCancelCollData = document.querySelector("#cancelCollData");
       btnCancelCollData.addEventListener("click", async (event) => {
         collectDataDialog.close();
       });
-
+      
       // listen for the save button click
       const btnSaveCollData = document.querySelector("#saveCollData");
       btnSaveCollData.addEventListener("click", async (event) => {
@@ -435,23 +508,23 @@ fetch(url, { method: "GET" })
         // get the nextId for the collect data
         // console.log( csrUrl + 'nextCSRId')
         const nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
-          .then((response) => response.json())
-          .then((data) => {
-            JSON.stringify(data);
-            return data;
-          });
+        .then((response) => response.json())
+        .then((data) => {
+          JSON.stringify(data);
+          return data;
+        });
         // get the form data
         const collectForm = document.querySelector("#collectForm");
         let data = new FormData(collectForm);
         // append data with the nextId
         // data.append('INPUT_ID', iid);
         // data.append('INPUT_USER', user);
-
+        
         const dataJson = {
           COLLECT_ID: nextId,
           INPUT_USER: user,
         };
-
+        
         // console log the form data
         for (let field of data.keys()) {
           if (field in ["CUSTOMER_ID", "UNIT"]) {
@@ -462,7 +535,7 @@ fetch(url, { method: "GET" })
           }
         }
         console.log(dataJson);
-
+        
         // post the collect data text
         const csrUrl2 = "http://localhost:3003/csr/" + iid;
         // console.log(csrUrl2);
@@ -484,6 +557,7 @@ fetch(url, { method: "GET" })
         // reload the page
         location.reload();
       });
+    }
     });
 
     // listen for the close button click

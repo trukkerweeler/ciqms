@@ -255,7 +255,7 @@ router.put('/:id', (req, res) => {
     let appended = '';
     // const myfield = Object.keys (req.body) [2]
     const myfield = Object.keys (mydata) [2]
-    console.log("257: " + myfield);
+    // console.log("257: " + myfield);
     // log the name of the third key
     switch (myfield) {
         case 'RESPONSE_TEXT':

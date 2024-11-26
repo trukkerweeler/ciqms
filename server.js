@@ -37,6 +37,9 @@ app.use("/todo", todoRoutes);
 const csrRoutes = require("./routes/csr");
 app.use("/csr", csrRoutes);
 
+const ssrRoutes = require("./routes/ssr");
+app.use("/ssr", ssrRoutes);
+
 app.listen(port, async() => {
   // console.log(`Example app listening at http://localhost:${port}`);
 });
