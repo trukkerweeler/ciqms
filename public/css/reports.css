@@ -1,0 +1,34 @@
+:root{
+    font-family: 'Roboto', sans-serif;
+}
+thead {
+    background-color: aliceblue;
+    color: black;
+}
+
+th, td {
+    padding: 0.5rem;
+    text-align: left;
+    border-bottom: 1px solid #ddd;
+}
+
+tr:nth-child(even) {
+    background-color: #f2f2f2;
+}
+
+#report-table {
+    margin: 0 auto;
+    width: 100%;
+    border-collapse: collapse;
+    border-spacing: 0;
+    border: 1px solid black;
+    margin-bottom: 1rem;
+    background-color: var(--secondary-color);
+    border-radius: var(--border-radius);
+    box-shadow: var(--shadow);
+    transition: var(--transition);
+    /* color: var(--text-color-dark); */
+    /* background-color: #fff; */
+    /* All borders */
+    border: 1px solid #000;
+}

@@ -27,3 +27,6 @@ GET http://localhost:3003/input/nextId
 
 ###
 GET http://localhost:3003/ssr/nextSSRId
+
+###
+GET http://localhost:3003/reports

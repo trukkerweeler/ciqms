@@ -147,4 +147,20 @@ export function createButton(section, buttonName, buttonId, buttonClass) {
 
     renderWithTemplate(sectionTemplate, mainElement, data);
   }
+
+  export async function createReportTable()
+  {
+    const reportTableTemplate = await loadTemplate("/partials/reportTable.html");
+    const mainElement = document.querySelector("#main");
+    const data = {
+      title: "Report Table"
+    };
+
+    renderWithTemplate(reportTableTemplate, mainElement, data);
+  }
+
+  export async function exesAndOhs(text) {
+    const returnText = await text.replace(/(?:\r\n|\r|\n)/g, '<br>');
+    return returnText;
+  }
   

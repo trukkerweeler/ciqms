@@ -40,6 +40,12 @@ app.use("/csr", csrRoutes);
 const ssrRoutes = require("./routes/ssr");
 app.use("/ssr", ssrRoutes);
 
+const reportRoutes = require("./routes/reports");
+app.use("/reports", reportRoutes);
+
+// const testRoutes = require("./routes/test");
+// app.use("/test", testRoutes);
+
 app.listen(port, async() => {
   // console.log(`Example app listening at http://localhost:${port}`);
 });
