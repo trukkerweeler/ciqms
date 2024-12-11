@@ -1,4 +1,4 @@
-import { loadHeaderFooter, exesAndOhs } from "./utils.mjs";
+// import { loadHeaderFooter } from "./utils.mjs";
 // loadHeaderFooter();
 const url = "http://localhost:3003/reports";
 
@@ -43,6 +43,38 @@ const PMFormNames = {
   PM26: "ACER Mill",
 };
 
+function exesAndOhs(newResponse) {
+  if (newResponse === null) {
+    newResponse = "";
+  } else {
+    newResponse = newResponse;
+
+    const regex = /scan/gi;
+    if (newResponse.match(regex)) {
+      newResponse = "X";
+    } else if (newResponse.match(/not[e]{0,1} done/gi)) {
+      newResponse = "O";
+    } else if (newResponse.match(/got it/gi)) {
+      newResponse = "X";
+    } else if (newResponse.match(/on file/gi)) {
+      newResponse = "X";
+    } else if (newResponse.match(/implementing/gi)) {
+      newResponse = "O";
+    } else if (newResponse.match(/no record/gi)) {
+      newResponse = "O";
+    } else if (newResponse.match(/no use/gi)) {
+      newResponse = "X";
+    } else if (newResponse.match(/not being used/gi)) {
+      newResponse = "X";
+    } else if (newResponse.match(/Filed,/gi)) {
+      newResponse = "X";
+    } else {
+      newResponse = newResponse;
+    }
+  }
+  return newResponse;
+}
+
 for (let i = 12; i > 0; i--) {
   const date = new Date(currentYear, currentMonth - i, 1);
   let month = monthNames[date.getMonth()];
@@ -80,25 +112,57 @@ fetch(url)
   .then((response) => response.json())
   .then((data) => {
     // console.log(data);
-    // iterate unique subjects
-    const subjects = data.map((report) => report.SUBJECT);
-    const uniqueSubjects = [...new Set(subjects)];
     // filter out any INPUT_DATE that is newer than the last day of last month
     const lastDayOfLastMonth = new Date(currentYear, currentMonth, 0);
     // console.log(lastDayOfLastMonth);
     data = data.filter(
       (report) => new Date(report.INPUT_DATE) <= lastDayOfLastMonth
     );
+    // filter out those that are not Monthly PMs
+    let monthlydata = data.filter((report) => report.FREQUENCY === "M");
+    // console.log(monthlydata);
+    let monthlySubjects = monthlydata.map((report) => report.SUBJECT);
+    // console.log(monthlySubjects);
+    let uMonthlySubjects = [...new Set(monthlySubjects)];
+    
+
+
+
+    let quarterlydata = data.filter((report) => report.FREQUENCY === "Q");
+    console.log(quarterlydata);
+    let quarterlysubjects = quarterlydata.map((report) => report.SUBJECT);
+    console.log(quarterlysubjects);
+    let uQuarterlySubjects = [...new Set(quarterlysubjects)];
+
+
+
+    let halfyearlydata = data.filter((report) => report.FREQUENCY === "H");
+    console.log(halfyearlydata);
+    let halfyearlysubjects = halfyearlydata.map((report) => report.SUBJECT);
+    console.log(halfyearlysubjects);
+    let uHalfyearlySubjects = [...new Set(halfyearlysubjects)];
+
+
+
+    let yearlydata = data.filter((report) => report.FREQUENCY === "A");
+    console.log(yearlydata);
+    let yearlysubjects = yearlydata.map((report) => report.SUBJECT);
+    console.log(yearlysubjects);
+    let uYearlySubjects = [...new Set(yearlysubjects)];
+
     // console.log(uniqueSubjects);
-    // for each subject enter teh subjet as teh first column in the row and then populate the responses for the dates
-    uniqueSubjects.forEach((subject) => {
+    // for each subject enter the subject as teh first column in the row and then populate the responses for the dates
+    uMonthlySubjects.forEach((subject) => {
       const row = table.insertRow(-1);
-      row.insertCell(0).innerHTML =
-        subject +
-        " " +
-        PMFormNames[subject] +
-        "<br>" +
-        data.find((report) => report.SUBJECT === subject).ASSIGNED_TO;
+      try {
+        row.insertCell(0).innerHTML =
+          subject + " " + PMFormNames[subject] + "<br>" + monthlydata.find((report) => report.SUBJECT === subject).ASSIGNED_TO;
+      } catch (error) {
+        console.log(error);
+        console.log(subject);
+        row.insertCell(0).innerHTML = subject + " " + PMFormNames[subject];
+      }
+
       dates.forEach((shortmonth) => {
         // console.log(shortmonth);
 
@@ -108,41 +172,70 @@ fetch(url)
             new Date(report.INPUT_DATE).getMonth() ===
               monthNames.indexOf(shortmonth.split(" ")[0])
         );
-        // const report = data.find(report => report.SUBJECT === subject && report.INPUT_DATE === date);
         // console.log(report);
         let newResponse = report ? report.RESPONSE_TEXT : "";
-        // if RESPONSE_TEXT is not null and contains the word 'scan' then replace the text with 'X'
-        if (newResponse === null) {
-          newResponse = "";
-        } else {
-          newResponse = newResponse;
-
-          const regex = /scan/gi;
-          if (newResponse.match(regex)) {
-            newResponse = "X";
-          } else if (newResponse.match(/not[e]{0,1} done/gi)) {
-            newResponse = "O";
-          } else if (newResponse.match(/got it/gi)) {
-            newResponse = "X";
-          } else if (newResponse.match(/on file/gi)) {
-            newResponse = "X";
-          } else if (newResponse.match(/implementing/gi)) {
-            newResponse = "O";
-          } else if (newResponse.match(/no record/gi)) {
-            newResponse = "O";
-          } else if (newResponse.match(/no use/gi)) {
-            newResponse = "X";
-          } else if (newResponse.match(/not being used/gi)) {
-            newResponse = "X";
-          } else if (newResponse.match(/Filed,/gi)) {
-            newResponse = "X";
-          } else {
-            newResponse = newResponse;
-          }
-        }
+        
+        newResponse = exesAndOhs(newResponse);
+        
 
         row.insertCell(-1).innerHTML = report ? newResponse : "";
         // row.insertCell(-1).innerHTML = 'X';
       });
     });
+
+    // Make a table for Quarterly PMs
+    const quarterlyTable = document.createElement("table");
+    quarterlyTable.id = "quarterly-table";
+    main.appendChild(quarterlyTable);
+    const quarterlyHeader = quarterlyTable.createTHead();
+    const quarterlyHeaderRow = quarterlyHeader.insertRow(0);
+    quarterlyHeaderRow.insertCell(0).innerHTML = "Subject";
+
+    // Determine previous 4 quarters
+    const today = new Date();
+    // const currentMonth = today.getMonth();
+    // const currentYear = today.getFullYear();
+    const quarter = Math.floor(currentMonth / 3);
+    const quarterNames = ["Q1", "Q2", "Q3", "Q4"];
+    const currentQuarter = quarterNames[quarter];
+    const currentQuarterIndex = quarter;
+    const previousQuarters = [];
+    for (let i = 1; i < 5; i++) {
+      previousQuarters.push(quarterNames[(currentQuarterIndex - i + 4) % 4]);
+    }
+    const quarterlyDates = previousQuarters.map((quarter) => {
+      return quarter + " " + currentYear;
+    });
+    quarterlyDates.forEach((date) => {
+      quarterlyHeaderRow.insertCell(-1).innerHTML = date;
+    });
+
+
+    uQuarterlySubjects.forEach((quarterlysubject) => {
+      const row = quarterlyTable.insertRow(-1);
+      try {
+        row.insertCell(0).innerHTML =
+        quarterlysubject + " " + PMFormNames[quarterlysubject] + "<br>" + quarterlydata.find((report) => report.SUBJECT === subject).ASSIGNED_TO;
+      } catch (error) {
+        console.log(error);
+        console.log(subject);
+        row.insertCell(0).innerHTML = quarterlysubject + " " + PMFormNames[quarterlysubject];
+      }
+
+      // Quarterly PMs only have 4 reports a year
+      // const quarterlyDates = dates.filter((date) => date.includes("Jan") || date.includes("Apr") || date.includes("Jul") || date.includes("Oct"));
+      console.log(dates);
+      // dates.forEach((shortmonth) => {
+      //   const report = data.find(
+      //     (report) =>
+      //       report.SUBJECT === subject &&
+      //       new Date(report.INPUT_DATE).getMonth() ===
+      //         monthNames.indexOf(shortmonth.split(" ")[0])
+      //   );
+      //   let newResponse = report ? report.RESPONSE_TEXT : "";
+      //   newResponse = exesAndOhs(newResponse);
+      //   row.insertCell(-1).innerHTML = report ? newResponse : "";
+      // });
+    } );
+
   });

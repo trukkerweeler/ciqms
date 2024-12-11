@@ -159,8 +159,35 @@ export function createButton(section, buttonName, buttonId, buttonClass) {
     renderWithTemplate(reportTableTemplate, mainElement, data);
   }
 
-  export async function exesAndOhs(text) {
-    const returnText = await text.replace(/(?:\r\n|\r|\n)/g, '<br>');
-    return returnText;
+  export async function exesAndOhs(newResponse) {
+    if (newResponse === null) {
+      newResponse = "";
+    } else {
+      newResponse = newResponse;
+
+      const regex = /scan/gi;
+      if (newResponse.match(regex)) {
+        newResponse = "X";
+      } else if (newResponse.match(/not[e]{0,1} done/gi)) {
+        newResponse = "O";
+      } else if (newResponse.match(/got it/gi)) {
+        newResponse = "X";
+      } else if (newResponse.match(/on file/gi)) {
+        newResponse = "X";
+      } else if (newResponse.match(/implementing/gi)) {
+        newResponse = "O";
+      } else if (newResponse.match(/no record/gi)) {
+        newResponse = "O";
+      } else if (newResponse.match(/no use/gi)) {
+        newResponse = "X";
+      } else if (newResponse.match(/not being used/gi)) {
+        newResponse = "X";
+      } else if (newResponse.match(/Filed,/gi)) {
+        newResponse = "X";
+      } else {
+        newResponse = newResponse;
+      }
+    }
+    return newResponse;
   }
   
