@@ -43,6 +43,9 @@ app.use("/ssr", ssrRoutes);
 const reportRoutes = require("./routes/reports");
 app.use("/reports", reportRoutes);
 
+const pmReportRoutes = require("./routes/pmReport");
+app.use("/pmReport", pmReportRoutes);
+
 // const testRoutes = require("./routes/test");
 // app.use("/test", testRoutes);
 
