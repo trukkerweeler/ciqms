@@ -250,4 +250,112 @@ fetch(url)
       // });
     // } );
 
+    // Make a table for Half Yearly PMs=====================================================
+    const halfyearlyTable = document.createElement("table");
+    halfyearlyTable.id = "halfyearly-table";
+    // Half Yearly Heading
+    const halfyearlyH1 = document.createElement("h1");
+    halfyearlyH1.innerText = "Half Yearly PM Report";
+    main.appendChild(halfyearlyH1);
+    main.appendChild(halfyearlyTable);
+    const halfyearlyHeader = halfyearlyTable.createTHead();
+    const halfyearlyHeaderRow = halfyearlyHeader.insertRow(0);
+    halfyearlyHeaderRow.insertCell(0).innerHTML = "Subject";
+
+    // Determine previous 8 half years
+    const previousHalfYears = [];
+    for (let i = 1; i < 9; i++) {
+      previousHalfYears.push(currentYear - i);
+    }
+    const halfyearlyDates = previousHalfYears.map((year) => {
+      return year;
+    });
+
+    halfyearlyDates.forEach((date) => {
+      halfyearlyHeaderRow.insertCell(-1).innerHTML = date;
+    });
+    // Reverse the array
+    // halfyearlyDates.reverse();
+
+    console.log(uHalfyearlySubjects);
+    console.log([previousHalfYears]);
+
+    uHalfyearlySubjects.forEach((halfyearlysubject) => {
+      const row = halfyearlyTable.insertRow(-1);
+      try {
+        row.insertCell(0).innerHTML =
+        halfyearlysubject + " " + PMFormNames[halfyearlysubject] + "<br>" + halfyearlydata.find((report) => report.SUBJECT === halfyearlysubject).ASSIGNED_TO;
+      } catch (error) {
+        console.log(error);
+        console.log(halfyearlysubject);
+        row.insertCell(0).innerHTML = halfyearlysubject + " " + PMFormNames[halfyearlysubject];
+      }
+
+      halfyearlyDates.forEach((year) => {
+        const report = data.find(
+          (report) =>
+            report.SUBJECT === halfyearlysubject &&
+            new Date(report.INPUT_DATE).getFullYear() === year
+        );
+        let newResponse = report ? report.RESPONSE_TEXT : "";
+        newResponse = exesAndOhs(newResponse);
+        row.insertCell(-1).innerHTML = report ? newResponse : "";
+      });
+    });
+
+
+
+    // Make a table for Yearly PMs =====================================================
+    const yearlyTable = document.createElement("table");
+    yearlyTable.id = "yearly-table";
+    // Yearly Heading
+    const yearlyH1 = document.createElement("h1");
+    yearlyH1.innerText = "Yearly PM Report";
+    main.appendChild(yearlyH1);
+    main.appendChild(yearlyTable);
+    const yearlyHeader = yearlyTable.createTHead();
+    const yearlyHeaderRow = yearlyHeader.insertRow(0);
+    yearlyHeaderRow.insertCell(0).innerHTML = "Subject";
+
+    // Determine previous 4 years
+    const previousYears = [];
+    for (let i = 1; i < 5; i++) {
+      previousYears.push(currentYear - i);
+    }
+    const yearlyDates = previousYears.map((year) => {
+      return year;
+    });
+
+    yearlyDates.forEach((date) => {
+      yearlyHeaderRow.insertCell(-1).innerHTML = date;
+    });
+    // Reverse the array
+    // yearlyDates.reverse();
+
+    console.log(uYearlySubjects);
+    console.log([previousYears]);
+
+    uYearlySubjects.forEach((yearlysubject) => {
+      const row = yearlyTable.insertRow(-1);
+      try {
+        row.insertCell(0).innerHTML =
+        yearlysubject + " " + PMFormNames[yearlysubject] + "<br>" + yearlydata.find((report) => report.SUBJECT === yearlysubject).ASSIGNED_TO;
+      } catch (error) {
+        console.log(error);
+        console.log(yearlysubject);
+        row.insertCell(0).innerHTML = yearlysubject + " " + PMFormNames[yearlysubject];
+      }
+
+      yearlyDates.forEach((year) => {
+        const report = data.find(
+          (report) =>
+            report.SUBJECT === yearlysubject &&
+            new Date(report.INPUT_DATE).getFullYear() === year
+        );
+        let newResponse = report ? report.RESPONSE_TEXT : "";
+        newResponse = exesAndOhs(newResponse);
+        row.insertCell(-1).innerHTML = report ? newResponse : "";
+      });
+    });
+
   });
