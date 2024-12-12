@@ -129,3 +129,38 @@ fetch(url)
 // dates.forEach(date => {
 //     totalRow.insertCell(-1).innerHTML = '';
 // });
+
+function convertDateToSemiYear(date) {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  if (month <= 6) {
+    return `${year}H1`;
+  } else {
+    return `${year}H2`;
+  }
+}
+
+
+// =========================
+// Determine the most recent transpired date either June 30 or December 31
+// =========================
+// const today = new Date();
+// const currentMonth = today.getMonth();
+// const currentYear = today.getFullYear();
+let myhalves = [];
+const lastDayOfJune = new Date(currentYear, 5, 30);
+const lastDayOfDecember = new Date(currentYear, 11, 31);
+let lastTranspiredDate = today;
+if (today < lastDayOfJune) {
+  lastTranspiredDate = lastDayOfDecember;
+} else if (today < lastDayOfDecember) {
+  lastTranspiredDate = lastDayOfJune;
+}
+myhalves.push(convertDateToSemiYear(lastTranspiredDate));
+// from lastTranspiredDate, go back 7 more 6-month iterations to get the last 8 semi-annual periods
+for (let i = 0; i < 7; i++) {
+  myhalves.push(convertDateToSemiYear(new Date(lastTranspiredDate.setMonth(lastTranspiredDate.getMonth() - 6))));
+}
+console.log(myhalves);
+
+

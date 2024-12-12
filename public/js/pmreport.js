@@ -43,8 +43,6 @@ const PMFormNames = {
   PM26: "ACER Mill",
 };
 
-console.log(PMFormNames);
-
 function exesAndOhs(newResponse) {
   if (newResponse === null) {
     newResponse = "";
@@ -75,6 +73,16 @@ function exesAndOhs(newResponse) {
     }
   }
   return newResponse;
+}
+
+function convertDateToSemiYear(date) {
+  const month = date.getMonth();
+  const year = date.getFullYear();
+  if (month <= 6) {
+    return `${year}H1`;
+  } else {
+    return `${year}H2`;
+  }
 }
 
 for (let i = 12; i > 0; i--) {
@@ -129,30 +137,23 @@ fetch(url)
     let monthlySubjects = monthlydata.map((report) => report.SUBJECT);
     // console.log(monthlySubjects);
     let uMonthlySubjects = [...new Set(monthlySubjects)];
-    
-
-
 
     let quarterlydata = data.filter((report) => report.FREQUENCY === "Q");
-    console.log(quarterlydata);
+    // console.log(quarterlydata);
     let quarterlysubjects = quarterlydata.map((report) => report.SUBJECT);
-    console.log(quarterlysubjects);
+    // console.log(quarterlysubjects);
     let uQuarterlySubjects = [...new Set(quarterlysubjects)];
 
-
-
     let halfyearlydata = data.filter((report) => report.FREQUENCY === "H");
-    console.log(halfyearlydata);
+    // console.log(halfyearlydata);
     let halfyearlysubjects = halfyearlydata.map((report) => report.SUBJECT);
-    console.log(halfyearlysubjects);
+    // console.log(halfyearlysubjects);
     let uHalfyearlySubjects = [...new Set(halfyearlysubjects)];
 
-
-
     let yearlydata = data.filter((report) => report.FREQUENCY === "A");
-    console.log(yearlydata);
+    // console.log(yearlydata);
     let yearlysubjects = yearlydata.map((report) => report.SUBJECT);
-    console.log(yearlysubjects);
+    // console.log(yearlysubjects);
     let uYearlySubjects = [...new Set(yearlysubjects)];
 
     // console.log(uniqueSubjects);
@@ -161,7 +162,11 @@ fetch(url)
       const row = table.insertRow(-1);
       try {
         row.insertCell(0).innerHTML =
-          subject + " " + PMFormNames[subject] + "<br>" + monthlydata.find((report) => report.SUBJECT === subject).ASSIGNED_TO;
+          subject +
+          " " +
+          PMFormNames[subject] +
+          "<br>" +
+          monthlydata.find((report) => report.SUBJECT === subject).ASSIGNED_TO;
       } catch (error) {
         console.log(error);
         console.log(subject);
@@ -179,9 +184,8 @@ fetch(url)
         );
         // console.log(report);
         let newResponse = report ? report.RESPONSE_TEXT : "";
-        
+
         newResponse = exesAndOhs(newResponse);
-        
 
         row.insertCell(-1).innerHTML = report ? newResponse : "";
         // row.insertCell(-1).innerHTML = 'X';
@@ -192,9 +196,9 @@ fetch(url)
     const quarterlyTable = document.createElement("table");
     quarterlyTable.id = "quarterly-table";
     // Quarterly Heading
-    const quarterlyH1 = document.createElement("h1");
-    quarterlyH1.innerText = "Quarterly PM Report";
-    main.appendChild(quarterlyH1);
+    const quarterlyH2 = document.createElement("h2");
+    quarterlyH2.innerText = "Quarterly PM Report";
+    main.appendChild(quarterlyH2);
     main.appendChild(quarterlyTable);
     const quarterlyHeader = quarterlyTable.createTHead();
     const quarterlyHeaderRow = quarterlyHeader.insertRow(0);
@@ -219,99 +223,84 @@ fetch(url)
       quarterlyHeaderRow.insertCell(-1).innerHTML = date;
     });
 
-    // console.log(uQuarterlySubjects);
-    // console.log([previousQuarters]);
-    // uQuarterlySubjects.forEach((quarterlysubject) => {
-    //   const row = quarterlyTable.insertRow(-1);
-    //   try {
-    //     row.insertCell(0).innerHTML =
-    //     quarterlysubject + " " + PMFormNames[quarterlysubject] + "<br>" + quarterlydata.find((report) => report.SUBJECT === subject).ASSIGNED_TO;
-    //   } catch (error) {
-    //     console.log(error);
-    //     console.log(subject);
-    //     row.insertCell(0).innerHTML = quarterlysubject + " " + PMFormNames[quarterlysubject];
-    //   }
-
-      // Quarterly PMs only have 4 reports a year
-      // const quarterlyDates = dates.filter((date) => date.includes("Jan") || date.includes("Apr") || date.includes("Jul") || date.includes("Oct"));
-      
-      // console.log(months);
-
-      // dates.forEach((shortmonth) => {
-      //   const report = data.find(
-      //     (report) =>
-      //       report.SUBJECT === subject &&
-      //       new Date(report.INPUT_DATE).getMonth() ===
-      //         monthNames.indexOf(shortmonth.split(" ")[0])
-      //   );
-      //   let newResponse = report ? report.RESPONSE_TEXT : "";
-      //   newResponse = exesAndOhs(newResponse);
-      //   row.insertCell(-1).innerHTML = report ? newResponse : "";
-      // });
-    // } );
 
     // Make a table for Half Yearly PMs=====================================================
     const halfyearlyTable = document.createElement("table");
     halfyearlyTable.id = "halfyearly-table";
     // Half Yearly Heading
-    const halfyearlyH1 = document.createElement("h1");
-    halfyearlyH1.innerText = "Half Yearly PM Report";
-    main.appendChild(halfyearlyH1);
+    const halfyearlyH2 = document.createElement("h2");
+    halfyearlyH2.innerText = "Half Yearly PM Report";
+    main.appendChild(halfyearlyH2);
     main.appendChild(halfyearlyTable);
     const halfyearlyHeader = halfyearlyTable.createTHead();
     const halfyearlyHeaderRow = halfyearlyHeader.insertRow(0);
     halfyearlyHeaderRow.insertCell(0).innerHTML = "Subject";
 
-    // Determine previous 8 half years
-    const previousHalfYears = [];
-    for (let i = 1; i < 9; i++) {
-      previousHalfYears.push(currentYear - i);
+    let myhalves = [];
+    const lastDayOfJune = new Date(currentYear, 5, 30);
+    const lastDayOfDecember = new Date(currentYear, 11, 31);
+    let lastTranspiredDate = today;
+    if (today < lastDayOfJune) {
+      lastTranspiredDate = lastDayOfDecember;
+    } else if (today < lastDayOfDecember) {
+      lastTranspiredDate = lastDayOfJune;
     }
-    const halfyearlyDates = previousHalfYears.map((year) => {
-      return year;
-    });
+    myhalves.push(convertDateToSemiYear(lastTranspiredDate));
+    // from lastTranspiredDate, go back 7 more 6-month iterations to get the last 8 semi-annual periods
+    for (let i = 0; i < 7; i++) {
+      myhalves.push(
+        convertDateToSemiYear(
+          new Date(
+            lastTranspiredDate.setMonth(lastTranspiredDate.getMonth() - 6)
+          )
+        )
+      );
+    }
+    // console.log(myhalves);
+    myhalves = myhalves.reverse();
 
-    halfyearlyDates.forEach((date) => {
+    myhalves.forEach((date) => {
       halfyearlyHeaderRow.insertCell(-1).innerHTML = date;
     });
-    // Reverse the array
-    // halfyearlyDates.reverse();
-
-    console.log(uHalfyearlySubjects);
-    console.log([previousHalfYears]);
 
     uHalfyearlySubjects.forEach((halfyearlysubject) => {
       const row = halfyearlyTable.insertRow(-1);
       try {
         row.insertCell(0).innerHTML =
-        halfyearlysubject + " " + PMFormNames[halfyearlysubject] + "<br>" + halfyearlydata.find((report) => report.SUBJECT === halfyearlysubject).ASSIGNED_TO;
+          halfyearlysubject +
+          " " +
+          PMFormNames[halfyearlysubject] +
+          "<br>" +
+          halfyearlydata.find((report) => report.SUBJECT === halfyearlysubject)
+            .ASSIGNED_TO;
       } catch (error) {
         console.log(error);
         console.log(halfyearlysubject);
-        row.insertCell(0).innerHTML = halfyearlysubject + " " + PMFormNames[halfyearlysubject];
+        row.insertCell(0).innerHTML =
+          halfyearlysubject + " " + PMFormNames[halfyearlysubject];
       }
 
-      halfyearlyDates.forEach((year) => {
+      myhalves.forEach((halfyear) => {
         const report = data.find(
           (report) =>
             report.SUBJECT === halfyearlysubject &&
-            new Date(report.INPUT_DATE).getFullYear() === year
-        );
+            convertDateToSemiYear(new Date(report.INPUT_DATE)) === halfyear
+            
+          );
+
         let newResponse = report ? report.RESPONSE_TEXT : "";
         newResponse = exesAndOhs(newResponse);
         row.insertCell(-1).innerHTML = report ? newResponse : "";
       });
     });
 
-
-
     // Make a table for Yearly PMs =====================================================
     const yearlyTable = document.createElement("table");
     yearlyTable.id = "yearly-table";
     // Yearly Heading
-    const yearlyH1 = document.createElement("h1");
-    yearlyH1.innerText = "Yearly PM Report";
-    main.appendChild(yearlyH1);
+    const yearlyH2 = document.createElement("h2");
+    yearlyH2.innerText = "Yearly PM Report";
+    main.appendChild(yearlyH2);
     main.appendChild(yearlyTable);
     const yearlyHeader = yearlyTable.createTHead();
     const yearlyHeaderRow = yearlyHeader.insertRow(0);
@@ -322,28 +311,33 @@ fetch(url)
     for (let i = 1; i < 5; i++) {
       previousYears.push(currentYear - i);
     }
-    const yearlyDates = previousYears.map((year) => {
+    let yearlyDates = previousYears.map((year) => {
       return year;
     });
+
+    // Reverse the array
+    yearlyDates = yearlyDates.reverse();
+    // previousYears = previousYears.reverse();
 
     yearlyDates.forEach((date) => {
       yearlyHeaderRow.insertCell(-1).innerHTML = date;
     });
-    // Reverse the array
-    // yearlyDates.reverse();
-
-    console.log(uYearlySubjects);
-    console.log([previousYears]);
 
     uYearlySubjects.forEach((yearlysubject) => {
       const row = yearlyTable.insertRow(-1);
       try {
         row.insertCell(0).innerHTML =
-        yearlysubject + " " + PMFormNames[yearlysubject] + "<br>" + yearlydata.find((report) => report.SUBJECT === yearlysubject).ASSIGNED_TO;
+          yearlysubject +
+          " " +
+          PMFormNames[yearlysubject] +
+          "<br>" +
+          yearlydata.find((report) => report.SUBJECT === yearlysubject)
+            .ASSIGNED_TO;
       } catch (error) {
         console.log(error);
         console.log(yearlysubject);
-        row.insertCell(0).innerHTML = yearlysubject + " " + PMFormNames[yearlysubject];
+        row.insertCell(0).innerHTML =
+          yearlysubject + " " + PMFormNames[yearlysubject];
       }
 
       yearlyDates.forEach((year) => {
@@ -357,5 +351,4 @@ fetch(url)
         row.insertCell(-1).innerHTML = report ? newResponse : "";
       });
     });
-
   });
