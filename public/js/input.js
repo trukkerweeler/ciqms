@@ -143,12 +143,22 @@ fetch(url, { method: "GET" })
 
       // create detail p element for the response date
       const responseDate = document.createElement("p");
-      responseDate.textContent =
-        "Response Date:" + " " + record[key]["RESPONSE_DATE"];
+      // if the key of RESPONSE_DATE is a date, sipaly substring of it
+      if (
+        record[key]["RESPONSE_DATE"] === null ||
+        record[key]["RESPONSE_DATE"] === "" ||
+        record[key]["RESPONSE_DATE"].length === 0
+      ) {
+        responseDate.textContent = "Response Date:" + " " + "";
+      } else {
+            responseDate.textContent =
+        "Response Date:" + " " + record[key]["RESPONSE_DATE"].substring(0, 10);
+      }
       responseDate.setAttribute("class", "tbl");
       responseDate.setAttribute("id", "responseDate");
       // make it invisible
-      responseDate.style.display = "none";
+      // responseDate.style.display = "none";
+    
 
       // Create p element for the subject
       const elemSubject = document.createElement("p");

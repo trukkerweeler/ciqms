@@ -155,8 +155,8 @@ router.post('/', (req, res) => {
         console.log(inputText);
         // escape the backslash
         const iid = req.body.INPUT_ID;
-        // const inputText = req.body.INPUT_TEXT.replace(/\\/g, "\\\\");
-        const insertQuery = `insert into PPL_INPT_TEXT values ('${iid}', '${inputText}')`;
+        const escapedInputText = inputText.replace(/\\/g, '\\\\');
+        const insertQuery = `insert into PPL_INPT_TEXT values ('${iid}', '${escapedInputText}')`;
         connection.query(insertQuery, (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for PPL_INPT_TEXT insert: ' + err);
@@ -178,7 +178,7 @@ router.post('/', (req, res) => {
         });
 
     } catch (err) {
-        console.log('Error connecting to Db (changes 175)');
+        console.log('Error connecting to Db (changes 181)');
         return;
     }
 
