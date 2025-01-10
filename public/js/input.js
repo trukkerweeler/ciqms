@@ -109,16 +109,6 @@ fetch(url, { method: "GET" })
       aiClosedDate.setAttribute("class", "tbl");
       aiClosedDate.setAttribute("id", "closeddate");
 
-      // toggle display of doit if recur id is not null
-      const doit = document.querySelector("#doit");
-      if (record[key]["RECUR_ID"] !== null) {
-        doit.style.display = "block";
-        // console.log('recur id is not null');
-      } else {
-        doit.style.display = "none";
-        // console.log('recur id is null');
-      }
-
       // create detail p element for the assigned to
       const aiAssTo = document.createElement("p");
       aiAssTo.textContent = "Assigned To:" + " " + record[key]["ASSIGNED_TO"];

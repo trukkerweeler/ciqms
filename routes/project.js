@@ -66,7 +66,6 @@ router.get('/:id', (req, res) => {
                 return;
             }
         // console.log('Connected to DB');
-
         const query = `SELECT 
         pi.INPUT_ID
         , pi.PEOPLE_ID
@@ -89,10 +88,18 @@ router.get('/:id', (req, res) => {
         left join PPL_INPT_RSPN pir on pi.INPUT_ID = pir.INPUT_ID 
         left join PROJECT p on pi.PROJECT_ID = p.PROJECT_ID
         left join PROJ_DESC pd on pi.PROJECT_ID = pd.PROJECT_ID
-        where p.PROJECT_ID = '${req.params.id}'
+        where p.PROJECT_ID = ?
         order by pi.CLOSED, pi.INPUT_ID desc`;
 
-        // console.log(query);
+        connection.query(query, [req.params.id], (err, rows, fields) => {
+            if (err) {
+                console.log('Failed to query for corrective actions: ' + err);
+                res.sendStatus(500);
+                return;
+            }
+            res.json(rows);
+        });
+        
 
         connection.query(query, (err, rows, fields) => {
             if (err) {
@@ -132,8 +139,8 @@ router.post('/', (req, res) => {
     // console.log('Connected to DB');
 
     const query = `insert into PROJECT (PROJECT_ID, NAME, LEADER, PROJECT_TYPE, CREATE_DATE, CREATE_BY, CLOSED) 
-    values ('${data.PROJECT_ID}', '${data.NAME}', '${data.LEADER}', '${data.PROJECT_TYPE}', '${data.CREATE_DATE}', '${data.CREATE_BY}', '${data.CLOSED}')`;
-
+    values (?, ?, ?, ?, ?, ?, ?)`;
+    const values = [data.PROJECT_ID, data.NAME, data.LEADER, data.PROJECT_TYPE, data.CREATE_DATE, data.CREATE_BY, data.CLOSED];
     console.log(query);
 
     connection.query(query, (err, rows, fields) => {

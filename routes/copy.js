@@ -23,35 +23,26 @@ router.post('/', (req, res) => {
                 return;
             }
         // console.log('Connected to DB');
-             
-        const query = `insert into PEOPLE_INPUT (INPUT_ID
-            , INPUT_DATE
-            , PEOPLE_ID
-            , ASSIGNED_TO
-            , DUE_DATE
-            , INPUT_TYPE
-            , SUBJECT
-            , PROJECT_ID
-            , CLOSED
-            , CREATE_DATE
-            , CREATE_BY
-            ) values (
-                '${req.body.INPUT_ID}'
-                , '${req.body.INPUT_DATE}'
-                , '${req.body.PEOPLE_ID}'
-                , '${req.body.ASSIGNED_TO}'
-                , '${req.body.DUE_DATE}'
-                , '${req.body.INPUT_TYPE}'
-                , '${req.body.SUBJECT}'
-                , '${req.body.PROJECT_ID}'
-                , '${req.body.CLOSED}'
-                , '${req.body.CREATE_DATE}'
-                , '${req.body.CREATE_BY}'
-            )`;
         
-        // console.log(query);
+        const queryParams = [
+            req.body.INPUT_ID,
+            req.body.INPUT_DATE,
+            req.body.PEOPLE_ID,
+            req.body.ASSIGNED_TO,
+            req.body.DUE_DATE,
+            req.body.INPUT_TYPE,
+            req.body.SUBJECT,
+            req.body.PROJECT_ID,
+            req.body.CLOSED,
+            req.body.CREATE_DATE,
+            req.body.CREATE_BY
+        ];
 
-        connection.query(query, (err, rows, fields) => {
+        const query = `INSERT INTO PEOPLE_INPUT (
+            INPUT_ID, INPUT_DATE, PEOPLE_ID, ASSIGNED_TO, DUE_DATE, INPUT_TYPE, SUBJECT, PROJECT_ID, CLOSED, CREATE_DATE, CREATE_BY
+        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+        connection.query(query, queryParams, (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for PEOPLE_INPUT insert: ' + err);
                 res.sendStatus(500);
@@ -60,15 +51,9 @@ router.post('/', (req, res) => {
             res.json(rows);
         });
 
-        
-        // escape the apostrophe
         const inputText = req.body.INPUT_TEXT.replace(/'/g, "\\'");
-        console.log(inputText);
-        // escape the backslash
-        const iid = req.body.INPUT_ID;
-        // const inputText = req.body.INPUT_TEXT.replace(/\\/g, "\\\\");
-        const insertQuery = `insert into PPL_INPT_TEXT values ('${iid}', '${inputText}')`;
-        connection.query(insertQuery, (err, rows, fields) => {
+        const insertQuery = `INSERT INTO PPL_INPT_TEXT VALUES (?, ?)`;
+        connection.query(insertQuery, [req.body.INPUT_ID, inputText], (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for PPL_INPT_TEXT insert: ' + err);
                 res.sendStatus(500);
@@ -76,14 +61,15 @@ router.post('/', (req, res) => {
             }
         });
 
-        const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body.INPUT_ID}' WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
-        connection.query(updateQuery, (err, rows, fields) => {
+        const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = ? WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
+        connection.query(updateQuery, [req.body.INPUT_ID], (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for system id update: ' + err);
                 res.sendStatus(500);
                 return;
             }
         });
+
 
         connection.end();
         });

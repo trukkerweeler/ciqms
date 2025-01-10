@@ -24,12 +24,9 @@ router.post('/:id', async (req, res) => {
             }
              
         const query = `insert into APPLICATION_USER (
-            USER_ID
-            , USER_PWD
-            ) values (
-                '${req.body.username}'
-                , '${hashedPassword}'
-            )`;
+            USER_ID, USER_PWD
+        ) values (?, ?)`;
+        const values = [req.body.username, hashedPassword];
 
         connection.query(query, (err, rows, fields) => {
             if (err) {
@@ -65,7 +62,8 @@ router.post('/login', async (req, res) => {
                 console.error('Error connecting: ' + err.stack);
                 return;
             }             
-        const query = `select * from APPLICATION_USER where USER_ID = '${req.body.username}'`;
+        const query = `select * from APPLICATION_USER where USER_ID = ?`;
+        const values = [req.body.username];
         connection.query(query, (err, rows, fields) => {
             if (err) {
                 res.sendStatus(400).send("Cannot connect");
