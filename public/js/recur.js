@@ -70,6 +70,8 @@ form.addEventListener('submit', async (event) => {
         }
     
     form.reset();
+    // reload the page
+    location.reload();
 });
 
 

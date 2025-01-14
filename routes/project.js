@@ -22,7 +22,6 @@ router.get('/', (req, res) => {
                 console.error('Error connecting: ' + err.stack);
                 return;
             }
-        // console.log('Connected to DB');
 
         const query = `select * from PROJECT`;
 
@@ -45,7 +44,6 @@ router.get('/', (req, res) => {
     }
 
 });
-
 
 
 // ==================================================
@@ -101,15 +99,6 @@ router.get('/:id', (req, res) => {
         });
         
 
-        connection.query(query, (err, rows, fields) => {
-            if (err) {
-                console.log('Failed to query for corrective actions: ' + err);
-                res.sendStatus(500);
-                return;
-            }
-            res.json(rows);
-        });
-
         connection.end();
         });
     } catch (err) {
@@ -141,7 +130,7 @@ router.post('/', (req, res) => {
     const query = `insert into PROJECT (PROJECT_ID, NAME, LEADER, PROJECT_TYPE, CREATE_DATE, CREATE_BY, CLOSED) 
     values (?, ?, ?, ?, ?, ?, ?)`;
     const values = [data.PROJECT_ID, data.NAME, data.LEADER, data.PROJECT_TYPE, data.CREATE_DATE, data.CREATE_BY, data.CLOSED];
-    console.log(query);
+    // console.log(query);
 
     connection.query(query, (err, rows, fields) => {
         if (err) {
