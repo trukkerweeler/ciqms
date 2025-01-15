@@ -34,7 +34,9 @@ router.get('/', (req, res) => {
         , pi.DUE_DATE
         , pi.CLOSED
         , pi.CLOSED_DATE 
-        from PEOPLE_INPUT pi left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID where CLOSED != 'Y' order by pi.INPUT_ID desc`;
+        from PEOPLE_INPUT pi left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID 
+        where CLOSED != 'Y' and pi.INPUT_DATE <= CURDATE() 
+        order by pi.INPUT_ID desc`;
         // where USER_DEFINED_1 = 'MR'
         
         connection.query(query, (err, rows, fields) => {

@@ -132,7 +132,7 @@ router.post('/', (req, res) => {
     const values = [data.PROJECT_ID, data.NAME, data.LEADER, data.PROJECT_TYPE, data.CREATE_DATE, data.CREATE_BY, data.CLOSED];
     // console.log(query);
 
-    connection.query(query, (err, rows, fields) => {
+    connection.query(query, values, (err, rows, fields) => {
         if (err) {
             console.log('Failed to query for corrective actions: ' + err);
             res.sendStatus(500);
