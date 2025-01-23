@@ -45,6 +45,11 @@ fetch(url, { method: "GET" })
     descriptionHeader.textContent = record[0].NAME;
     descriptionSection.appendChild(descriptionHeader);
     descriptionSection.appendChild(leader);
+    // Create a close button
+    const closeButton = document.createElement("button");
+    closeButton.textContent = "Close Project";
+    closeButton.setAttribute("class", "close-button");
+    descriptionSection.appendChild(closeButton);
     // descriptionSection.appendChild(detailParagraph);
     main.appendChild(descriptionSection);
     const actionsHeader = document.createElement("h1");
@@ -114,4 +119,24 @@ fetch(url, { method: "GET" })
     table.appendChild(thead);
     table.appendChild(tbody);
     main.appendChild(table);
-  });
+
+    // Add the event listener to the close button
+    closeButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      const url = "http://localhost:3003/project/close/" + projectId;
+      fetch(url, { method: "PUT" })
+        // if the response is 200, reload the page
+        .then((response) => {
+          if (response.status === 200) {
+            location.reload();          }
+
+          // if the response is 500, display an error message
+          if (response.status === 500) {
+            const message = document.createElement("h1");
+            message.textContent = "Error closing project " + projectId;
+            main.appendChild(message);
+          }
+        });
+
+    });
+  })

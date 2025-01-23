@@ -23,7 +23,7 @@ router.get('/', (req, res) => {
                 return;
             }
 
-        const query = `select * from PROJECT`;
+        const query = `select * from PROJECT order by CLOSED, PROJECT_ID`;
 
         // console.log(query);
 
@@ -96,8 +96,7 @@ router.get('/:id', (req, res) => {
                 return;
             }
             res.json(rows);
-        });
-        
+        });        
 
         connection.end();
         });
@@ -112,7 +111,7 @@ router.get('/:id', (req, res) => {
 router.post('/', (req, res) => {
     // console.log(req.body);
     const data = req.body;
-    console.log(data);
+    // console.log(data);
     const connection = mysql.createConnection({
         host: process.env.DB_HOST,
         user: process.env.DB_USER,
@@ -144,5 +143,45 @@ router.post('/', (req, res) => {
     connection.end();
     });
 });
+
+// ==================================================
+// Close a project
+router.put('/close/:id', (req, res) => {
+    // console.log(req.body);
+    let data = req.body;
+    data.CLOSED_DATE = new Date().toISOString().slice(0, 19).replace('T', ' ');
+    // console.log(data);
+    const connection = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASS,
+        port: 3306,
+        database: 'quality'
+    });
+    connection.connect(function(err) {
+        if (err) {
+            console.error('Error connecting: ' + err.stack);
+            return;
+        }
+    // console.log('Connected to DB');
+
+    const query = `update PROJECT set CLOSED = "Y", CLOSED_DATE = ? where PROJECT_ID = ?`;
+    const values = [data.CLOSED_DATE, req.params.id];
+    // console.log(query);
+
+    connection.query(query, values, (err, rows, fields) => {
+        if (err) {
+            console.log('Failed to query for corrective actions: ' + err);
+            res.sendStatus(500);
+            return;
+        }
+        res.sendStatus(200);
+    });
+
+    connection.end();
+    });
+});
+
+
 
 module.exports = router;
