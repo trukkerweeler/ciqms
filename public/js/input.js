@@ -8,6 +8,7 @@ loadHeaderFooter();
 
 let user = await getUserValue();
 
+
 // Get the project id from the url params
 let queryString = window.location.search;
 let urlParams = new URLSearchParams(queryString);
