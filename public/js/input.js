@@ -3,9 +3,11 @@ import {
   createNotesSection,
   getUserValue,
   getDateTime,
+  myport,
 } from "./utils.mjs";
 loadHeaderFooter();
 
+const port = myport();
 let user = await getUserValue();
 
 
@@ -14,10 +16,10 @@ let queryString = window.location.search;
 let urlParams = new URLSearchParams(queryString);
 let iid = urlParams.get("id");
 
-const url = "http://localhost:3003/input/" + iid;
-const inputUrl = "http://localhost:3003/input/";
-const csrUrl = "http://localhost:3003/csr/";
-const ssrUrl = "http://localhost:3003/ssr/";
+const url = `http://localhost:${port}/input/${iid}`;
+const inputUrl = `http://localhost:${port}/input/`;
+const csrUrl = `http://localhost:${port}/csr/`;
+const ssrUrl = `http://localhost:${port}/ssr/`;
 
 const main = document.querySelector("main");
 // Delete the child nodes of the main element
@@ -258,7 +260,7 @@ fetch(url, { method: "GET" })
         // console.log(data);
 
         // update the response text
-        const url = "http://localhost:3003/input/" + iid;
+        const url = `http://localhost:${port}/input/${iid}`;
         const response = await fetch(url, {
           method: "PUT",
           headers: {
@@ -327,7 +329,7 @@ fetch(url, { method: "GET" })
         // console.log(data);
 
         // update the action text
-        const url = "http://localhost:3003/input/" + iid;
+        const url = `http://localhost:${port}/input/${iid}`;
         const response = await fetch(url, {
           method: "PUT",
           headers: {
@@ -399,7 +401,7 @@ fetch(url, { method: "GET" })
         // console.log(data);
 
         // update the follow up text
-        const url = "http://localhost:3003/input/" + iid;
+        const url = `http://localhost:${port}/input/${iid}`;
         const response = await fetch(url, {
           method: "PUT",
           headers: {
@@ -470,7 +472,7 @@ fetch(url, { method: "GET" })
           console.log(dataJson);
 
           // post the collect data text
-          const ssrUrl2 = "http://localhost:3003/ssr/" + iid;
+            const ssrUrl2 = `http://localhost:${port}/ssr/${iid}`;
           // console.log(ssrUrl2);
           try {
             await fetch(ssrUrl2, {
@@ -538,7 +540,7 @@ fetch(url, { method: "GET" })
         console.log(dataJson);
         
         // post the collect data text
-        const csrUrl2 = "http://localhost:3003/csr/" + iid;
+        const csrUrl2 = `http://localhost:${port}/csr/${iid}`;
         // console.log(csrUrl2);
         try {
           await fetch(csrUrl2, {
@@ -673,7 +675,7 @@ fetch(url, { method: "GET" })
         // console.log(data);
 
         // update the action text
-        const url = "http://localhost:3003/input/detail/" + iid;
+        const url = `http://localhost:${port}/input/detail/${iid}`;
         const response = await fetch(url, {
           method: "PUT",
           headers: {

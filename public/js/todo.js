@@ -1,7 +1,8 @@
-import { loadHeaderFooter, getUserValue, getDateTime } from './utils.mjs';
+import { loadHeaderFooter, getUserValue, getDateTime, myport } from './utils.mjs';
 
 loadHeaderFooter();
 const user = await getUserValue();
+const port = myport();
 
 // Default the ASSIGNED_TO field to the current user
 document.getElementById('ASSIGNED_TO').value = user;
@@ -19,7 +20,7 @@ button.addEventListener('click', async (event) => {
     personid = personid.toUpperCase();
     // console.log(personid)
 
-    const url = 'http://localhost:3003/todo';
+    const url = `http://localhost:${port}/todo`;
 
     // Delete the child nodes of the main element
     while (main.firstChild) {
@@ -74,7 +75,7 @@ button.addEventListener('click', async (event) => {
                 if (field === 'INPUT_ID') {
                     td.textContent = '';
                     const a = document.createElement('a');
-                    a.href = `http://localhost:3003/input.html?id=${row[field]}`;
+                    a.href = `http://localhost:${port}/input.html?id=${row[field]}`;
                     a.textContent = row[field];
                     td.appendChild(a);
                 } 

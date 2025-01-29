@@ -1,11 +1,13 @@
-import { loadHeaderFooter } from './utils.mjs';
+import { loadHeaderFooter, myport } from './utils.mjs';
 loadHeaderFooter();
+
+const port = myport();
 
 // Send a POST request for copy
 const form = document.querySelector('#copyform');
 form.addEventListener('submit', async (event) => {
     event.preventDefault();
-    let inputUrl = 'http://localhost:3003/input/';    
+    let inputUrl = `http://localhost:${port}/input/`;    
     const data = new FormData(form);
     const nextId = await fetch(inputUrl + '/nextId', { method: 'GET' })
     .then(response => response.json())

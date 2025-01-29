@@ -1,11 +1,12 @@
 
-import { loadHeaderFooter } from "./utils.mjs";
+import { loadHeaderFooter, myport } from "./utils.mjs";
 loadHeaderFooter();
-
+const port = myport() || 3003;
+const year = new Date().getFullYear();
 let sortOrder = 'asc';
 
 
-const url = 'http://localhost:3003/corrective';
+const url = `http://localhost:${port}/corrective`;
 
 document.addEventListener('DOMContentLoaded', () => {
     fetch(url, {method: 'GET'})
@@ -59,8 +60,7 @@ function createTable(data) {
                     td.textContent = new Date(item[header]).toLocaleDateString();
                 }
             } else if (header == 'CORRECTIVE_ID') {
-                td.innerHTML = `<a href="http://localhost:3003/corrective.html?id=${item[header]}">${item[header]}</a>`;
-            } else {
+                td.innerHTML = `<a href="http://localhost:${port}/corrective.html?id=${item[header]}">${item[header]}</a>`;} else {
                 td.textContent = item[header];
             }
             row.appendChild(td);

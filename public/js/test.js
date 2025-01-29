@@ -1,13 +1,14 @@
 
-import { loadHeaderFooter, exesAndOhs } from "./utils.mjs";
+import { loadHeaderFooter, exesAndOhs, myport } from "./utils.mjs";
 // import {getComputerName} from './getComputerName.mjs';
 loadHeaderFooter();
+const port = myport() || 3003;
 // console.log(getComputerName());
 console.log(`Hostname: ${window.location.hostname}`);
 
 // console.log(getUserValue1());
 
-// const url = 'http://localhost:3003/reports';
+// const url = `http://localhost:${port}/reports`;
 
 // const dates = [];
 // const today = new Date();

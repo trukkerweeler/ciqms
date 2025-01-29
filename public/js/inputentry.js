@@ -1,7 +1,8 @@
-import { getUserValue, loadHeaderFooter } from './utils.mjs';
+import { getUserValue, loadHeaderFooter, myport } from './utils.mjs';
 loadHeaderFooter();
+const port = myport();
 
-const url = 'http://localhost:3003/input';
+const url = `http://localhost:${port}/input`;
 let user  = await getUserValue();
 
 let myRequestDate = new Date();

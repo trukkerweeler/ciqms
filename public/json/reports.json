@@ -1,0 +1,25 @@
+{
+    "Reports": [
+        {
+            "h2": "Preventive Maintenance",
+            "a": "Go to Preventive Maintenance Report",
+            "html": "pmreport.html"
+        },
+        {
+            "h2": "SysDoc",
+            "a": "Go to SysDoc Report",
+            "html": "sysdocreport.html"
+        },
+        {
+            "h2": "Competence-Training-Awareness",
+            "a": "Go to CTA Report",
+            "html": "ctareport.html"
+        },
+        {
+            "h2": "Opportunities for Improvement",
+            "a": "Go to OFI Report",
+            "html": "ofireport.html"
+        }
+        
+    ]
+}

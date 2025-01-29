@@ -23,8 +23,6 @@ router.post('/:iid', (req, res) => {
         // console.log('key: ' + key['CUSTOMER_ID']);
         let cid = req.body[key].CUSTOMER_ID.toUpperCase();
         let unit = req.body[key].UNIT.toUpperCase();
-
-
              
         const query = `insert into NINETYONETWENTY (COLLECT_ID
             , INPUT_ID

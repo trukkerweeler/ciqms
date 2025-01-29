@@ -1,8 +1,9 @@
-import { loadHeaderFooter } from './utils.mjs';
+import { loadHeaderFoote., myportr } from './utils.mjs';
 loadHeaderFooter();
+const port = myport();
 const skippers = ['ENTITY_ID', 'MODIFIED_DATE', 'MODIFIED_BY', 'COST_SAVINGS']
 
-const url = 'http://localhost:3003/project';
+const url = `http://localhost:${port}/project`;
 
 function getRecords () {
     const main = document.querySelector('main');
@@ -38,7 +39,7 @@ function getRecords () {
                             td.textContent = record[key].slice(0,10);
                         } else {
                             if (key == 'PROJECT_ID') {
-                                td.innerHTML = `<a href="http://localhost:3003/project.html?id=${record[key]}">${record[key]}</a>`;
+                                td.innerHTML = `<a href="http://localhost:${port}/project.html?id=${record[key]}">${record[key]}</a>`;
                             } else {
                                 td.textContent = record[key];
                             }

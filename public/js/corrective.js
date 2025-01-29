@@ -1,11 +1,12 @@
-import { loadHeaderFooter, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
 loadHeaderFooter();
 const user = await getUserValue();
+const port = myport();
 
 // Get the id from the url
 let urlParams = new URLSearchParams(window.location.search);
 let caid = urlParams.get('id');
-let url = 'http://localhost:3003/corrective/' + caid;
+let url = `http://localhost:${port}/corrective/${caid}`;
 
 const main = document.querySelector('main');
 const closebutton = document.getElementById('closecorrective');
@@ -97,7 +98,7 @@ fetch(url, { method: 'GET' })
                 let requestby = document.getElementById('requestby').value;
                 let project = document.getElementById('project').value;
                 // update the record
-                let url = 'http://localhost:3003/corrective/' + caid;
+                let url = `http://localhost:${port}/corrective/${caid}`;
                 await fetch(url, {
                     method: 'PUT',
                     headers: {
@@ -124,7 +125,7 @@ fetch(url, { method: 'GET' })
         btnClose.textContent = 'Close';
         btnClose.addEventListener('click', async (e) => {
             e.preventDefault();
-            const closeUrl = 'http://localhost:3003/corrective/' + caid + '/close';
+            const closeUrl = `http://localhost:${port}/corrective/${caid}/close`;
             await fetch(closeUrl, {
                 method: 'PUT',
                 headers: {
@@ -248,8 +249,7 @@ fetch(url, { method: 'GET' })
                 // // let correctiondate = document.getElementById('correctiondate').value;
                 let correctiondate = new Date().toISOString().slice(0, 10);
                 // update the record
-                let url = 'http://localhost:3003
-                // /corrective/' + caid;
+                let url = `http://localhost:${port}/corrective/${caid}`;
                 await fetch(url, {
                     method: 'PUT',
                     headers: {
@@ -319,7 +319,7 @@ fetch(url, { method: 'GET' })
                 // let causeDate = document.getElementById('causedate').value;
                 let causeDate = new Date().toISOString().slice(0, 10);
                 // update the record
-                let url = 'http://localhost:3003/corrective/' + caid;
+                let url = `http://localhost:${port}/corrective/${caid}`;
                 await fetch(url, {
                     method: 'PUT',
                     headers: {
@@ -394,7 +394,7 @@ fetch(url, { method: 'GET' })
                 // let controlDate = document.getElementById('controldate').value;
                 let controlDate = new Date().toISOString().slice(0, 10);
                 // update the record
-                let url = 'http://localhost:3003/corrective/' + caid;
+                let url = `http://localhost:${port}/corrective/${caid}`;
                 await fetch(url, {
                     method: 'PUT',
                     headers: {

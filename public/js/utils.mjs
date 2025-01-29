@@ -19,11 +19,13 @@ export function renderWithTemplate(template, parentElement, data, callback, posi
     }
   }
 
-export async function loadHeaderFooter(){
+  export async function loadHeaderFooter(){
     const headerTemplate = await loadTemplate("/partials/header.html");
     const headerElement = document.querySelector("#header");
-    const footerTemplate = await loadTemplate('/partials/footer.html');
+    let footerTemplate = await loadTemplate('/partials/footer.html');
     const footerElement = document.querySelector("#footer");
+    const year = new Date().getFullYear();
+    footerTemplate = footerTemplate.replace("{{year}}", year);    
   
     renderWithTemplate(headerTemplate, headerElement);
     renderWithTemplate(footerTemplate, footerElement);
@@ -31,9 +33,9 @@ export async function loadHeaderFooter(){
 
   // get user value from config.json file
 export async function getUserValue() {
-    const res = await fetch("../js/config.json");
+    const res = await fetch("../json/config.json");
     const data = await res.json();
-    return data.user;
+    return data.username;
   }
 
   // get computer name from Windows environment variable
@@ -198,5 +200,9 @@ export function createButton(section, buttonName, buttonId, buttonClass) {
       }
     }
     return newResponse;
+  }
+
+  export function myport() {
+    return 3003;
   }
   

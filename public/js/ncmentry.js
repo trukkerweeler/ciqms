@@ -1,10 +1,11 @@
 
-import { loadHeaderFooter, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
 // import { exec } from 'child_process';
 // import * as fs from 'node:fs/promises';
 loadHeaderFooter();
+const port = myport();
 
-const url = "http://localhost:3003/ncm";
+const url = `http://localhost:${port}/ncm`;
 let user = await getUserValue();
 
 let recordDate = new Date();

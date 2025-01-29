@@ -1,5 +1,6 @@
-import { loadHeaderFooter, getUserValue } from './utils.mjs';
+import { loadHeaderFooter, getUserValue, myport } from './utils.mjs';
 loadHeaderFooter();
+const port = myport() || 3003;
 const user = await getUserValue();
 const test = false;
 
@@ -17,7 +18,7 @@ if (test) {
     console.log(iid);
     }
     
-const url = 'http://localhost:3003/ncm/' + iid;
+const url = `http://localhost:${port}/ncm/${iid}`;
 
 const main = document.querySelector('main');
 // Delete the child nodes of the main element
@@ -501,7 +502,7 @@ while (main.firstChild) {
 
         // Listen for the saveDetail button click
         const saveDetail = document.querySelector('#saveDetail');
-        const detailsUrl = 'http://localhost:3003/ncm/details/' + iid
+        const detailsUrl = `http://localhost:${port}/ncm/details/${iid}`;
         saveDetail.addEventListener('click', async (event) => {
             // prevent the default action
             event.preventDefault();
@@ -566,10 +567,7 @@ while (main.firstChild) {
             // close the detailDialog
             const detailDialog = document.querySelector('#detailDialog');
             detailDialog.close();
-        });
-
-
-        
+        });        
 
     });
 
@@ -579,7 +577,7 @@ while (main.firstChild) {
         closeNCM.addEventListener('click', async (event) => {
             // prevent the default action
             event.preventDefault();
-            const closeUrl = 'http://localhost:3003/ncm/close/' + iid;
+            const closeUrl = `http://localhost:${port}/ncm/close/${iid}`;
 
             let data = {
                 NCM_ID: iid,

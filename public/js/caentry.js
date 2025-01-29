@@ -1,8 +1,9 @@
-import { loadHeaderFooter, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
 loadHeaderFooter();
 
 let user = await getUserValue();
-const url = 'http://localhost:3003/corrective';
+const port = myport();
+const url = `http://localhost:${port}/corrective`;
 
 // Send a POST request
 const form = document.querySelector('form');

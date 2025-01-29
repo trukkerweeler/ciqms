@@ -1,7 +1,8 @@
-import { loadHeaderFooter } from "./utils.mjs";
+import { loadHeaderFooter, myport } from "./utils.mjs";
 loadHeaderFooter();
+const port = myport() || 3003;
 
-const url = 'http://localhost:3003/user';
+const url = `http://localhost:${port}/user`;
 
 const register = document.querySelector("#register");
 register.addEventListener("submit", (e) => {

@@ -1,5 +1,6 @@
-import { loadHeaderFooter } from './utils.mjs';
+import { loadHeaderFooter, myport } from './utils.mjs';
 loadHeaderFooter();
+const port = myport();
 document.querySelector('#subjectFilter').addEventListener('keyup', function(event) {
     const filter = event.target.value.toLowerCase();
     const rows = document.querySelectorAll('tbody tr');
@@ -17,7 +18,7 @@ document.querySelector('#subjectFilter').addEventListener('keyup', function(even
     });
 });
 
-const url = 'http://localhost:3003/input';
+const url = `http://localhost:${port}/input`;
 
 function getRecords () {
     const main = document.querySelector('main');
@@ -52,7 +53,7 @@ function getRecords () {
                         td.textContent = record[key].slice(0,10);
                     } else {
                         if (key == 'INPUT_ID') {
-                            td.innerHTML = `<a href="http://localhost:3003/input.html?id=${record[key]}">${record[key]}</a>`;
+                            td.innerHTML = `<a href="http://localhost:${port}/input.html?id=${record[key]}">${record[key]}</a>`;
                         } else {
                             td.textContent = record[key];
                         }

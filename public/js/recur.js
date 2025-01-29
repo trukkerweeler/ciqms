@@ -1,6 +1,7 @@
-import { loadHeaderFooter } from './utils.mjs';
+import { loadHeaderFooter, myport } from './utils.mjs';
 loadHeaderFooter();
-const url = 'http://localhost:3003/recur';
+const port = myport();
+const url = `http://localhost:${port}/recur`;
 
 
 //Get the table with id of view and append the data from the API including a header row

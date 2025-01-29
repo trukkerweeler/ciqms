@@ -1,12 +1,13 @@
-import { loadHeaderFooter } from "./utils.mjs";
+import { loadHeaderFooter, myport } from "./utils.mjs";
 loadHeaderFooter();
+const port = myport();
 
 // Get the project id from the url params
 let queryString = window.location.search;
 let urlParams = new URLSearchParams(queryString);
 let projectId = urlParams.get("id");
 
-const url = "http://localhost:3003/project/" + projectId;
+const url = `http://localhost:${port}/project/${projectId}`;
 
 const main = document.querySelector("main");
 // Delete the child nodes of the main element
@@ -123,7 +124,7 @@ fetch(url, { method: "GET" })
     // Add the event listener to the close button
     closeButton.addEventListener("click", (e) => {
       e.preventDefault();
-      const url = "http://localhost:3003/project/close/" + projectId;
+      const url = `http://localhost:${port}/project/close/${projectId}`;
       fetch(url, { method: "PUT" })
         // if the response is 200, reload the page
         .then((response) => {

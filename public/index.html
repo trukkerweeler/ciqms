@@ -1,44 +1,104 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Actions</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
     <h1>Actions</h1>
     <main id="main">
+      <div id="menudiv">
         <section class="indexsection">
-            <button class="program" id="ncm">Actions</button>
-            <!-- <p>Nonconformance is a deviation from a specification, standard, or requirement. It is a failure to meet the quality requirements of a product or service. Nonconformance can be a minor issue that does not affect the overall quality of the product or service, or it can be a major issue that renders the product or service unusable.</p> -->
-             <h3 id="indexsubheader">Activities</h3>
-            <div class="sectionlinks">
-                <li><a href="../inputs.html">View</a></li>
-                <li><a href="../inputentry.html">Add</a></li>
-                <!-- <li><a href="../exportncm.html">Export Records</a></li> -->
-            </div>
+          <button class="program" id="ncm">Actions (Input)</button>
+          <!-- <p>Nonconformance is a deviation from a specification, standard, or requirement. It is a failure to meet the quality requirements of a product or service. Nonconformance can be a minor issue that does not affect the overall quality of the product or service, or it can be a major issue that renders the product or service unusable.</p> -->
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../inputs.html">View</a></li>
+            <li><a href="../inputentry.html">Add</a></li>
+            <!-- <li><a href="../exportncm.html">Export Records</a></li> -->
+          </div>
         </section>
-        <!-- <section class="indexsection"> -->
-            <!-- <button class="program" id="ca">Corrective Action</button> -->
-            <!-- <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p> -->
-            <!-- <h3 id="indexsubheader">Activities</h3>
-            <div class="sectionlinks">
-                <li><a href="../corrective.html">View</a></li>
-                <li><a href="../enterca.html">Add</a></li>
-                <li><a href="../caedit.html">Edit</a></li>
-                <li><a href="../caexport.html">Export Records</a></li>
-
-            </div>
+        <section class="indexsection">
+          <button class="program" id="ncm">Nonconformance</button>
+          <!-- <p>Nonconformance is a deviation from a specification, standard, or requirement. It is a failure to meet the quality requirements of a product or service. Nonconformance can be a minor issue that does not affect the overall quality of the product or service, or it can be a major issue that renders the product or service unusable.</p> -->
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../ncms.html">View</a></li>
+            <li><a href="../enterncm.html">Add</a></li>
+            <!-- <li><a href="../exportncm.html">Export</a></li> -->
+          </div>
+        </section>
+        <section class="indexsection">
+          <button class="program" id="ca">Corrective Action</button>
+          <!-- <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p> -->
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../correctives.html">View</a></li>
+            <li><a href="../correctiveentry.html">Add</a></li>
+            <li><a href="../caedit.html">Edit</a></li>
+            <!-- <li><a href="../caexport.html">Export</a></li> -->
+          </div>
+        </section>
+        <!-- <section class="indexsection">
+          <button class="program" id="sysdoc">Sysdoc</button>
+          <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p>
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../documents.html">View</a></li>
+            <li><a href="../docentry.html">Add</a></li>
+            <li><a href="../dcrs.html">DCRs</a></li>
+            <li><a href="../sysdocexport.html">Export</a></li>
+          </div>
         </section> -->
+        <!-- <section class="indexsection">
+          <button class="program" id="supplier">Suppliers</button>
+          <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p>
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../suppliers.html">View</a></li>
+            <li><a href="../docentry.html">Add</a></li>
+            <li><a href="../dcrs.html">DCRs</a></li>
+          </div>
+        </section> -->
+        <!-- <section class="indexsection">
+          <button class="program" id="cta">Competency</button>
+          <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p>
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../attendance.html">View</a></li>
+            <li><a href="../ctaentry.html">Add</a></li>
+          </div>
+        </section> -->
+        <!-- <section class="indexsection">
+          <button class="program" id="cal">Calibration</button>
+          <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p>
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../calpo.html">PO Instructions</a></li>
+          </div>
+        </section> -->
+        <!-- <section class="indexsection">
+          <button class="program" id="cust">Customers</button>
+          <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p>
+          <h3 id="indexsubheader">Activities</h3>
+          <div class="sectionlinks">
+            <li><a href="../customers.html">Customers</a></li>
+          </div>
+        </section> -->
+      </div>
     </main>
-    <footer id="footer"></footer>    
-</body>
-<script type="module" src="/js/index.js"></script>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/index.js"></script>
 </html>

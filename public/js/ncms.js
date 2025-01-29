@@ -1,11 +1,12 @@
-import { loadHeaderFooter } from './utils.mjs';
+import { loadHeaderFooter, myport } from './utils.mjs';
 
 loadHeaderFooter();
 const year = new Date().getFullYear();
+const port = myport();
 
 
 // const url = `http://localhost:${NONCONFORMANCE_PORT}/ncm`;
-const url = `http://localhost:3003/ncm`;
+const url = `http://localhost:${port}/ncm`;
 
 function getTrend(processId) {
     const dialog = document.getElementById('dialog');
@@ -55,7 +56,7 @@ function getRecords () {
                         td.textContent = record[key].slice(0,10);
                     } else {
                         if (key == 'NCM_ID') {
-                            td.innerHTML = `<a href="http://localhost:3003/ncm.html?id=${record[key]}">${record[key]}</a>`;                        
+                            td.innerHTML = `<a href="http://localhost:${port}/ncm.html?id=${record[key]}">${record[key]}</a>`;                        
                         } else if (key == 'PROCESS_ID') {
                             const button = document.createElement('button');
                             button.className = 'btn rowbtn';
@@ -65,11 +66,7 @@ function getRecords () {
                             }
                             button.textContent = processId;
                             button.addEventListener('click', () => {
-                                window.location.href = `http://localhost:3003/trend.html?id=${record['NCM_ID']}`;
-                                // console.log('process id:', record['NCM_ID']);
-                                // run function to get process record and open dialog
-                                // getTrend(record['NCM_ID']);
-
+                                window.location.href = `http://localhost:${port}/trend.html?id=${record['NCM_ID']}`;
 
                             });
                             td.appendChild(button);
