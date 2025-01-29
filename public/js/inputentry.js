@@ -1,7 +1,8 @@
-import { loadHeaderFooter } from './utils.mjs';
+import { getUserValue, loadHeaderFooter } from './utils.mjs';
 loadHeaderFooter();
 
 const url = 'http://localhost:3003/input';
+let user  = await getUserValue();
 
 let myRequestDate = new Date();
 myRequestDate.setDate(myRequestDate.getDate());
@@ -30,7 +31,7 @@ form.addEventListener('submit', async (event) => {
     const dataJson = {
         INPUT_ID: nextId,
         CREATE_DATE: myRequestDate,
-        CREATE_BY: 'TKENT',
+        CREATE_BY: user,
         CLOSED: 'N',
     };
     for (let field of data.keys()) {

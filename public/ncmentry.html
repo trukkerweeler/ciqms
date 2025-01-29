@@ -1,0 +1,61 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Nonconformance - Entry</title>
+</head>
+<body>
+    <header id="header"></header>
+    <h1>Add Nonconformance</h1>
+    <main id="main">
+        <form action="submit" name="form" id="ncmform" class="dataentry">
+            <label for="NCM_DATE">Date</label>
+            <input type="date" name="NCM_DATE" id="NCM_DATE" placeholder="Enter NCM date">
+            <label for="DUE_DATE">Due Date</label>
+            <input type="date" name="DUE_DATE" id="DUE_DATE" placeholder="Enter due date">
+            <label for="PEOPLE_ID">Requestor</label>
+            <input type="text" name="PEOPLE_ID" id="reqby" placeholder="Enter requestor ID">
+            <label for="ASSIGNED_TO">Assignee</label>
+            <input type="text" name="ASSIGNED_TO" id="assto" placeholder="Enter assigned ID">
+            <label for="PRODUCT_ID">Part No.</label>
+            <input type="text" name="PRODUCT_ID" id="product" placeholder="Part number">
+            <label for="PO_NUMBER">PO</label>
+            <input type="text" name="PO_NUMBER" id="po" placeholder="PO number">
+            <label for="corType">Input Type</label>
+            <select name="NCM_TYPE" id="ncmType">
+                <option value="VPP">Verification of Purchased Product (Receiving Inspection)</option>
+                <option value="WIP" selected>Work In Process (Traveler)</option>
+                <option value="FIN">Final Inspection</option>
+                <option value="RET">Returns incl. Complaints</option>
+            </select>
+            <label for="SUBJECT">Subject</label>
+            <input type="text" name="SUBJECT" id="subject" placeholder="Enter subject (Form-Fit-Function)">
+            <label for="CAUSE">Cause</label>
+            <input type="text" name="CAUSE" id="cause" placeholder="Enter cause">
+            <label for="LOT_NUMBER">Lot Number</label>
+            <input type="text" name="LOT_NUMBER" id="lot" placeholder="Enter lot number (WO)">
+            <label for="LOT_SIZE">Quantity</label>
+            <input type="number" name="LOT_SIZE" id="qty" placeholder="Enter quantity">
+            <label for="USER_DEFINED_1">RMA</label>
+            <input type="text" name="USER_DEFINED_1" id="rma" placeholder="Enter RMA number">
+            <label for="DESCRIPTION">Nonconformance stmt:</label>
+            <input type="textarea" name="DESCRIPTION" id="description" placeholder="Enter nonconformance text (Should-be/Is)">
+            <label for="SUPPLIER_ID">Supplier</label>
+            <input type="text" name="SUPPLIER_ID" id="supplier" placeholder="Enter supplier ID">
+            <label for="CUSTOMER_ID">Customer</label>
+            <input type="text" name="CUSTOMER_ID" id="customer" placeholder="Enter customer ID">
+            
+            <input type="submit" value="Submit" id="button">
+        </form>
+    </main>
+    <footer id="footer"></footer>
+</body>
+<script type="module" src="/js/ncmentry.js"></script>
+</html>

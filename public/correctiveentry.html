@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Corrective - Entry</title>
+</head>
+<body>
+    <header id="header"></header>
+    <h1>Add Corrective Record</h1>
+    <main id="main">
+        <form action="submit" name="form" id="entryform">
+            <label for="CORRECTIVE_DATE">Date</label>
+            <input type="date" name="CORRECTIVE_DATE" id="corrdate" placeholder="Enter date">
+            <!-- <label for="COURSE_ID">Course ID</label>
+            <input type="text" name="COURSE_ID" id="courseid" placeholder="Enter course id"> -->
+            <label for="corType">Corrective Type</label>
+            <select name="corType" id="corType">
+                <option value="IA" selected>Internal Audit</option>
+                <option value="Supplier">Supplier</option>
+                <option value="Product">Product</option>
+                <option value="Customer">Customer</option>
+                <option value="3PA">Audit</option>
+            </select>     
+            <label for="REQUEST_BY">Requestor</label>
+            <input type="text" name="REQUEST_BY" id="reqby" placeholder="Enter requestor ID">
+            <!-- <select name="REQUEST_BY" id="corType">
+                <option value="I" selected>Internal</option>
+                <option value="S">Supplier</option>
+                <option value="C">Customer</option>
+            </select>         -->
+             <label for="ASSIGNED_TO">Assigned to</label>
+            <input type="text" name="ASSIGNED_TO" id="assto" placeholder="Enter assigned ID">
+            <label for="REFERENCE">Reference</label>
+            <input type="text" name="REFERENCE" id="reference" placeholder="Enter reference (QMS clause)">
+            <label for="NC_TREND">NC</label>
+            <input type="textarea" name="NC_TREND" id="nc" placeholder="Enter nonconformance">          
+            <label for="USER_DEFINED_1">Ext. Ref.</label>
+            <input type="text" name="USER_DEFINED_1" id="ud1" placeholder="External Reference">  
+            <label for="TITLE">Title</label>
+            <input type="text" name="TITLE" id="catitle" placeholder="Title">                               
+            
+            <input type="submit" value="Submit" id="button">
+        </form>
+    </main>
+    <footer id="footer"></footer>
+    
+</body>
+<script type="module" src="/js/caentry.js"></script>
+</html>

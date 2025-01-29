@@ -1,3 +1,7 @@
+// import { dotenv } from "../../node_modules/dotenv";
+// dotenv.config();
+
+
 async function loadTemplate(path) {
     const res = await fetch(path);
     const template = await res.text();
@@ -30,6 +34,11 @@ export async function getUserValue() {
     const res = await fetch("../js/config.json");
     const data = await res.json();
     return data.user;
+  }
+
+  // get computer name from Windows environment variable
+export function getUserValue1() {
+    return process.env.COMPUTERNAME;
   }
 
   // return datetime in format YYYY-MM-DD HH:MM:SS

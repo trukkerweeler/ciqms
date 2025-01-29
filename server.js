@@ -46,8 +46,11 @@ app.use("/reports", reportRoutes);
 const pmReportRoutes = require("./routes/pmReport");
 app.use("/pmReport", pmReportRoutes);
 
-// const testRoutes = require("./routes/test");
-// app.use("/test", testRoutes);
+const ncmRoutes = require("./routes/ncm");
+app.use("/ncm", ncmRoutes);
+
+const correctiveRoutes = require("./routes/corrective");
+app.use("/corrective", correctiveRoutes);
 
 app.listen(port, async() => {
   // console.log(`Example app listening at http://localhost:${port}`);

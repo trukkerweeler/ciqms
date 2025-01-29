@@ -1,0 +1,57 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Corrective - Detail</title>
+</head>
+<body>
+    <header id="header"></header>
+    <h1>Detail</h1>
+    <form>
+        <label for="search">Enter CA Id:</label>
+        <input type="text" name="search" id="caid" value="1239">
+        <button type="submit" id="detailsearch">Search</button>
+        <button type="submit" id="editaction" disabled>Append</button>
+        <button type="submit" id="closecorrective" disabled>Close</button>
+        <button type="submit" id="mkfldr" disabled>Make Folder</button>
+    </form>
+
+    <dialog data-modal>
+        <div>Append field - choose field:</div>
+        <form class="appendmodal">
+            <select name="fieldname" id="fieldname">
+                <option value="CORRECTION_TEXT" selected>Correction</option>
+                <option value="CAUSE_TEXT" selected>Cause</option>
+                <option value="CONTROL_TEXT" selected>Control</option>
+            </select>
+            
+            <input type="textarea" id="newtext">
+            <button type="submit" formmethod="dialog">Cancel</button>
+            <button id="modalsave" type="submit">Save</button>
+        </form>
+        <button data-close-modal>Close</button>
+    </dialog>
+    <dialog id="mkfldrmodal">
+        <div>Make Folder</div>
+        <form class="mkfldrmodal">
+            <input type="text" id="foldername" placeholder="Folder Name">
+            <button type="submit" formmethod="dialog">Cancel</button>
+            <button id="mkfldrsave" type="submit">Save</button>
+        </form>
+    </dialog>
+
+    <main id="main"></main>
+    <footer id="footer"></footer>
+    
+</body>
+<!-- Add jquery script -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+<script type="module" src="/js/caedit.js"></script>
+</html>

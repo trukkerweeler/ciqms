@@ -1,7 +1,8 @@
-import { loadHeaderFooter } from './utils.mjs';
+import { getUserValue, loadHeaderFooter } from './utils.mjs';
 loadHeaderFooter();
 
 const url = 'http://localhost:3003/project';
+let user = await getUserValue();
 
 let mytoday = new Date();
 let myCreateDate = mytoday.toISOString().slice(0, 10);
@@ -14,7 +15,7 @@ form.addEventListener('submit', async (event) => {
     
     const dataJson = {
         CREATE_DATE: myCreateDate,
-        CREATE_BY: 'TKENT',
+        CREATE_BY: user,
         CLOSED: 'N',
     };
     for (let field of data.keys()) {

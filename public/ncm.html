@@ -1,0 +1,59 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Nonconformance - Detail</title>
+</head>
+<body>
+    <header id="header"></header>
+    <dialog id="detailDialog" class="editDialog">
+        <div class="dialogTitle">Edit Detail</div>
+        <form class="editdetail" id="editdetailform">
+        </form>
+        <button id="btnCloseEditDetail" class="closedialog">Close</button>
+    </dialog>
+    
+    <dialog id="trendDialog" class="editDialog">
+        <div class="dialogTitle">Edit Description</div>
+        <form class="edittrend">
+            <textarea type="textarea" id="newtextTrend" class="notestext" rows="4" cols="40"></textarea>
+            <button class="btnDialog" id="cancelTrend" type="submit" formmethod="dialog">Cancel</button>
+            <button class="btnDialog dialogSaveBtn" id="savetrend" type="submit">Save</button>
+        </form>
+        <button id="btnCloseEditTrend" class="closedialog">Close</button>
+    </dialog>
+    
+    <dialog id="dispDialog" class="editDialog">
+        <div class="dialogTitle">Edit Disposition</div>
+        <form class="editdisp">
+            <textarea type="textarea" id="newtextDisp" class="notestext" rows="4" cols="40"></textarea>
+            <button class="btnDialog" id="cancelDisp" type="submit" formmethod="dialog">Cancel</button>
+            <button class="btnDialog dialogSaveBtn" id="saveDisp" type="submit">Save</button>
+        </form>
+        <button id="btnCloseEditDisp" class="closedialog">Close</button>
+    </dialog>
+
+    <dialog id="verfDialog" class="editDialog">
+        <div class="dialogTitle">Edit Verification</div>
+        <form class="editverf">
+            <textarea type="textarea" id="newtextVerf" class="notestext" rows="4" cols="40"></textarea>
+            <button class="btnDialog" id="cancelVerf" type="submit" formmethod="dialog">Cancel</button>
+            <button class="btnDialog dialogSaveBtn" id="saveVerf" type="submit">Save</button>
+        </form>
+        <button id="btnCloseEditVerf" class="closedialog">Close</button>
+    </dialog>
+
+    <main id="main">
+        
+    </main>
+    <footer id="footer"></footer>
+</body>
+<script type="module" src="/js/ncm.js"></script>
+</html>
