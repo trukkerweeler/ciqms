@@ -1,0 +1,53 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Supplier - Add</title>
+</head>
+<body>
+    <header id="header">        
+    </header>
+    <h1>Add Supplier</h1>
+    <main id="main">
+        <form action="submit" name="entryform" id="supplierform">
+            <label for="SUPPLIER_ID">Supplier ID</label>
+            <input type="supplier_id" name="SUPPLIER_ID" id="supplier_id" placeholder="Enter supplier id">
+            <label for="NAME">Supplier Name</label>
+            <input type="text" name="NAME" id="supplier_name" placeholder="Enter supplier name">
+            <label for="CITY">City</label>
+            <input type="text" name="CITY" id="city" placeholder="Enter city">
+            <label for="STATE">State</label>
+            <input type="text" name="STATE" id="state" placeholder="Enter state/province">
+            <label for="ZIP">Code (Zip)</label>
+            <input type="text" name="ZIP" id="zip" placeholder="Enter code">
+            <label for="STATUS">Status</label>
+            <select name="STATUS" id="status">
+                <option value="A">Approved</option>
+                <option value="I">Inactive</option>
+                <option value="P" selected>Pending</option>
+            </select> 
+            <label for="SCOPE">Cmmdty/Srvce</label>
+            <input type="text" name="SCOPE" id="commodities" placeholder="Leave one space between each commodity/service code">
+            <label for="FIRST_NAME">First name</label>
+            <input type="text" name="FIRST_NAME" id="first_name" placeholder="Enter contact first name">
+            <label for="LAST_NAME">Last name</label>
+            <input type="text" name="LAST_NAME" id="last_name" placeholder="Enter contact last name">
+            <label for="WORK_EMAIL_ADDRESS">Email</label>
+            <input type="email" name="WORK_EMAIL_ADDRESS" id="email" placeholder="Enter email">             
+            
+            <input type="submit" value="Submit" id="button">
+        </form>
+    </main>
+    <footer id="footer">
+    </footer>
+    
+</body>
+<script type="module" src="/js/supplier.js"></script>
+</html>

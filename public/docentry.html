@@ -1,0 +1,48 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Documentation - Add</title>
+</head>
+<body>
+    <header id="header">        
+    </header>
+    <h1>Add Document</h1>
+    <main id="main">
+        <!-- <button onclick="document.querySelector('.inputFile').click();">Choose Control File</button>
+        <input class="inputFile" type="file" style="display: none;"> -->
+        <form action="submit" name="entryform" id="entryform">
+            <label for="document_id">Document ID</label>            
+            <input type="document_id" name="document_id" id="document_id" placeholder="Enter document id" style="text-transform: uppercase">
+            <label for="document_name">Document Name</label>
+            <input type="text" name="document_name" id="document_name" placeholder="Enter document name">
+            <label for="issue_date">Issue Date</label>
+            <input type="date" name="issue_date" id="issue_date" placeholder="Enter issue date">
+            <label for="doc_rev">Revision</label>
+            <input type="text" name="doc_rev" id="doc_rev" placeholder="Enter revision">
+            <label for="status">Status</label>
+            <select name="status" id="status">
+                <option value="C" selected>Current</option>
+                <option value="O">Obsolete</option>
+                <option value="P">Pending</option>
+            </select> 
+            <label for="subject">Subject</label>
+            <input type="text" name="subject" id="subject" placeholder="Enter subject">
+            <label for="reference">Reference</label>
+            <input type="text" name="reference" id="reference" placeholder="Enter reference including preceding zero">
+            
+            <input type="submit" value="Submit" id="button">
+        </form>
+    </main>
+    <footer id="footer"></footer>
+    
+</body>
+<script type="module" src="/js/sysdoc.js"></script>
+</html>

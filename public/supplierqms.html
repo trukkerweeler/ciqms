@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Supplier - Add QMS</title>
+</head>
+<body>
+    <header id="header">        
+    </header>
+    <h1>Add Supplier QMS</h1>
+    <main id="main">
+        <form action="submit" name="entryform" id="qmsform" class="dataentry">
+            <label for="SUPPLIER_ID">Supplier ID</label>
+            <input type="supplier_id" name="SUPPLIER_ID" id="supplier_id" placeholder="Enter supplier id">
+            <!-- <label for="QMS">QMS</label>
+            <input type="text" name="QMS" id="qms" placeholder="Enter quality management system"> -->
+            <label for="QMS">QMS</label>
+            <select name="QMS" id="qms">
+                <option value="AS9100" selected>AS 9100</option>
+                <option value="AS9120">AS 9120 </option>
+                <option value="ISO9001">ISO 9001</option>
+                <option value="A2LA">A2LA</option>
+                <option value="ASA100">ASA 100</option>
+                <option value="AC7004">AC 7004 (NADCAP QMS)</option>
+                <option value="HEAT">HEAT (NADCAP)</option>
+                <option value="WELD">WELD (NADCAP)</option>
+                <option value="BASIC">Basic QMS</option>
+                <option value="ISO17025">ISO 17025</option>
+            </select>
+            <label for="CERTIFICATE">Certificate No</label>
+            <input type="text" name="CERTIFICATE" id="certificate" placeholder="Enter certificate number">             
+            <label for="EXPIRY_DATE">Expiry</label>
+            <input type="date" name="EXPIRY_DATE" id="city" placeholder="Enter expiry date">
+            
+            <input type="submit" value="Submit" id="button">
+        </form>
+    </main>
+    <footer id="footer">
+    </footer>
+    
+</body>
+<script type="module" src="/js/supplierqms.js"></script>
+</html>

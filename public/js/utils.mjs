@@ -19,6 +19,28 @@ export function renderWithTemplate(template, parentElement, data, callback, posi
     }
   }
 
+  export function renderWithTemplate2(template, parentElement, data, callback, position = "afterbegin"){
+    if (parentElement) {
+      let output = template;
+      for (const key in data) {
+        const regex = new RegExp(`{{${key}}}`, "g");
+        output = output.replace(regex, data[key]);
+      }
+      parentElement.insertAdjacentHTML(position, output);
+  }
+  else {
+    console.error("Parent element is null or undefined.");
+  }
+}
+
+export async function loadReports(data){
+    const main = document.querySelector('main');
+    const reportsTemplate = await loadTemplate("/partials/report.html");
+    for (const report of data) {
+      renderWithTemplate2(reportsTemplate, main, report);
+    }
+  }
+
   export async function loadHeaderFooter(){
     const headerTemplate = await loadTemplate("/partials/header.html");
     const headerElement = document.querySelector("#header");
@@ -205,4 +227,11 @@ export function createButton(section, buttonName, buttonId, buttonClass) {
   export function myport() {
     return 3003;
   }
+
+  // return the parameter date in a yyyy-mm-dd format
+export function displayDate(date) {
+  if (!date) {
+    return "";
+  }
+}
   

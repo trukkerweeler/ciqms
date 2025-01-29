@@ -52,6 +52,21 @@ app.use("/ncm", ncmRoutes);
 const correctiveRoutes = require("./routes/corrective");
 app.use("/corrective", correctiveRoutes);
 
+const sysdocRoutes = require("./routes/sysdocs");
+app.use("/sysdocs", sysdocRoutes);
+
+const dcrRoutes = require("./routes/requests");
+app.use("/requests", dcrRoutes);
+
+const supplierRoutes = require("./routes/suppliers");
+app.use("/suppliers", supplierRoutes);
+
+const supplierlistRoutes = require("./routes/supplierlist");
+app.use("/supplierlist", supplierlistRoutes);
+
+const customerRoutes = require("./routes/customer");
+app.use("/customer", customerRoutes);
+
 app.listen(port, async() => {
   // console.log(`Example app listening at http://localhost:${port}`);
 });

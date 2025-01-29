@@ -35,8 +35,8 @@ ctaButton.addEventListener('click', () => {
   window.location.href = 'attendance.html';
 });
 
-// append the button cal with an anchor to calpo.html
-const calButton = document.querySelector('#cal');
-calButton.addEventListener('click', () => {
-  window.location.href = 'calpo.html';
-});
+// // append the button cal with an anchor to calpo.html
+// const calButton = document.querySelector('#cal');
+// calButton.addEventListener('click', () => {
+//   window.location.href = 'calpo.html';
+// });

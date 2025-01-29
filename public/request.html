@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Documentation - Request</title>
+</head>
+<body>
+    <header id="header"></header>
+    <h1>Enter Document Change Request</h1>
+    <main id="main">
+        <form action="submit" name="entryform" id="entryform">
+            <label for="DOCUMENT_ID">Document ID</label>
+            <input type="text" name="DOCUMENT_ID" id="document_id" placeholder="Enter document id" style="text-transform: uppercase;">
+            <label for="doc_rev">Revision</label>
+            <input type="text" name="doc_rev" id="doc_rev" placeholder="Enter revision">
+            <label for="status">Status</label>
+            <input type="text" name="status" id="status" placeholder="Enter status">
+            <label for="CHANGE_TYPE">Type</label>
+            <select name="CHANGE_TYPE" id="chtype">
+                <option value="C">Cancel</option>
+                <option value="E">Enhancement/Clarification</option>
+                <option value="F">Format</option>
+                <option value="P" selected>Process</option>
+                <option value="I" selected>Initial</option>
+            </select> 
+            <label for="CHANGE_REASON">Reason</label>
+            <input type="text" name="CHANGE_REASON" id="reason" placeholder="Enter reason">
+            <label for="PRIORITY">Priority</label>
+            <input type="text" name="PRIORITY" id="priority" placeholder="Enter priority">
+            <label for="REQUEST_TEXT">Change</label>
+            <input type="textarea" name="REQUEST_TEXT" id="change" placeholder="Enter change">     
+            <label for="CREATE_BY">Requestor</label>                         
+            <input type="text" name="CREATE_BY" id="createby" placeholder="Enter requestor ID" style="text-transform: uppercase;">     
+            <label for="ASSIGNED_TO">Assignee</label>
+            <input type="text" name="ASSIGNED_TO" id="assto" placeholder="Enter assignee" style="text-transform: uppercase;">     
+            
+            <input type="submit" value="Submit" id="button">
+        </form>
+    </main>
+    <footer id="footer"></footer>
+    
+</body>
+<script type="module" src="/js/request.js"></script>
+</html>
