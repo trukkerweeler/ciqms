@@ -263,7 +263,7 @@ fetch(url, { method: "GET" })
 
     // Listen for the saveDetail button click
     const saveDetail = document.querySelector("#btnSaveEditReq");
-    const detailsUrl = "http://localhost:3000/sysdocs/" + drid;
+    const detailsUrl = `http://localhost:${port}/sysdocs/${drid}`;
     saveDetail.addEventListener("click", async (event) => {
       // prevent the default action
       event.preventDefault();

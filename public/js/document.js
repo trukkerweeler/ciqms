@@ -91,10 +91,6 @@ while (main.firstChild) {
             } else {
                 btnClose.disabled = true;
             }
-
-            
-            // detailSection.appendChild(detailTable);
-
             
             main.appendChild(elemRpt);
             main.appendChild(elemId);
@@ -113,6 +109,7 @@ while (main.firstChild) {
     }
     );
 
+    
     // =============================================
     // Listen for click on close dialog button class
     const closedialog = document.querySelectorAll('.closedialog');
@@ -125,7 +122,6 @@ while (main.firstChild) {
             dialog.close();
         });        
     });
-
 
 
     // =============================================
@@ -187,7 +183,7 @@ while (main.firstChild) {
 
         // Listen for the saveDetail button click
         const saveDetail = document.querySelector('#saveDetail');
-        const detailsUrl = 'http://localhost:3000/sysdocs/' + iid
+        const detailsUrl = `http://localhost:${port}/sysdocs/${iid}`;
         saveDetail.addEventListener('click', async (event) => {
             // prevent the default action
             event.preventDefault();
@@ -245,9 +241,6 @@ while (main.firstChild) {
             const detailDialog = document.querySelector('#detailDialog');
             detailDialog.close();
         });
-
-
-        
 
     });
 

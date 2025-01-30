@@ -13,6 +13,7 @@
     "bcrypt": "^5.1.1",
     "express": "^4.18.2",
     "mysql": "^2.18.1",
+    "mysql2": "^3.12.0",
     "node-gyp": "^10.0.1"
   },
   "devDependencies": {

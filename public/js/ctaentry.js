@@ -3,10 +3,10 @@ loadHeaderFooter();
 const port = myport() || 3003;
 const url = `http://localhost:${port}/corrective`;
 
-// set the date to today
-let corrdate = document.getElementById('corrdate');
-let today = new Date();
-corrdate.value = today.toISOString().slice(0, 10);
+// // set the date to today
+// let corrdate = document.getElementById('corrdate');
+// let today = new Date();
+// corrdate.value = today.toISOString().slice(0, 10);
 
 // Send a POST request
 const form = document.querySelector('form');

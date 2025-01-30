@@ -1,4 +1,4 @@
-import { loadHeaderFoote., myportr } from './utils.mjs';
+import { loadHeaderFooter, myport } from './utils.mjs';
 loadHeaderFooter();
 const port = myport();
 const skippers = ['ENTITY_ID', 'MODIFIED_DATE', 'MODIFIED_BY', 'COST_SAVINGS']
