@@ -34,7 +34,7 @@ form.addEventListener('submit', async (event) => {
     for (let field of data.keys()) {
         dataJson[field] = data.get(field);
     } 
-    console.log(dataJson);
+    // console.log(dataJson);
 
     try {
         await fetch(url, {
