@@ -256,6 +256,8 @@ fetch(url, { method: "GET" })
           INPUT_USER: user,
           RESPONSE_TEXT: responseText,
           RESPONSE_DATE: document.querySelector("#newResponseDate").value,
+          MODIFIED_BY: user,
+          MODIFIED_DATE: getDateTime(),
         };
         // console.log(data);
 

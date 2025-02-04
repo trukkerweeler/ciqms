@@ -229,6 +229,7 @@ router.get('/:id', (req, res) => {
     }
 });
 
+// RESPONSES<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<<        
 router.put('/:id', (req, res) => {
     // console.log("Params: " + req.params.id);
     // console.log(req.body);
@@ -295,7 +296,8 @@ router.put('/:id', (req, res) => {
         });
 
         if (myfield === 'RESPONSE_TEXT') {
-            const updateQuery = `UPDATE PEOPLE_INPUT SET RESPONSE_DATE = '${mydata.RESPONSE_DATE}' WHERE INPUT_ID = '${req.params.id}'`;
+            const updateQuery = `UPDATE PEOPLE_INPUT SET RESPONSE_DATE = '${mydata.RESPONSE_DATE}', MODIFIED_BY = '${mydata.MODIFIED_BY}', MODIFIED_DATE = '${mydata.MODIFIED_DATE}' WHERE INPUT_ID = '${req.params.id}'`;
+            // console.log(updateQuery);
             connection.query(updateQuery, (err, rows, fields) => {
                 if (err) {
                     console.log('Failed to query for response date update: ' + err);
@@ -308,7 +310,7 @@ router.put('/:id', (req, res) => {
         connection.end();
         });
     } catch (err) {
-        console.log('Error connecting to Db 328');
+        console.log('Error connecting to Db 312');
         return;
     }
 
