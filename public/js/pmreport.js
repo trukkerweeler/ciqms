@@ -24,25 +24,19 @@ const monthNames = [
   "Dec",
 ];
 
-const PMFormNames = {
-  PM02: "Air Compressor",
-  PM03: "Amada Shear",
-  PM04: "Pneumatic (Assy)",
-  PM05: "AutoSert",
-  PM06: "100-3s Brake",
-  PM07: "RG-50 Press Brake",
-  PM09: "Air Filtration",
-  PM10: "Despatch Oven",
-  PM11: "Grieve Oven",
-  PM12: "HyPress",
-  PM13: "I-Mark",
-  PM17: "Powder Coat",
-  PM18: "Sanding",
-  PM23: "Timesaver",
-  PM24: "Tumbler",
-  PM25: "Wisconsin Oven",
-  PM26: "ACER Mill",
-};
+
+// create a dictionary of PM Form Names from the pmforms.json in json folder
+let PMFormNames = {};
+
+fetch('./json/pmforms.json')
+  .then(response => response.json())
+  .then(data => {
+    data.forEach(form => {
+      PMFormNames[form.name] = form.description;
+    });
+  })
+  .catch(error => console.error('Error loading PM Form Names:', error));
+  
 
 function exesAndOhs(newResponse) {
   if (newResponse === null) {

@@ -61,6 +61,7 @@ while (main.firstChild) {
             btnClose.setAttribute('id', 'btnCloseNCM');
             btnClose.setAttribute('type', 'submit');
 
+            // disable the close button
             if (user === 'TKENT') {
                 btnClose.disabled = false;
             } else {

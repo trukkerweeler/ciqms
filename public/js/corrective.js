@@ -123,6 +123,12 @@ fetch(url, { method: 'GET' })
         btnClose.setAttribute('id', 'btnClose');
         btnClose.setAttribute('class', 'btnEditNotes');
         btnClose.textContent = 'Close';
+        // disble the close button if user is not TKENT
+        if (user !== 'TKENT') {
+            btnClose.disabled = true;
+        }
+        
+
         btnClose.addEventListener('click', async (e) => {
             e.preventDefault();
             const closeUrl = `http://localhost:${port}/corrective/${caid}/close`;

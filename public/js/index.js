@@ -4,12 +4,17 @@ loadHeaderFooter();
 // hide the main-nav element
 // document.querySelector('#main-nav').style.display = 'none';
 
-// append the button ncm with an anchor to ncms.html
-const ncmButton = document.querySelector('#ncm');
-ncmButton.addEventListener('click', () => {
+// append the button ai with an anchor to inputs.html
+const inputButton = document.querySelector('#ai');
+inputButton.addEventListener('click', () => {
   window.location.href = 'inputs.html';
 });
 
+// append the button ncm with an anchor to ncms.html
+const ncmButton = document.querySelector('#ncm');
+ncmButton.addEventListener('click', () => {
+  window.location.href = 'ncms.html';
+});
 
 // append the button ca with an anchor to corrective.html
 const caButton = document.querySelector('#ca');
