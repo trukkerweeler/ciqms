@@ -70,6 +70,9 @@ app.use("/customer", customerRoutes);
 const attendanceRoutes = require("./routes/attendance");
 app.use("/attendance", attendanceRoutes);
 
+const trendRoutes = require("./routes/trend");
+app.use("/trend", trendRoutes);
+
 app.listen(port, async() => {
   // console.log(`Example app listening at http://localhost:${port}`);
 });
