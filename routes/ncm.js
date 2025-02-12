@@ -3,7 +3,7 @@ require('dotenv').config();
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
-let test = true;
+let test = false;
 
 // ==================================================
 // Get all records

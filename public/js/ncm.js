@@ -54,21 +54,9 @@ while (main.firstChild) {
             btnEditDetail.setAttribute('id', 'btnEditDetail');
             btnEditDetail.setAttribute('type', 'submit');
 
-            const btnClose = document.createElement('button');
-            btnClose.setAttribute('class', 'btn');
-            // btnClose.setAttribute('class', 'btnEditNotes');
-            btnClose.textContent = 'Close';
-            btnClose.setAttribute('id', 'btnCloseNCM');
-            btnClose.setAttribute('type', 'submit');
+            
 
-            // disable the close button
-            if (user === 'TKENT') {
-                btnClose.disabled = false;
-            } else {
-                btnClose.disabled = true;
-            }
-
-            divDetailBtns.appendChild(btnClose);
+            // divDetailBtns.appendChild(btnClose);
             divDetailBtns.appendChild(btnEditDetail);
 
             
@@ -84,8 +72,6 @@ while (main.firstChild) {
                 }
             } else {
                 aiClosedDate.textContent = 'Closed Date:' + ' ' + record[key]['CLOSED_DATE'].substring(0, 10);
-                // enable the closebutton
-                btnClose.disabled = true;
 
                 if (test) {
                     console.log('closed date is NOT null');
@@ -191,9 +177,34 @@ while (main.firstChild) {
 
             elemRpt.textContent = 'Nonconformance Detail';
             elemRpt.setAttribute('class', 'header');
+            // make a div for the subtitle and add the subtitle to the div and a button
+            const divSubTitle = document.createElement('div');
+            divSubTitle.setAttribute('class', 'subtitlewithbutton');
+            
+            // Add title to the div
             elemId.textContent = 'NCM Id: ' + record[key]['NCM_ID'];
             elemId.setAttribute('class', 'header2');
             elemId.setAttribute('id', 'nid');
+            divSubTitle.appendChild(elemId);
+
+            // Add close button to the div
+            const btnClose = document.createElement('button');
+            btnClose.setAttribute('class', 'btn');
+            // btnClose.setAttribute('class', 'btnEditNotes');
+            btnClose.textContent = 'Close NCM';
+            btnClose.setAttribute('id', 'btnCloseNCM');
+            btnClose.setAttribute('type', 'submit');
+
+            // disable the close button
+            if (user === 'TKENT') {
+                btnClose.disabled = false;
+            } else {
+                btnClose.disabled = true;
+            }
+
+            divSubTitle.appendChild(btnClose);
+
+            
 
             const empty = document.createElement('p');
             
@@ -261,7 +272,7 @@ while (main.firstChild) {
             // console.log(closedValue);
 
             main.appendChild(elemRpt);
-            main.appendChild(elemId);
+            main.appendChild(divSubTitle);
             main.appendChild(detailSection);
             main.appendChild(notesSection);
         }
@@ -578,6 +589,11 @@ while (main.firstChild) {
         closeNCM.addEventListener('click', async (event) => {
             // prevent the default action
             event.preventDefault();
+            // if the user is not TKENT, do not allow the close
+            if (user !== 'TKENT') {
+                alert('Only TKENT can close the NCM');
+                return;
+            }
             const closeUrl = `http://localhost:${port}/ncm/close/${iid}`;
 
             let data = {

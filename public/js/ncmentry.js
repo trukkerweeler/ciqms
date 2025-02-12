@@ -21,6 +21,12 @@ myDueDateDefault = myDueDateDefault.toISOString().slice(0, 10);
 const defaultDueDate = document.getElementById("DUE_DATE");
 defaultDueDate.value = myDueDateDefault;
 
+const reqby = document.getElementById("reqby");
+reqby.value = user;
+
+const assto = document.getElementById("assto");
+assto.value = "TKENT";
+
 // Send a POST request
 const form = document.querySelector("#ncmform");
 form.addEventListener("submit", async (event) => {

@@ -297,7 +297,6 @@ li:hover ul .submenu {
 .dataentry {
     display: grid;
     grid-template-columns: 20% 80%;
-    margin: 2rem auto;
     padding: 1rem;
     background: var(--background-color);
     border-radius: var(--border-radius);
@@ -306,8 +305,8 @@ li:hover ul .submenu {
 }
 .dataentry label, .dataentry input, .dataentry textarea, .dataentry select {
     /* display: block; */
-    width: 99%;
-    padding: 0.5rem;
+    width: 98%;
+    /* padding: 0.5rem; */
     margin-bottom: 1rem;
     border: 1px solid var(--border-color);
     border-radius: var(--border-radius);
@@ -529,6 +528,13 @@ input {
     padding-left: 4px;
 }
 
+/* .editDialog {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 25px;
+} */
+
 .btnEditNotes {
     grid-column-start: 3;
     align-self: end;
@@ -711,6 +717,18 @@ footer div p {
     border-top: 1px solid var(--border-color); */
 }
 
+
+.subtitlewithbutton {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 25px;
+    padding-left: 1rem;
+}
+#btnCloseNCM {
+    max-width: 125px;
+    justify-self: end;
+}
 
 @media print {
     form{

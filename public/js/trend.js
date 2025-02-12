@@ -19,6 +19,8 @@ fetch(url, { method: 'GET' })
     form.setAttribute('action', url);
     form.setAttribute('enctype', 'multipart/form-data');
     form.setAttribute('class', 'stacked-form');
+    // Add class to the form with the id of entryform
+    // form.setAttribute('class', 'entryform');
     form.setAttribute('id', 'trend-form');
     // Add h2 element to the form with the id of the trend data
     const h2 = document.createElement('h2');
