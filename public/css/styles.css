@@ -431,6 +431,7 @@ h3 {
 .header2 {
     margin-top: 0px;
     margin-bottom: 0px;
+    grid-column: span 4;
 }
 
 .header3 {
@@ -720,12 +721,13 @@ footer div p {
 
 .subtitlewithbutton {
     display: grid;
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     gap: 5px;
     margin-bottom: 25px;
     padding-left: 1rem;
 }
-#btnCloseNCM {
+#btnCloseNCM, #btnCloseCA {
+    grid-column-start: 5;
     max-width: 125px;
     justify-self: end;
 }

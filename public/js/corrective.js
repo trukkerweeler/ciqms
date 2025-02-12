@@ -9,7 +9,7 @@ let caid = urlParams.get('id');
 let url = `http://localhost:${port}/corrective/${caid}`;
 
 const main = document.querySelector('main');
-const closebutton = document.getElementById('closecorrective');
+const closebutton = document.getElementById('btnClose');
 const editbutton = document.getElementById('editaction');
 const button = document.getElementById('detailsearch');
 
@@ -25,12 +25,25 @@ fetch(url, { method: 'GET' })
     let caid = record[0]['CORRECTIVE_ID'];
     for (const key in record) {
         // Header =======================================
-        const elemRpt = document.createElement('h1');
-        const elemId = document.createElement('h2');
-        elemRpt.textContent = 'Corrective Action Report';
-        elemRpt.setAttribute('class', 'header');
-        elemId.textContent = 'Corrective Id: ' + record[key]['CORRECTIVE_ID'] + ' - ' + record[key]['TITLE'];
-        elemId.setAttribute('class', 'header2');
+        const mainTitle = document.createElement('h1');
+        const divSubTitle = document.createElement('div');
+        divSubTitle.setAttribute('class', 'subtitlewithbutton');
+        const subTitle = document.createElement('h2');
+        mainTitle.textContent = 'Corrective Action Report';
+        mainTitle.setAttribute('class', 'header');
+
+        subTitle.textContent = 'Corrective Id: ' + record[key]['CORRECTIVE_ID'] + ' - ' + record[key]['TITLE'];
+        subTitle.setAttribute('class', 'header2');
+
+        // Create close button
+        const closebutton = document.createElement('button');
+        closebutton.setAttribute('class', 'closebutton');
+        closebutton.setAttribute('id', 'btnCloseCA');
+        closebutton.textContent = 'Close CA';
+
+        divSubTitle.appendChild(subTitle);
+        divSubTitle.appendChild(closebutton);
+
 
         // Detail section=======================================
         const detailSection = document.createElement('section');
@@ -119,18 +132,19 @@ fetch(url, { method: 'GET' })
         });
 
         // close button
-        const btnClose = document.createElement('button');
-        btnClose.setAttribute('id', 'btnClose');
-        btnClose.setAttribute('class', 'btnEditNotes');
-        btnClose.textContent = 'Close';
-        // disble the close button if user is not TKENT
-        if (user !== 'TKENT') {
-            btnClose.disabled = true;
-        }
-        
+        // const btnClose = document.createElement('button');
+        // btnClose.setAttribute('id', 'btnClose');
+        // btnClose.setAttribute('class', 'btnEditNotes');
+        // btnClose.textContent = 'Close';
+               
 
-        btnClose.addEventListener('click', async (e) => {
+        closebutton.addEventListener('click', async (e) => {
             e.preventDefault();
+            // If not TKENT, do not allow to close
+            if (user !== 'TKENT') {
+                alert('Only TKENT can close the CA');
+                return;
+            }
             const closeUrl = `http://localhost:${port}/corrective/${caid}/close`;
             await fetch(closeUrl, {
                 method: 'PUT',
@@ -150,7 +164,7 @@ fetch(url, { method: 'GET' })
         const detailButtons = document.createElement('div');
         detailButtons.setAttribute('class', 'detailButtons');
         detailButtons.setAttribute('id', 'detailButtons');
-        detailButtons.appendChild(btnClose);
+        // detailButtons.appendChild(btnClose);
         detailButtons.appendChild(btnDetails);
 
         const empty = document.createElement('p');
@@ -426,8 +440,8 @@ fetch(url, { method: 'GET' })
 
 
         // Append the elements to the main element================
-        main.appendChild(elemRpt);
-        main.appendChild(elemId);
+        main.appendChild(mainTitle);
+        main.appendChild(divSubTitle);
         main.appendChild(detailSection);
         main.appendChild(trendSection);
         main.appendChild(correctionSection);

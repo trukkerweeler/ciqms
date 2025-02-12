@@ -52,9 +52,7 @@ while (main.firstChild) {
             btnEditDetail.setAttribute('class', 'btnEditNotes');
             btnEditDetail.textContent = 'Edit Detail';
             btnEditDetail.setAttribute('id', 'btnEditDetail');
-            btnEditDetail.setAttribute('type', 'submit');
-
-            
+            btnEditDetail.setAttribute('type', 'submit');            
 
             // divDetailBtns.appendChild(btnClose);
             divDetailBtns.appendChild(btnEditDetail);
@@ -76,7 +74,7 @@ while (main.firstChild) {
                 if (test) {
                     console.log('closed date is NOT null');
                     // print button status
-                    console.log(btnClose.disabled);
+                    // console.log(btnClose.disabled);
                 }
             }
 
@@ -177,6 +175,7 @@ while (main.firstChild) {
 
             elemRpt.textContent = 'Nonconformance Detail';
             elemRpt.setAttribute('class', 'header');
+
             // make a div for the subtitle and add the subtitle to the div and a button
             const divSubTitle = document.createElement('div');
             divSubTitle.setAttribute('class', 'subtitlewithbutton');
@@ -450,14 +449,14 @@ while (main.firstChild) {
     const editDetail = document.querySelector('#btnEditDetail');
     editDetail.addEventListener('click', async (event) => {
         const detailDialog = document.querySelector('#detailDialog');
-        const detailDialogForm = document.querySelector('#detailDialogForm');
+        const editdetailform = document.querySelector('#editdetailform');
         const label = document.createElement('label');
         // prevent the default action
         event.preventDefault();
 
-        // Clear the dialog
-        while (detailDialog.firstChild) {
-            detailDialog.removeChild(detailDialog.firstChild);
+        // Clear the form
+        while (editdetailform.firstChild) {
+            editdetailform.removeChild(editdetailform.firstChild);
         }
 
         for (const key in record) {
@@ -466,7 +465,8 @@ while (main.firstChild) {
                 // console.log(field);
                 const fieldDesc = document.createElement('label');
                 fieldDesc.textContent = field;
-                detailDialog.appendChild(fieldDesc);
+                editdetailform.appendChild(fieldDesc);
+
                 const formfield = document.createElement('input');
                 // if the field is a date field, set the type to date
                 if (['NCM_DATE', 'DUE_DATE'].includes(field)) {
@@ -488,24 +488,24 @@ while (main.firstChild) {
                         formfield.setAttribute('value', record[key][field]);
                     }
                 }
-                detailDialog.appendChild(formfield);
+                editdetailform.appendChild(formfield);
 
             }           
         };
 
-            const saveDetail = document.createElement('button');
-            saveDetail.textContent = 'Save';
-            saveDetail.setAttribute('class', 'btn');
-            saveDetail.setAttribute('class', 'dialogSaveBtn');
-            saveDetail.setAttribute('id', 'saveDetail');
-            detailDialog.appendChild(saveDetail);
+        const btnCancelDetail = document.createElement('button');
+        btnCancelDetail.textContent = 'Cancel';
+        btnCancelDetail.setAttribute('class', 'btn');
+        btnCancelDetail.setAttribute('class', 'closedialog');
+        btnCancelDetail.setAttribute('id', 'btnCancelDetail');
+        editdetailform.appendChild(btnCancelDetail);
 
-            const btnCancelDetail = document.createElement('button');
-            btnCancelDetail.textContent = 'Cancel';
-            btnCancelDetail.setAttribute('class', 'btn');
-            btnCancelDetail.setAttribute('class', 'closedialog');
-            btnCancelDetail.setAttribute('id', 'btnCancelDetail');
-            detailDialog.appendChild(btnCancelDetail);
+        const saveDetail = document.createElement('button');
+        saveDetail.textContent = 'Save';
+        saveDetail.setAttribute('class', 'btn');
+        saveDetail.setAttribute('class', 'dialogSaveBtn');
+        saveDetail.setAttribute('id', 'saveDetail');
+        editdetailform.appendChild(saveDetail);
 
         }                  
 
@@ -529,7 +529,7 @@ while (main.firstChild) {
 
             for (const key in record) {
                 for (const field in record[key]) {
-                    if (['PEOPLE_ID', 'NCM_DATE', 'ASSIGNED_TO', 'DUE_DATE', 'NCM_TYPE', 'SUBJECT','PRODUCT_ID', 'LOT_NUMBER', 'LOT_SIZE', 'USER_DEFINED_1'].includes (field)) {
+                    if (['PEOPLE_ID', 'NCM_DATE', 'ASSIGNED_TO', 'DUE_DATE', 'NCM_TYPE', 'SUBJECT','PRODUCT_ID', 'LOT_NUMBER', 'LOT_SIZE', 'USER_DEFINED_1', 'CUSTOMER_ID', 'SUPPLIER_ID'].includes (field)) {
                         const fieldname = field;
 
                         try {
