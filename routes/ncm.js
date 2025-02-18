@@ -271,7 +271,7 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
     // console.log("Params: " + req.params.id);
     // console.log(req.body);
-    test = true;
+    // test = true;
     let mytable = '';
     let appended = '';
     const myfield = Object.keys (req.body) [2]

@@ -79,4 +79,6 @@ form.addEventListener('submit', async (event) => {
         }
     
     form.reset();
+    document.getElementById('INPUT_DATE').value = myRequestDate;
+    document.getElementById('DUE_DATE').value = myDueDateDefault;
 });

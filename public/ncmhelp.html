@@ -1,0 +1,66 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="/css/styles.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>NCM Code Help</title>
+</head>
+<body>
+    <header id="header"></header>
+
+    <section id="trendHelp">
+        <h2 class="dialogTitle">Description</h2>
+        <p>Enter NCM Description in a should be is format. For NCMs not related to product discrepancies (Eg: Calibration), enter enough detail so one can ascertain the intention.</p>
+        <p>Make sure to enter the correct NCM Type: Calibration for Calibration, Return for Returns et al.</p>        
+    </section>
+    <section id="subjectCodeHelp">
+        <h2 class="dialogTitle">Subject Codes</h2>
+        <ul>
+            <li>HFS - Held For Statement <p class="codeinstrns">Use this for paperwork issues.</p></li>
+            <li>DAM - Damaged</li>
+            <li>FRM - Form</li>
+            <li>FIT - Fit</li>
+            <li>FUN - Function</li>
+            <li>WKM - Workmanship <p class="codeinstrns">Use this for workmanship issues that do not fit into form/fit/function subjects (Eg: Burrs).</p></li>
+        </ul>
+    </section>
+    <section id="causeCodeHelp">
+        <h2 class="dialogTitle">Cause Codes</h2>
+        <p>If you don't know, just enter TBD</p>
+        <ul>
+            <li>"HE" - Human Error.</li>
+            <li>"ME" - Machine Error.</li>
+            <li>"MA" - Material Error.</li>
+            <li>"DE" - Design Error.</li>
+            <li>"VE" - Vendor Error.</li>
+            <li>"OT" - Other.</li>
+            <li>"PC" - Process Control (Did not follow process)</li>
+            <li>"UD" - Undetermined</li>
+        </ul>
+    </section>
+    <section id="dispHelp">
+        <h2 class="dialogTitle">Disposition</h2>
+        <p>Enter the Disposition of the NCM. This is the action that will be taken to resolve the NCM. Eg: Rework, Scrap, Return to Vendor, etc.</p>
+    </section>
+    <section id="verfHelp">
+        <h2 class="dialogTitle">Verification</h2>
+        <p>Enter the Verification of the NCM. This is the action that has been taken to verify the NCM has been resolved. </p>
+        <p>Enter a tracking number as applicable for returns</p>
+        <p>Enter a WO number for new rework orders.</p>
+    </section>
+    
+    
+    
+    
+    <main id="main">
+    </main>
+    <footer id="footer"></footer>
+</body>
+<script type="module" src="/js/ncm.js"></script>
+</html>

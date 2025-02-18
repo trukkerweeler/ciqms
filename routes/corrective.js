@@ -140,6 +140,7 @@ router.post('/', (req, res) => {
             , REQUEST_BY
             , ASSIGNED_TO
             , CORRECTIVE_DATE
+            , DUE_DATE
             , REFERENCE
             , CLOSED
             , TITLE
@@ -151,6 +152,7 @@ router.post('/', (req, res) => {
                 , '${req.body.REQUEST_BY}'
                 , '${req.body.ASSIGNED_TO}'
                 , '${req.body.CORRECTIVE_DATE}'
+                , '${req.body.DUE_DATE}'
                 , '${req.body.REFERENCE}'
                 , '${req.body.CLOSED}'
                 , '${req.body.TITLE}'

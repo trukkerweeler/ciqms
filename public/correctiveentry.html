@@ -16,7 +16,7 @@
     <h1>Add Corrective Record</h1>
     <main id="main">
         <form action="submit" name="form" id="entryform" class="dataentry">
-            <label for="CORRECTIVE_DATE">Date</label>
+            <label for="corrdate">Date</label>
             <input type="date" name="CORRECTIVE_DATE" id="corrdate" placeholder="Enter date">
             <!-- <label for="COURSE_ID">Course ID</label>
             <input type="text" name="COURSE_ID" id="courseid" placeholder="Enter course id"> -->
@@ -28,22 +28,22 @@
                 <option value="Customer">Customer</option>
                 <option value="3PA">Audit</option>
             </select>     
-            <label for="REQUEST_BY">Requestor</label>
+            <label for="reqby">Requestor</label>
             <input type="text" name="REQUEST_BY" id="reqby" placeholder="Enter requestor ID">
             <!-- <select name="REQUEST_BY" id="corType">
                 <option value="I" selected>Internal</option>
                 <option value="S">Supplier</option>
                 <option value="C">Customer</option>
             </select>         -->
-             <label for="ASSIGNED_TO">Assigned to</label>
+             <label for="assto">Assigned to</label>
             <input type="text" name="ASSIGNED_TO" id="assto" placeholder="Enter assigned ID">
-            <label for="REFERENCE">Reference</label>
+            <label for="reference">Reference</label>
             <input type="text" name="REFERENCE" id="reference" placeholder="Enter reference (QMS clause)">
-            <label for="NC_TREND">NC</label>
+            <label for="nc">NC</label>
             <input type="textarea" name="NC_TREND" id="nc" placeholder="Enter nonconformance">          
-            <label for="USER_DEFINED_1">Ext. Ref.</label>
+            <label for="ud1">Ext. Ref.</label>
             <input type="text" name="USER_DEFINED_1" id="ud1" placeholder="External Reference">  
-            <label for="TITLE">Title</label>
+            <label for="catitle">Title</label>
             <input type="text" name="TITLE" id="catitle" placeholder="Title">                               
             
             <input type="submit" value="Submit" id="button">

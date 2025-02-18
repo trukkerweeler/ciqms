@@ -201,9 +201,7 @@ while (main.firstChild) {
                 btnClose.disabled = true;
             }
 
-            divSubTitle.appendChild(btnClose);
-
-            
+            divSubTitle.appendChild(btnClose);            
 
             const empty = document.createElement('p');
             
@@ -263,12 +261,6 @@ while (main.firstChild) {
             notesSection.appendChild(verificationTitle);
             notesSection.appendChild(divVerification);
             notesSection.appendChild(btnEditVerf);
-
-            // // Manage the closed checkbox
-            // const closed = document.createElement('checkbox');
-            // // get the value of the checkbox
-            // const closedValue = record[key]['CLOSED'];
-            // console.log(closedValue);
 
             main.appendChild(elemRpt);
             main.appendChild(divSubTitle);
@@ -347,13 +339,6 @@ while (main.firstChild) {
             // get the input id
             const nid = document.querySelector('#nid');
             let nidValue = iid;
-            // if (nidValue.length === 0) {
-            //     alert('Please enter the Input ID');
-            // } else {
-            //     while (nidValue.length < 7) {
-            //         nidValue = '0' + nidValue;
-            //     }
-            // }
 
             const fieldname = event.target.id;
 

@@ -87,5 +87,8 @@ form.addEventListener("submit", async (event) => {
   }
 
   form.reset();
+  // Set default values
+  defaultNcmDate.value = recordDate;
+  defaultDueDate.value = myDueDateDefault;
 
 });

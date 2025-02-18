@@ -106,9 +106,9 @@ fetch(url, { method: 'GET' })
             document.getElementById('detailSave').addEventListener('click', async (e) => {
                 e.preventDefault();
                 // get the values from the form
-                let assignedto = document.getElementById('assignedto').value;
+                let assignedto = document.getElementById('assignedto').value.toUpperCase();
                 let reference = document.getElementById('reference').value;
-                let requestby = document.getElementById('requestby').value;
+                let requestby = document.getElementById('requestby').value.toUpperCase();
                 let project = document.getElementById('project').value;
                 // update the record
                 let url = `http://localhost:${port}/corrective/${caid}`;
@@ -127,7 +127,7 @@ fetch(url, { method: 'GET' })
                 // close the dialog
                 document.getElementById('detailsDialog').close();
                 // reload the page
-                // location.reload();
+                location.reload();
             });
         });
 

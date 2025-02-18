@@ -5,6 +5,11 @@ let user = await getUserValue();
 const port = myport();
 const url = `http://localhost:${port}/corrective`;
 
+// Set the date to today
+const today = new Date();
+const todayStr = today.toISOString().slice(0, 10);
+document.getElementById('corrdate').value = todayStr;
+
 // Send a POST request
 const form = document.querySelector('form');
 form.addEventListener('submit', async (event) => {
@@ -34,6 +39,9 @@ form.addEventListener('submit', async (event) => {
             dataJson[field] = data.get(field);
         }
     }
+    // Add the DUE_DATE field
+    const dueDate = new Date(dataJson.CORRECTIVE_DATE);
+    dueDate.setDate(dueDate.getDate() + 21);
     console.log(dataJson);
 
     try {
@@ -51,4 +59,6 @@ form.addEventListener('submit', async (event) => {
         }
     
     form.reset();
+    document.getElementById('corrdate').value = todayStr;
+    
 });

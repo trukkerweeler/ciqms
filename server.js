@@ -75,4 +75,5 @@ app.use("/trend", trendRoutes);
 
 app.listen(port, async() => {
   // console.log(`Example app listening at http://localhost:${port}`);
+  console.log(`This still gits to INPUT`);
 });
