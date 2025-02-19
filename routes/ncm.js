@@ -369,7 +369,9 @@ router.put('/details/:id', (req, res) => {
         PRODUCT_ID = '${req.body.PRODUCT_ID}',
         LOT_SIZE = '${req.body.LOT_SIZE}',
         LOT_NUMBER = '${req.body.LOT_NUMBER}',
-        USER_DEFINED_1 = '${req.body.USER_DEFINED_1}'
+        USER_DEFINED_1 = '${req.body.USER_DEFINED_1}',
+        MODIFIED_DATE = '${req.body.MODIFIED_DATE}',
+        MODIFIED_BY = '${req.body.MODIFIED_BY}'
         WHERE NCM_ID = '${req.params.id}'`;
         // console.log(query);
 

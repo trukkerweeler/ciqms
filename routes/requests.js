@@ -303,7 +303,7 @@ router.put("/close/:id", (req, res) => {
       WHERE REQUEST_ID = ?`;
       const values = [
         req.body.CLOSED, req.body.CLOSED_DATE, req.body.DECISION, 
-        req.body.DECISION_DATE, user, modifiedDate, req.params.id
+        req.body.DECISION_DATE, req.body.MODIFIED_BY, modifiedDate, req.params.id
       ];
       connection.query(query, values, (err, rows, fields) => {
         if (err) {

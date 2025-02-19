@@ -30,3 +30,20 @@ GET http://localhost:3003/ssr/nextSSRId
 
 ###
 GET http://localhost:3003/reports
+
+###
+PUT http://localhost:3003/requests/0000092
+Content-Type: application/json
+
+{
+    "CLOSED": "Y",
+    "CLOSED_DATE": "2025-02-19",
+    "DECISION": "A",
+    "DECISION_DATE": "2025-02-19",
+    "DOCUMENT_ID": "CI-QSP-8500",
+    "REQUEST_ID": "0000092",
+    "REVISION_LEVEL": "N",
+    "REVISION_DATE": "2025-02-19",
+    "MODIFIED_BY": "TKENT",
+    "MODIFIED_DATE": "2025-02-19"
+}

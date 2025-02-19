@@ -60,7 +60,7 @@ fetch(url, { method: "GET" })
       //   Add event listener for the close button
       btnClose.addEventListener("click", async (event) => {
         event.preventDefault();
-        console.log("btnCloseDCR @85 button clicked");
+        // console.log("btnCloseDCR @85 button clicked");
         // show the close dialog
         const closeDialog = document.querySelector("#closeDialog");
         closeDialog.showModal();
@@ -102,6 +102,7 @@ fetch(url, { method: "GET" })
             CLOSED_DATE: closedDate,
             REVISION_LEVEL: newRevision,
             REVISION_DATE: newRevDate,
+            MODIFIED_BY: user,
           };
           if (test) {
             console.log(data);

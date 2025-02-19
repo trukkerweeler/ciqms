@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getUserValue, myport } from './utils.mjs';
+import { loadHeaderFooter, getUserValue, myport, getDateTime } from './utils.mjs';
 loadHeaderFooter();
 const port = myport() || 3003;
 const user = await getUserValue();
@@ -509,7 +509,9 @@ while (main.firstChild) {
 
             let data = {
                 NCM_ID: nidValue,
-                INPUT_USER: getUserValue(),
+                INPUT_USER: user,
+                MODIFIED_BY: user,
+                MODIFIED_DATE: getDateTime(),
             };
 
             for (const key in record) {
