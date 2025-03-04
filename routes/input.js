@@ -56,6 +56,55 @@ router.get('/', (req, res) => {
 
 });
 
+// ==================================================
+// Get closed records
+router.get('/closed', (req, res) => {
+    try {
+        const connection = mysql.createConnection({
+            host: process.env.DB_HOST,
+            user: process.env.DB_USER,
+            password: process.env.DB_PASS,
+            port: 3306,
+            database: 'quality'
+        });
+        connection.connect(function(err) {
+            if (err) {
+                console.error('Error connecting: ' + err.stack);
+                return;
+            }
+        // console.log('Connected to DB');
+
+        const query = `select pi.INPUT_ID
+        , pi.INPUT_DATE
+        , pi.SUBJECT
+        , pi.ASSIGNED_TO
+        , pi.PROJECT_ID
+        , pit.INPUT_TEXT
+        , pi.DUE_DATE
+        , pi.CLOSED
+        , pi.CLOSED_DATE 
+        from PEOPLE_INPUT pi left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID where CLOSED = 'Y' order by pi.CLOSED_DATE desc`;
+        // where USER_DEFINED_1 = 'MR'
+        
+        connection.query(query, (err, rows, fields) => {
+            if (err) {
+                console.log('Failed to query for inputs: ' + err);
+                res.sendStatus(500);
+                return;
+            }
+            res.json(rows);
+        });
+
+        connection.end();
+        });
+    
+    } catch (err) {
+        console.log('Error connecting to Db');
+        return;
+    }
+
+});
+
 // Get the next ID for a new record
 router.get('/nextId', (req, res) => {
     // res.json('0000005');
@@ -361,7 +410,6 @@ router.put('/close/:id', (req, res) => {
 // ==================================================
 // Get previous records
 router.get('/previous/:id', (req, res) => {
-    // console.log(req.params.id);
     try {
         const connection = mysql.createConnection({
             host: process.env.DB_HOST,
@@ -375,11 +423,8 @@ router.get('/previous/:id', (req, res) => {
                 console.error('Error connecting: ' + err.stack);
                 return;
             }
-        // console.log('Connected to DB');
 
         const query = `with subjects as (select * from PEOPLE_INPUT where SUBJECT = (select SUBJECT from PEOPLE_INPUT where INPUT_ID = '${req.params.id}')) select * from PPL_INPT_RSPN pir join subjects on pir.INPUT_ID = subjects.INPUT_ID order by pir.INPUT_ID desc limit 5`;
-
-        // console.log(query);
 
         connection.query(query, (err, rows, fields) => {
             if (err) {
@@ -400,8 +445,6 @@ router.get('/previous/:id', (req, res) => {
 
 router.put('/detail/:id', (req, res) => {
     // put the detail
-    // console.log("Params: " + req.params.id);
-    // console.log(req.body);
     let mydata = req.body['data'];
     try {
         const connection = mysql.createConnection({

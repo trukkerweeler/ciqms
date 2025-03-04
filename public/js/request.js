@@ -32,6 +32,10 @@ form.addEventListener('submit', async (event) => {
         CREATE_DATE: myRequestDate,
     };
     for (let field of data.keys()) {
+        // if the field is 'CREATE_BY', change it to uppercase
+        if (field === 'CREATE_BY') {
+            dataJson[field] = data.get(field).toUpperCase();
+        } else
         dataJson[field] = data.get(field);
     } 
     // console.log(dataJson);

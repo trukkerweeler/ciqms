@@ -31,12 +31,8 @@ let PMFormNames = {};
 fetch('./json/pmforms.json')
   .then(response => response.json())
   .then(data => {
-    data.forEach(form => {
-      PMFormNames[form.name] = form.description;
-    });
-  })
-  .catch(error => console.error('Error loading PM Form Names:', error));
-  
+    PMFormNames = data;
+  });
 
 function exesAndOhs(newResponse) {
   if (newResponse === null) {

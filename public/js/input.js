@@ -247,9 +247,9 @@ fetch(url, { method: "GET" })
           newResponseText +
           "\n\n" +
           oldResponseText;
-        responseText = responseText.replace(/\n/g, "<br>");
+        // responseText = responseText.replace(/\n/g, "<br>");
         // fix the apostrophe issue
-        responseText = responseText.replace(/'/g, "''");
+        // responseText = responseText.replace(/'/g, "''");
 
         let data = {
           INPUT_ID: iid,
@@ -321,7 +321,7 @@ fetch(url, { method: "GET" })
           user + " - " + mydate + "\n" + newActionText + "\n\n" + oldActionText;
         actionText = actionText.replace(/\n/g, "<br>");
         // fix the apostrophe issue
-        actionText = actionText.replace(/'/g, "''");
+        // actionText = actionText.replace(/'/g, "''");
 
         let data = {
           INPUT_ID: iid,
@@ -391,7 +391,7 @@ fetch(url, { method: "GET" })
           newFollowUpText +
           "\n\n" +
           oldFollowUpText;
-        followUpText = followUpText.replace(/\n/g, "<br>");
+        // followUpText = followUpText.replace(/\n/g, "<br>");
         // fix the apostrophe issue
         followUpText = followUpText.replace(/'/g, "''");
 
