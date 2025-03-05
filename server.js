@@ -73,6 +73,9 @@ app.use("/attendance", attendanceRoutes);
 const trendRoutes = require("./routes/trend");
 app.use("/trend", trendRoutes);
 
+const mgmtRoutes = require("./routes/mgmt");
+app.use("/mgmt", mgmtRoutes);
+
 app.listen(port, async() => {
   // console.log(`Example app listening at http://localhost:${port}`);
   console.log(`This still gits to INPUT`);
