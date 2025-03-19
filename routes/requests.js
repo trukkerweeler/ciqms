@@ -99,7 +99,7 @@ router.get("/", (req, res) => {
       // console.log('Connected to DB');
 
       const query =
-        "select DOCUMENT_ID, dcr.REQUEST_ID, dcrt.REQUEST_TEXT, CHANGE_REASON, REQUEST_DATE, ASSIGNED_TO, CLOSED from DOCM_CHNG_RQST dcr left join DOC_CHG_REQ_TXT dcrt on dcr.REQUEST_ID = dcrt.REQUEST_ID order by CLOSED, REQUEST_ID desc";
+        "select DOCUMENT_ID, dcr.REQUEST_ID, dcrt.REQUEST_TEXT, CHANGE_REASON, REQUEST_DATE, ASSIGNED_TO, CLOSED, CLOSED_DATE from DOCM_CHNG_RQST dcr left join DOC_CHG_REQ_TXT dcrt on dcr.REQUEST_ID = dcrt.REQUEST_ID order by CLOSED, REQUEST_ID desc";
       // const query = 'select * from DOCM_CHNG_RQST';
       connection.query(query, (err, rows, fields) => {
         if (err) {

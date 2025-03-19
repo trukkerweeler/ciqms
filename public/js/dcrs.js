@@ -33,7 +33,19 @@ function getRecords () {
                     const td = document.createElement('td');
                     switch (key) {
                         case 'DUE_DATE':
-                            td.textContent = record[key].slice(0,10);
+                            // if it's not null and not empty
+                            if (record[key] !== null && record[key] !== '') {
+                                td.textContent = record[key].slice(0,10);
+                            } else {
+                                td.textContent = '';
+                            }
+                            break;
+                        case 'CLOSED_DATE':
+                            if (record[key] !== null && record[key] !== '') {
+                                td.textContent = record[key].slice(0,10);
+                            } else {
+                                td.textContent = '';
+                            }
                             break;
                         case 'DECISION_DATE':
                             if (record[key] !== null) {

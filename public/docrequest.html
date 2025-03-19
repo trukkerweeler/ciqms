@@ -16,13 +16,13 @@
     <h1>Enter Document Change Request</h1>
     <main id="main">
         <form action="submit" name="entryform" id="entryform" class="dataentry">
-            <label for="DOCUMENT_ID">Document ID</label>
+            <label for="document_id">Document ID</label>
             <input required type="text" name="DOCUMENT_ID" id="document_id" placeholder="Enter document id" style="text-transform: uppercase;">
             <label for="doc_rev">Revision</label>
             <input type="text" name="doc_rev" id="doc_rev" placeholder="Enter revision">
             <label for="status">Status</label>
             <input type="text" name="status" id="status" placeholder="Enter status">
-            <label for="CHANGE_TYPE">Type</label>
+            <label for="chtype">Type</label>
             <select name="CHANGE_TYPE" id="chtype">
                 <option value="C">Cancel</option>
                 <option value="E">Enhancement/Clarification</option>
@@ -30,15 +30,15 @@
                 <option value="P" selected>Process</option>
                 <option value="I" selected>Initial</option>
             </select> 
-            <label for="CHANGE_REASON">Reason</label>
+            <label for="reason">Reason</label>
             <input type="text" name="CHANGE_REASON" id="reason" placeholder="Enter reason">
-            <label for="PRIORITY">Priority</label>
+            <label for="priority">Priority</label>
             <input type="text" name="PRIORITY" id="priority" placeholder="Enter priority">
-            <label for="REQUEST_TEXT">Change</label>
+            <label for="change">Change</label>
             <input type="textarea" name="REQUEST_TEXT" id="change" placeholder="Enter change">     
-            <label for="CREATE_BY">Requestor</label>                         
+            <label for="createby">Requestor</label>                         
             <input type="text" name="CREATE_BY" id="createby" placeholder="Enter requestor ID" style="text-transform: uppercase;">     
-            <label for="ASSIGNED_TO">Assignee</label>
+            <label for="assto">Assignee</label>
             <input type="text" name="ASSIGNED_TO" id="assto" placeholder="Enter assignee" style="text-transform: uppercase;">     
             
             <input type="submit" value="Submit" id="button">
