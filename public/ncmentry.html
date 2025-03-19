@@ -20,15 +20,15 @@
             <input type="date" name="NCM_DATE" id="NCM_DATE" placeholder="Enter NCM date">
             <label for="DUE_DATE">Due Date</label>
             <input type="date" name="DUE_DATE" id="DUE_DATE" placeholder="Enter due date">
-            <label for="PEOPLE_ID">Requestor</label>
+            <label for="reqby">Requestor</label>
             <input type="text" name="PEOPLE_ID" id="reqby" placeholder="Enter requestor ID">
-            <label for="ASSIGNED_TO">Assignee</label>
+            <label for="assto">Assignee</label>
             <input type="text" name="ASSIGNED_TO" id="assto" placeholder="Enter assigned ID">
-            <label for="PRODUCT_ID">Part No.</label>
+            <label for="product">Part No.</label>
             <input type="text" name="PRODUCT_ID" id="product" placeholder="Part number">
-            <label for="PO_NUMBER">PO</label>
+            <label for="po">PO</label>
             <input type="text" name="PO_NUMBER" id="po" placeholder="PO number">
-            <label for="corType">NCM Type</label>
+            <label for="ncmType">NCM Type</label>
             <select name="NCM_TYPE" id="ncmType">
                 <option value="VPP">Verification of Purchased Product (Receiving Inspection)</option>
                 <option value="WIP" selected>Work In Process (Traveler)</option>
@@ -36,21 +36,21 @@
                 <option value="RET">Returns incl. Complaints</option>
                 <option value="CAL">Calibration</option>
             </select>
-            <label for="SUBJECT">Subject</label>
+            <label for="subject">Subject</label>
             <input type="text" name="SUBJECT" id="subject" placeholder="Enter subject (Form-Fit-Function)">
-            <label for="CAUSE">Cause</label>
+            <label for="cause">Cause</label>
             <input type="text" name="CAUSE" id="cause" placeholder="Enter cause">
-            <label for="LOT_NUMBER">Lot Number</label>
+            <label for="lot">Lot Number</label>
             <input type="text" name="LOT_NUMBER" id="lot" placeholder="Enter lot number (WO)">
-            <label for="LOT_SIZE">Quantity</label>
+            <label for="qty">Quantity</label>
             <input type="number" name="LOT_SIZE" id="qty" placeholder="Enter quantity">
-            <label for="USER_DEFINED_1">RMA</label>
+            <label for="rma">RMA</label>
             <input type="text" name="USER_DEFINED_1" id="rma" placeholder="Enter RMA number">
-            <label for="DESCRIPTION">Nonconformance stmt:</label>
+            <label for="description">Nonconformance stmt:</label>
             <input type="textarea" name="DESCRIPTION" id="description" placeholder="Enter nonconformance text (Should-be/Is)" required>
-            <label for="SUPPLIER_ID">Supplier</label>
+            <label for="supplier">Supplier</label>
             <input type="text" name="SUPPLIER_ID" id="supplier" placeholder="Enter supplier ID">
-            <label for="CUSTOMER_ID">Customer</label>
+            <label for="customer">Customer</label>
             <input type="text" name="CUSTOMER_ID" id="customer" placeholder="Enter customer ID">
             
             <input type="submit" value="Save New NCM" id="button">

@@ -17,6 +17,9 @@ myDueDateDefault = myDueDateDefault.toISOString().slice(0, 10);
 const defaultDueDate = document.getElementById('DUE_DATE');
 defaultDueDate.value = myDueDateDefault;
 
+let reqBy = document.getElementById('reqby');
+reqBy.value = user;
+
 // Send a POST request
 const form = document.querySelector('#entryform');
 form.addEventListener('submit', async (event) => {

@@ -1,8 +1,13 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
 loadHeaderFooter();
 
 const port = myport() || 3003;
 const url = `http://localhost:${port}/requests`;
+
+let user = await getUserValue();
+
+let requestBy = document.getElementById('createby');
+requestBy.value = user
 
 
 // Send a POST request

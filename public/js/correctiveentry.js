@@ -10,6 +10,9 @@ const today = new Date();
 const todayStr = today.toISOString().slice(0, 10);
 document.getElementById('corrdate').value = todayStr;
 
+let requestBy = document.getElementById('reqby');
+requestBy.value = user;
+
 // Send a POST request
 const form = document.querySelector('form');
 form.addEventListener('submit', async (event) => {
