@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport, getDateTime } from "./utils.mjs";
 loadHeaderFooter();
 const user = await getUserValue();
 const port = myport() || 3003;
@@ -90,7 +90,6 @@ fetch(url, { method: "GET" })
         //   get the new revison from the dialog
         const newRevision = document.querySelector("#docnewrev").value;
         const newRevDate = document.querySelector("#docnewrevdate").value;
-        const closedDate = document.querySelector("#closedate").value;
         const decisionDate = document.querySelector("#decisiondate").value;
 
           let data = {
@@ -99,10 +98,11 @@ fetch(url, { method: "GET" })
             DECISION: decisioncode,
             DECISION_DATE: decisionDate,
             CLOSED: "Y",
-            CLOSED_DATE: closedDate,
+            CLOSED_DATE: getDateTime(),
             REVISION_LEVEL: newRevision,
             REVISION_DATE: newRevDate,
             MODIFIED_BY: user,
+            MODIFIED_DATE: getDateTime(),
           };
           if (test) {
             console.log(data);

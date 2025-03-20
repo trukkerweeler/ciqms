@@ -283,7 +283,7 @@ router.get("/:id", (req, res) => {
 // ==================================================
 // put closed status
 router.put("/close/:id", (req, res) => {
-  let modifiedDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+  // let modifiedDate = new Date().toISOString().slice(0, 19).replace("T", " ");
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -303,7 +303,7 @@ router.put("/close/:id", (req, res) => {
       WHERE REQUEST_ID = ?`;
       const values = [
         req.body.CLOSED, req.body.CLOSED_DATE, req.body.DECISION, 
-        req.body.DECISION_DATE, req.body.MODIFIED_BY, modifiedDate, req.params.id
+        req.body.DECISION_DATE, req.body.MODIFIED_BY, req.body.MODIFIED_DATE, req.params.id
       ];
       connection.query(query, values, (err, rows, fields) => {
         if (err) {
