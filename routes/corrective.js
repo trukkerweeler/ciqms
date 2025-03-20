@@ -1,5 +1,3 @@
-require('dotenv').config();
-// sequelize...
 
 const express = require('express');
 const router = express.Router();

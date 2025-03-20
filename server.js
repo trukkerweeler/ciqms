@@ -1,4 +1,3 @@
-require("dotenv").config();
 
 const exp = require("constants");
 const cors = require("cors");
