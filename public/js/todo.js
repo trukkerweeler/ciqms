@@ -35,7 +35,7 @@ button.addEventListener('click', async (event) => {
         // filter the records to only show the ones that are assigned to the user
         records = records.filter(record => record.ASSIGNED_TO === personid);
         
-        let fieldList = ['INPUT_ID', 'INPUT_DATE', 'SUBJECT', 'ASSIGNED_TO', 'PROJECT_ID', 'INPUT_TEXT', 'DUE_DATE']
+        let fieldList = ['record_id', 'INPUT_DATE', 'ASSIGNED_TO', 'TODO_TEXT', 'DATE_DUE', 'RECORD_TYPE']
 
         const table = document.createElement('table');
         const thead = document.createElement('thead');
@@ -45,6 +45,7 @@ button.addEventListener('click', async (event) => {
         
         // Create the table header
         for (let key in records[0]) {
+            // console.log(key);
             if (fieldList.includes(key)){
             const th = document.createElement('th');
             th.textContent = key;
@@ -62,7 +63,7 @@ button.addEventListener('click', async (event) => {
                 td.textContent = row[field];
 
                 // fix the date format
-                if (field === 'INPUT_DATE' || field === 'DUE_DATE') {
+                if (field === 'INPUT_DATE' || field === 'DATE_DUE') {
                     // console.log("Date: " + row[field]);
                     if (row[field] === null) {
                         td.textContent = '';
@@ -72,10 +73,19 @@ button.addEventListener('click', async (event) => {
                     }
                 } 
                     
-                if (field === 'INPUT_ID') {
+                if (field === 'record_id') {
                     td.textContent = '';
                     const a = document.createElement('a');
-                    a.href = `http://localhost:${port}/input.html?id=${row[field]}`;
+                    // match the case to RECORD_TYPE
+                    if (row['RECORD_TYPE'] === 'INPUT') {
+                        a.href = `http://localhost:${port}/input.html?id=${row[field]}`;
+                    } else if (row['RECORD_TYPE'] === 'DCR') {
+                        a.href = `http://localhost:${port}/dcr.html?id=${row[field]}`;
+                    } else if (row['RECORD_TYPE'] === 'TODO') {
+                        a.href = `http://localhost:${port}/todo.html?id=${row[field]}`;
+                    } else {
+                        a.href = `http://localhost:${port}/ncm.html?id=${row[field]}`;
+                    }
                     a.textContent = row[field];
                     td.appendChild(a);
                 } 
