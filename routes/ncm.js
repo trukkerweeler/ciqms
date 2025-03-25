@@ -242,10 +242,12 @@ router.get('/:id', (req, res) => {
         , ne.DESCRIPTION
         , ni.DISPOSITION
         , nv.VERIFICATION
+        , nn.NCM_NOTE
         FROM quality.NONCONFORMANCE n 
         left join NCM_DESCRIPTION ne on n.NCM_ID = ne.NCM_ID
         left join NCM_DISPOSITION ni on n.NCM_ID = ni.NCM_ID
         left join NCM_VERIFICATION nv on n.NCM_ID = nv.NCM_ID 
+        left join NCM_NOTES nn on n.NCM_ID = nn.NCM_ID 
         where n.NCM_ID = '${req.params.id}'`;
 
         // console.log(query);
@@ -270,12 +272,12 @@ router.get('/:id', (req, res) => {
 router.put('/:id', (req, res) => {
     // console.log("Params: " + req.params.id);
     // console.log(req.body);
-    // test = true;
+    test = false;
     let mytable = '';
     let appended = '';
     const myfield = Object.keys (req.body) [2]
     if (test) {
-        console.log("My field: " + myfield);
+        console.log("279 - My field: " + myfield);
     }
     switch (myfield) {
         case 'DESCRIPTION':
@@ -289,6 +291,10 @@ router.put('/:id', (req, res) => {
         case 'VERIFICATION':
             mytable = 'NCM_VERIFICATION';
             appended = req.body.VERIFICATION.replace(/'/g, "/''");
+            break;
+        case 'NCM_NOTE':
+            mytable = 'NCM_NOTES';
+            appended = req.body.NCM_NOTE.replace(/'/g, "/''");
             break;
         default:
             console.log('No match');

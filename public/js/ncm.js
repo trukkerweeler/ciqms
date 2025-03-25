@@ -169,7 +169,16 @@ while (main.firstChild) {
             btnEditVerf.setAttribute('class', 'btn');
             btnEditVerf.setAttribute('class', 'btnEditNotes');
             btnEditVerf.setAttribute('id', 'btnEditVerf');
-            btnEditVerf.textContent = 'Edit Verf.';            
+            btnEditVerf.textContent = 'Edit Verf.';  
+            
+            const notesTitle = document.createElement('h3');
+            notesTitle.setAttribute('class', 'header3');
+
+            const btnEditNote = document.createElement('button');
+            btnEditNote.setAttribute('class', 'btn');
+            btnEditNote.setAttribute('class', 'btnEditNotes');
+            btnEditNote.setAttribute('id', 'btnEditNote');
+            btnEditNote.textContent = 'Edit Notes';
 
             const linebreak = document.createElement('br');
 
@@ -262,6 +271,23 @@ while (main.firstChild) {
             notesSection.appendChild(divVerification);
             notesSection.appendChild(btnEditVerf);
 
+            const divNcmNotes = document.createElement('div');
+            divNcmNotes.setAttribute('class', 'ncmnotes');
+            divNcmNotes.setAttribute('class', 'notes');
+            divNcmNotes.setAttribute('id', 'notetext');
+            notesTitle.textContent = 'Notes:';
+            notesTitle.setAttribute('id', 'notesTitle');
+            divNcmNotes.innerHTML = divNcmNotes.innerHTML.replace(/\n/g, '<br>');
+            if ((record[key]['NCM_NOTE'] === null) || (record[key]['NCM_NOTE'] === '') || (record[key]['NCM_NOTE'] === undefined)) {
+                divNcmNotes.innerHTML = '<br>';
+            } else {
+                divNcmNotes.textContent = record[key]['NCM_NOTE'];
+                divNcmNotes.innerHTML = divNcmNotes.innerHTML.replace(/\n/g, '<br>');
+            }            
+            notesSection.appendChild(notesTitle);
+            notesSection.appendChild(divNcmNotes);
+            notesSection.appendChild(btnEditNote);
+
             main.appendChild(elemRpt);
             main.appendChild(divSubTitle);
             main.appendChild(detailSection);
@@ -299,6 +325,18 @@ while (main.firstChild) {
         // show the trend dialog
         const verfDialog = document.querySelector('#verfDialog');
         verfDialog.showModal();
+    }
+    );
+
+    // =============================================
+    // Listen for the btnEditNote button click
+    const btnEditNote = document.querySelector('#btnEditNote');
+    btnEditNote.addEventListener('click', async (event) => {
+        // prvent the default action
+        event.preventDefault();
+        // show the trend dialog
+        const noteDialog = document.querySelector('#noteDialog');
+        noteDialog.showModal();
     }
     );
 
@@ -402,6 +440,19 @@ while (main.firstChild) {
                         data = { ...data, MY_TABLE: 'NCM_VERIFICATION'}
                     }                    
                     break;
+
+                    case 'saveNote':
+                        let previoustext4 = document.querySelector('#notetext').innerHTML;
+                        let newtextNote = document.querySelector('#newtextNote').value;
+                        if (newtextNote.length === 0) {
+                            alert('Not saving, no note text.');
+                            break;
+                        } else {
+                            let compositetext4 = user + " - " + mydate + "<br>" + document.querySelector('#newtextNote').value + "<br><br>" + previoustext4;
+                            data = { ...data, NCM_NOTE: compositetext4}
+                            data = { ...data, MY_TABLE: 'NCM_NOTES'}
+                        }
+                        break;
                 
                 default:
                     console.log('default');
