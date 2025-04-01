@@ -34,7 +34,7 @@
     <dialog id="respDialog" class="editDialog">
         <div class="dialogTitle">Edit Response</div>
         <form class="dialogForm">
-            <label for="RESPONSE_DATE">Response Date:</label>
+            <label for="newResponseDate">Response Date:</label>
             <input type="date" id="newResponseDate" name="RESPONSE_DATE" required>
             <textarea type="textarea" id="newTextResp" class="notestext" rows="4" cols="40" required></textarea>
             <button class="btnDialog" id="cancelResp" type="submit" formmethod="dialog">Cancel</button>
@@ -47,11 +47,11 @@
         <form class="dialogForm" id="collectForm">
             <label for="CUSTOMER_ID">Customer Id:</label>
             <input type="text" id="CUSTOMER_ID" name="CUSTOMER_ID" style="text-transform: uppercase" required>
-            <label for="unit">Unit:</label>
+            <label for="UNIT">Unit:</label>
             <input type="text" id="UNIT" name="UNIT" required style="text-transform: uppercase">
-            <label for="value">Value:</label>
+            <label for="VALUE">Value:</label>
             <input type="text" id="VALUE" name="VALUE" required>
-            <label for="sampledate">Date:</label>
+            <label for="SAMPLE_DATE">Date:</label>
             <input type="date" id="SAMPLE_DATE" name="SAMPLE_DATE" required title="Last day of graded month">
             <button class="btnDialog" id="cancelCollData" type="submit" formmethod="dialog">Cancel</button>
             <button class="btnDialog dialogSaveBtn" id="saveCollData" type="submit">Save</button>
@@ -62,11 +62,11 @@
         <form class="dialogForm" id="collectForm2">
             <label for="SUPPLIER_ID">Supplier Id:</label>
             <input type="text" id="SUPPLIER_ID" name="SUPPLIER_ID" style="text-transform: uppercase" required>
-            <label for="unit">Unit:</label>
+            <label for="UNIT">Unit:</label>
             <input type="text" id="UNIT" name="UNIT" required style="text-transform: uppercase">
-            <label for="value">Value:</label>
+            <label for="VALUE">Value:</label>
             <input type="text" id="VALUE" name="VALUE" required>
-            <label for="sampledate">Date:</label>
+            <label for="SAMPLE_DATE">Date:</label>
             <input type="date" id="SAMPLE_DATE" name="SAMPLE_DATE" required>
             <button class="btnDialog" id="cancelCollData2" type="submit" formmethod="dialog">Cancel</button>
             <button class="btnDialog dialogSaveBtn" id="saveCollData2" type="submit">Save</button>

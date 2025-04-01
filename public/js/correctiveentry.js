@@ -28,10 +28,14 @@ form.addEventListener('submit', async (event) => {
     const requestDate = new Date();
     requestDate.setDate(requestDate.getDate())
     let myRequestDate = requestDate.toISOString().slice(0, 19).replace('T', ' ');
+    let myDueDate = new Date();
+    myDueDate.setDate(myDueDate.getDate() + 21);
+    myDueDate = myDueDate.toISOString().slice(0, 19).replace('T', ' ');
     
     const dataJson = {
         CORRECTIVE_ID: nextId,
         CREATE_DATE: myRequestDate,
+        DUE_DATE: myDueDate,
         CREATE_BY: user,
         CLOSED: 'N',
     };

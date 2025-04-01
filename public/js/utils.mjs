@@ -252,6 +252,10 @@ export function getDocType(docid) {
   let proposedDocType = "P";
   if (/F[0-9]{4}-[0-9]{1,2}/.test(docid)) {
     proposedDocType = "F";
+  } else if (/(S|T)[0-9]{2}/.test(docid)) {
+    proposedDocType = "F";
+  } else if (/CI-WI-/.test(docid)) {
+    proposedDocType = "W";
   }
   return proposedDocType;
 }

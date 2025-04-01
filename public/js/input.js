@@ -259,7 +259,7 @@ fetch(url, { method: "GET" })
           MODIFIED_BY: user,
           MODIFIED_DATE: getDateTime(),
         };
-        // console.log(data);
+        console.log(data);
 
         // update the response text
         const url = `http://localhost:${port}/input/${iid}`;
@@ -273,7 +273,7 @@ fetch(url, { method: "GET" })
         // close the dialog
         responseDialog.close();
         // reload the page
-        location.reload();
+        // location.reload();
       });
     });
 

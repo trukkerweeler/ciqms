@@ -329,22 +329,30 @@ router.put('/:id', (req, res) => {
         // console.log('Connected to DB');
         // console.log(req.body);
         const query = `REPLACE INTO ${mytable} SET 
-        INPUT_ID = '${req.params.id}',
-        ${myfield} = '${appended}'`;
-        // console.log(query);
-        connection.query(query, (err, rows, fields) => {
+            INPUT_ID = ?,
+            ?? = ?`;
+
+        const values = [req.params.id, myfield, appended];
+        console.log(query);
+
+        connection.query(query, values, (err, rows, fields) => {
             if (err) {
-                console.log('Failed to query for input : ' + err);
-                res.sendStatus(500);
-                return;
+            console.log('Failed to query for input : ' + err);
+            res.sendStatus(500);
+            return;
             }
             res.json(rows);
         });
 
         if (myfield === 'RESPONSE_TEXT') {
-            const updateQuery = `UPDATE PEOPLE_INPUT SET RESPONSE_DATE = '${mydata.RESPONSE_DATE}', MODIFIED_BY = '${mydata.MODIFIED_BY}', MODIFIED_DATE = '${mydata.MODIFIED_DATE}' WHERE INPUT_ID = '${req.params.id}'`;
-            // console.log(updateQuery);
-            connection.query(updateQuery, (err, rows, fields) => {
+            const updateQuery = `
+            UPDATE PEOPLE_INPUT 
+            SET RESPONSE_DATE = ?, 
+                MODIFIED_BY = ?, 
+                MODIFIED_DATE = ? 
+            WHERE INPUT_ID = ?`;
+            const updateValues = [mydata.RESPONSE_DATE, mydata.MODIFIED_BY, mydata.MODIFIED_DATE, req.params.id];
+            connection.query(updateQuery, updateValues, (err) => {
                 if (err) {
                     console.log('Failed to query for response date update: ' + err);
                     res.sendStatus(500);

@@ -1,5 +1,5 @@
 
-import { loadHeaderFooter, exesAndOhs, myport } from "./utils.mjs";
+import { loadHeaderFooter, exesAndOhs, myport, getDocType } from "./utils.mjs";
 // import {getComputerName} from './getComputerName.mjs';
 loadHeaderFooter();
 const port = myport() || 3003;
@@ -171,4 +171,4 @@ console.log(`Hostname: ${window.location.hostname}`);
 // }
 // console.log(myhalves);
 
-
+console.log('Document Type: ', getDocType('CI-WI-5080'));
