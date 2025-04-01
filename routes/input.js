@@ -333,7 +333,7 @@ router.put('/:id', (req, res) => {
             ?? = ?`;
 
         const values = [req.params.id, myfield, appended];
-        console.log(query);
+        // console.log(query);
 
         connection.query(query, values, (err, rows, fields) => {
             if (err) {
