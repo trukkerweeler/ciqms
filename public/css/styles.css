@@ -655,7 +655,7 @@ footer div p {
     justify-self: end;
 }
 
-#newtextTrend, #newtextDisp, #newtextVerf {
+#newtextTrend, #newtextDisp, #newtextVerf, #newTextNote {
     grid-column: span 2;
 }
 
