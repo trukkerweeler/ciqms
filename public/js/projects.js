@@ -3,9 +3,10 @@ loadHeaderFooter();
 const port = myport();
 const skippers = ['ENTITY_ID', 'MODIFIED_DATE', 'MODIFIED_BY', 'COST_SAVINGS']
 
-const url = `http://localhost:${port}/project`;
+
 
 function getRecords () {
+    const url = `http://localhost:${port}/project`;
     const main = document.querySelector('main');
     
     fetch(url, { method: 'GET' })
@@ -57,6 +58,8 @@ function getRecords () {
         table.appendChild(tbody);
         main.appendChild(table);
     })
+    
 }
 
 getRecords();
+
