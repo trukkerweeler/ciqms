@@ -134,33 +134,33 @@ router.post('/', (req, res) => {
 
              
         const query = `insert into CORRECTIVE (CORRECTIVE_ID
-            , USER_DEFINED_1
-            , REQUEST_BY
-            , ASSIGNED_TO
-            , CORRECTIVE_DATE
-            , DUE_DATE
-            , REFERENCE
-            , CLOSED
-            , TITLE
-            , CREATE_DATE
-            , CREATE_BY
-            ) values (
-                '${req.body.CORRECTIVE_ID}'
-                , '${req.body.USER_DEFINED_1}'
-                , '${req.body.REQUEST_BY}'
-                , '${req.body.ASSIGNED_TO}'
-                , '${req.body.CORRECTIVE_DATE}'
-                , '${req.body.DUE_DATE}'
-                , '${req.body.REFERENCE}'
-                , '${req.body.CLOSED}'
-                , '${req.body.TITLE}'
-                , '${req.body.CREATE_DATE}'
-                , '${req.body.CREATE_BY}'
-            )`;
-        
-        // console.log(query);
+                    , USER_DEFINED_1
+                    , REQUEST_BY
+                    , ASSIGNED_TO
+                    , CORRECTIVE_DATE
+                    , DUE_DATE
+                    , REFERENCE
+                    , CLOSED
+                    , TITLE
+                    , CREATE_DATE
+                    , CREATE_BY
+                    ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
-        connection.query(query, (err, rows, fields) => {
+        const queryParams = [
+            req.body.CORRECTIVE_ID,
+            req.body.USER_DEFINED_1,
+            req.body.REQUEST_BY,
+            req.body.ASSIGNED_TO,
+            req.body.CORRECTIVE_DATE,
+            req.body.DUE_DATE,
+            req.body.REFERENCE,
+            req.body.CLOSED,
+            req.body.TITLE,
+            req.body.CREATE_DATE,
+            req.body.CREATE_BY
+        ];
+
+        connection.query(query, queryParams, (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for corrective insert: ' + err);
                 res.sendStatus(500);
