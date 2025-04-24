@@ -2,7 +2,7 @@ import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
 loadHeaderFooter();
 
 const port = myport() || 3003;
-const user = getUserValue();
+const user = await getUserValue();
 
 // Send POST request to server
 const form = document.querySelector('#supplierform');
@@ -50,7 +50,32 @@ form.addEventListener('submit', async (event) => {
         catch (err) {
             console.log('Error:', err);
         }
-
+    try {
+        await fetch(url + '/scope', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                },
+            body: JSON.stringify(dataJson)
+        });
+        // console.log('Success:', JSON.stringify(dataJson));
+        }
+        catch (err) {
+            console.log('Error:', err);
+        }
+    try {
+        await fetch(url + '/contact', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/json'
+                },
+            body: JSON.stringify(dataJson)
+        });
+        // console.log('Success:', JSON.stringify(dataJson));
+        }
+        catch (err) {
+            console.log('Error:', err);
+        }
     form.reset();
 });
 
