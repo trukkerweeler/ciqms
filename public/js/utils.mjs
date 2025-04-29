@@ -266,3 +266,9 @@ export function displayDate(date) {
     return "";
   }
 }
+
+
+export function getEmail(user) {
+  const email = user + "@example.com";
+  return email;
+}
