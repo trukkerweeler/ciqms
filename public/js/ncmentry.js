@@ -1,5 +1,6 @@
 
 import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import users from "./users.mjs";
 // import { exec } from 'child_process';
 // import * as fs from 'node:fs/promises';
 loadHeaderFooter();
@@ -55,9 +56,9 @@ form.addEventListener("submit", async (event) => {
         break;
       case "SUBJECT":
         dataJson[field] = data.get(field).toUpperCase();
-        if (dataJson[field] = " ") {
+        if (dataJson[field] === " " || dataJson[field] === "") {
           dataJson[field] = "TBD";
-        }
+        } 
         break;
       case "PROJECT_ID":
         dataJson[field] = data.get(field).toUpperCase();
@@ -88,6 +89,47 @@ form.addEventListener("submit", async (event) => {
   } catch (err) {
     console.log("Error:", err);
   }
+
+  setTimeout(async () => {
+    // Try to send email
+    let toEmail = users[dataJson.ASSIGNED_TO];
+    if (toEmail === undefined) {
+      toEmail = users["DEFAULT"];
+    }
+    const emailData = {
+      NCM_ID: nextId,
+      CREATE_BY: user,
+      SUBJECT: dataJson.SUBJECT,
+      PEOPLE_ID: dataJson.PEOPLE_ID,
+      ASSIGNED_TO_EMAIL: toEmail,
+      DESCRIPTION: dataJson.DESCRIPTION,
+      PRODUCT_ID: dataJson.PRODUCT_ID,
+    };
+    await fetch(url + "/email", {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(emailData),
+    })
+      .then(async (response) => {
+        if (response.ok) {
+          await fetch(url + "/ncm_notify", {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({
+              ACTION: "I",
+              NCM_ID: nextId,
+              ASSIGNED_TO: dataJson.ASSIGNED_TO,
+            }),
+          });
+          return response.text(); // Handle as plain text if not JSON
+        }
+        throw new Error("Failed to send ncm email");
+      });
+  });
 
   form.reset();
   // Set default values

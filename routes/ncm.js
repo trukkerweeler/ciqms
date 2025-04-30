@@ -2,6 +2,7 @@
 const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
+const nodemailer = require('nodemailer');
 let test = false;
 
 // ==================================================
@@ -99,6 +100,78 @@ router.get('/nextId', (req, res) => {
         return;
     }
 });
+
+// ==================================================
+// Send email using nodemailer
+router.post("/email", async (req, res) => {
+    try {
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: true, // true for 465, false for other ports
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+        });
+
+        const mailOptions = {
+            from: process.env.SMTP_FROM,
+            to: req.body.ASSIGNED_TO_EMAIL,
+            subject: `Nonconformance Notification: ${req.body.NCM_ID} - ${req.body.PRODUCT_ID}`,
+            text: `The following nonconformance has been issued. Please review and take timely action. If you have any questions, please contact the quality manager.\n\n Description:\n${req.body.DESCRIPTION} \n\n`,
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        // console.log("Email sent:", info.response);
+        res.status(200).send("Email sent successfully");
+    } catch (error) {
+        console.log("Error sending email:", error);
+        res.status(500).send(error.toString());
+    }
+});
+
+// ==================================================
+// update INPUTS_NOTIFY table
+router.post("/ncm_notify", (req, res) => {
+    // console.log(req.body);
+    try {
+      const connection = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASS,
+        port: 3306,
+        database: "quality",
+      });
+      connection.connect(function (err) {
+        if (err) {
+          console.error("Error connecting: " + err.stack);
+          return;
+        }
+        // console.log('Connected to DB');
+      const query = `INSERT INTO NCM_NOTIFY (NCM_ID, ACTION, NOTIFIED_DATE, ASSIGNED_TO ) VALUES (?, ?, NOW(), ?)`;
+      const values = [
+        req.body.NCM_ID,
+        req.body.ACTION,
+        req.body.ASSIGNED_TO,
+      ];
+        // console.log(query);
+        // console.log(values);
+        connection.query(query, values, (err) => {
+          if (err) {
+            console.log("Failed to query for ncm notify: " + err);
+            res.sendStatus(500);
+            return;
+          }
+          res.sendStatus(200);
+        });
+        connection.end();
+      });
+    } catch (err) {
+      console.log("Error connecting to Db 140");
+      return;
+    }
+  });
 
 // ==================================================
 // Create a record
