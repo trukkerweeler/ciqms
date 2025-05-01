@@ -155,7 +155,7 @@ router.post("/email", async (req, res) => {
             from: process.env.SMTP_FROM,
             to: req.body.ASSIGNED_TO_EMAIL,
             subject: `Action Item Notification: ${req.body.INPUT_ID} - ${req.body.SUBJECT}`,
-            text: `The following action item has been assigned.\nPlease review and take timely action.\n${req.body.INPUT_TEXT} \n\nIf you have any questions, please contact the quality manager.`,
+            text: `The following action item has been assigned.\nInput Id: ${req.body.INPUT_ID} \nDue Date: ${req.body.DUE_DATE} \nAssigned To: ${req.body.ASSIGNED_TO} \nDescription:\n${req.body.INPUT_TEXT}\n\nPlease log in to the QMS system to view the details and take timely action.\n\nIf you have any questions, please contact the quality manager.`,
         };
 
         const info = await transporter.sendMail(mailOptions);

@@ -96,6 +96,8 @@ setTimeout(async () => {
     PEOPLE_ID: dataJson.PEOPLE_ID,
     ASSIGNED_TO_EMAIL: toEmail,
     INPUT_TEXT: dataJson.INPUT_TEXT,
+    DUE_DATE: dataJson.DUE_DATE,
+    ASSIGNED_TO: dataJson.ASSIGNED_TO,
   };
   await fetch(url + "/email", {
     method: "POST",
