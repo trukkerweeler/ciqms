@@ -76,6 +76,12 @@ fetch(url, { method: 'GET' })
         }
         data.MODIFIED_BY = user;
         data.MODIFIED_DATE = new Date().toLocaleString();
+        if (data.CUSTOMER_ID != null) {
+            data.CUSTOMER_ID = data.CUSTOMER_ID.toUpperCase();
+        }
+        if (data.SUPPLIER_ID != null) {
+            data.SUPPLIER_ID = data.SUPPLIER_ID.toUpperCase();
+        }
         const cid = data.CORRECTIVE_ID;
         delete data.CORRECTIVE_ID;
 

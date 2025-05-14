@@ -675,6 +675,14 @@ footer div p {
     margin-bottom: 10px;
 }
 
+.stacked-form {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 5px;
+    margin-bottom: 25px;
+    max-width: 800px;
+}
+
 @media print {
     form{
         display: none;
