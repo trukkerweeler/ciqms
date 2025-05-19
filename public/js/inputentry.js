@@ -92,7 +92,7 @@ setTimeout(async () => {
     INPUT_ID: nextId,
     CREATE_DATE: myRequestDate,
     CREATE_BY: user,
-    SUBJECT: dataJson.SUBJECT,
+    SUBJECT: dataJson.SUBJECT.toUpperCase(),
     PEOPLE_ID: dataJson.PEOPLE_ID,
     ASSIGNED_TO_EMAIL: toEmail,
     INPUT_TEXT: dataJson.INPUT_TEXT,

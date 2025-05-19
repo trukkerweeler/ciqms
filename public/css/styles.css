@@ -683,6 +683,40 @@ footer div p {
     max-width: 800px;
 }
 
+.editDialog {
+    display: none;
+    min-width: 400px;
+    max-width: 600px;
+    padding: 1.5rem;
+    border-radius: 1rem;
+    background: var(--secondary-color);
+    box-shadow: var(--shadow);
+    grid-template-columns: 1fr 1fr;
+    gap: 1rem;
+}
+
+.editDialog[open] {
+    display: grid;
+}
+
+.editDialog .dialogTitle {
+    font-size: 1.2rem;
+    font-weight: bold;
+    margin-bottom: 1rem;
+    text-align: center;
+    grid-column: span 2;
+}
+
+.editDialog .notestext {
+    grid-column: span 2;
+    font-size: 1.5rem;
+    font-weight: 600;
+}
+
+.editDialog form {
+    display: contents;
+}
+
 @media print {
     form{
         display: none;
