@@ -46,7 +46,6 @@ router.get('/', (req, res) => {
 
 // Get the next ID for a new attendance record
 router.get('/nextId', (req, res) => {
-    // res.json('0000005');
     try {
         const connection = mysql.createConnection({
             host: process.env.DB_HOST,
@@ -60,28 +59,28 @@ router.get('/nextId', (req, res) => {
                 console.error('Error connecting: ' + err.stack);
                 return;
             }
-        // console.log('Connected to DB');
 
-        const query = 'SELECT CURRENT_ID FROM SYSTEM_IDS where TABLE_NAME = "CTA_ATTENDANCE"';
-        connection.query(query, (err, rows, fields) => {
-            if (err) {
-                console.log('Failed to query for attendance: ' + err);
-                res.sendStatus(500);
-                return;
-            }
-            const nextId = parseInt(rows[0].CURRENT_ID) + 1;
-            let dbNextId = nextId.toString().padStart(7, '0');
+            const query = 'SELECT CURRENT_ID FROM SYSTEM_IDS where TABLE_NAME = "CTA_ATTENDANCE"';
+            connection.query(query, (err, rows, fields) => {
+                if (err) {
+                    console.log('Failed to query for attendance: ' + err);
+                    res.sendStatus(500);
+                    return;
+                }
+                const nextId = parseInt(rows[0].CURRENT_ID) + 1;
+                let dbNextId = nextId.toString().padStart(7, '0');
 
-            res.json(dbNextId);
-        });    
+                res.json(dbNextId);
+            });    
 
-        connection.end();
+            connection.end();
         });
     } catch (err) {
         console.log('Error connecting to Db 83');
         return;
     }
 });
+
 
 // ==================================================
 // Create a record

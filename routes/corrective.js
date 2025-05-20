@@ -129,8 +129,18 @@ router.post('/', (req, res) => {
             closedDate = null;
         }
         // Change FIELDS to uppercase
-        req.body.ASSIGNED_TO = req.body.ASSIGNED_TO.toUpperCase();
-        req.body.REQUEST_BY = req.body.REQUEST_BY.toUpperCase();
+        if (typeof req.body.ASSIGNED_TO === 'string') {
+            req.body.ASSIGNED_TO = req.body.ASSIGNED_TO.toUpperCase();
+        }
+        if (typeof req.body.REQUEST_BY === 'string') {
+            req.body.REQUEST_BY = req.body.REQUEST_BY.toUpperCase();
+        }
+        if (typeof req.body.PEOPLE_ID === 'string') {
+            req.body.PEOPLE_ID = req.body.PEOPLE_ID.toUpperCase();
+        }
+        if (typeof req.body.INSTRUCTOR === 'string') {
+            req.body.INSTRUCTOR = req.body.INSTRUCTOR.toUpperCase();
+        }
 
              
         const query = `insert into CORRECTIVE (CORRECTIVE_ID
@@ -169,8 +179,12 @@ router.post('/', (req, res) => {
             res.json(rows);
         });
 
-        // Escape the single quotes
-        req.body.NC_TREND = req.body.NC_TREND.replace(/'/g, "\\'");
+        // Escape the single quotes if NC_TREND exists
+        if (typeof req.body.NC_TREND === 'string') {
+            req.body.NC_TREND = req.body.NC_TREND.replace(/'/g, "\\'");
+        } else {
+            req.body.NC_TREND = '';
+        }
 
         const insertQuery = `insert into CORRECTIVE_TREND (CORRECTIVE_ID, NC_TREND) values ('${req.body.CORRECTIVE_ID}', '${req.body.NC_TREND}')`;
         connection.query(insertQuery, (err, rows, fields) => {

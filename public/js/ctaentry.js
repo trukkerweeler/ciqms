@@ -1,7 +1,7 @@
 import { loadHeaderFooter, myport } from "./utils.mjs";
 loadHeaderFooter();
 const port = myport() || 3003;
-const url = `http://localhost:${port}/corrective`;
+const url = `http://localhost:${port}/attendance`;
 
 // // set the date to today
 // let corrdate = document.getElementById('corrdate');
@@ -33,7 +33,7 @@ form.addEventListener('submit', async (event) => {
         CLOSED: 'N',
     };
     for (let field of data.keys()) {
-        if (field in ['REQUEST_BY', 'ASSIGNED_TO']) {
+        if (field in ['REQUEST_BY', 'ASSIGNED_TO', 'PEOPLE_ID', 'INSTRUCTOR']) {
             dataJson[field] = data.get(field).toUpperCase();
         } else {
             dataJson[field] = data.get(field);

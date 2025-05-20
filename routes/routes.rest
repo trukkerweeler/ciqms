@@ -47,3 +47,8 @@ Content-Type: application/json
     "MODIFIED_BY": "TKENT",
     "MODIFIED_DATE": "2025-02-19"
 }
+###
+PUT http://localhost:3003/csr/incrementId
+
+###
+GET http://localhost:3003/attendance/nextId

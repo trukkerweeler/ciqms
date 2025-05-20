@@ -3,6 +3,7 @@ const router = express.Router();
 const mysql = require("mysql");
 const nodemailer = require("nodemailer");
 
+
 // ==================================================
 // Get all records
 router.get("/", (req, res) => {
@@ -278,7 +279,43 @@ router.post("/", (req, res) => {
       connection.end();
     });
   } catch (err) {
-    console.log("Error connecting to Db (changes 181)");
+    console.log("Error connecting to Db (changes 282)");
+    return;
+  }
+});
+
+// ==================================================
+// increment the ID
+router.put("/incrementId", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+      // console.log('Connected to DB');
+
+      const query = `UPDATE SYSTEM_IDS SET CURRENT_ID = LPAD(CAST(CAST(CURRENT_ID AS UNSIGNED) + 1 AS CHAR), 7, '0') WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for system id update: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
+
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error connecting to Db 318");
     return;
   }
 });

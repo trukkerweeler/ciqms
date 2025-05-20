@@ -3,7 +3,43 @@ const express = require('express');
 const router = express.Router();
 const mysql = require('mysql');
 
+// ==================================================
+// increment the ID
+router.put("/incrementId", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+      // console.log('Connected to DB');
 
+      const query = `UPDATE SYSTEM_IDS SET CURRENT_ID = LPAD(CAST(CAST(CURRENT_ID AS UNSIGNED) + 1 AS CHAR), 7, '0') WHERE TABLE_NAME = 'NINETYONETWENTY'`;
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for system id update: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
+
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error connecting to Db 37");
+    return;
+  }
+});
+
+// ==================================================
 router.post('/:iid', (req, res) => {
     try {
         const connection = mysql.createConnection({
@@ -21,8 +57,8 @@ router.post('/:iid', (req, res) => {
 
         let key = Object.keys(req.body)[0];
         // console.log('key: ' + key['CUSTOMER_ID']);
-        let cid = req.body[key].CUSTOMER_ID.toUpperCase();
-        let unit = req.body[key].UNIT.toUpperCase();
+        // let cid = req.body[key].CUSTOMER_ID;
+        // let unit = req.body[key].UNIT;
              
         const query = `insert into NINETYONETWENTY (COLLECT_ID
             , INPUT_ID
@@ -33,8 +69,8 @@ router.post('/:iid', (req, res) => {
             , PEOPLE_ID
             ) values ('${req.body[key].COLLECT_ID}'
                 , '${req.params.iid}'
-                , '${cid}'
-                , '${unit}'
+                , '${req.body[key].CUSTOMER_ID}'
+                , '${req.body[key].UNIT}'
                 , '${req.body[key].VALUE}'
                 , '${req.body[key].SAMPLE_DATE}'
                 , '${req.body[key].INPUT_USER}'
