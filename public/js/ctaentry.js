@@ -21,25 +21,25 @@ form.addEventListener('submit', async (event) => {
         return data;
     })
     // console.log(nextId);
-    const requestDate = new Date();
-    requestDate.setDate(requestDate.getDate())
-    let myRequestDate = requestDate.toISOString().slice(0, 19).replace('T', ' ');
+    const attendanceDate = new Date();
+    attendanceDate.setDate(attendanceDate.getDate())
+    let myRequestDate = attendanceDate.toISOString().slice(0, 19).replace('T', ' ');
     // console.log(myRequestDate);
     
     const dataJson = {
-        CORRECTIVE_ID: nextId,
-        CREATE_DATE: myRequestDate,
+        COURSE_ATND_ID: nextId,
+        CREATED_DATE: myRequestDate,
         CREATE_BY: 'TKENT',
         CLOSED: 'N',
     };
     for (let field of data.keys()) {
-        if (field in ['REQUEST_BY', 'ASSIGNED_TO', 'PEOPLE_ID', 'INSTRUCTOR']) {
+        if (['REQUEST_BY', 'ASSIGNED_TO', 'PEOPLE_ID', 'INSTRUCTOR'].includes(field)) {
             dataJson[field] = data.get(field).toUpperCase();
         } else {
             dataJson[field] = data.get(field);
         }
     }
-    console.log(dataJson);
+    // console.log(dataJson);
 
     try {
         await fetch(url, {
