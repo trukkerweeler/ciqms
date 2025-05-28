@@ -75,7 +75,7 @@ form.addEventListener("submit", async (event) => {
     }
   }
 
-  console.log(dataJson);
+  // console.log(dataJson);
 
   try {
     await fetch(url, {

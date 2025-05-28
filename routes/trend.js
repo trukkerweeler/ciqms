@@ -113,7 +113,7 @@ router.put('/:id', (req, res) => {
             console.error('Error connecting: ' + err.stack);
             return;
         }
-        console.log('Connected to DB');
+        // console.log('Connected to DB');
         let query = `UPDATE quality.NONCONFORMANCE SET `;
 
         let queryParams = [];
