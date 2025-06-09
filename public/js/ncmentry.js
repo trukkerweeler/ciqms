@@ -75,8 +75,6 @@ form.addEventListener("submit", async (event) => {
     }
   }
 
-  // console.log(dataJson);
-
   try {
     await fetch(url, {
       method: "POST",
@@ -135,5 +133,6 @@ form.addEventListener("submit", async (event) => {
   // Set default values
   defaultNcmDate.value = recordDate;
   defaultDueDate.value = myDueDateDefault;
+  window.location.href = "ncms.html";
 
 });

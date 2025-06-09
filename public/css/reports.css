@@ -32,3 +32,32 @@ tr:nth-child(even) {
     /* All borders */
     border: 1px solid #000;
 }
+
+.filter-panel {
+    position: fixed;
+    top: 1rem;
+    right: 1rem;
+    background: #fff;
+    border: 1px solid #ccc;
+    border-radius: 8px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    padding: 1rem;
+    z-index: 1000;
+}
+
+.filter-panel label {
+    display: flex;
+    align-items: center;
+    gap: 0.5em;
+    margin-bottom: 0.5em;
+}
+
+.filter-panel label:last-child {
+    margin-bottom: 0;
+}
+
+@media print {
+    .filter-panel {
+        display: none !important;
+    }
+}
