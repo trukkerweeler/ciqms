@@ -717,6 +717,8 @@ footer div p {
     display: contents;
 }
 
+
+
 @media print {
     form{
         display: none;

@@ -52,3 +52,7 @@ PUT http://localhost:3003/csr/incrementId
 
 ###
 GET http://localhost:3003/attendance/nextId
+###
+GET http://localhost:3003/expiry
+###
+GET http://localhost:3003/expiry/nextId

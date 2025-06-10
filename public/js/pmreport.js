@@ -101,20 +101,6 @@ table.id = "report-table";
 const h1 = document.createElement("h1");
 h1.innerText = "Preventive Maintenance";
 main.appendChild(h1);
-const h2 = document.createElement("h2");
-h2.innerText = "Monthly PM Report";
-main.appendChild(h2);
-const p = document.createElement("p");
-p.innerText = "X = Done, O = Not Done, I = Inop";
-main.appendChild(p);
-main.appendChild(table);
-const header = table.createTHead();
-// header.innerText = "Monthly PM Report";
-const headerRow = header.insertRow(0);
-headerRow.insertCell(0).innerHTML = "Subject";
-months.forEach((date) => {
-  headerRow.insertCell(-1).innerHTML = date;
-});
 
 // Fetch the data from the server
 fetch(url)
@@ -160,42 +146,51 @@ fetch(url)
     const annualCheckbox = document.getElementById("annual");
     // if the monthly checkbox is not checked, hide the monthly table
     if (monthlyCheckbox.checked === true) {
-      // for each subject enter the subject as teh first column in the row and then populate the responses for the dates
+      // Monthly PM Report Heading and Legend
+      const h2 = document.createElement("h2");
+      h2.innerText = "Monthly PM Report";
+      main.appendChild(h2);
+      const p = document.createElement("p");
+      p.innerText = "X = Done, O = Not Done, I = Inop";
+      main.appendChild(p);
+
+      // Table setup
+      main.appendChild(table);
+      const header = table.createTHead();
+      const headerRow = header.insertRow(0);
+      headerRow.insertCell(0).innerHTML = "Subject";
+      months.forEach((date) => {
+      headerRow.insertCell(-1).innerHTML = date;
+      });
+
+      // Populate table rows
       uMonthlySubjects.forEach((subject) => {
-        const row = table.insertRow(-1);
-        try {
-          row.insertCell(0).innerHTML =
-            subject +
-            " " +
-            PMFormNames[subject] +
-            "<br>" +
-            monthlydata.find((report) => report.SUBJECT === subject)
-              .ASSIGNED_TO;
-        } catch (error) {
-          console.log(error);
-          console.log(subject);
-          row.insertCell(0).innerHTML = subject + " " + PMFormNames[subject];
-        }
+      const row = table.insertRow(-1);
+      let assignedTo = "";
+      try {
+        assignedTo =
+        "<br>" +
+        monthlydata.find((report) => report.SUBJECT === subject).ASSIGNED_TO;
+      } catch (error) {
+        assignedTo = "";
+      }
+      row.insertCell(0).innerHTML =
+        subject + " " + (PMFormNames[subject] || "") + assignedTo;
 
-        months.forEach((shortmonth) => {
-          // console.log(shortmonth);
-
-          const report = data.find(
-            (report) =>
-              report.SUBJECT === subject &&
-              new Date(report.INPUT_DATE).getMonth() ===
-                monthNames.indexOf(shortmonth.split(" ")[0])
-          );
-          // console.log(report);
-          let newResponse = report ? report.RESPONSE_TEXT : "";
-
-          newResponse = exesAndOhs(newResponse);
-
-          row.insertCell(-1).innerHTML = report ? newResponse : "";
-          // row.insertCell(-1).innerHTML = 'X';
-        });
+      months.forEach((shortmonth) => {
+        const monthIdx = monthNames.indexOf(shortmonth.split(" ")[0]);
+        const report = data.find(
+        (report) =>
+          report.SUBJECT === subject &&
+          new Date(report.INPUT_DATE).getMonth() === monthIdx
+        );
+        let newResponse = report ? report.RESPONSE_TEXT : "";
+        newResponse = exesAndOhs(newResponse);
+        row.insertCell(-1).innerHTML = report ? newResponse : "";
+      });
       });
     }
+
     if (quarterlyCheckbox.checked === true) {
       // Make a table for Quarterly PMs
       const quarterlyTable = document.createElement("table");

@@ -75,7 +75,9 @@ app.use("/trend", trendRoutes);
 const mgmtRoutes = require("./routes/mgmt");
 app.use("/mgmt", mgmtRoutes);
 
+const expiryRoutes = require("./routes/expiry");
+app.use("/expiry", expiryRoutes);
+
 app.listen(port, async() => {
-  // console.log(`Example app listening at http://localhost:${port}`);
-  console.log(`This still gits to INPUT`);
+  console.log(`Example app listening at http://localhost:${port}`);
 });
