@@ -22,7 +22,7 @@ router.get('/', (req, res) => {
             }
         // console.log('Connected to DB');
 
-        const query = 'select DOCUMENT_ID, NAME, TYPE, STATUS, REVISION_LEVEL, ISSUE_DATE, REFERENCE, CREATE_BY, CREATE_DATE from DOCUMENTS order by REFERENCE asc, TYPE desc, DOCUMENT_ID asc';
+        const query = 'select DOCUMENT_ID, NAME, TYPE, STATUS, REVISION_LEVEL, ISSUE_DATE, REFERENCE, CREATE_BY, CREATE_DATE from DOCUMENTS where STATUS != "O" order by REFERENCE asc, TYPE desc, DOCUMENT_ID asc';
         connection.query(query, (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for document selection: ' + err);

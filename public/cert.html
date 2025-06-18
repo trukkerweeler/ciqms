@@ -1,0 +1,40 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <title id="pageTitle">CERT</title>
+  </head>
+  <body>
+    <header>
+      <h1 class="greenfont d-none">Global Cert</h1>
+    </header>
+    <main>
+      <div id="historyButton">
+        <p>Go to <a href="index.html">HOME</a></p>
+      </div>
+      <div id="logoContainer">
+      <img id="logoImage" src="../images/ci-logo.png" alt="CI logo" title="" />
+      <h2 id="textTitle">CERTIFICATE OF PROCESSING</h2>
+      </div>
+      <div id="searchForm">
+        <label for="woNo">WO No:</label>
+        <input type="text" id="woNo" name="woNo" value="122203" />
+        <button type="submit" id="btnSearch">Search</button>
+      </div>
+      <div id="trace"></div>
+      <div id="chem"></div>
+      <div id="spot"></div>
+      <div id="fusion"></div>
+      <div id="heat"></div>
+      <div id="paint"></div>
+      <div id="cert-trace"></div>
+    </main>
+    <div id="stmt"></div>
+    <footer>
+      <p>&copy; 2025 RMA</p>
+    </footer>
+  </body>
+  <script type="module" src="/js/cert.mjs"></script>
+</html>

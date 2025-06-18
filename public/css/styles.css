@@ -646,7 +646,7 @@ footer div p {
     display: grid;
     grid-template-columns: 1fr 1fr 1fr 1fr 1fr;
     gap: 5px;
-    margin-bottom: 25px;
+    margin-bottom: 10px;
     padding-left: 1rem;
 }
 #btnCloseNCM, #btnCloseCA {

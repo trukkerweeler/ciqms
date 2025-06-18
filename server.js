@@ -77,6 +77,20 @@ app.use("/mgmt", mgmtRoutes);
 
 const expiryRoutes = require("./routes/expiry");
 app.use("/expiry", expiryRoutes);
+const rmaRoutes = require("./routes/rmahistory");
+app.use("/rmahistory", rmaRoutes);
+
+const rmaWipRoutes = require("./routes/rmawip");
+app.use("/rmawip", rmaWipRoutes);
+
+const apoiRoutes = require("./routes/apoi");
+app.use("/apoi", apoiRoutes);
+
+const searcherRoutes = require("./routes/searcher");
+app.use("/searcher", searcherRoutes);
+
+const certRoutes = require("./routes/cert");
+app.use("/cert", certRoutes);
 
 app.listen(port, async() => {
   console.log(`Example app listening at http://localhost:${port}`);

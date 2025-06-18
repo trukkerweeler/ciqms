@@ -31,6 +31,7 @@ fetch(url, { method: "GET" })
     const fieldList = [
       "INPUT_ID",
       "INPUT_DATE",
+      "ASSIGNED_TO",
       "SUBJECT",
       "INPUT_TEXT",
       "CLOSED",

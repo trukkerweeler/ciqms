@@ -1,0 +1,32 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <title>RMA</title>
+  </head>
+  <body>
+    <header>
+      <h1 class="greenfont">Global RMA WIP info</h1>
+    </header>
+    <main>
+      <div id="historyButton"></div>
+      <p>Go to <a href="rmahistory.html">HISTORY</a></p>        
+      </div>
+      <div id="searchForm">
+        <label for="rmaNo">RMA No:</label>
+        <input type="text" id="rmaNo" name="rmaNo" value="0001172"/>
+        <button type="submit" id="btnSearch">Search</button>
+      </div>
+      <div>
+        <table id="xmlTable"></table>
+      </div>
+      <div id="searchResults"></div>
+    </main>
+    <footer>
+      <p>&copy; 2025 RMA</p>
+    </footer>
+  </body>
+  <script type="module" src="/js/rmawip.mjs"></script>
+</html>
