@@ -142,7 +142,7 @@ document.getElementById("saveExpiry").addEventListener("click", async () => {
   data.EXPIRATION_ID = nextId;
   data.CREATE_BY = user;
   data.CREATE_DATE = getDateTime();
-  console.log(nextId);
+  // console.log(nextId);
 
   const response = await fetch(url, {
     method: "POST",
@@ -153,7 +153,7 @@ document.getElementById("saveExpiry").addEventListener("click", async () => {
   });
 
   if (response.ok) {
-    alert("Expiry saved successfully!");
+    // alert("Expiry saved successfully!");
     // increment nextId for next entry
     const incrementResponse = await fetch(`${url}/incrementId`, {
       method: "PUT",
@@ -207,4 +207,9 @@ document
     } else {
       alert("Failed to update disposition and comment.");
     }
+  });
+
+  // listen for closeEditBtn and close the modal
+  document.querySelector("#closeEditBtn").addEventListener("click", () => {
+    document.getElementById("dispositionModal").close();
   });

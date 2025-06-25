@@ -182,8 +182,8 @@ router.post("/", (req, res) => {
         req.body.CREATE_BY,
         req.body.CREATE_DATE,
       ];
-      console.log(query);
-      console.log(values);
+      // console.log(query);
+      // console.log(values);
 
       connection.query(query, values, (err, rows, fields) => {
         if (err) {

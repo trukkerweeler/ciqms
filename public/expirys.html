@@ -67,8 +67,9 @@
                     <label for="modalDisposition">Disposition</label>
                     <select id="modalDisposition" name="DISPOSITION">
                         <option value="" selected disabled>Select disposition</option>
-                        <option value="E">E</option>
-                        <option value="A">A</option>
+                        <!-- <option value="E">E</option> -->
+                        <!-- <option value="A">A</option> -->
+                        <option value="C">Consumed</option>
                         <option value="D">Disposed</option>
                     </select>
 
@@ -76,6 +77,7 @@
                     <textarea id="modalComment" name="COMMENT" placeholder="Always enter a disposition comment. Note that 'Disposed' means it is not in the building"></textarea>
 
                     <button type="submit" id="saveDisposition">Save</button>
+                    <!-- <button type="button" id="closeEditBtn">Close</button> -->
                 </form>
             </div>
         </dialog>
