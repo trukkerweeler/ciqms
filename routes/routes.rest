@@ -56,3 +56,5 @@ GET http://localhost:3003/attendance/nextId
 GET http://localhost:3003/expiry
 ###
 GET http://localhost:3003/expiry/nextId
+###
+GET http://localhost:3003/calibrate

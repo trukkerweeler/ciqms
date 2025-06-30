@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Devices</title>
+    <link rel="stylesheet" href="css/stylescal.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" href="./images/ci-logo.png" />
+  </head>
+  <body>
+    <header id="header"></header>
+    <nav></nav>
+    <main id="main-content">
+      <dialog id="edit-device-dialog" class="dialog">
+        <form id="edit-device-form">
+          <h2>Edit Device Record</h2>
+          <label for="edit-device-id">Device ID:</label>
+          <input
+            type="text"
+            id="edit-device-id"
+            name="DEVICE_ID"
+            required
+            readonly
+          />
+
+          <label for="edit-device-name">Name:</label>
+          <input type="text" id="edit-device-name" name="NAME"required />
+
+          <label for="edit-device-type">Device Type:</label>
+          <input type="text" id="edit-device-type" name="DEVICE_TYPE" />
+
+          <label for="edit-manufacturer-name">Manufacturer Name:</label>
+          <input
+            type="text"
+            id="edit-manufacturer-name"
+            name="MANUFACTURER_NAME"
+          />
+
+          <label for="edit-model">Model:</label>
+          <input type="text" id="edit-model" name="MODEL" />
+
+          <label for="edit-serial-number">Serial Number:</label>
+          <input type="text" id="edit-serial-number" name="SERIAL_NUMBER" />
+
+          <label for="edit-major-location">Major Location:</label>
+          <input type="text" id="edit-major-location" name="MAJOR_LOCATION" />
+
+          <label for="edit-minor-location">Minor Location:</label>
+          <input type="text" id="edit-minor-location" name="MINOR_LOCATION" />
+
+          <label for="edit-purchase-date">Purchase Date:</label>
+          <input type="date" id="edit-purchase-date" name="PURCHASE_DATE" />
+
+          <label for="edit-purchase-price">Purchase Price:</label>
+          <input
+            type="number"
+            id="edit-purchase-price"
+            name="PURCHASE_PRICE"
+            step="0.01"
+          />
+
+          <label for="edit-status">Status:</label>
+          <select id="edit-status" name="STATUS" required>
+            <option value="A">Active</option>
+            <option value="I">Inactive</option>
+          </select>
+
+          <div class="dialog-actions">
+            <button type="button" id="saveDeviceEdit" class="btn btn-primary btn-save">
+              Save
+            </button>
+            <button type="button" id="cancelDeviceEdit" class="btn btn-cancel" onclick="document.getElementById('edit-device-dialog').close()">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+      <dialog id="edit-devcal-dialog" class="dialog">
+        <form id="edit-devcal-form">
+          <h2>Edit Device Cal Info</h2>
+          <label for="edit-assi-employee-id">ASSI Employee ID:</label>
+          <input
+            type="text"
+            id="edit-assi-employee-id"
+            name="ASSI_EMPLOYEE_ID"
+          />
+
+          <label for="edit-days-remaining">Days Remaining:</label>
+          <input type="number" id="edit-days-remaining" name="DAYS_REMAINING" />
+
+          <label for="edit-status">Status:</label>
+          <select id="edit-status" name="STATUS" required>
+            <option value="A">Active</option>
+            <option value="I">Inactive</option>
+          </select>
+
+          <label for="edit-next-date">Next Date:</label>
+          <input type="date" id="edit-next-date" name="NEXT_DATE" />
+
+          <label for="edit-warning-interval">Warning Interval:</label>
+          <input
+            type="number"
+            id="edit-warning-interval"
+            name="WARNING_INTERVAL"
+          />
+
+          <label for="edit-standard-interval">Standard Interval:</label>
+          <input
+            type="number"
+            id="edit-standard-interval"
+            name="STANDARD_INTERVAL"
+          />
+
+          <label for="edit-special-interval">Special Interval:</label>
+          <input
+            type="number"
+            id="edit-special-interval"
+            name="SPECIAL_INTERVAL"
+          />
+
+          <div class="dialog-actions">
+            <button type="button" id="saveDevcalEdit" class="btn btn-primary">
+              Save
+            </button>
+            <button type="button" id="cancelDevcalEdit" class="btn btn-cancel" onclick="document.getElementById('edit-devcal-dialog').close()">Cancel</button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Image view dialog -->
+      <dialog id="view-device-image-dialog" class="dialog">
+        <button id="closeDialog" class="close-button" onclick="document.getElementById('view-device-image-dialog').close()">&times;</button>
+        <section class="section image-section">
+          <h2>Device Image</h2>
+          <div id="view-device-image-div">
+            <img id="device-image" src="" alt="Device Image" />
+            <div id="image-actions">
+              <!-- <label for="imagePicker">Change Image:</label> -->
+              <section>
+                <h3>Change image</h3>
+                <button type="button" id="changeImage" class="btn btn-primary">
+                  Change Image</button>
+                <input type="file" id="imagePicker" accept="image/*" />
+              </section>
+              <section>
+                <h3>Delete image</h3>
+                <button type="button" id="deleteImage" class="btn btn-cancel">
+                  Delete Image</button>
+              </section>
+            </div>
+          </div>
+          </button>
+        </section>
+      </dialog>
+
+
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="js/device.mjs"></script>
+</html>

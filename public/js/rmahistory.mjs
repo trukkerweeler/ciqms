@@ -1,3 +1,5 @@
+import { myport } from "./utils.mjs";
+
 const port = myport() || 3003;
 const btnSearch = document.getElementById("btnSearch");
 const rmaNo = document.getElementById("rmaNo"); // Assuming this is the input field for Work Order No

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Devices</title>
+    <link rel="stylesheet" href="css/stylescal.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" href="./images/ci-logo.png" />
+  </head>
+  <body>
+    <header id="header"></header>
+    <nav></nav>
+    <main id="main-content">
+      <dialog create-calibration-dialog class="dialog">
+        <form id="create-calibration-form">
+          <h2 id="create-cal-header"></h2>
+          <label for="device-id">Device ID:</label>
+          <input
+            type="text"
+            id="device-id"
+            name="DEVICE_ID"
+            style="text-transform: uppercase;"
+            required
+          />
+
+          <label for="isc">Calibrated by:</label>
+          <select id="isc" name="CALIBRATED_BY" required>
+            <option value="S">Supplier</option>
+            <option value="I">Internal</option>
+            <option value="C">Customer</option>
+          </select>
+
+          <label for="supplier-id">Supplier ID:</label>
+            <input type="text" id="supplier-id" name="SUPPLIER_ID" style="text-transform: uppercase;" required />
+
+          <label for="employee-id">Employee ID:</label>
+            <input type="text" id="employee-id" name="EMPLOYEE_ID" style="text-transform: uppercase;" required />
+
+          <label for="calibrate-date">Calibrate Date:</label>
+          <input
+            type="date"
+            id="calibrate-date"
+            name="CALIBRATE_DATE"
+            required
+          />
+
+          <label for="result">Result:</label>
+          <select id="result" name="RESULT" required>
+            <option value="P">Pass</option>
+            <option value="F">Fail</option>
+          </select>
+
+          <div class="dialog-actions">
+            <button id="buttonAddCalibration" class="btn btn-primary" type="submit">
+              Create
+            </button>
+            <button
+              type="button"
+              id="cancel-add-calibration"
+              class="btn btn-cancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="js/calibrations.mjs"></script>
+</html>

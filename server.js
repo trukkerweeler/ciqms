@@ -92,6 +92,18 @@ app.use("/searcher", searcherRoutes);
 const certRoutes = require("./routes/cert");
 app.use("/cert", certRoutes);
 
+const idsRoutes = require("./routes/ids");
+app.use("/ids", idsRoutes);
+
+const calibrateRoutes = require("./routes/calibrate");
+app.use("/calibrate", calibrateRoutes);
+
+const deviceRoutes = require("./routes/device");
+app.use("/device", deviceRoutes);
+
+const imageRoutes = require("./routes/image");
+app.use("/image", imageRoutes);
+
 app.listen(port, async() => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
