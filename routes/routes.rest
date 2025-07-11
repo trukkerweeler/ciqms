@@ -58,3 +58,6 @@ GET http://localhost:3003/expiry
 GET http://localhost:3003/expiry/nextId
 ###
 GET http://localhost:3003/calibrate
+###
+GET http://localhost:3003/cert/122246
+

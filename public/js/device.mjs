@@ -158,6 +158,11 @@ async function initializePage() {
 
         let editCalibrationButton = document.createElement("button");
         editCalibrationButton.textContent = "Edit";
+        // make the editCalibrationButton not displayed
+        editCalibrationButton.style.display = "none";
+        if (user === "TKENT" || user === "superuser") {
+          editCalibrationButton.style.display = "inline-block";
+        }
         editCalibrationButton.addEventListener("click", () => {
           document.getElementById("edit-assi-employee-id").value =
             data["ASSI_EMPLOYEE_ID"] || "";

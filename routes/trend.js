@@ -2,7 +2,7 @@
 
 const express = require("express");
 const router = express.Router();
-const mysql = require("mysql");
+const mysql = require("mysql2");
 let test = true;
 
 // ==================================================

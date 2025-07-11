@@ -137,6 +137,15 @@ while (main.firstChild) {
                 rmaId.textContent = 'RMA Id:' + ' ' + record[key]['USER_DEFINED_1'];
             }
 
+            const po_number = document.createElement('p');
+            po_number.textContent = 'PO Number:' + ' ' + record[key]['PO_NUMBER'];
+            po_number.setAttribute('class', 'tbl');
+            if ((record[key]['PO_NUMBER'] === null) || (record[key]['PO_NUMBER'] === '') || (record[key]['PO_NUMBER'] === undefined)) {
+                po_number.textContent = 'PO:' + '--';
+            } else {
+                po_number.textContent = 'PO:' + ' ' + record[key]['PO_NUMBER'];
+            }
+
 
             const notesSection = document.createElement('section');
             notesSection.setAttribute('class', 'notesgrid');
@@ -227,6 +236,7 @@ while (main.firstChild) {
             detailSection.appendChild(lotNumber);
             detailSection.appendChild(lotQty);
             detailSection.appendChild(rmaId);
+            detailSection.appendChild(po_number);
 
             const divDesc = document.createElement('div');
             divDesc.setAttribute('class', 'notes');

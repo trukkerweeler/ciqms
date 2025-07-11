@@ -1,11 +1,13 @@
+// cert.js
+
+
+
 const express = require("express");
 const fs = require("fs");
 const path = require("path");
 const router = express.Router();
 const mysql = require("mysql2");
 const { exec } = require("child_process");
-
-
 
 
 router.get("/detail/:id", (req, res) => {
@@ -44,7 +46,7 @@ router.get("/detail/:id", (req, res) => {
 // ==================================================
 // Get record
 router.get("/:id", (req, res) => {
-    // console.log("Received request for WO No:", req.params.id);
+    console.log("Received request for WO No:", req.params.id);
     const rmaNo = req.params.id;
     const vbsFilePath = path.join(__dirname, "cert.vbs");
     const cscriptPath = process.env.SYSTEMROOT + "\\SysWOW64\\cscript.exe"; // Use 32-bit cscript explicitly
@@ -78,7 +80,6 @@ router.get("/:id", (req, res) => {
 router.get("/processes/:id", (req, res) => {
     // console.log("Received request 78 for WO No:", req.params.id);
     const longWO = req.params.id;
-    // return res.status(501).send("Not implemented yet.");
     const vbsFilePath = path.join(__dirname, "certprocesses.vbs");
     const cscriptPath = process.env.SYSTEMROOT + "\\SysWOW64\\cscript.exe"; // Use 32-bit cscript explicitly
     const command = `"${cscriptPath}" //Nologo "${vbsFilePath}" ${longWO}`;
@@ -223,7 +224,7 @@ router.get("/swld/:id", (req, res) => {
 
 // ==================================================
 router.get("/heat/:id", (req, res) => {
-    // console.log("Received request 226 for WO No:", req.params.id);
+    // console.log("Received request 225 for WO No:", req.params.id);
     const longWO = req.params.id;
     const jobId = longWO.substring(0, 6);
     const jobSuffix = longWO.substring(7, 10);

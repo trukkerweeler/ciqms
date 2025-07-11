@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql');
+const mysql = require('mysql2');
 
 router.post('/', async (req, res) => {
     // prefix the id with 0s to make it 7 digits

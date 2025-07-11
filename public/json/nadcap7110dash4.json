@@ -1,0 +1,362 @@
+[
+  {
+    "clause_id": "3.1",
+    "requirement": "Are applicable customer specifications available at the facility?",
+    "reference": ""
+  },
+  {
+    "clause_id": "4.1",
+    "requirement": "Are cleaning materials, chemical solvents or etching solutions as specified on part drawings or certified/qualified welding procedures/schedules?",
+    "reference": ""
+  },
+  {
+    "clause_id": "5.1",
+    "requirement": "Is equipment used to evaluate production witness coupons capable of accurately measuring nugget characteristics at the required magnification?",
+    "reference": ""
+  },
+  {
+    "clause_id": "5.2",
+    "requirement": "Is there a documented procedure that defines the calibration of equipment at established intervals?",
+    "reference": "CI-QSP-7150"
+  },
+  {
+    "clause_id": "5.3",
+    "requirement": "Are qualification records/results that meet procedure requirements available for each machine?",
+    "reference": ""
+  },
+  {
+    "clause_id": "5.4.1",
+    "requirement": "Is there a documented procedure that defines the specification and certification requirements including receiving inspection verification responsibilities for the electrodes or electrode materials?",
+    "reference": "CI-WI-5080 4.4.2"
+  },
+  {
+    "clause_id": "5.4.2",
+    "requirement": "Are all electrode materials and shapes controlled and identified as specified on the certified weld schedules?",
+    "reference": ""
+  },
+  {
+    "clause_id": "5.5",
+    "requirement": "Is there a documented procedure to ensure that tooling and fixtures are so designed that magnetic material is not present in the throat of the machine, insofar as possible?",
+    "reference": "CI-WI-5080 5.2.3"
+  },
+  {
+    "clause_id": "5.6",
+    "requirement": "Is there a documented procedure to ensure that jigs and fixtures are so designed that welding current cannot shunt through them?",
+    "reference": "CI-WI-5080 5.2.3"
+  },
+  {
+    "clause_id": "5.7.1",
+    "requirement": "Are welding conditions/settings documented on Machine Qualification Test Reports or equivalent?",
+    "reference": ""
+  },
+  {
+    "clause_id": "5.7.2",
+    "requirement": "Is evidence of Machine Qualification Test reports, or equivalent, and supporting data available to machine operators, inspectors, and customer representative?",
+    "reference": ""
+  },
+  {
+    "clause_id": "5.7.3",
+    "requirement": "Are machines qualified for the material type and thickness for which they are intended to be used in production?",
+    "reference": ""
+  },
+  {
+    "clause_id": "5.7.4",
+    "requirement": "Are welding machines re-qualified if rebuilt, relocated, or if significant operational changes are made?",
+    "reference": "CI-WI-5080 5.5.8"
+  },
+  {
+    "clause_id": "6.1.1",
+    "requirement": "Is there a documented procedure to ensure qualified welding procedures/schedules are established for each production weld where qualification is required by the customer/specification?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.1.2",
+    "requirement": "Is there a documented procedure that includes a provision for obtaining customer approval when the customer requires welding procedure approval?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.1.3",
+    "requirement": "Is there a documented procedure that includes a provision for obtaining customer approval when the customer requires welding schedule approval?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.2",
+    "requirement": "Use of Resistance Tack Welds. If resistance tack welds are not used, check NA.",
+    "reference": "SECTION N/A"
+  },
+  {
+    "clause_id": "6.2.1",
+    "requirement": "Is there a documented procedure that ensures resistance tack welding of details is accomplished in accordance with specification requirements?",
+    "reference": "N/A - 5.12.1, CI-WI-5080"
+  },
+  {
+    "clause_id": "6.2.2",
+    "requirement": "Is there a documented procedure to ensure that the resistance tack welds are welded in accordance with an approved schedule?",
+    "reference": "N/A - 5.12.2, CI-WI-5080"
+  },
+  {
+    "clause_id": "6.2.3",
+    "requirement": "Is there a documented procedure to ensure that the resistance tack weld is totally consumed and within the confines of the finished weld when required?",
+    "reference": "5.12.1, CI-WI-5080"
+  },
+  {
+    "clause_id": "6.3",
+    "requirement": "Is GTA tack welding prohibited or, if used, is Supplement C for GTA tack welding control included in the audit? (Note that this question can only be answered NA when the scope only includes foils)",
+    "reference": "N/A 5.13.1, CI-WI-5080"
+  },
+  {
+    "clause_id": "6.4",
+    "requirement": "Do Auditee procedures specifically prohibit the use of filler material or if not is Supplement D for filler material control included in the scope of the audit? (Note that this question can only be answered NA when the scope only includes foils)",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.5",
+    "requirement": "Is there a process to ensure stress relieve of weldments is performed in accordance with applicable requirements? (Supplement E is to be completed if the Auditee is performing stress relieving of weldments in-house and does not hold a Nadcap Heat treat accreditation).",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.6",
+    "requirement": "Is there a process to ensure heat treatment of weldments is performed in accordance with applicable requirements?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.7.1",
+    "requirement": "Is there a documented procedure to define the requirements for certification of welding procedures/schedules?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.7.2",
+    "requirement": "Are tests conducted and documented for the purposes of welding schedule/procedure certification?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.7.3",
+    "requirement": "Are Certification Test Reports available to the customer representatives?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.7.4",
+    "requirement": "Is there a Certification Test Report traceable to each machine and each combination of relevant materials, material conditions, surface conditions, electrode configurations, and thickness combinations?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.7.5",
+    "requirement": "Does each certification report contain all applicable requirements? For example: Shear strength and/or peel data on each weld, the average, the number of specimens with shear values outside set limits, and the nugget diameters for each metallographic specimen as required?",
+    "reference": ""
+  },
+  {
+    "clause_id": "6.7.6",
+    "requirement": "Does the Certification Test Report indicate the success or failure to meet certification criteria?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.1.1",
+    "requirement": "Is there a documented procedure to ensure part cleanliness prior to welding?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.1.2",
+    "requirement": "Are parts properly cleaned to assure surfaces of the details and representative test specimens are free from contaminants such as oxides, scale, oil, dirt, ink, or other surface conditions that are detrimental to the joining process?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.1.3",
+    "requirement": "Are part details protected after cleaning until welding can be performed?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.1.4",
+    "requirement": "Is there a documented procedure to ensure that after cleaning, all part details are welded within specified time limits?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.1.5",
+    "requirement": "Is there a documented procedure to ensure that after surface preparation, parts are handled and protected to prevent contamination, including a requirement to re-clean should contamination occur?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.1.6",
+    "requirement": "Are jigs, fixtures, and measuring devices free of scale, grease, protective coatings, oxides, dust, oil, and other foreign matter detrimental to the welding process?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.2.1",
+    "requirement": "Does the router list the sequence of operations that control manufacturing and inspection operations?",
+    "reference": "CI-QSP-8500, 4.5.2"
+  },
+  {
+    "clause_id": "7.2.2",
+    "requirement": "Are there detailed operation sheets/weld schedules with parameter settings for each part number?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.3.1",
+    "requirement": "Are parameter settings on operation sheets traceable to qualification test reports?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.3.2",
+    "requirement": "Are qualification test reports documented and held on file for customer review?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.3.3",
+    "requirement": "When metallographic assessment of resistance welds (Qualification and / or Process Control) is performed by the Auditee’s captive laboratory, is Supplement F included in the audit? (Note that NA is only an option when approval for metallographic assessment of welds is not required or metallographic assessment is not being performed by the Auditee’s captive laboratory) (See AC7110/4S for unique Customer requirements)",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.3.4",
+    "requirement": "Is the Independent Laboratory performing metallographic testing of Qualification welds approved in accordance with customer requirements? (Note that N/A is only an option when an Independent Laboratory is not used or there are no customer approval requirements) (See AC7110/4S for unique Customer requirements)",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.1",
+    "requirement": "Are test specimens for production parts identified with a unique identification system that can be used to match them to material, thickness, heat treat condition etc.?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.2",
+    "requirement": "If acceptable pre-production tests cannot be obtained within the permitted schedule latitude adjustment, is welding stopped and the machine checked for faulty operation?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.3",
+    "requirement": "Are results of production witness welds (e.g. etch, peel, chisel, tensile, metallographic) recorded and maintained in a paper or electronic register near the welding machine or available to the operator?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.4",
+    "requirement": "Are metallographic test sections being evaluated to specification requirements with proper magnification? (Note that this question can only be answered NA when there is no requirement for the metallurgical assessment of test sections)",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.5",
+    "requirement": "Is metallographic sectioning and polishing equipment available and does measuring equipment have the required magnification and ability to measure dimensional characteristics for evaluating production witness weld specimens? (Note that this question can only be answered NA when there is no requirement for the metallurgical assessment of test sections)",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.6",
+    "requirement": "Whenever specimen test results do not meet specified requirements, is welding stopped and all parts produced since the last acceptable test identified as nonconforming and segregated?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.7",
+    "requirement": "Does the register include traceability to part number, (serial numbers - when applicable), lot/job numbers, production witness results, machine number, and coupon weld times?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.8",
+    "requirement": "Is there a documented procedure to ensure, that when deterioration of welding is encountered, an investigation is conducted to assign the cause, and implement corrective action?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.4.9",
+    "requirement": "Is there a documented procedure to ensure that where the assigned cause is attributed to the qualified machine/schedule being unable to produce acceptable welds, the Auditee stops welding and requalifies the machine/schedule in accordance with the applicable specification requirement?",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.5",
+    "requirement": "Is there a documented procedure to control methods for the location of resistance welds?",
+    "reference": "CI-WI-5080 5.2.3.1, "
+  },
+  {
+    "clause_id": "7.6",
+    "requirement": "Is there a documented procedure in effect to assure the control of electronic programs and data? (Note that this question can only be answered NA when electronic programs are not used)",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.7",
+    "requirement": "Is Supplement AC7110/4S completed for Auditees who chisel test pre and post production test pieces? (Note that this question can only be answered NA when chisel testing is not performed) (Note that unique Subscriber requirements exist against this question. Refer to AC7110/4S to establish if additional requirements are mandated)",
+    "reference": ""
+  },
+  {
+    "clause_id": "7.8",
+    "requirement": "Is there a documented procedure that addresses rework / repair in accordance with Customer requirements?",
+    "reference": ""
+  },
+  {
+    "clause_id": "8.1",
+    "requirement": "Is there a documented procedure to ensure welding operators are qualified/trained?",
+    "reference": "CI-PP-5000"
+  },
+  {
+    "clause_id": "8.2",
+    "requirement": "Is there a documented procedure to ensure tack weld personnel are qualified/trained? (Note that this question can only be answered NA when there is no requirement for resistance tack welding)",
+    "reference": ""
+  },
+  {
+    "clause_id": "8.3",
+    "requirement": "Is there a documented procedure in place to train and qualify welding visual inspectors?",
+    "reference": "CI-PP-5000 1S"
+  },
+  {
+    "clause_id": "8.4",
+    "requirement": "Is there documented evidence of training and qualification of welding visual inspectors?",
+    "reference": ""
+  },
+  {
+    "clause_id": "8.5",
+    "requirement": "Do qualification documents include objective evidence that the welding operator(s) / visual weld inspectors have satisfied the specified vision examination requirements?",
+    "reference": ""
+  },
+  {
+    "clause_id": "8.6",
+    "requirement": "Does the training of operators/inspectors that evaluate production weld coupons include assessment of all necessary characteristics?",
+    "reference": ""
+  },
+  {
+    "clause_id": "8.7",
+    "requirement": "Can the person who evaluates resistance welds determine the necessary characteristics as required by the customer specification?",
+    "reference": ""
+  },
+  {
+    "clause_id": "9.1",
+    "requirement": "Are production welds examined for conformance in accordance with applicable specifications?",
+    "reference": "CI-PP-5000 1S"
+  },
+  {
+    "clause_id": "9.2",
+    "requirement": "Are welded parts traceable to the welding machine, approved procedure, operator, and inspector?",
+    "reference": ""
+  },
+  {
+    "clause_id": "9.3",
+    "requirement": "Is there a documented procedure to ensure all welds are inspected by qualified visual inspectors?",
+    "reference": "CI-PP-5000 1S"
+  },
+  {
+    "clause_id": "9.4",
+    "requirement": "Are inspection tools to measure dimensional features available to the inspector? (Note that this question can only be answered NA when only foils are welded and when there is no requirement for dimensional testing of test pieces)",
+    "reference": "CI-QMS-4420 8.1 (j) Ref. DCR 0000106"
+  },
+  {
+    "clause_id": "9.5",
+    "requirement": "Is visual and dimensional inspection equipment suitable for the types of inspections that are being conducted?",
+    "reference": ""
+  },
+  {
+    "clause_id": "9.6",
+    "requirement": "Does the Auditee have a process in place to ensure all required NDT inspections are performed?",
+    "reference": "CI-WI-5080 5.14.1"
+  },
+  {
+    "clause_id": "9.7",
+    "requirement": "Is there a documented procedure that defines the record retention requirements for inspection records, including radiographic films (or digital equivalent)?",
+    "reference": ""
+  },
+  {
+    "clause_id": "9.8",
+    "requirement": "Is the environment where visual weld inspection is performed in compliance with customer inspection requirements?",
+    "reference": ""
+  },
+  {
+    "clause_id": "10.1",
+    "requirement": "Do written procedures require preventative maintenance of welding equipment and tooling at a specified frequency?",
+    "reference": "CI-QSP-8511"
+  },
+  {
+    "clause_id": "10.2",
+    "requirement": "Do records indicate that maintenance is performed on welding equipment and tooling in accordance with the procedures and appropriate standards?",
+    "reference": "F8511-22 (SWLD), F8511-21 (FWLD)"
+  }
+]

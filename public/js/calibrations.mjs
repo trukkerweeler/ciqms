@@ -27,109 +27,107 @@ function makePageHeaderDiv() {
   const pageTitle = document.createElement("h1");
   pageTitle.classList.add("page-header");
   pageTitle.innerHTML = "Calibrations List: " + id;
+  // pageTitle.innerHTML = "Calibrations List";
   divTitle.appendChild(pageTitle);
   // Add the button to the header div
   let AddCalBtn = document.createElement("button");
   AddCalBtn.type = "submit";
   AddCalBtn.classList.add("btn", "btn-plus");
   AddCalBtn.id = "btnAddCal";
-AddCalBtn.textContent = "+ Add Cal";
-// AddCalBtn.addEventListener("click", (e) => {
-//     e.preventDefault();
-//     const createCalibrationDialog = document.querySelector("[create-calibration-dialog]");
-//     if (createCalibrationDialog) {
-//         createCalibrationDialog.showModal();
-//     } else {
-//         console.error("Dialog element with id 'create-calibration-dialog' not found.");
-//     }
-// });
+  AddCalBtn.textContent = "+ Add Cal";
+
   AddCalBtn.setAttribute("title", "Click to add a new calibration");
   divTitle.appendChild(AddCalBtn);
-  // append the header div to the main element
   mainElement.appendChild(divTitle);
 }
 makePageHeaderDiv();
 
 function getRecords() {
-    // Clear the main element
-    Array.from(mainElement.children).forEach((child) => {
-        if (!child.hasAttribute("create-calibration-dialog")) {
-            mainElement.removeChild(child);
-        }
-    });
-    // Create the header div again
-    makePageHeaderDiv();
-    
-    // fetch(`${calibrationUrl}/${id}`, {
-    fetch(`${calibrationUrl}`, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    })
-      .then((response) => response.json())
-      .then((data) => {
-        let myFields = [
-          "CALIBRATION_ID",
-          "DEVICE_ID",
-          "CALIBRATED_BY",
-          "SUPPLIER_ID",
-          "CALIBRATE_DATE",
-          "RESULT",
-          "EMPLOYEE_ID",
-        ];
-        let table = document.createElement("table");
-        table.className = "table table-striped table-bordered table-hover";
-
-        // Create table header
-        let thead = document.createElement("thead");
-        let headerRow = document.createElement("tr");
-        myFields.forEach((field) => {
-          let th = document.createElement("th");
-          th.textContent = field.replace(/_/g, " ");
-          headerRow.appendChild(th);
-        });
-        thead.appendChild(headerRow);
-        table.appendChild(thead);
-
-        // Create table body
-        let tbody = document.createElement("tbody");
-        if (data.length === 0) {
-            let row = document.createElement("tr");
-            let td = document.createElement("td");
-            td.colSpan = myFields.length;
-            td.textContent = "No records found";
-            td.style.textAlign = "center";
-            row.appendChild(td);
-            tbody.appendChild(row);
-        }
-        data.forEach((record) => {
-          let row = document.createElement("tr");
-          myFields.forEach((field) => {
-            let td = document.createElement("td");
-            if (record[field] === "I") {
-              td.textContent = "Internal";
-            } else if (record[field] === "P") {
-                td.textContent = "Passed";
-            } else if (field.toLowerCase().endsWith("date") && record[field]) {
-              const date = new Date(record[field]);
-              td.textContent = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
-            } else {
-              td.textContent = record[field] || "";
-            }
-            row.appendChild(td);
-          });
-          tbody.appendChild(row);
-        });
-        table.appendChild(tbody);
-
-        // Append the table to the main element
-        mainElement.appendChild(table);
-      })
-      .catch((error) => {
-        console.error("Error fetching records:", error);
-      });
+  // Clear the main element
+  Array.from(mainElement.children).forEach((child) => {
+    if (!child.hasAttribute("create-calibration-dialog")) {
+      mainElement.removeChild(child);
     }
+  });
+  // Create the header div again
+  makePageHeaderDiv();
+  
+  fetch(`${calibrationUrl}`, {
+    method: "GET",
+    headers: {
+    "Content-Type": "application/json",
+    },
+  })
+    .then((response) => response.json())
+    .then((data) => {
+    // Filter records by DEVICE_ID matching the id from params
+    const filteredData = data.filter(record => record.DEVICE_ID === id);
+
+    let myFields = [
+      "CALIBRATION_ID",
+      "DEVICE_ID",
+      "CALIBRATED_BY",
+      "SUPPLIER_ID",
+      "CALIBRATE_DATE",
+      "RESULT",
+      "EMPLOYEE_ID",
+    ];
+    let table = document.createElement("table");
+    table.className = "table table-striped table-bordered table-hover";
+
+    // Create table header
+    let thead = document.createElement("thead");
+    let headerRow = document.createElement("tr");
+    myFields.forEach((field) => {
+      let th = document.createElement("th");
+      if (field === "CALIBRATE_DATE") {
+        th.textContent = "NEXT DUE";
+      } else {
+        th.textContent = field.replace(/_/g, " ");
+      }
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    // Create table body
+    let tbody = document.createElement("tbody");
+    if (filteredData.length === 0) {
+      let row = document.createElement("tr");
+      let td = document.createElement("td");
+      td.colSpan = myFields.length;
+      td.textContent = "No records found";
+      td.style.textAlign = "center";
+      row.appendChild(td);
+      tbody.appendChild(row);
+    }
+    filteredData.forEach((record) => {
+      let row = document.createElement("tr");
+      myFields.forEach((field) => {
+      let td = document.createElement("td");
+      if (record[field] === "I") {
+        td.textContent = "Internal";
+      } else if (record[field] === "P") {
+        td.textContent = "Passed";
+      } else if (field.toLowerCase().endsWith("date") && record[field]) {
+        const date = new Date(record[field]);
+        td.textContent = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
+      } else {
+        td.textContent = record[field] || "";
+      }
+      row.appendChild(td);
+      });
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    // Append the table to the main element
+    mainElement.appendChild(table);
+    })
+    .catch((error) => {
+    console.error("Error fetching records:", error);
+    });
+}
 
 getRecords();
 

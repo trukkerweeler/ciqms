@@ -1,7 +1,7 @@
 
 const express = require('express');
 const router = express.Router();
-const mysql = require('mysql');
+const mysql = require('mysql2');
 const nodemailer = require('nodemailer');
 let test = false;
 
@@ -309,6 +309,7 @@ router.get('/:id', (req, res) => {
         , n.CLOSED
         , n.CLOSED_DATE
         , n.PRODUCT_ID
+        , n.PO_NUMBER
         , n.LOT_SIZE
         , n.LOT_NUMBER
         , n.USER_DEFINED_1
