@@ -104,6 +104,9 @@ app.use("/device", deviceRoutes);
 const imageRoutes = require("./routes/image");
 app.use("/image", imageRoutes);
 
+const receiverRoutes = require("./routes/receiver");
+app.use("/receiver", receiverRoutes);
+
 app.listen(port, async() => {
   console.log(`Example app listening at http://localhost:${port}`);
 });

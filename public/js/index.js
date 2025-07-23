@@ -45,3 +45,9 @@ ctaButton.addEventListener('click', () => {
 // calButton.addEventListener('click', () => {
 //   window.location.href = 'calpo.html';
 // });
+
+// append the button cert with an anchor to cert.html
+const certButton = document.querySelector('#cert');
+certButton.addEventListener('click', () => {
+  window.location.href = 'cert.html';
+});

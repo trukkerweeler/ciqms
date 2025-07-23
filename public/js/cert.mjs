@@ -8,7 +8,7 @@ btnSearch.addEventListener("click", async function (event) {
   }
 
   // Use window.location.hostname to avoid hardcoding 'localhost'
-  const url = `http://${window.location.hostname}:3006/cert/${woNumber}`;
+  const url = `http://${window.location.hostname}:3003/cert/${woNumber}`;
   try {
     const response = await fetch(url, {
       method: "GET",

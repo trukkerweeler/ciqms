@@ -273,6 +273,7 @@ export function getEmail(user) {
   return email;
 }
 
+
 // Move fetchAndParseXML to a separate utils file
 export function fetchAndParseXML(filePath, searchKey, searchValue) {
   fetch(filePath)
@@ -330,7 +331,6 @@ export async function getCertNos(childWorkOrderNoValue) {
     table.id = "xmlTable"; // Set an ID for the table if needed
     // table.border = "1";
 
-
     details.forEach((detail) => {
       const sections = detail.querySelectorAll("Section");
       sections.forEach((section) => {
@@ -355,12 +355,12 @@ export async function getCertNos(childWorkOrderNoValue) {
         // if length is 5 or less, push to cert.lines array
         if (certno.length <= 5) {
           line["SERIALNUMBER1"] = certno; // Update the certno in the line object
-            const isDuplicate = cert.childlines.some((existingLine) => {
+          const isDuplicate = cert.childlines.some((existingLine) => {
             return JSON.stringify(existingLine) === JSON.stringify(line);
-            });
-            if (!isDuplicate) {
+          });
+          if (!isDuplicate) {
             cert.childlines.push(line);
-            }
+          }
           return; // Skip to the next section
         } else {
           // push to lookup array
@@ -372,7 +372,7 @@ export async function getCertNos(childWorkOrderNoValue) {
             if (!isDuplicate) {
               cert.lookupchild.push(line);
             }
-          } 
+          }
         }
       });
     });
@@ -380,12 +380,14 @@ export async function getCertNos(childWorkOrderNoValue) {
     console.error("Error fetching or parsing XML:", error);
   }
   // Remove duplicates from cert.childlines, ignoring differences in 'QUANTITY1'
-  cert.childlines = cert.childlines.filter((line, index, self) => 
-    index === self.findIndex((t) => {
-      const { QUANTITY1: _, ...restT } = t;
-      const { QUANTITY1: __, ...restLine } = line;
-      return JSON.stringify(restT) === JSON.stringify(restLine);
-    })
+  cert.childlines = cert.childlines.filter(
+    (line, index, self) =>
+      index ===
+      self.findIndex((t) => {
+        const { QUANTITY1: _, ...restT } = t;
+        const { QUANTITY1: __, ...restLine } = line;
+        return JSON.stringify(restT) === JSON.stringify(restLine);
+      })
   );
   return cert; // Return the cert object containing lines and lookup arrays
 }
@@ -400,17 +402,21 @@ export async function fetchXML(workOrderNo) {
 }
 
 export function parseXML(xmlString) {
-    const parser = new DOMParser();
-    const xmlDoc = parser.parseFromString(xmlString, "application/xml");
-    const parseError = xmlDoc.querySelector("parsererror");
-    if (parseError) {
-        throw new Error('Error parsing XML');
-    }
-    return xmlDoc;
+  const parser = new DOMParser();
+  const xmlDoc = parser.parseFromString(xmlString, "application/xml");
+  const parseError = xmlDoc.querySelector("parsererror");
+  if (parseError) {
+    throw new Error("Error parsing XML");
+  }
+  return xmlDoc;
 }
 
 // Function to get details from the XML data
-export async function getDetails(parsedData, childWorkOrderNoValue, workOrderNoValue) {
+export async function getDetails(
+  parsedData,
+  childWorkOrderNoValue,
+  workOrderNoValue
+) {
   const cert = { lines: [] }; // Initialize the cert object with an empty lines array
   try {
     const crystalReport = parsedData.querySelector("CrystalReport");
@@ -466,7 +472,7 @@ export async function getDetails(parsedData, childWorkOrderNoValue, workOrderNoV
             if (!isDuplicate) {
               cert.lookup.push(line);
             }
-          } 
+          }
         }
       });
     });
@@ -474,12 +480,78 @@ export async function getDetails(parsedData, childWorkOrderNoValue, workOrderNoV
     console.error("Error fetching or parsing XML:", error);
   }
   // Remove duplicates from cert.lines, ignoring differences in 'QUANTITY1'
-  cert.lines = cert.lines.filter((line, index, self) => 
-    index === self.findIndex((t) => {
-      const { QUANTITY1: _, ...restT } = t;
-      const { QUANTITY1: __, ...restLine } = line;
-      return JSON.stringify(restT) === JSON.stringify(restLine);
-    })
+  cert.lines = cert.lines.filter(
+    (line, index, self) =>
+      index ===
+      self.findIndex((t) => {
+        const { QUANTITY1: _, ...restT } = t;
+        const { QUANTITY1: __, ...restLine } = line;
+        return JSON.stringify(restT) === JSON.stringify(restLine);
+      })
   );
   return cert; // Return the cert object containing lines and lookup arrays
+}
+
+// Render a section as an HTML table using the provided data and title
+export function renderTableFromArray(data, title) {
+  if (!Array.isArray(data) || !data.length)
+    return "";
+
+  // Determine if we need to add the Specification column
+  const showSpecification = title !== "Raw Materials";
+
+  let html = `<h3 class="textSubTitle">${title}</h3>
+<table class="certtable">
+  <thead>
+    <tr>
+      <th class="tight-cell w-32">Item</th>
+      <th class="tight-cell">Part Number</th>`;
+  if (showSpecification) {
+    html += `<th class="tight-cell">Specification</th>`;
+  }
+  html += `<th class="tight-cell">Trace ID</th>
+    </tr>
+  </thead>
+  <tbody>
+`;
+
+  data.forEach((line) => {
+    html += `    <tr class="fontmed">
+      <td class="py-4 w-32">${line.JOB ? line.JOB + (line.SUFFIX ? "-" + line.SUFFIX : "") : ""}</td>
+      <td class="py-4">${line.part2 || line.PART || ""}</td>`;
+    if (showSpecification) {
+      let spec = "";
+      if (line.OPERATION) {
+        switch (line.OPERATION) {
+          case "FT1C1A":
+        spec = "MIL-DTL-5541 Type I Class 1A";
+        break;
+          case "FT1C3":
+        spec = "MIL-DTL-5541 Type I Class 3";
+        break;
+          case "FT1C3A":
+        spec = "MIL-DTL-5541 Type I Class 3A";
+        break;
+          case "FT2C1A":
+        spec = "MIL-DTL-5541 Type II Class 1A";
+        break;
+          case "FT2C3":
+        spec = "MIL-DTL-5541 Type II Class 3";
+        break;
+        }
+      }
+      if (spec === "") {
+        spec = line.OPERATION || "";
+      }
+      html += `<td class="py-4">${spec}</td>`;
+    }
+    html += `<td class="py-4">${(line.PURCHASE_ORDER || line.DATE_COMPLETED || "")}</td>
+    </tr>
+    `;
+  });
+
+  html += `  </tbody>
+</table>
+`;
+  return html;
 }
