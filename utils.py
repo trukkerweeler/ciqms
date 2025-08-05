@@ -91,6 +91,19 @@ def copypackage():
         print("Copied package.json")
     else:
         print("No update needed for package.json")
+        
+def copyserverjs():
+    """Copy the server.js file to the network drive if it is newer or does not exist."""
+    source = r"C:\Users\TimK\Documents\CIQMS1\server.js"
+    destination = r"\\fs1\Common\Applications\CIQMS\server.js"
+
+    if not os.path.exists(destination) or os.path.getmtime(source) > os.path.getmtime(destination):
+        with open(source, 'rb') as src_file:
+            with open(destination, 'wb') as dest_file:
+                dest_file.write(src_file.read())
+        print("Copied server.js")
+    else:
+        print("No update needed for server.js")
 
 def main():
     # js_files()
@@ -103,6 +116,7 @@ def main():
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\routes", r"\\fs1\Common\Applications\CIQMS\routes")
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\public", r"\\fs1\Common\Applications\CIQMS\html")
     copypackage()
+    copyserverjs()
 
 if __name__ == "__main__":
     main()

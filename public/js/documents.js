@@ -39,7 +39,7 @@ function getRecords () {
                     let lastFour = key.slice(-4);
                     switch (lastFour) {
                         case 'DATE':
-                            td.textContent = record[key].slice(0,10);
+                            td.textContent = record[key] ? record[key].slice(0,10) : '';
                             break;
                         default:
                             td.textContent = record[key];

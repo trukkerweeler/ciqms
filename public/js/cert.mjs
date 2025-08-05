@@ -1,3 +1,6 @@
+import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+const port = myport() || 3003; // Default port if not set
+
 btnSearch.addEventListener("click", async function (event) {
   event.preventDefault();
 
@@ -8,7 +11,7 @@ btnSearch.addEventListener("click", async function (event) {
   }
 
   // Use window.location.hostname to avoid hardcoding 'localhost'
-  const url = `http://${window.location.hostname}:3003/cert/${woNumber}`;
+  const url = `http://${window.location.hostname}:${port}/cert/${woNumber}`;
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -61,42 +64,42 @@ btnSearch.addEventListener("click", async function (event) {
           ? item["SERIAL_NUMBER"].trim()
           : "";
         if (/^\d{6}-\d{3}$/.test(serialNumber)) {
-          return fetch(`http://localhost:3006/cert/detail/${serialNumber}`)
+            return fetch(`http://${window.location.hostname}:${port}/cert/detail/${serialNumber}`)
             .then((res) => {
               if (!res.ok) throw new Error("Detail fetch failed");
               return res.json();
             })
             .then((detailData) => {
               if (detailData && detailData.length > 0) {
-                detailData.forEach((detail) => {
-                  if (
-                    detail.PRODUCT_LINE === "RM" &&
-                    !(detail.PART2 && detail.PART2.trim().startsWith("SWC"))
-                  ) {
-                    let ddSerialNumber = detail.SERIAL_NUMBER
-                      ? detail.SERIAL_NUMBER.trim()
-                      : "";
-                    // Remove "PO: 00" prefix if present
-                    if (ddSerialNumber.startsWith("PO: 00")) {
-                      ddSerialNumber = ddSerialNumber.replace(/^PO: 00/, "");
-                    }
-                    const job =
-                      (detail.JOB ? detail.JOB.trim() : "") +
-                      (detail.SUFFIX ? `-${detail.SUFFIX.trim()}` : "");
-                    const part = detail.PART ? detail.PART.trim() : "";
-                    const part2 = detail.PART2 ? detail.PART2.trim() : "";
-                    const key = [job, part, part2, ddSerialNumber].join("|");
-                    if (!rmSet.has(key)) {
-                      rmSet.add(key);
-                      RM.push({
-                        job,
-                        part,
-                        part2,
-                        serialNumber: ddSerialNumber,
-                      });
-                    }
-                  }
-                });
+              detailData.forEach((detail) => {
+                if (
+                detail.PRODUCT_LINE === "RM" &&
+                !(detail.PART2 && detail.PART2.trim().startsWith("SWC"))
+                ) {
+                let ddSerialNumber = detail.SERIAL_NUMBER
+                  ? detail.SERIAL_NUMBER.trim()
+                  : "";
+                // Remove "PO: 00" prefix if present
+                if (ddSerialNumber.startsWith("PO: 00")) {
+                  ddSerialNumber = ddSerialNumber.replace(/^PO: 00/, "");
+                }
+                const job =
+                  (detail.JOB ? detail.JOB.trim() : "") +
+                  (detail.SUFFIX ? `-${detail.SUFFIX.trim()}` : "");
+                const part = detail.PART ? detail.PART.trim() : "";
+                const part2 = detail.PART2 ? detail.PART2.trim() : "";
+                const key = [job, part, part2, ddSerialNumber].join("|");
+                if (!rmSet.has(key)) {
+                  rmSet.add(key);
+                  RM.push({
+                  job,
+                  part,
+                  part2,
+                  serialNumber: ddSerialNumber,
+                  });
+                }
+                }
+              });
               }
             })
             .catch((err) => {
@@ -182,12 +185,12 @@ btnSearch.addEventListener("click", async function (event) {
     for (const serialNumber of serialNumbers) {
       try {
       const procResponse = await fetch(
-        `http://localhost:3006/cert/processes/${encodeURIComponent(serialNumber)}`,
+        `http://${window.location.hostname}:${port}/cert/processes/${encodeURIComponent(serialNumber)}`,
         {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
+          method: "GET",
+          headers: {
+        "Content-Type": "application/json",
+          },
         }
       );
       if (!procResponse.ok) {
@@ -202,7 +205,7 @@ btnSearch.addEventListener("click", async function (event) {
           : proc.OPERATION || "";
         if (op === "FT1C3A" || op === "FT1C1A" || op === "FT1C3" || op === "FT2C3" || op === "FT2C1A") {
           CHEM.push(proc);
-        } else if (op === "FUSION") {
+        } else if (op === "FUSION"|| op === "D171C" || op === "D17.1" || op === "D171C" ) {
           FWLD.push(proc);
         } else if (op === "SPOTW") {
           SWLD.push(proc);
@@ -352,7 +355,7 @@ btnSearch.addEventListener("click", async function (event) {
         if (suffix) jobString += `-${suffix}`;
         if (lineRouter) jobString += `-${lineRouter}`;
         const poResponse = await fetch(
-          `http://localhost:3006/cert/certpurchase/${encodeURIComponent(jobString)}`
+          `http://${window.location.hostname}:${port}/cert/certpurchase/${encodeURIComponent(jobString)}`
         );
         if (poResponse.ok) {
           const poData = await poResponse.json();
@@ -441,7 +444,7 @@ btnSearch.addEventListener("click", async function (event) {
         if (suffix) jobString += `-${suffix}`;
         if (lineRouter) jobString += `-${lineRouter}`;
         const poResponse = await fetch(
-          `http://localhost:3006/cert/fwld/${encodeURIComponent(jobString)}`
+          `http://${window.location.hostname}:${port}/cert/fwld/${encodeURIComponent(jobString)}`
         );
         if (poResponse.ok) {
           const poData = await poResponse.json();
@@ -522,7 +525,7 @@ btnSearch.addEventListener("click", async function (event) {
         if (suffix) jobString += `-${suffix}`;
         if (lineRouter) jobString += `-${lineRouter}`;
         const poResponse = await fetch(
-          `http://localhost:3006/cert/swld/${encodeURIComponent(jobString)}`
+          `http://${window.location.hostname}:${port}/cert/swld/${encodeURIComponent(jobString)}`
         );
         if (poResponse.ok) {
           const poData = await poResponse.json();
@@ -624,7 +627,7 @@ btnSearch.addEventListener("click", async function (event) {
         if (suffix) jobString += `-${suffix}`;
         if (lineRouter) jobString += `-${lineRouter}`;
         const poResponse = await fetch(
-          `http://localhost:3006/cert/heat/${encodeURIComponent(jobString)}`
+          `http://${window.location.hostname}:${port}/cert/heat/${encodeURIComponent(jobString)}`
         );
         if (poResponse.ok) {
           const poData = await poResponse.json();

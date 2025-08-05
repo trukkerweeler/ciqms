@@ -476,7 +476,11 @@ input {
     height: 20px;
     padding-top: 3px;
     margin-bottom: 2px;
-}   
+}
+
+#btnEditNote {
+    grid-row: 7;
+}
 
 #btnEditDesc {
     grid-column: 3;
@@ -487,6 +491,12 @@ input {
     padding-bottom: 2px;
     margin-left: 2px;
     margin-bottom: 2px;
+}
+#btnEditDisp {
+    grid-row: 3;
+}
+#btnEditVerf {
+    grid-row: 5;
 }
 
 #btnEditFlup {

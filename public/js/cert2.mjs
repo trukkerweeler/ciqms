@@ -1,4 +1,5 @@
-import { renderTableFromArray } from "./utils.mjs";
+import { renderTableFromArray, myport} from "./utils.mjs";
+const port = myport();
 
 btnSearch.addEventListener("click", async function (event) {
   event.preventDefault();
@@ -9,7 +10,7 @@ btnSearch.addEventListener("click", async function (event) {
     return;
   }
 
-  const url = `http://localhost:3003/cert/${woNumber}`;
+  const url = `http://localhost:${port}/cert/${woNumber}`;
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -64,43 +65,43 @@ btnSearch.addEventListener("click", async function (event) {
           ? item["SERIAL_NUMBER"].trim()
           : "";
         if (/^\d{6}-\d{3}$/.test(serialNumber)) {
-          return fetch(`http://localhost:3003/cert/detail/${serialNumber}`)
+            return fetch(`http://localhost:${port}/cert/detail/${serialNumber}`)
             .then((res) => {
               if (!res.ok) throw new Error("Detail fetch failed");
               return res.json();
             })
             .then((detailData) => {
               if (detailData && detailData.length > 0) {
-                detailData.forEach((detail) => {
-                  if (
-                    detail.PRODUCT_LINE === "RM" &&
-                    !(detail.PART2 && detail.PART2.trim().startsWith("SWC"))
-                  ) {
-                    let ddSerialNumber = detail.SERIAL_NUMBER
-                      ? detail.SERIAL_NUMBER.trim()
-                      : "";
-                    if (ddSerialNumber.startsWith("PO: 00")) {
-                      ddSerialNumber = ddSerialNumber.replace(/^PO: 00/, "");
-                    }
-                    const JOB = detail.JOB ? detail.JOB.trim() : "";
-                    const SUFFIX = detail.SUFFIX ? detail.SUFFIX.trim() : "";
-                    const part = detail.PART ? detail.PART.trim() : "";
-                    const part2 = detail.PART2 ? detail.PART2.trim() : "";
-                    const key = [JOB, SUFFIX, part, part2, ddSerialNumber].join(
-                      "|"
-                    );
-                    if (!rmSet.has(key)) {
-                      rmSet.add(key);
-                      RM.push({
-                        JOB,
-                        SUFFIX,
-                        part,
-                        part2,
-                        PURCHASE_ORDER: ddSerialNumber,
-                      });
-                    }
-                  }
-                });
+              detailData.forEach((detail) => {
+                if (
+                detail.PRODUCT_LINE === "RM" &&
+                !(detail.PART2 && detail.PART2.trim().startsWith("SWC"))
+                ) {
+                let ddSerialNumber = detail.SERIAL_NUMBER
+                  ? detail.SERIAL_NUMBER.trim()
+                  : "";
+                if (ddSerialNumber.startsWith("PO: 00")) {
+                  ddSerialNumber = ddSerialNumber.replace(/^PO: 00/, "");
+                }
+                const JOB = detail.JOB ? detail.JOB.trim() : "";
+                const SUFFIX = detail.SUFFIX ? detail.SUFFIX.trim() : "";
+                const part = detail.PART ? detail.PART.trim() : "";
+                const part2 = detail.PART2 ? detail.PART2.trim() : "";
+                const key = [JOB, SUFFIX, part, part2, ddSerialNumber].join(
+                  "|"
+                );
+                if (!rmSet.has(key)) {
+                  rmSet.add(key);
+                  RM.push({
+                  JOB,
+                  SUFFIX,
+                  part,
+                  part2,
+                  PURCHASE_ORDER: ddSerialNumber,
+                  });
+                }
+                }
+              });
               }
             })
             .catch((err) => {
@@ -165,7 +166,7 @@ btnSearch.addEventListener("click", async function (event) {
     for (const serialNumber of serialNumbers) {
       try {
         const procResponse = await fetch(
-          `http://localhost:3003/cert/processes/${encodeURIComponent(
+          `http://localhost:${port}/cert/processes/${encodeURIComponent(
             serialNumber
           )}`,
           {
@@ -247,7 +248,7 @@ btnSearch.addEventListener("click", async function (event) {
         const job = item[jobField] ? item[jobField].trim() : "";
         const suffix = item[suffixField] ? item[suffixField].trim() : "";
         const rtr_seq = item[seqField] ? item[seqField].trim() : "";
-        const receiverUrl = `http://localhost:3003/receiver?job=${encodeURIComponent(
+        const receiverUrl = `http://localhost:${port}/receiver?job=${encodeURIComponent(
           job
         )}&suffix=${encodeURIComponent(suffix)}&rtr_seq=${encodeURIComponent(
           rtr_seq
