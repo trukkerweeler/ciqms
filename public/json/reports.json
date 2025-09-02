@@ -16,6 +16,11 @@
             "html": "report-cta.html"
         },
         {
+            "h2": "CTA - Weld",
+            "a": "Go to Weld Report",
+            "html": "report-cta-weld.html"
+        },
+        {
             "h2": "Opportunities for Improvement",
             "a": "Go to OFI Report",
             "html": "report-ofi.html"

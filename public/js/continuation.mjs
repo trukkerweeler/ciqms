@@ -1,7 +1,7 @@
 import { myport } from "./utils.mjs";
 
 const port  = myport() || 3003; // Get the port from utils.mjs
-const url = `http://localhost:${port}/apoi`;
+const url = `http://localhost:${port}/continuation`;
 
 let allData = [];
 
@@ -22,19 +22,19 @@ async function fetchData() {
     allData = await response.json();
     renderTable(allData);
   } catch (error) {
-    console.error("Error fetching RMA data:", error);
+    console.error("Error fetching Continuation data:", error);
   }
 }
 
 // Render table based on filtered data
 function renderTable(data) {
-  let table = document.getElementById('apoi-table');
+  let table = document.getElementById('continuation-table');
   if (table) table.remove();
 
   if (!data.length) return;
 
   table = document.createElement('table');
-  table.id = 'apoi-table';
+  table.id = 'continuation-table';
   const thead = document.createElement('thead');
   const headerRow = document.createElement('tr');
   Object.keys(data[0]).forEach(key => {
@@ -54,9 +54,9 @@ function renderTable(data) {
       td.className = "smaller-font";
       if (key.startsWith("DATE_") && typeof value === "string" && /^\d{6}$/.test(value)) {
       // Convert mmddyy to YYYY-mm-DD
-      const mm = value.slice(0, 2);
-      const dd = value.slice(2, 4);
-      const yy = value.slice(4, 6);
+      const yy = value.slice(0, 2);
+      const mm = value.slice(2, 4);
+      const dd = value.slice(4, 6);
       const year = Number(yy) < 50 ? "20" + yy : "19" + yy; // Y2K-safe
       td.textContent = `${year}-${mm}-${dd}`;
       } else {
@@ -73,12 +73,12 @@ function renderTable(data) {
 
 // Filter and update table as user types
 document.addEventListener('DOMContentLoaded', () => {
-  const vendorNoInput = document.getElementById("vendorNo");
-  if (vendorNoInput) {
-    vendorNoInput.addEventListener('input', () => {
-      const vendorNo = vendorNoInput.value.trim().toLowerCase();
-      const filtered = vendorNo
-        ? allData.filter(record => String(record.VENDOR).toLowerCase().startsWith(vendorNo))
+  const employeeInput = document.getElementById("employee");
+  if (employeeInput) {
+    employeeInput.addEventListener('input', () => {
+      const employee = employeeInput.value.trim().toLowerCase();
+      const filtered = employee
+        ? allData.filter(record => String(record.EMPLOYEE).toLowerCase().startsWith(employee))
         : allData;
       renderTable(filtered);
     });

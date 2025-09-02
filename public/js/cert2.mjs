@@ -201,9 +201,15 @@ btnSearch.addEventListener("click", async function (event) {
               SWLD.push(proc);
             } else if (
               op.includes("HT") ||
+              op.includes("6013") ||
               op.includes("6061") ||
+              op.includes("7075") ||
+              op.includes("7075B") ||
+              op.includes("7075C") ||
               op.includes("HT2") ||
-              op.includes("HT3")
+              op.includes("HT3") ||
+              op.includes("HT6") ||
+              op.includes("HT7")
             ) {
               HEAT.push(proc);
             } else if (op === "PASST6" || op === "PASS") {

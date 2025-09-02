@@ -48,6 +48,63 @@ order by pi.SUBJECT`;
 });
 
 // ==================================================
+// Get WELD training records
+router.get("/weld", (req, res) => {
+    try {
+      const connection = mysql.createConnection({
+        host: process.env.DB_HOST,
+        user: process.env.DB_USER,
+        password: process.env.DB_PASS,
+        port: 3306,
+        database: "quality",
+      });
+      connection.connect(function (err) {
+        if (err) {
+          console.error("Error connecting: " + err.stack);
+          return;
+        }
+  
+        const currentYear = new Date().getFullYear();
+        // const query = `SELECT COURSE_ATND_ID, COURSE_ID, DATE_TIME, PEOPLE_ID, INSTRUCTOR, MINUTES from CTA_ATTENDANCE WHERE YEAR(DATE_TIME) = ${currentYear} ORDER BY DATE_TIME DESC;`;
+        const query = `
+          SELECT 
+            ca.COURSE_ATND_ID,
+            ca.COURSE_ID,
+            ca.DATE_TIME,
+            ca.PEOPLE_ID,
+            ca.INSTRUCTOR,
+            ca.MINUTES,
+            ca.EXPIRATION_DATE,
+            cal.CTA_ATTENDANCE_LINK
+          FROM quality.CTA_ATTENDANCE ca
+          LEFT JOIN CTA_ATTENDANCE_LINK cal
+            ON ca.COURSE_ATND_ID = cal.COURSE_ATND_ID
+          WHERE (ca.COURSE_ID LIKE '%WELD%' 
+            OR ca.COURSE_ID LIKE '5080' 
+            OR ca.COURSE_ID LIKE '5090'
+            OR ca.COURSE_ID LIKE '5000'
+            OR ca.COURSE_ID LIKE '5500')
+          ORDER BY ca.DATE_TIME DESC;
+        `;
+
+        connection.query(query, (err, rows, fields) => {
+          if (err) {
+            console.log("Failed to query for reports: " + err);
+            res.sendStatus(500);
+            return;
+          }
+          res.json(rows);
+        });
+  
+        connection.end();
+      });
+    } catch (err) {
+      console.log("Error connecting to Db");
+      return;
+    }
+  });
+
+// ==================================================
 // Get all records Training
 router.get("/cta", (req, res) => {
     try {

@@ -265,6 +265,11 @@ export function displayDate(date) {
   if (!date) {
     return "";
   }
+  const d = new Date(date);
+  const year = d.getFullYear();
+  const month = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
 }
 
 
@@ -494,6 +499,7 @@ export async function getDetails(
 
 // Render a section as an HTML table using the provided data and title
 export function renderTableFromArray(data, title) {
+  console.log("Data to render:", data);
   if (!Array.isArray(data) || !data.length)
     return "";
 
@@ -522,22 +528,42 @@ export function renderTableFromArray(data, title) {
     if (showSpecification) {
       let spec = "";
       if (line.OPERATION) {
-        switch (line.OPERATION) {
+        switch (line.OPERATION.trim()) {
           case "FT1C1A":
-        spec = "MIL-DTL-5541 Type I Class 1A";
-        break;
+            spec = "MIL-DTL-5541 Type I Class 1A";
+            break;
           case "FT1C3":
-        spec = "MIL-DTL-5541 Type I Class 3";
-        break;
+            spec = "MIL-DTL-5541 Type I Class 3";
+            break;
           case "FT1C3A":
-        spec = "MIL-DTL-5541 Type I Class 3A";
-        break;
+            spec = "MIL-DTL-5541 Type I Class 3A";
+            break;
           case "FT2C1A":
-        spec = "MIL-DTL-5541 Type II Class 1A";
-        break;
+            spec = "MIL-DTL-5541 Type II Class 1A";
+            break;
           case "FT2C3":
-        spec = "MIL-DTL-5541 Type II Class 3";
-        break;
+            spec = "MIL-DTL-5541 Type II Class 3";
+            break;
+          case "HT61A":
+              spec = "HEAT TREAT 6061 NON CLAD .032";
+              break;
+          case "HT61B":
+              spec = "HEAT TREAT 6061 NON CLAD .064";
+              break;
+          case "HT61C":
+              spec = "HEAT TREAT 6061 NON CLAD .091";
+              break;
+          case "HT75A":
+              spec = "HEAT TREAT 7075 NON CLAD .033";
+              break;
+          case "HT75B":
+              spec = "HEAT TREAT 7075 NON CLAD .064";
+              break;
+          case "HT75C":
+              spec = "HEAT TREAT 7075 NON CLAD .091";
+              break;
+          case "HT75D":
+              spec = "HEAT TREAT 7075 NON CLAD .126";
         }
       }
       if (spec === "") {

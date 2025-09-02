@@ -606,12 +606,41 @@ btnSearch.addEventListener("click", async function (event) {
       // Specification column
       const tdSpec = document.createElement("td");
       let spec = "";
-      if (
-        item.TEXT &&
-        typeof item.TEXT === "string" &&
-        item.TEXT.includes("6088")
-      ) {
-        spec = "AMS-H-6088";
+      if (item.OPERATION) {
+        switch (item.OPERATION) {
+        case "HT24A":
+          spec = "MIL-DTL-5541 Type I Class 1A";
+          break;
+        case "HT 24B":
+          spec = "HEAT TREAT 2024 NON CLAD .064";
+          break;
+        case "HT24C":
+          spec = "HEAT TREAT 2024 NON CLAD .080";
+          break;
+        case "HT24D":
+          spec = "HEAT TREAT 2024 NON CLAD .091";
+          break;
+        case "HT61A":
+          spec = "HEAT TREAT 6061 NON CLAD .032";
+          break;
+        case "HT61B":
+          spec = "HEAT TREAT 6061 NON CLAD .064";
+          break;
+        case "HT61C":
+          spec = "HEAT TREAT 6061 NON CLAD .091";
+          break;
+        case "HT75A":
+          spec = "HEAT TREAT 7075 NON CLAD .033";
+          break;
+        case "HT75B":
+          spec = "HEAT TREAT 7075 NON CLAD .064";
+          break;
+        case "HT75C":
+          spec = "HEAT TREAT 7075 NON CLAD .091";
+          break;
+        case "HT75D":
+          spec = "HEAT TREAT 7075 NON CLAD .126";
+        }
       }
       tdSpec.textContent = spec;
       row.appendChild(tdSpec);

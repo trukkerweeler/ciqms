@@ -809,6 +809,10 @@ footer div p {
     width: 8rem;
 }
 
+.smaller-font {
+    font-size: 0.65rem;
+    line-height: 0.9rem;
+}
 
 @media print {
     form{

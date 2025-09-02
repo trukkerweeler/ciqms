@@ -110,6 +110,12 @@ app.use("/receiver", receiverRoutes);
 const opcodesRoutes = require("./routes/opcodes");
 app.use("/opcodes", opcodesRoutes);
 
+const invoiceRoutes = require("./routes/invoice");
+app.use("/invoice", invoiceRoutes);
+
+const continuationRoutes = require("./routes/continuation");
+app.use("/continuation", continuationRoutes);
+
 app.listen(port, async() => {
   console.log(`Example app listening at http://localhost:${port}`);
 });
