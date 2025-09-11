@@ -88,8 +88,8 @@ form.addEventListener("submit", async (event) => {
     console.log("Error:", err);
   }
 
-  setTimeout(async () => {
-    // Try to send email
+  // Try to send email and notify, then redirect
+  (async () => {
     let toEmail = users[dataJson.ASSIGNED_TO];
     if (toEmail === undefined) {
       toEmail = users["DEFAULT"];
@@ -103,36 +103,37 @@ form.addEventListener("submit", async (event) => {
       DESCRIPTION: dataJson.DESCRIPTION,
       PRODUCT_ID: dataJson.PRODUCT_ID,
     };
-    await fetch(url + "/email", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(emailData),
-    })
-      .then(async (response) => {
-        if (response.ok) {
-          await fetch(url + "/ncm_notify", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              ACTION: "I",
-              NCM_ID: nextId,
-              ASSIGNED_TO: dataJson.ASSIGNED_TO,
-            }),
-          });
-          return response.text(); // Handle as plain text if not JSON
-        }
-        throw new Error("Failed to send ncm email");
+    try {
+      const response = await fetch(url + "/email", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(emailData),
       });
-  });
-
-  form.reset();
-  // Set default values
-  defaultNcmDate.value = recordDate;
-  defaultDueDate.value = myDueDateDefault;
-  window.location.href = "ncms.html";
+      if (response.ok) {
+        await fetch(url + "/ncm_notify", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            ACTION: "I",
+            NCM_ID: nextId,
+            ASSIGNED_TO: dataJson.ASSIGNED_TO,
+          }),
+        });
+      } else {
+        throw new Error("Failed to send ncm email");
+      }
+    } catch (err) {
+      console.log("Error sending email or notifying:", err);
+    }
+    form.reset();
+    // Set default values
+    defaultNcmDate.value = recordDate;
+    defaultDueDate.value = myDueDateDefault;
+    window.location.href = "ncms.html";
+  })();
 
 });

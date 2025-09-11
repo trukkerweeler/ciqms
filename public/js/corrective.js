@@ -266,8 +266,8 @@ fetch(url, { method: 'GET' })
                     concatText = newcorrectiontext + '\n' + correctiontext;
                     // console.log(concatText);
                 }
-                // // let correctiondate = document.getElementById('correctiondate').value;
-                let correctiondate = new Date().toISOString().slice(0, 10);
+                let correctiondate = document.getElementById('correctiondate').value;
+                // let correctiondate = new Date().toISOString().slice(0, 10);
                 // update the record
                 let url = `http://localhost:${port}/corrective/${caid}`;
                 await fetch(url, {
@@ -278,7 +278,8 @@ fetch(url, { method: 'GET' })
                     body: JSON.stringify({
                         'CORRECTION_DATE': correctiondate,
                         'CORRECTION_TEXT': concatText,
-                        'ACTION_BY': newactioner
+                        'ACTION_BY': newactioner,
+                        'MODIFIED_BY': user
                     })
                 });
                 // close the dialog

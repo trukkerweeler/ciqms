@@ -63,3 +63,14 @@ GET http://localhost:3003/cert/122246
 
 ###
 GET http://localhost:3003/opcodes
+
+###
+POST http://localhost:3003/ncm/ncm_notify
+Content-Type: application/json
+
+{
+    "NCM_ID": "0000999",
+    "ACTION": "I",
+    "NOTIFIED_DATE": "2025-02-19",
+    "ASSIGNED_TO": "TKENT"
+}
