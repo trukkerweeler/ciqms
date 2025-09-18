@@ -5,59 +5,43 @@ const mysql = require("mysql2");
 // ==================================================
 // Get all records
 router.get("/", (req, res) => {
-  try {
-    const connection = mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      port: 3306,
-      database: "quality",
-    });
-    connection.connect(function (err) {
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "",
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("❌ DB connection failed:", err.stack);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    const query = `SELECT c.CORRECTIVE_ID, TITLE, USER_DEFINED_2, USER_DEFINED_1,
+      c.REQUEST_BY, c.ASSIGNED_TO, c.CORRECTIVE_DATE, c.REFERENCE,
+      ia.CORRECTION_DATE, ia.ACTION_BY, c.CREATE_DATE, c.DUE_DATE,
+      CLOSED, c.CLOSED_DATE
+      FROM CORRECTIVE c
+      LEFT JOIN CORRECTIVE_TREND ct ON c.CORRECTIVE_ID = ct.CORRECTIVE_ID
+      LEFT JOIN CORRECTION ia ON c.CORRECTIVE_ID = ia.CORRECTIVE_ID
+      LEFT JOIN CORRECTIVE_CTRL cc ON c.CORRECTIVE_ID = cc.CORRECTIVE_ID
+      ORDER BY CLOSED, CORRECTIVE_ID DESC`;
+
+    connection.query(query, (err, rows) => {
       if (err) {
-        console.error("Error connecting: " + err.stack);
-        return;
-      }
-      // console.log('Connected to DB');
-
-      const query = `select c.CORRECTIVE_ID
-        , TITLE
-        , USER_DEFINED_2
-        , USER_DEFINED_1
-        , c.REQUEST_BY
-        , c.ASSIGNED_TO
-        , c.CORRECTIVE_DATE
-        , c.REFERENCE
-        , ia.CORRECTION_DATE
-        , ia.ACTION_BY 
-        , c.CREATE_DATE
-        , c.DUE_DATE
-        , CLOSED
-        , c.CLOSED_DATE
-        from CORRECTIVE c 
-        left join CORRECTIVE_TREND ct on c.CORRECTIVE_ID = ct.CORRECTIVE_ID 
-        left join CORRECTION ia on c.CORRECTIVE_ID = ia.CORRECTIVE_ID 
-        left join CORRECTIVE_CTRL cc on c.CORRECTIVE_ID = cc.CORRECTIVE_ID
-        order by CLOSED, CORRECTIVE_ID desc`;
-
-      connection.query(query, (err, rows, fields) => {
-        if (err) {
-          console.log("Failed to query for corrective actions: " + err);
-          res.sendStatus(500);
-          return;
-        }
+        console.error("❌ Query failed:", err);
+        res.status(500).json({ error: "Query execution failed" });
+      } else {
         res.json(rows);
-      });
-
+      }
       connection.end();
     });
-
-    // res.send('Hello Corrective!');
-  } catch (err) {
-    console.log("Error connecting to Db");
-    return;
-  }
+  });
 });
+
+
 
 // Get the next ID for a new record
 router.get("/nextId", (req, res) => {

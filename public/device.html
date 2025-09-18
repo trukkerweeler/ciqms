@@ -70,12 +70,12 @@
           />
 
           <label for="edit-status">Status:</label>
-          <select id="edit-status" name="STATUS" required>
-            <option value="H">Home</option>
-            <option value="C">At Calibration</option>
-            <option value="BC">Bond Calibrated (Uncommon)</option>
-            <option value="BN">Bond Not Calibrated</option>
-          </select>
+            <select id="edit-status" name="STATUS" required>
+            <option value="">Select Status</option>
+            <option value="C">Current</option>
+            <option value="E">Expired</option>
+            <option value="X">Extend (Uncommon)</option>
+            </select>
 
           <div class="dialog-actions">
             <button type="button" id="saveDeviceEdit" class="btn btn-primary btn-save">
@@ -101,10 +101,11 @@
           <input type="number" id="edit-days-remaining" name="DAYS_REMAINING" />
 
           <label for="edit-status">Status:</label>
-          <select id="edit-status" name="STATUS" required>
-            <option value="A">Active</option>
-            <option value="I">Inactive</option>
-          </select>
+            <select id="status" name="STATUS" required>
+              <option value="C">Current</option>
+              <option value="E">Expired</option>
+              <option value="X">Extend</option>
+            </select>
 
           <label for="edit-next-date">Next Date:</label>
           <input type="date" id="edit-next-date" name="NEXT_DATE" />

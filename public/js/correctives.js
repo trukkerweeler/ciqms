@@ -1,7 +1,7 @@
 
 import { loadHeaderFooter, myport } from "./utils.mjs";
 loadHeaderFooter();
-const port = myport() || 3003;
+const port = myport() || 3004;
 const year = new Date().getFullYear();
 let sortOrder = 'asc';
 

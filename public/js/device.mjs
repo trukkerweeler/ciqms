@@ -334,7 +334,8 @@ document.addEventListener("DOMContentLoaded", async () => {
       const warningInterval = document.getElementById(
         "edit-warning-interval"
       ).value;
-      const status = document.getElementById("edit-status").value;
+      const statusSelect = document.getElementById("edit-status");
+      const status = statusSelect.options[statusSelect.selectedIndex].text;
 
       // log all the values
       console.log("Device ID: ", deviceId);

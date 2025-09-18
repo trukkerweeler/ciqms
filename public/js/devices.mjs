@@ -210,20 +210,27 @@ function generateTableRow(device, fields) {
   for (const field of fields) {
     if (field === "DEVICE_ID") {
       rowTemplate += `<td><a href="device.html?id=${device[field]}">${device[field]}</a></td>`;
+    } else if (field === "STATUS") {
+      let statusText = "";
+      if (device[field] === "E") statusText = "EXPIRED";
+      else if (device[field] === "C") statusText = "CURRENT";
+      else if (device[field] === "X") statusText = "EXTEND";
+      else statusText = device[field] ?? "";
+      rowTemplate += `<td>${statusText}</td>`;
     } else if (field.endsWith("DATE")) {
       const dateValue = device[field];
       if (dateValue) {
-        const date = new Date(dateValue);
-        const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-        const formattedDate = date.toLocaleDateString("en-US", options);
-        if (field === "NEXT_DATE" && new Date(dateValue) < new Date()) {
-          rowTemplate = `<tr class="past-date">` + rowTemplate.slice(4); // Apply class to the entire row
-          rowTemplate += `<td>${formattedDate}</td>`;
-        } else {
-          rowTemplate += `<td>${formattedDate}</td>`;
-        }
+      const date = new Date(dateValue);
+      const options = { year: "numeric", month: "2-digit", day: "2-digit" };
+      const formattedDate = date.toLocaleDateString("en-US", options);
+      if (field === "NEXT_DATE" && new Date(dateValue) < new Date()) {
+        rowTemplate = `<tr class="past-date">` + rowTemplate.slice(4); // Apply class to the entire row
+        rowTemplate += `<td>${formattedDate}</td>`;
       } else {
-        rowTemplate += `<td></td>`;
+        rowTemplate += `<td>${formattedDate}</td>`;
+      }
+      } else {
+      rowTemplate += `<td></td>`;
       }
     } else {
       rowTemplate += `<td>${device[field] ?? ""}</td>`;
