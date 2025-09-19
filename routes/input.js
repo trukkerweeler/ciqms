@@ -4,6 +4,38 @@ const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 
 
+// emailer
+router.post("/email/:id", (req, res) => {
+  // console.log('Emailer route');
+  const transporter = nodemailer.createTransport({
+    host: process.env.SMTP_HOST,
+    port: Number(process.env.SMTP_PORT),
+    secure: process.env.SMTP_SECURE === "true",
+    auth: {
+      user: process.env.SMTP_USER,
+      pass: process.env.SMTP_PASS,
+    },
+  });
+  // Send email
+  const mailOptions = {
+    from: req.body.from,
+    to: req.body.to,
+    subject: req.body.subject,
+    text: req.body.text,
+  };
+  transporter.sendMail(mailOptions, (error, info) => {
+    if (error) {
+      console.log(error);
+      res.status(500).send("Error sending email: " + error.toString());
+    } else {
+      console.log("Email sent: " + info.response);
+      res.status(200).send("Email sent: " + info.response);
+    }
+  });
+});
+
+
+
 // ==================================================
 // Get all records
 router.get("/", (req, res) => {
@@ -144,8 +176,8 @@ router.post("/email", async (req, res) => {
     try {
         const transporter = nodemailer.createTransport({
             host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: true, // true for 465, false for other ports
+            port: Number(process.env.SMTP_PORT),
+            secure: process.env.SMTP_SECURE === "true", // use env for secure
             auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,

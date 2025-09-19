@@ -68,6 +68,14 @@ fetch(url, { method: "GET" })
       btnCollData.setAttribute("id", "btnCollData");
       btnCollData.textContent = "Collect";
 
+      // Create the follow-up button
+      const btnFollowUp = document.createElement("button");
+      btnFollowUp.setAttribute("class", "btn");
+      btnFollowUp.setAttribute("class", "btnEdit");
+      btnFollowUp.setAttribute("id", "btnFollowUp");
+      btnFollowUp.textContent = "Email";
+
+      detailButtons.appendChild(btnFollowUp);
       detailButtons.appendChild(btnCollData);
       detailButtons.appendChild(btnCloseDetail);
       detailButtons.appendChild(btnEditDetail);
@@ -817,4 +825,58 @@ fetch(url, { method: "GET" })
         location.reload();
       });
     });
+    // Add listener for the email button
+    const btnFollowUp = document.querySelector("#btnFollowUp");
+    btnFollowUp.addEventListener("click", async (event) => {
+      event.preventDefault();
+      // get the action item id
+      let queryString = window.location.search;
+      let urlParams = new URLSearchParams(queryString);
+      let iid = urlParams.get("id");
+      // alert('Email button clicked');
+      const emailDialog = document.querySelector("#emailDialog");
+      emailDialog.showModal();
+      // populate the email dialog fields
+      const emailCommentText = document.querySelector("#emailCommentText");
+      emailCommentText.value = ""; // clear the textarea
+      // listen for the cancel button click
+      const btnCancelEmail = document.querySelector("#cancelEmailComment");
+      btnCancelEmail.addEventListener("click", async (event) => {
+        emailDialog.close();
+      });
+
+      // listen for the save email button click
+      const btnSaveEmail = document.querySelector("#saveEmailComment");
+      btnSaveEmail.addEventListener("click", async (event) => {
+        // prevent default action
+        event.preventDefault();
+
+        // need to get email for sendto from the page
+
+        let data = {
+          INPUT_ID: iid,
+          to: "tim.kent@ci-aviation.com",
+          subject: "CIQMS Action Item " + iid,
+          text: document.querySelector("#emailCommentText").value,
+          from: "quality@ci-aviation.com",
+        };
+
+        // console.log(data);
+
+        // update the action text
+        const url = `http://localhost:${port}/input/email/${iid}`;
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ data }),
+        });
+        // close the dialog
+        emailDialog.close();
+        // reload the page
+        location.reload();
+      });
+    });
+
   });
