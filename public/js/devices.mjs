@@ -5,6 +5,8 @@ const port = myport();
 const user = await getUserValue();
 
 const deviceUrl = `http://localhost:${port}/device`;
+console.log(`Device URL: ${deviceUrl}`);
+
 let mainElement = document.getElementById("main-content");
 
 // Make the page header div

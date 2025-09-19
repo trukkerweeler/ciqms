@@ -1,4 +1,5 @@
 import os
+# from icecream import ic
 
 def js_files():
     """
@@ -74,9 +75,10 @@ def copyfiles(source, destination):
                         dest_file.write(src_file.read())
                 print(f"Copied file: {item}")
         elif os.path.isdir(source_path):
-            if not os.path.exists(destination_path):
-                os.makedirs(destination_path)
-                print(f"Created directory: {item}")
+            if not only_html:
+                if not os.path.exists(destination_path):
+                    os.makedirs(destination_path)
+                    print(f"Created directory: {item}")
 
 
 def copypackage():
@@ -115,6 +117,8 @@ def main():
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\public\css", r"\\fs1\Common\Applications\CIQMS\css")
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\routes", r"\\fs1\Common\Applications\CIQMS\routes")
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\public", r"\\fs1\Common\Applications\CIQMS\html")
+    copyfiles(r"C:\Users\TimK\Documents\CIQMS1\public\partials", r"\\fs1\Common\Applications\CIQMS\partials")
+    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>partials may need manual copy.")
     copypackage()
     copyserverjs()
 
