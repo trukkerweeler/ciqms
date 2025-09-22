@@ -221,7 +221,8 @@ router.post("/inputs_notify", (req, res) => {
       }
       // console.log('Connected to DB');
       const query = `INSERT INTO INPUTS_NOTIFY (INPUT_ID, NOTIFIED_DATE, ASSIGNED_TO, ACTION) VALUES (?, NOW(), ?, ?)`;
-      const values = [req.body.INPUT_ID, req.body.ASSIGNED_TO, req.body.ACTION];
+      const { INPUT_ID, ASSIGNED_TO, ACTION } = req.body.data;
+      const values = [INPUT_ID, ASSIGNED_TO, ACTION];
       // console.log(query);
       // console.log(values);
       connection.query(query, values, (err) => {

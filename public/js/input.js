@@ -865,19 +865,19 @@ fetch(url, { method: "GET" })
         project_id = project_id.split(" ")[0];
 
         let data = {
-          INPUT_ID: iid,
+          INPUT_ID: urlParams.get("id"),
           from: "quality@ci-aviation.com",
           to: userEmail,
           subject: "Action Item Updated: " + iid,
           text:
             "Project: " +
             project_id +
-            "\n\n" +
+            "\n\n" + "Action: " + "\n\n" +
             actionNoteText +
             "\n\n" +
-            (document.querySelector("#emailCommentText").value || "") +
+            "Follow-up: " + "\n\n" + followUpNoteText +
             "\n\n" +
-            followUpNoteText,
+            ("Email comment: " + (document.querySelector("#emailCommentText").value || ""))
         };
 
         // update the action text in the background
@@ -893,22 +893,31 @@ fetch(url, { method: "GET" })
           console.error("Error sending email:", err);
         });
         // update the inputs_notify table
-        const notifyUrl = `http://localhost:${port}/inputs_notify`;
+        const notifyUrl = `http://localhost:${port}/input/inputs_notify`;
+        // You can await the assignment if you wrap it in a Promise or async function.
+        // For example, if you need to fetch or compute 'assignedto' asynchronously:
+        // let assignedto = await someAsyncFunction();
+
+        // If 'assignedto' is already available synchronously, just assign it:
+        let assignedto = document.querySelector("#assignedto").textContent.replace(/^Assigned To:\s*/, "").trim();
+
         let notifyData = {
-          INPUT_ID: iid,
-          ASSIGNED_TO: document.querySelector("#ASSIGNED_TO").value,
+          INPUT_ID: urlParams.get("id"),
+          ASSIGNED_TO: assignedto,
           ACTION: "R",
         };
-        await new Promise((resolve) => setTimeout(resolve, 1000));
-        fetch(notifyUrl, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data: notifyData }),
-        }).catch((err) => {
+        // await new Promise((resolve) => setTimeout(resolve, 1000));
+        try {
+          await fetch(notifyUrl, {
+            method: "POST",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data: notifyData }),
+          });
+        } catch (err) {
           console.error("Error updating inputs_notify:", err);
-        });
+        }
         // close the dialog
         emailDialog.close();
         // reload the page
