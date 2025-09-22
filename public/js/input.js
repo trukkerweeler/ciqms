@@ -5,6 +5,7 @@ import {
   getDateTime,
   myport,
 } from "./utils.mjs";
+import userEmails from "./users.mjs";
 loadHeaderFooter();
 
 const port = myport();
@@ -505,130 +506,128 @@ fetch(url, { method: "GET" })
           location.reload();
         });
       } else if (actionText.includes("Parker-Meggitt")) {
-          // alert("Parker-Meggitt action item");
+        // alert("Parker-Meggitt action item");
         const collectDataDialog = document.querySelector("#collectDataDialog");
         // Remove all child nodes from the dialog
         while (collectDataDialog.firstChild) {
           collectDataDialog.removeChild(collectDataDialog.firstChild);
         }
-          let customer_measures = [
-            "OTIF",
-            "PPM",
-            "ESCAPES",
+        let customer_measures = ["OTIF", "PPM", "ESCAPES"];
+        customer_measures.forEach((measure) => {
+          const label = document.createElement("label");
+          label.textContent = measure + ": ";
+          label.setAttribute("for", measure.toLowerCase());
+          const input = document.createElement("input");
+          input.type = "text";
+          input.id = measure.toLowerCase();
+          input.name = measure.toLowerCase();
+          collectDataDialog.appendChild(label);
+          collectDataDialog.appendChild(input);
+        });
+
+        // Date picker
+        const dateLabel = document.createElement("label");
+        dateLabel.textContent = "Date: ";
+        dateLabel.setAttribute("for", "collectDate");
+        const dateInput = document.createElement("input");
+        dateInput.type = "date";
+        dateInput.id = "collectDate";
+        dateInput.name = "collectDate";
+        collectDataDialog.appendChild(dateLabel);
+        collectDataDialog.appendChild(dateInput);
+
+        // Customer code field
+        const codeLabel = document.createElement("label");
+        codeLabel.textContent = "Customer Code: ";
+        codeLabel.setAttribute("for", "customerCode");
+        const codeInput = document.createElement("input");
+        codeInput.type = "text";
+        codeInput.id = "customerCode";
+        codeInput.name = "customerCode";
+        collectDataDialog.appendChild(codeLabel);
+        collectDataDialog.appendChild(codeInput);
+        collectDataDialog.showModal();
+
+        // listen for the cancel button click
+        const btnCancelCollData = document.createElement("button");
+        btnCancelCollData.id = "cancelCollData";
+        btnCancelCollData.textContent = "Cancel";
+        collectDataDialog.appendChild(btnCancelCollData);
+        btnCancelCollData.addEventListener("click", async (event) => {
+          collectDataDialog.close();
+        });
+
+        // listen for the save button click
+        const btnSaveCollData = document.createElement("button");
+        btnSaveCollData.id = "saveCollData";
+        btnSaveCollData.textContent = "Save";
+        collectDataDialog.appendChild(btnSaveCollData);
+        btnSaveCollData.addEventListener("click", async (event) => {
+          event.preventDefault();
+          // get the nextId for the collect data
+          const nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
+            .then((response) => response.json())
+            .then((data) => {
+              JSON.stringify(data);
+              return data;
+            });
+
+          // collect the values from the dynamically created fields
+          const dataJson = {
+            COLLECT_ID: nextId,
+            INPUT_USER: user,
+            OTIF: document.getElementById("otif").value,
+            PPM: document.getElementById("ppm").value,
+            ESCAPES: document.getElementById("escapes").value,
+            SAMPLE_DATE: document.getElementById("collectDate").value,
+            CUSTOMER_ID: document.getElementById("customerCode").value,
+          };
+          // console.log(dataJson);
+
+          // For each customer measure, create a separate record and POST it
+          const measures = [
+            { key: "OTIF", unit: "PERCENT" },
+            { key: "PPM", unit: "PPM" },
+            { key: "ESCAPES", unit: "COUNT" },
           ];
-          customer_measures.forEach((measure) => {
-            const label = document.createElement("label");
-            label.textContent = measure + ": ";
-            label.setAttribute("for", measure.toLowerCase());
-            const input = document.createElement("input");
-            input.type = "text";
-            input.id = measure.toLowerCase();
-            input.name = measure.toLowerCase();
-            collectDataDialog.appendChild(label);
-            collectDataDialog.appendChild(input);
-          });
-
-          // Date picker
-          const dateLabel = document.createElement("label");
-          dateLabel.textContent = "Date: ";
-          dateLabel.setAttribute("for", "collectDate");
-          const dateInput = document.createElement("input");
-          dateInput.type = "date";
-          dateInput.id = "collectDate";
-          dateInput.name = "collectDate";
-          collectDataDialog.appendChild(dateLabel);
-          collectDataDialog.appendChild(dateInput);
-
-          // Customer code field
-          const codeLabel = document.createElement("label");
-          codeLabel.textContent = "Customer Code: ";
-          codeLabel.setAttribute("for", "customerCode");
-          const codeInput = document.createElement("input");
-          codeInput.type = "text";
-          codeInput.id = "customerCode";
-          codeInput.name = "customerCode";
-          collectDataDialog.appendChild(codeLabel);
-          collectDataDialog.appendChild(codeInput);
-          collectDataDialog.showModal();
-
-          // listen for the cancel button click
-          const btnCancelCollData = document.createElement("button");
-          btnCancelCollData.id = "cancelCollData";
-          btnCancelCollData.textContent = "Cancel";
-          collectDataDialog.appendChild(btnCancelCollData);
-          btnCancelCollData.addEventListener("click", async (event) => {
-            collectDataDialog.close();
-          });
-
-          // listen for the save button click
-          const btnSaveCollData = document.createElement("button");
-          btnSaveCollData.id = "saveCollData";
-          btnSaveCollData.textContent = "Save";
-          collectDataDialog.appendChild(btnSaveCollData);
-          btnSaveCollData.addEventListener("click", async (event) => {
-            event.preventDefault();
-            // get the nextId for the collect data
-            const nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
-              .then((response) => response.json())
-              .then((data) => {
-                JSON.stringify(data);
-                return data;
-              });
-
-            // collect the values from the dynamically created fields
-            const dataJson = {
-              COLLECT_ID: nextId,
-              INPUT_USER: user,
-              OTIF: document.getElementById("otif").value,
-              PPM: document.getElementById("ppm").value,
-              ESCAPES: document.getElementById("escapes").value,
-              SAMPLE_DATE: document.getElementById("collectDate").value,
-              CUSTOMER_ID: document.getElementById("customerCode").value,
-            };
-            // console.log(dataJson);
-
-            // For each customer measure, create a separate record and POST it
-            const measures = [
-              { key: "OTIF", unit: "PERCENT" },
-              { key: "PPM", unit: "PPM" },
-              { key: "ESCAPES", unit: "COUNT" },
-            ];
-            const csrUrl2 = `http://localhost:${port}/csr/${iid}`;
-            try {
-              for (const measure of measures) {
-                let nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
-                  .then((response) => response.json())
-                  .then((data) => data);
-              const value = document.getElementById(measure.key.toLowerCase()).value;
+          const csrUrl2 = `http://localhost:${port}/csr/${iid}`;
+          try {
+            for (const measure of measures) {
+              let nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
+                .then((response) => response.json())
+                .then((data) => data);
+              const value = document.getElementById(
+                measure.key.toLowerCase()
+              ).value;
               if (value !== "") {
                 await fetch(csrUrl + "/incrementId", { method: "PUT" });
                 const record = {
-                COLLECT_ID: nextId, 
-                INPUT_USER: user,
-                CUSTOMER_ID: document.getElementById("customerCode").value,
-                SAMPLE_DATE: document.getElementById("collectDate").value,
-                UNIT: measure.key,
-                VALUE: value,
+                  COLLECT_ID: nextId,
+                  INPUT_USER: user,
+                  CUSTOMER_ID: document.getElementById("customerCode").value,
+                  SAMPLE_DATE: document.getElementById("collectDate").value,
+                  UNIT: measure.key,
+                  VALUE: value,
                 };
                 console.log(record);
                 await fetch(csrUrl2, {
-                method: "POST",
-                headers: {
-                  "Content-Type": "application/json",
-                },
-                body: JSON.stringify({ dataJson: record }),
+                  method: "POST",
+                  headers: {
+                    "Content-Type": "application/json",
+                  },
+                  body: JSON.stringify({ dataJson: record }),
                 });
               }
-              }
-            } catch (err) {
-              console.log("Error:", err);
             }
-            // close the dialog
-            collectDataDialog.close();
-            // reload the page
-            location.reload();
-          });
-        } else {
+          } catch (err) {
+            console.log("Error:", err);
+          }
+          // close the dialog
+          collectDataDialog.close();
+          // reload the page
+          location.reload();
+        });
+      } else {
         // show the customer collect data dialog
         const collectDataDialog = document.querySelector("#collectDataDialog");
         collectDataDialog.showModal();
@@ -852,25 +851,63 @@ fetch(url, { method: "GET" })
         event.preventDefault();
 
         // need to get email for sendto from the page
+        let userEmail = userEmails[user] || userEmails["DEFAULT"];
+        // console.log("Sending email to: " + userEmail);
+
+        let actionNoteElem = document.querySelector("#actionNote");
+        let followUpNoteElem = document.querySelector("#followUpNote");
+        let actionNoteText = actionNoteElem ? actionNoteElem.innerText : "";
+        let followUpNoteText = followUpNoteElem
+          ? followUpNoteElem.innerText
+          : "";
+        let project_id = document.querySelector("#project").textContent;
+        project_id = project_id.substring(9);
+        project_id = project_id.split(" ")[0];
 
         let data = {
           INPUT_ID: iid,
-          to: "tim.kent@ci-aviation.com",
-          subject: "CIQMS Action Item " + iid,
-          text: document.querySelector("#emailCommentText").value,
           from: "quality@ci-aviation.com",
+          to: userEmail,
+          subject: "Action Item Updated: " + iid,
+          text:
+            "Project: " +
+            project_id +
+            "\n\n" +
+            actionNoteText +
+            "\n\n" +
+            (document.querySelector("#emailCommentText").value || "") +
+            "\n\n" +
+            followUpNoteText,
         };
 
-        // console.log(data);
-
-        // update the action text
+        // update the action text in the background
         const url = `http://localhost:${port}/input/email/${iid}`;
-        const response = await fetch(url, {
+        // This can be async (fire-and-forget) since you don't need to wait for the result before closing the dialog or reloading.
+        fetch(url, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({ data }),
+        }).catch((err) => {
+          console.error("Error sending email:", err);
+        });
+        // update the inputs_notify table
+        const notifyUrl = `http://localhost:${port}/inputs_notify`;
+        let notifyData = {
+          INPUT_ID: iid,
+          ASSIGNED_TO: document.querySelector("#ASSIGNED_TO").value,
+          ACTION: "R",
+        };
+        await new Promise((resolve) => setTimeout(resolve, 1000));
+        fetch(notifyUrl, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ data: notifyData }),
+        }).catch((err) => {
+          console.error("Error updating inputs_notify:", err);
         });
         // close the dialog
         emailDialog.close();
@@ -878,5 +915,4 @@ fetch(url, { method: "GET" })
         location.reload();
       });
     });
-
   });

@@ -3,38 +3,40 @@ const router = express.Router();
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 
+// ==================================================
+// Send email using nodemailer
+// ==================================================
+// Send email using nodemailer
+router.post("/email/:id", async (req, res) => {
+  // const iid = req.params.id;
+  // console.log(req.body);
+    try {
+        const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: true, // true for 465, false for other ports
+            auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+            },
+        });
 
-// emailer
-router.post("/email/:id", (req, res) => {
-  // console.log('Emailer route');
-  const transporter = nodemailer.createTransport({
-    host: process.env.SMTP_HOST,
-    port: Number(process.env.SMTP_PORT),
-    secure: process.env.SMTP_SECURE === "true",
-    auth: {
-      user: process.env.SMTP_USER,
-      pass: process.env.SMTP_PASS,
-    },
-  });
-  // Send email
-  const mailOptions = {
-    from: req.body.from,
-    to: req.body.to,
-    subject: req.body.subject,
-    text: req.body.text,
-  };
-  transporter.sendMail(mailOptions, (error, info) => {
-    if (error) {
-      console.log(error);
-      res.status(500).send("Error sending email: " + error.toString());
-    } else {
-      console.log("Email sent: " + info.response);
-      res.status(200).send("Email sent: " + info.response);
+        const { iid, to, from, subject, text } = req.body.data;
+        const mailOptions = {
+            from,
+            to,
+            subject,
+            text
+        };
+
+        const info = await transporter.sendMail(mailOptions);
+        // console.log("Email sent:", info.response);
+        res.status(200).send("Email sent successfully");
+    } catch (error) {
+        console.log("Error sending email:", error);
+        res.status(500).send(error.toString());
     }
-  });
 });
-
-
 
 // ==================================================
 // Get all records
@@ -173,31 +175,31 @@ router.get("/nextId", (req, res) => {
 // ==================================================
 // Send email using nodemailer
 router.post("/email", async (req, res) => {
-    try {
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: Number(process.env.SMTP_PORT),
-            secure: process.env.SMTP_SECURE === "true", // use env for secure
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: Number(process.env.SMTP_PORT),
+      secure: process.env.SMTP_SECURE === "true", // use env for secure
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
-        const mailOptions = {
-            from: process.env.SMTP_FROM,
-            to: req.body.ASSIGNED_TO_EMAIL,
-            subject: `Action Item Notification: ${req.body.INPUT_ID} - ${req.body.SUBJECT}`,
-            text: `The following action item has been assigned.\nInput Id: ${req.body.INPUT_ID} \nDue Date: ${req.body.DUE_DATE} \nAssigned To: ${req.body.ASSIGNED_TO} \nDescription:\n${req.body.INPUT_TEXT}\n\nPlease log in to the QMS system to view the details and take timely action.\n\nIf you have any questions, please contact the quality manager.`,
-        };
+    const mailOptions = {
+      to: req.body.ASSIGNED_TO_EMAIL,
+      from: process.env.SMTP_FROM,
+      subject: `Action Item Notification: ${req.body.INPUT_ID} - ${req.body.SUBJECT}`,
+      text: `The following action item has been assigned.\nInput Id: ${req.body.INPUT_ID} \nDue Date: ${req.body.DUE_DATE} \nAssigned To: ${req.body.ASSIGNED_TO} \nDescription:\n${req.body.INPUT_TEXT}\n\nPlease log in to the QMS system to view the details and take timely action.\n\nIf you have any questions, please contact the quality manager.`,
+    };
 
-        const info = await transporter.sendMail(mailOptions);
-        // console.log("Email sent:", info.response);
-        res.status(200).send("Email sent successfully");
-    } catch (error) {
-        console.log("Error sending email:", error);
-        res.status(500).send(error.toString());
-    }
+    const info = await transporter.sendMail(mailOptions);
+    // console.log("Email sent:", info.response);
+    res.status(200).send("Email sent successfully");
+  } catch (error) {
+    console.log("Error sending email:", error);
+    res.status(500).send(error.toString());
+  }
 });
 
 // ==================================================
@@ -218,12 +220,8 @@ router.post("/inputs_notify", (req, res) => {
         return;
       }
       // console.log('Connected to DB');
-    const query = `INSERT INTO INPUTS_NOTIFY (INPUT_ID, NOTIFIED_DATE, ASSIGNED_TO, ACTION) VALUES (?, NOW(), ?, ?)`;
-    const values = [
-      req.body.INPUT_ID,
-      req.body.ASSIGNED_TO,
-      req.body.ACTION,
-    ];
+      const query = `INSERT INTO INPUTS_NOTIFY (INPUT_ID, NOTIFIED_DATE, ASSIGNED_TO, ACTION) VALUES (?, NOW(), ?, ?)`;
+      const values = [req.body.INPUT_ID, req.body.ASSIGNED_TO, req.body.ACTION];
       // console.log(query);
       // console.log(values);
       connection.query(query, values, (err) => {
