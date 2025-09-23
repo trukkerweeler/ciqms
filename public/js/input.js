@@ -849,9 +849,10 @@ fetch(url, { method: "GET" })
       btnSaveEmail.addEventListener("click", async (event) => {
         // prevent default action
         event.preventDefault();
-
+        let e_assignedto = document.querySelector("#assignedto").textContent;
+        e_assignedto = e_assignedto.substring(13);
         // need to get email for sendto from the page
-        let userEmail = userEmails[user] || userEmails["DEFAULT"];
+        let userEmail = userEmails[e_assignedto] || userEmails["DEFAULT"];
         // console.log("Sending email to: " + userEmail);
 
         let actionNoteElem = document.querySelector("#actionNote");
@@ -872,12 +873,17 @@ fetch(url, { method: "GET" })
           text:
             "Project: " +
             project_id +
-            "\n\n" + "Action: " + "\n\n" +
+            "\n\n" +
+            "Action: " +
+            "\n\n" +
             actionNoteText +
             "\n\n" +
-            "Follow-up: " + "\n\n" + followUpNoteText +
+            "Follow-up: " +
             "\n\n" +
-            ("Email comment: " + (document.querySelector("#emailCommentText").value || ""))
+            followUpNoteText +
+            "\n\n" +
+            ("Email comment: " +
+              (document.querySelector("#emailCommentText").value || "")),
         };
 
         // update the action text in the background
@@ -894,7 +900,10 @@ fetch(url, { method: "GET" })
         });
         // update the inputs_notify table
         const notifyUrl = `http://localhost:${port}/input/inputs_notify`;
-        let assignedto = document.querySelector("#assignedto").textContent.replace(/^Assigned To:\s*/, "").trim();
+        let assignedto = document
+          .querySelector("#assignedto")
+          .textContent.replace(/^Assigned To:\s*/, "")
+          .trim();
 
         let notifyData = {
           INPUT_ID: urlParams.get("id"),

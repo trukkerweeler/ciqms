@@ -227,7 +227,9 @@ router.post("/inputs_notify", (req, res) => {
       }
       // console.log('Connected to DB');
       const query = `INSERT INTO INPUTS_NOTIFY (INPUT_ID, NOTIFIED_DATE, ASSIGNED_TO, ACTION) VALUES (?, NOW(), ?, ?)`;
-      const { INPUT_ID, ASSIGNED_TO, ACTION } = req.body;
+      // Support both direct and nested (data) payloads
+      const data = req.body.data ? req.body.data : req.body;
+      const { INPUT_ID, ASSIGNED_TO, ACTION } = data;
       const values = [INPUT_ID, ASSIGNED_TO, ACTION];
       // console.log(query);
       // console.log(values);
