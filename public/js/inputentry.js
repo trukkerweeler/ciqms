@@ -99,6 +99,7 @@ setTimeout(async () => {
     DUE_DATE: dataJson.DUE_DATE,
     ASSIGNED_TO: dataJson.ASSIGNED_TO,
   };
+  // console.log(emailData);
   await fetch(url + "/email", {
     method: "POST",
     headers: {
@@ -115,7 +116,7 @@ setTimeout(async () => {
           },
           body: JSON.stringify({
             ACTION: "I",
-            INPUT_ID: nextId,
+            INPUT_ID: dataJson.INPUT_ID,
             NOTIFY_DATE: myRequestDate,
             ASSIGNED_TO: dataJson.ASSIGNED_TO,
           }),
@@ -129,4 +130,5 @@ setTimeout(async () => {
   form.reset();
   document.getElementById("INPUT_DATE").value = myRequestDate;
   document.getElementById("DUE_DATE").value = myDueDateDefault;
+  window.location.href = "inputs.html";
 });

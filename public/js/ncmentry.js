@@ -90,7 +90,13 @@ form.addEventListener("submit", async (event) => {
 
   // Try to send email and notify, then redirect
   (async () => {
-    let toEmail = users[dataJson.ASSIGNED_TO];
+    let toEmail;
+    if (dataJson.NCM_TYPE === "RET") {
+      toEmail = users["QC"];
+    }
+    if (!toEmail && dataJson.ASSIGNED_TO) {
+      toEmail = users[dataJson.ASSIGNED_TO];
+    }
     if (toEmail === undefined) {
       toEmail = users["DEFAULT"];
     }

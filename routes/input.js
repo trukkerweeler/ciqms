@@ -10,32 +10,32 @@ const nodemailer = require("nodemailer");
 router.post("/email/:id", async (req, res) => {
   // const iid = req.params.id;
   // console.log(req.body);
-    try {
-        const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: true, // true for 465, false for other ports
-            auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-            },
-        });
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
 
-        const { iid, to, from, subject, text } = req.body.data;
-        const mailOptions = {
-            from,
-            to,
-            subject,
-            text
-        };
+    const { iid, to, from, subject, text } = req.body.data;
+    const mailOptions = {
+      from,
+      to,
+      subject,
+      text,
+    };
 
-        const info = await transporter.sendMail(mailOptions);
-        // console.log("Email sent:", info.response);
-        res.status(200).send("Email sent successfully");
-    } catch (error) {
-        console.log("Error sending email:", error);
-        res.status(500).send(error.toString());
-    }
+    const info = await transporter.sendMail(mailOptions);
+    // console.log("Email sent:", info.response);
+    res.status(200).send("Email sent successfully");
+  } catch (error) {
+    console.log("Error sending email:", error);
+    res.status(500).send(error.toString());
+  }
 });
 
 // ==================================================
@@ -175,16 +175,23 @@ router.get("/nextId", (req, res) => {
 // ==================================================
 // Send email using nodemailer
 router.post("/email", async (req, res) => {
+  // console.log('Email route');
+  // console.log(req.body);
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
-      secure: process.env.SMTP_SECURE === "true", // use env for secure
+      secure: true,
       auth: {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      logger: true,
+      debug: true,
     });
+
+    // Verify connection configuration
+    // await transporter.verify();
 
     const mailOptions = {
       to: req.body.ASSIGNED_TO_EMAIL,
@@ -194,7 +201,6 @@ router.post("/email", async (req, res) => {
     };
 
     const info = await transporter.sendMail(mailOptions);
-    // console.log("Email sent:", info.response);
     res.status(200).send("Email sent successfully");
   } catch (error) {
     console.log("Error sending email:", error);
@@ -205,7 +211,7 @@ router.post("/email", async (req, res) => {
 // ==================================================
 // update INPUTS_NOTIFY table
 router.post("/inputs_notify", (req, res) => {
-  // console.log(req.body);
+  // console.log("Inputs Notify:", req.body);
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -216,12 +222,12 @@ router.post("/inputs_notify", (req, res) => {
     });
     connection.connect(function (err) {
       if (err) {
-        console.error("Error connecting: " + err.stack);
+        console.error("Error connecting inputs_notify: " + err.stack);
         return;
       }
       // console.log('Connected to DB');
       const query = `INSERT INTO INPUTS_NOTIFY (INPUT_ID, NOTIFIED_DATE, ASSIGNED_TO, ACTION) VALUES (?, NOW(), ?, ?)`;
-      const { INPUT_ID, ASSIGNED_TO, ACTION } = req.body.data;
+      const { INPUT_ID, ASSIGNED_TO, ACTION } = req.body;
       const values = [INPUT_ID, ASSIGNED_TO, ACTION];
       // console.log(query);
       // console.log(values);

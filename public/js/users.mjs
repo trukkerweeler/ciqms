@@ -6,4 +6,5 @@ export default {
   "RMATSAMAS": "ritam@ci-aviation.com",
   "VRASMUSSEN": "victoria.r@ci-aviation.com",
   "AMIDDLETON": "alex.m@ci-aviation.com",
+  "QC": "tim.kent@ci-aviation.com, bobbi.bush@ci-aviation.com, craig@ci-aviation.com, ritam@ci-aviation.com",
 };

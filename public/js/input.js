@@ -894,11 +894,6 @@ fetch(url, { method: "GET" })
         });
         // update the inputs_notify table
         const notifyUrl = `http://localhost:${port}/input/inputs_notify`;
-        // You can await the assignment if you wrap it in a Promise or async function.
-        // For example, if you need to fetch or compute 'assignedto' asynchronously:
-        // let assignedto = await someAsyncFunction();
-
-        // If 'assignedto' is already available synchronously, just assign it:
         let assignedto = document.querySelector("#assignedto").textContent.replace(/^Assigned To:\s*/, "").trim();
 
         let notifyData = {
@@ -906,7 +901,7 @@ fetch(url, { method: "GET" })
           ASSIGNED_TO: assignedto,
           ACTION: "R",
         };
-        // await new Promise((resolve) => setTimeout(resolve, 1000));
+
         try {
           await fetch(notifyUrl, {
             method: "POST",

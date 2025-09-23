@@ -132,9 +132,10 @@ router.post("/email", async (req, res) => {
 });
 
 // ==================================================
-// update INPUTS_NOTIFY table
+// update NCM_NOTIFY table
 router.post("/ncm_notify", (req, res) => {
-    console.log(req.body);
+    // console.log("post ncm_notify");
+    // console.log(req.body);
     try {
       const connection = mysql.createConnection({
         host: process.env.DB_HOST,
