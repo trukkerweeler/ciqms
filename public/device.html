@@ -165,6 +165,17 @@
           </button>
         </section>
       </dialog>
+      <dialog id="editNotes" class="dialog">
+        <form id="edit-notes-form">
+          <h2>Edit Notes</h2>
+          <label for="notes-textarea">Notes:</label>
+          <textarea id="notes-textarea" name="NOTES" rows="6" required></textarea>
+          <div class="dialog-actions">
+            <button type="submit" id="saveNotes" class="btn btn-primary">Save</button>
+            <button type="button" id="cancelNotes" class="btn btn-cancel" onclick="document.getElementById('editNotes').close()">Cancel</button>
+          </div>
+        </form>
+      </dialog>
 
 
     </main>

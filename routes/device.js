@@ -108,7 +108,7 @@ router.get("/:id", async (req, res) => {
         return;
       }
 
-      const query = `SELECT * FROM DEVICES WHERE DEVICE_ID = ?`;
+      const query = `SELECT d.*, dn.DEVICE_NOTE FROM DEVICES d LEFT JOIN DEVICE_NOTES dn ON d.DEVICE_ID = dn.DEVICE_ID WHERE d.DEVICE_ID = ?`;
 
       connection.query(query, [req.params.id], (err, rows) => {
         if (err) {
@@ -321,6 +321,48 @@ router.delete("/delete", async (req, res) => {
       });
 
       connection.end();
+    });
+  } catch (err) {
+    console.error("Error connecting to DB: ", err);
+    res.sendStatus(500);
+  }
+});
+
+router.put("/savenote", async (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    }); 
+    connection.connect((err) => {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.sendStatus(500);
+        return;
+      }
+
+      const { id, notes } = req.body;
+
+      const upsertQuery = `
+        INSERT INTO DEVICE_NOTES (DEVICE_ID, DEVICE_NOTE)
+        VALUES (?, ?)
+        ON DUPLICATE KEY UPDATE DEVICE_NOTE = VALUES(DEVICE_NOTE)
+      `;
+      connection.query(upsertQuery, [id, notes], (err) => {
+        if (err) {
+          console.error("Failed to save device note: " + err);
+          res.sendStatus(500);
+          connection.end();
+          return;
+        }
+        res.json({ message: "Note saved successfully" });
+        connection.end();
+      });
+      return; 
+      
     });
   } catch (err) {
     console.error("Error connecting to DB: ", err);

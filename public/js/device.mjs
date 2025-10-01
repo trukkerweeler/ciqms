@@ -1,9 +1,10 @@
-import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, myport, getUserValue, timestampAndJoinNotes } from "./utils.mjs";
 
 loadHeaderFooter();
 const port = myport();
+let user = (await getUserValue("user")) || "Unknown User";
+
 async function initializePage() {
-  let user = (await getUserValue("user")) || "Unknown User";
 
   // read the url parameter
   const urlParams = new URLSearchParams(window.location.search);
@@ -20,6 +21,12 @@ async function initializePage() {
     })
       .then((response) => response.json())
       .then((data) => {
+        // console.log("Device data: ", data);
+        if (data.message === "No records found") {
+          let mainElement = document.getElementById("main-content");
+          mainElement.innerHTML = "<p>No device found</p>";
+          return;
+        }
         let mainElement = document.getElementById("main-content");
         const divTitle = document.createElement("div");
         divTitle.classList.add("page-header-div");
@@ -68,6 +75,7 @@ async function initializePage() {
           "SPECIAL_INTERVAL",
           "STANDARD_INTERVAL",
           "WARNING_INTERVAL",
+          "DEVICE_NOTE",
         ];
         let sectionsDiv = document.createElement("div");
         sectionsDiv.classList.add("sections-div");
@@ -82,9 +90,7 @@ async function initializePage() {
         editDeviceButton.id = "btnEditDevice";
         editDeviceButton.textContent = "Edit";
         editDeviceButton.addEventListener("click", (e) => {
-          // alert("Edit Device button clicked!");
           e.preventDefault();
-          // set the values of the input fields in the edit device dialog
           document.getElementById("edit-device-id").value = data["DEVICE_ID"];
           document.getElementById("edit-device-name").value = data["NAME"];
           document.getElementById("edit-device-type").value =
@@ -151,6 +157,8 @@ async function initializePage() {
         // =====================================================
         // Calibration section
         let calibrationSection = document.createElement("section");
+        calibrationSection.classList.add("calibration-section");
+        calibrationSection.id = "calibration-section";
         let calibDiv = document.createElement("div");
         calibDiv.classList.add("section-header-edit");
 
@@ -158,11 +166,11 @@ async function initializePage() {
 
         let editCalibrationButton = document.createElement("button");
         editCalibrationButton.textContent = "Edit";
-        // make the editCalibrationButton not displayed
         editCalibrationButton.style.display = "none";
-        if (user === "TKENT" || user === "superuser") {
+        if (user === "TKENT" || user === "superuser" || user === "QC2") {
           editCalibrationButton.style.display = "inline-block";
         }
+        editCalibrationButton.classList.add("btn", "btn-primary", "edit-button");
         editCalibrationButton.addEventListener("click", () => {
           document.getElementById("edit-assi-employee-id").value =
             data["ASSI_EMPLOYEE_ID"] || "";
@@ -178,7 +186,6 @@ async function initializePage() {
           document.getElementById("edit-warning-interval").value =
             data["WARNING_INTERVAL"] || "";
 
-          // Show the edit calibration dialog
           document.getElementById("edit-devcal-dialog").showModal();
         });
 
@@ -208,21 +215,48 @@ async function initializePage() {
         });
 
         sectionsDiv.appendChild(calibrationSection);
+        // =====================================================
+        // Notes section
+        let notesSection = document.createElement("section");
+        notesSection.classList.add("calibration-section");
+        notesSection.id = "notes-section";
+        let notesDiv = document.createElement("div");
+        notesDiv.classList.add("section-header-edit");
+        notesDiv.innerHTML = `<h2>Notes</h2>`;
+        let editNotesButton = document.createElement("button");
+        editNotesButton.id = "btnEditNotes";
+        editNotesButton.textContent = "Edit";
+        editNotesButton.style.display = "none";
+        if (user === "TKENT" || user === "superuser" || user === "QC2") {
+          editNotesButton.style.display = "inline-block";
+        }
+        editNotesButton.classList.add("btn", "btn-primary", "edit-button");
+        editNotesButton.addEventListener("click", () => {
+          // document.getElementById("notes-textarea").value = data["DEVICE_NOTE"] || "";
+          document.getElementById("editNotes").showModal();
+        });
+
+        notesDiv.appendChild(editNotesButton);
+        notesSection.appendChild(notesDiv);
+
+        let notesContentDiv = document.createElement("div");
+        notesContentDiv.classList.add("device-info-field", "notes-content");
+        notesContentDiv.id = "notesContentDiv";
+        notesContentDiv.innerHTML = data["DEVICE_NOTE"] ? data["DEVICE_NOTE"] : "No notes available.";
+        notesSection.appendChild(notesContentDiv);
+
+        sectionsDiv.appendChild(notesSection);
+
         // listen for click event on the image button
         document
           .querySelector("#imageBtn")
           .addEventListener("click", async () => {
-            // alert("Image button clicked!");
             const urlParams = new URLSearchParams(window.location.search);
             const deviceId = urlParams.get("id");
-            //   console.log("Device ID: ", deviceId);
-            // get the modal element
             const modal = document.getElementById("view-device-image-dialog");
-            // get the image element
             const imgElement = document.getElementById("device-image");
 
             try {
-              // fetch the image from the server
               const response = await fetch(
                 `http://localhost:${port}/image/${deviceId}`,
                 {
@@ -248,7 +282,6 @@ async function initializePage() {
               imgElement.src = `./images/default.png`;
             };
 
-            // open the modal
             modal.showModal();
           });
         mainElement.appendChild(sectionsDiv);
@@ -475,4 +508,41 @@ if (editDialog) {
   console.error(
     "Dialog element with attribute 'edit-device-dialog' is missing or not a <dialog>."
   );
+}
+
+// Event listener for the "Save" button in the edit notes dialog
+const saveNotes = document.getElementById("saveNotes");
+if (saveNotes) {
+  saveNotes.addEventListener("click", (e) => {
+    e.preventDefault();
+    const notesTextarea = document.getElementById("notes-textarea");
+    const newNotes = notesTextarea.value;
+
+    // Save the notes (you can implement the actual save logic here)
+    const urlSaveDeviceNote = `http://localhost:${port}/device/savenote`;
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get("id");
+    // get the existing notes content div
+    let oldNotesContentDiv = document.getElementById("notesContentDiv");
+    // need to prepend the existing notes with a timestamp and separator
+    const timestamp = new Date().toLocaleString();
+    const updatedNotes = timestampAndJoinNotes(oldNotesContentDiv.textContent, newNotes, user);
+    // console.log("Updated Notes: ", updatedNotes);
+
+    // send to server
+    fetch(urlSaveDeviceNote, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        id: deviceId,
+        notes: updatedNotes,
+      }),
+    });
+
+    const editNotesDialog = document.getElementById("editNotes");
+    editNotesDialog.close();
+    window.location.href = `./device.html?id=${deviceId}`;
+  });
 }

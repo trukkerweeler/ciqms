@@ -11,6 +11,7 @@ input {
     margin-bottom: 5px; /* Space below each input field */
 }
 
+
 .btn{ 
     background-color: #4CAF50; /* Green background */
     color: white; /* White text */
@@ -150,7 +151,7 @@ nav ul li a:hover, nav ul li button:hover {
 .sections-div {
     display: grid;
     /* grid-template-columns: repeat(auto-fill, minmax(400px, 1fr)); Responsive grid */
-    grid-template-columns: 1fr 1fr;
+    grid-template-columns: 1fr 1fr 1fr;
     gap: 20px 30px; /* Horizontal gap: 20px, Vertical gap: 30px */
     margin: 20px; /* Margin around the grid */
     margin-top: 0px; /* No margin on top */
@@ -172,6 +173,40 @@ nav ul li a:hover, nav ul li button:hover {
     justify-content: space-between;
     margin-left: 1rem;
     margin-right: 1rem;
+    grid-column: span 2;
+    height: 60px;
+}
+
+#notesContentDiv {
+    margin-left: 1rem;
+    margin-right: 1rem;
+    margin-bottom: 1rem;
+    max-width: 400px; /* Ensure it doesn't exceed the container width */
+    overflow-wrap: break-word; /* Break long words if necessary */
+    grid-column: span 2;
+}
+
+.calibration-section {
+    grid-template-columns: 1fr 1fr; /* Two equal columns */
+    min-width: 325px;
+}
+
+#notes-section button {
+    vertical-align: top;
+    align-self: flex-start;
+}
+
+/* #btnEditNotes {
+    margin-top: 0;
+    padding-top: 0;
+    vertical-align: top;
+} */
+
+.notes-content {
+    white-space: pre-wrap; /* Preserve whitespace and wrap text */
+    word-wrap: break-word; /* Break long words if necessary */
+    max-width: 400px; /* Ensure it doesn't exceed the container width */
+    grid-column: span 2;
 }
 
 .section-header-edit button {

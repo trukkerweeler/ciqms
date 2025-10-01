@@ -581,3 +581,13 @@ export function renderTableFromArray(data, title) {
 `;
   return html;
 }
+// =================================================
+// timestamp new note and join to existing notes
+export function timestampAndJoinNotes(existingNotes, newNote, user) {
+  const timestamp = new Date().toLocaleString();
+  let updatedNotes = `${timestamp} by ${user}:\n${newNote}\n`;
+  if (existingNotes && existingNotes.trim() !== "") {
+    updatedNotes += existingNotes.startsWith("---") ? existingNotes : "\n" + existingNotes;
+  }
+  return updatedNotes;
+}
