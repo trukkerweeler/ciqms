@@ -242,52 +242,78 @@ router.put("/editdevice", async (req, res) => {
 // ==================================================
 // Edit devcal record
 router.put("/editdevcal", async (req, res) => {
-  try {
-    const connection = mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      port: 3306,
-      database: "quality",
-    });
+  console.log("Request body: ", req.body); // Log the request body for debugging
+//   try {
+//     const connection = mysql.createConnection({
+//       host: process.env.DB_HOST,
+//       user: process.env.DB_USER,
+//       password: process.env.DB_PASS,
+//       port: 3306,
+//       database: "quality",
+//     });
 
-    connection.connect((err) => {
-      if (err) {
-        console.error("Error connecting: " + err.stack);
-        res.sendStatus(500);
-        return;
-      }
+//     connection.connect((err) => {
+//       if (err) {
+//         console.error("Error connecting: " + err.stack);
+//         res.sendStatus(500);
+//         return;
+//       }
 
-      const query = `UPDATE DEVICES SET ASSI_EMPLOYEE_ID = ?, DAYS_REMAINING = ?, STATUS = ?, NEXT_DATE = ?, SPECIAL_INTERVAL = ?, STANDARD_INTERVAL = ?, WARNING_INTERVAL = ?, MODIFIED_BY = ?, MODIFIED_DATE = ? WHERE DEVICE_ID = ?`;
+//       // Build dynamic SET clause and values array based on req.body
+//       const allowedFields = [
+//         "ASSI_EMPLOYEE_ID",
+//         "DAYS_REMAINING",
+//         "STATUS",
+//         "NEXT_DATE",
+//         "SPECIAL_INTERVAL",
+//         "STANDARD_INTERVAL",
+//         "WARNING_INTERVAL",
+//         "MODIFIED_BY",
+//         "MODIFIED_DATE"
+//       ];
 
-      const values = [
-        req.body.ASSI_EMPLOYEE_ID,
-        req.body.DAYS_REMAINING,
-        req.body.STATUS,
-        req.body.NEXT_DATE,
-        req.body.SPECIAL_INTERVAL,
-        req.body.STANDARD_INTERVAL,
-        req.body.WARNING_INTERVAL,
-        req.body.MODIFIED_BY,
-        req.body.MODIFIED_DATE,
-        req.body.DEVICE_ID,
-      ];
+//       const setClauses = [];
+//       const values = [];
 
-      connection.query(query, values, (err) => {
-        if (err) {
-          console.error("Failed to update device calibration: " + err);
-          res.sendStatus(500);
-          return;
-        }
-        res.json({ message: "Record updated successfully" });
-      });
+//       allowedFields.forEach(field => {
+//         if (req.body[field] !== undefined) {
+//           setClauses.push(`${field} = ?`);
+//           values.push(req.body[field]);
+//         }
+//       });
 
-      connection.end();
-    });
-  } catch (err) {
-    console.error("Error connecting to DB: ", err);
-    res.sendStatus(500);
-  }
+//       // Always require DEVICE_ID for WHERE clause
+//       if (!req.body.DEVICE_ID) {
+//         res.status(400).json({ error: "DEVICE_ID is required" });
+//         connection.end();
+//         return;
+//       }
+
+//       // Ensure at least one field is being updated
+//       if (setClauses.length === 0) {
+//         res.status(400).json({ error: "No valid fields provided for update" });
+//         connection.end();
+//         return;
+//       }
+
+//       const query = `UPDATE DEVICES SET ${setClauses.join(", ")} WHERE DEVICE_ID = ?`;
+//       values.push(req.body.DEVICE_ID);
+
+//       connection.query(query, values, (err) => {
+//         if (err) {
+//           console.error("Failed to update device calibration: " + err);
+//           res.sendStatus(500);
+//           connection.end();
+//           return;
+//         }
+//         res.json({ message: "Record updated successfully" });
+//         connection.end();
+//       });
+//     });
+//   } catch (err) {
+//     console.error("Error connecting to DB: ", err);
+//     res.sendStatus(500);
+//   }
 });
 
 // ==================================================

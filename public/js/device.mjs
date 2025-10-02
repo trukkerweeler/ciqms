@@ -343,6 +343,7 @@ document.addEventListener("DOMContentLoaded", async () => {
       document.getElementById("edit-device-dialog").close();
       window.location.href = `./device.html?id=${deviceId}`;
     });
+  });
 
   document
     .getElementById("saveDevcalEdit")
@@ -367,46 +368,54 @@ document.addEventListener("DOMContentLoaded", async () => {
       const warningInterval = document.getElementById(
         "edit-warning-interval"
       ).value;
-      const statusSelect = document.getElementById("edit-status");
-      const status = statusSelect.options[statusSelect.selectedIndex].text;
+      const statusSelect = document.getElementById("status");
+      const status = statusSelect.value;
+      if (!status || status === "SELECT STATUS") {
+        alert("Please select a valid status.");
+        return;
+      }
 
-      // log all the values
-      console.log("Device ID: ", deviceId);
-      console.log("Assi Employee ID: ", assiEmployeeId);
-      console.log("Days Remaining: ", daysRemaining);
-      console.log("Next Date: ", nextDate);
-      console.log("Special Interval: ", specialInterval);
-      console.log("Standard Interval: ", standardInterval);
-      console.log("Warning Interval: ", warningInterval);
+      // // log all the values
+      // console.log("Device ID: ", deviceId);
+      // console.log("Assi Employee ID: ", assiEmployeeId);
+      // console.log("Days Remaining: ", daysRemaining);
+      // console.log("Next Date: ", nextDate);
+      // console.log("Special Interval: ", specialInterval);
+      // console.log("Standard Interval: ", standardInterval);
+      // console.log("Warning Interval: ", warningInterval);
+      // console.log("User: ", user);
       const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+      // console.log("Mod Date: ", modDate);
+      console.log("Status: ", status);
 
-      console.log("User: ", user);
-      console.log("Mod Date: ", modDate);
       const devCalEditUrl = `http://localhost:${port}/device/editdevcal`;
 
-      fetch(devCalEditUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          DEVICE_ID: deviceId,
-          ASSI_EMPLOYEE_ID: assiEmployeeId
-            ? assiEmployeeId.toUpperCase()
-            : assiEmployeeId,
-          DAYS_REMAINING: daysRemaining,
-          NEXT_DATE: nextDate,
-          SPECIAL_INTERVAL: specialInterval,
-          STANDARD_INTERVAL: standardInterval,
-          STATUS: status ? status.toUpperCase() : status,
-          WARNING_INTERVAL: warningInterval,
-          MODIFIED_BY: user,
-          MODIFIED_DATE: modDate,
-        }),
-      });
-      document.getElementById("edit-devcal-dialog").close();
-      window.location.href = `./device.html?id=${deviceId}`;
-    });
+  // Build the JSON object for the request body
+  const devCalEditData = {
+    DEVICE_ID: deviceId,
+    ASSI_EMPLOYEE_ID: assiEmployeeId ? assiEmployeeId.toUpperCase() : assiEmployeeId,
+    DAYS_REMAINING: daysRemaining,
+    NEXT_DATE: nextDate,
+    SPECIAL_INTERVAL: specialInterval,
+    STANDARD_INTERVAL: standardInterval,
+    WARNING_INTERVAL: warningInterval,
+    MODIFIED_BY: user,
+    MODIFIED_DATE: modDate,
+  };
+  if (status && status !== "SELECT STATUS") {
+    devCalEditData.STATUS = status.toUpperCase();
+  }
+
+  fetch(devCalEditUrl, {
+    method: "PUT",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(devCalEditData),
+  }).then(() => {
+    document.getElementById("edit-devcal-dialog").close();
+    window.location.href = `./device.html?id=${deviceId}`;
+  });
 });
 
 // listen for changeImage
@@ -526,7 +535,8 @@ if (saveNotes) {
     let oldNotesContentDiv = document.getElementById("notesContentDiv");
     // need to prepend the existing notes with a timestamp and separator
     const timestamp = new Date().toLocaleString();
-    const updatedNotes = timestampAndJoinNotes(oldNotesContentDiv.textContent, newNotes, user);
+    const oldNotes = oldNotesContentDiv.textContent === "No notes available." ? "" : oldNotesContentDiv.textContent;
+    const updatedNotes = timestampAndJoinNotes(oldNotes, newNotes, user);
     // console.log("Updated Notes: ", updatedNotes);
 
     // send to server
