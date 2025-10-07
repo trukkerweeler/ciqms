@@ -315,16 +315,10 @@ document
     ).value;
     const model = document.getElementById("edit-model").value;
     const serialNumber = document.getElementById("edit-serial-number").value;
-    const majorLocation = document.getElementById(
-      "edit-major-location"
-    ).value;
-    const minorLocation = document.getElementById(
-      "edit-minor-location"
-    ).value;
+    const majorLocation = document.getElementById("edit-major-location").value;
+    const minorLocation = document.getElementById("edit-minor-location").value;
     const purchaseDate = document.getElementById("edit-purchase-date").value;
-    const purchasePrice = document.getElementById(
-      "edit-purchase-price"
-    ).value;
+    const purchasePrice = document.getElementById("edit-purchase-price").value;
     const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
 
     const deviceEditUrl = `http://localhost:${port}/device/editdevice`;
