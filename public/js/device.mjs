@@ -1,11 +1,15 @@
-import { loadHeaderFooter, myport, getUserValue, timestampAndJoinNotes } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  myport,
+  getUserValue,
+  timestampAndJoinNotes,
+} from "./utils.mjs";
 
 loadHeaderFooter();
 const port = myport();
 let user = (await getUserValue("user")) || "Unknown User";
 
 async function initializePage() {
-
   // read the url parameter
   const urlParams = new URLSearchParams(window.location.search);
   const deviceId = urlParams.get("id");
@@ -170,7 +174,11 @@ async function initializePage() {
         if (user === "TKENT" || user === "superuser" || user === "QC2") {
           editCalibrationButton.style.display = "inline-block";
         }
-        editCalibrationButton.classList.add("btn", "btn-primary", "edit-button");
+        editCalibrationButton.classList.add(
+          "btn",
+          "btn-primary",
+          "edit-button"
+        );
         editCalibrationButton.addEventListener("click", () => {
           document.getElementById("edit-assi-employee-id").value =
             data["ASSI_EMPLOYEE_ID"] || "";
@@ -242,7 +250,9 @@ async function initializePage() {
         let notesContentDiv = document.createElement("div");
         notesContentDiv.classList.add("device-info-field", "notes-content");
         notesContentDiv.id = "notesContentDiv";
-        notesContentDiv.innerHTML = data["DEVICE_NOTE"] ? data["DEVICE_NOTE"] : "No notes available.";
+        notesContentDiv.innerHTML = data["DEVICE_NOTE"]
+          ? data["DEVICE_NOTE"]
+          : "No notes available.";
         notesSection.appendChild(notesContentDiv);
 
         sectionsDiv.appendChild(notesSection);
@@ -292,131 +302,128 @@ async function initializePage() {
 
 initializePage();
 
-document.addEventListener("DOMContentLoaded", async () => {
+document
+  .getElementById("saveDeviceEdit")
+  .addEventListener("click", async (e) => {
+    e.preventDefault();
+    const user = (await getUserValue("user")) || "Unknown User";
+    const deviceId = document.getElementById("edit-device-id").value;
+    const deviceName = document.getElementById("edit-device-name").value;
+    const deviceType = document.getElementById("edit-device-type").value;
+    const manufacturerName = document.getElementById(
+      "edit-manufacturer-name"
+    ).value;
+    const model = document.getElementById("edit-model").value;
+    const serialNumber = document.getElementById("edit-serial-number").value;
+    const majorLocation = document.getElementById(
+      "edit-major-location"
+    ).value;
+    const minorLocation = document.getElementById(
+      "edit-minor-location"
+    ).value;
+    const purchaseDate = document.getElementById("edit-purchase-date").value;
+    const purchasePrice = document.getElementById(
+      "edit-purchase-price"
+    ).value;
+    const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
 
-  document
-    .getElementById("saveDeviceEdit")
-    .addEventListener("click", async (e) => {
-      e.preventDefault();
-      const user = (await getUserValue("user")) || "Unknown User";
-      const deviceId = document.getElementById("edit-device-id").value;
-      const deviceName = document.getElementById("edit-device-name").value;
-      const deviceType = document.getElementById("edit-device-type").value;
-      const manufacturerName = document.getElementById(
-        "edit-manufacturer-name"
-      ).value;
-      const model = document.getElementById("edit-model").value;
-      const serialNumber = document.getElementById("edit-serial-number").value;
-      const majorLocation = document.getElementById(
-        "edit-major-location"
-      ).value;
-      const minorLocation = document.getElementById(
-        "edit-minor-location"
-      ).value;
-      const purchaseDate = document.getElementById("edit-purchase-date").value;
-      const purchasePrice = document.getElementById(
-        "edit-purchase-price"
-      ).value;
-      const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+    const deviceEditUrl = `http://localhost:${port}/device/editdevice`;
+    fetch(deviceEditUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({
+        DEVICE_ID: deviceId,
+        NAME: deviceName,
+        DEVICE_TYPE: deviceType,
+        MANUFACTURER_NAME: manufacturerName,
+        MODEL: model,
+        SERIAL_NUMBER: serialNumber,
+        MAJOR_LOCATION: majorLocation,
+        MINOR_LOCATION: minorLocation,
+        PURCHASE_DATE: purchaseDate,
+        PURCHASE_PRICE: purchasePrice,
+        MODIFIED_DATE: modDate,
+        MODIFIED_BY: user,
+      }),
+    });
+    document.getElementById("edit-device-dialog").close();
+    window.location.href = `./device.html?id=${deviceId}`;
+  });
 
-      const deviceEditUrl = `http://localhost:${port}/device/editdevice`;
-      fetch(deviceEditUrl, {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          DEVICE_ID: deviceId,
-          NAME: deviceName,
-          DEVICE_TYPE: deviceType,
-          MANUFACTURER_NAME: manufacturerName,
-          MODEL: model,
-          SERIAL_NUMBER: serialNumber,
-          MAJOR_LOCATION: majorLocation,
-          MINOR_LOCATION: minorLocation,
-          PURCHASE_DATE: purchaseDate,
-          PURCHASE_PRICE: purchasePrice,
-          MODIFIED_DATE: modDate,
-          MODIFIED_BY: user,
-        }),
-      });
-      document.getElementById("edit-device-dialog").close();
+document
+  .getElementById("saveDevcalEdit")
+  .addEventListener("click", async (e) => {
+    e.preventDefault();
+    let user = (await getUserValue()) || "Unknown User";
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get("id");
+    const assiEmployeeId = document.getElementById(
+      "edit-assi-employee-id"
+    ).value;
+    const daysRemaining = document.getElementById("edit-days-remaining").value;
+    const nextDate = document.getElementById("edit-next-date").value;
+    const specialInterval = document.getElementById(
+      "edit-special-interval"
+    ).value;
+    const standardInterval = document.getElementById(
+      "edit-standard-interval"
+    ).value;
+    const warningInterval = document.getElementById(
+      "edit-warning-interval"
+    ).value;
+    const statusSelect = document.getElementById("status");
+    const status = statusSelect.value;
+    if (!status || status === "SELECT STATUS") {
+      alert("Please select a valid status.");
+      return;
+    }
+
+    // // log all the values
+    // console.log("Device ID: ", deviceId);
+    // console.log("Assi Employee ID: ", assiEmployeeId);
+    // console.log("Days Remaining: ", daysRemaining);
+    // console.log("Next Date: ", nextDate);
+    // console.log("Special Interval: ", specialInterval);
+    // console.log("Standard Interval: ", standardInterval);
+    // console.log("Warning Interval: ", warningInterval);
+    // console.log("User: ", user);
+    const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+    // console.log("Mod Date: ", modDate);
+    console.log("Status: ", status);
+
+    const devCalEditUrl = `http://localhost:${port}/device/editdevcal`;
+
+    // Build the JSON object for the request body
+    const devCalEditData = {
+      DEVICE_ID: deviceId,
+      ASSI_EMPLOYEE_ID: assiEmployeeId
+        ? assiEmployeeId.toUpperCase()
+        : assiEmployeeId,
+      DAYS_REMAINING: daysRemaining,
+      NEXT_DATE: nextDate,
+      SPECIAL_INTERVAL: specialInterval,
+      STANDARD_INTERVAL: standardInterval,
+      WARNING_INTERVAL: warningInterval,
+      MODIFIED_BY: user,
+      MODIFIED_DATE: modDate,
+    };
+    if (status && status !== "SELECT STATUS") {
+      devCalEditData.STATUS = status.toUpperCase();
+    }
+
+    fetch(devCalEditUrl, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(devCalEditData),
+    }).then(() => {
+      document.getElementById("edit-devcal-dialog").close();
       window.location.href = `./device.html?id=${deviceId}`;
     });
   });
-
-  document
-    .getElementById("saveDevcalEdit")
-    .addEventListener("click", async (e) => {
-      e.preventDefault();
-      let user = (await getUserValue()) || "Unknown User";
-      const urlParams = new URLSearchParams(window.location.search);
-      const deviceId = urlParams.get("id");
-      const assiEmployeeId = document.getElementById(
-        "edit-assi-employee-id"
-      ).value;
-      const daysRemaining = document.getElementById(
-        "edit-days-remaining"
-      ).value;
-      const nextDate = document.getElementById("edit-next-date").value;
-      const specialInterval = document.getElementById(
-        "edit-special-interval"
-      ).value;
-      const standardInterval = document.getElementById(
-        "edit-standard-interval"
-      ).value;
-      const warningInterval = document.getElementById(
-        "edit-warning-interval"
-      ).value;
-      const statusSelect = document.getElementById("status");
-      const status = statusSelect.value;
-      if (!status || status === "SELECT STATUS") {
-        alert("Please select a valid status.");
-        return;
-      }
-
-      // // log all the values
-      // console.log("Device ID: ", deviceId);
-      // console.log("Assi Employee ID: ", assiEmployeeId);
-      // console.log("Days Remaining: ", daysRemaining);
-      // console.log("Next Date: ", nextDate);
-      // console.log("Special Interval: ", specialInterval);
-      // console.log("Standard Interval: ", standardInterval);
-      // console.log("Warning Interval: ", warningInterval);
-      // console.log("User: ", user);
-      const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
-      // console.log("Mod Date: ", modDate);
-      console.log("Status: ", status);
-
-      const devCalEditUrl = `http://localhost:${port}/device/editdevcal`;
-
-  // Build the JSON object for the request body
-  const devCalEditData = {
-    DEVICE_ID: deviceId,
-    ASSI_EMPLOYEE_ID: assiEmployeeId ? assiEmployeeId.toUpperCase() : assiEmployeeId,
-    DAYS_REMAINING: daysRemaining,
-    NEXT_DATE: nextDate,
-    SPECIAL_INTERVAL: specialInterval,
-    STANDARD_INTERVAL: standardInterval,
-    WARNING_INTERVAL: warningInterval,
-    MODIFIED_BY: user,
-    MODIFIED_DATE: modDate,
-  };
-  if (status && status !== "SELECT STATUS") {
-    devCalEditData.STATUS = status.toUpperCase();
-  }
-
-  fetch(devCalEditUrl, {
-    method: "PUT",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(devCalEditData),
-  }).then(() => {
-    document.getElementById("edit-devcal-dialog").close();
-    window.location.href = `./device.html?id=${deviceId}`;
-  });
-});
 
 // listen for changeImage
 const changeImageButton = document.getElementById("changeImage");
@@ -535,7 +542,10 @@ if (saveNotes) {
     let oldNotesContentDiv = document.getElementById("notesContentDiv");
     // need to prepend the existing notes with a timestamp and separator
     const timestamp = new Date().toLocaleString();
-    const oldNotes = oldNotesContentDiv.textContent === "No notes available." ? "" : oldNotesContentDiv.textContent;
+    const oldNotes =
+      oldNotesContentDiv.textContent === "No notes available."
+        ? ""
+        : oldNotesContentDiv.textContent;
     const updatedNotes = timestampAndJoinNotes(oldNotes, newNotes, user);
     // console.log("Updated Notes: ", updatedNotes);
 
