@@ -25,7 +25,7 @@ router.get('/pm', (req, res) => {
         const query = `select pi.INPUT_ID, pi.INPUT_DATE, pi.SUBJECT, pi.ASSIGNED_TO, rcr.FREQUENCY, pir.RESPONSE_TEXT from PEOPLE_INPUT pi 
 left join PPL_INPT_RSPN pir on pi.INPUT_ID = pir.INPUT_ID 
 left join PPL_INPT_RCUR rcr on pi.SUBJECT = rcr.SUBJECT
-where pi.SUBJECT REGEXP 'PM(0|1|2)[0-9]{1}' and INPUT_DATE <= current_date() and rcr.STATUS = 'A' and pi.ASSIGNED_TO != 'TKENT'
+where pi.SUBJECT REGEXP 'PM(0|1|2)[0-9]{1}' and INPUT_DATE >= DATE_FORMAT(NOW(), '%Y-%m-01') - INTERVAL 11 MONTH and rcr.STATUS = 'A' and pi.ASSIGNED_TO != 'TKENT'
 order by pi.SUBJECT`;
         
         connection.query(query, (err, rows, fields) => {

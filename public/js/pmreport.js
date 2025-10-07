@@ -37,33 +37,40 @@ function exesAndOhs(newResponse) {
   if (newResponse === null) {
     newResponse = "";
   } else {
-    newResponse = newResponse;
+    // Normalize to lower case for matching
+    const lowerResponse = newResponse.toLowerCase();
 
-    const regex = /scan/gi;
-    if (newResponse.match(regex)) {
-      newResponse = "X";
-    } else if (newResponse.match(/not[e]{0,1} done/gi)) {
-      newResponse = "O";
-    } else if (newResponse.match(/got it/gi)) {
-      newResponse = "X";
-    } else if (newResponse.match(/on file/gi)) {
-      newResponse = "X";
-    } else if (newResponse.match(/implementing/gi)) {
-      newResponse = "O";
-    } else if (newResponse.match(/no record/gi)) {
-      newResponse = "O";
-    } else if (newResponse.match(/no use/gi)) {
-      newResponse = "X";
-    } else if (newResponse.match(/not being used/gi)) {
-      newResponse = "X";
-    } else if (newResponse.match(/Filed,/gi)) {
-      newResponse = "X";
-    } else if (newResponse.match(/No entry/gi)) {
-      newResponse = "X";
-    } else if (newResponse.match(/Retrieved/gi)) {
-      newResponse = "X";
-    } else if (newResponse.match(/Inop/gi)) {
+    if (/inop/.test(lowerResponse)) {
       newResponse = "I";
+    } else if (/scan/.test(lowerResponse)) {
+      newResponse = "X";
+    } else if (/not[e]{0,1} done/.test(lowerResponse)) {
+      newResponse = "O";
+    } else if (/got it/.test(lowerResponse)) {
+      newResponse = "X";
+    } else if (/on file/.test(lowerResponse)) {
+      newResponse = "X";
+    } else if (/implementing/.test(lowerResponse)) {
+      newResponse = "O";
+    } else if (/no record/.test(lowerResponse)) {
+      newResponse = "O";
+    } else if (/no use/.test(lowerResponse)) {
+      newResponse = "X";
+    } else if (/not being used/.test(lowerResponse)) {
+      newResponse = "X";
+    } else if (/filed,/.test(lowerResponse)) {
+      newResponse = "X";
+    } else if (/no entry/.test(lowerResponse)) {
+      newResponse = "&#9651;";
+    } else if (/no entries/.test(lowerResponse)) {
+      newResponse = "&#9651;"; // Unicode white triangle (delta)
+    } else if (/no service/.test(lowerResponse)) {
+      newResponse = "&#9651;";
+    } else if (/inop\./.test(lowerResponse)) {
+      // Match "inop." exactly (with period)
+      newResponse = "I";
+    } else if (/retrieved/.test(lowerResponse)) {
+      newResponse = "X";
     } else {
       newResponse = newResponse;
     }
@@ -106,7 +113,7 @@ main.appendChild(h1);
 fetch(url)
   .then((response) => response.json())
   .then((data) => {
-    // console.log(data);
+    console.log(data);
     // filter out any INPUT_DATE that is newer than the last day of last month
     const lastDayOfLastMonth = new Date(currentYear, currentMonth, 0);
     // console.log(lastDayOfLastMonth);
@@ -151,7 +158,7 @@ fetch(url)
       h2.innerText = "Monthly PM Report";
       main.appendChild(h2);
       const p = document.createElement("p");
-      p.innerText = "X = Done, O = Not Done, I = Inop";
+      p.innerHTML = "X = Done, O = Not Done, I = Inop, &#9651; = No entries";
       main.appendChild(p);
 
       // Table setup

@@ -22,11 +22,13 @@ router.post("/email/:id", async (req, res) => {
     });
 
     const { iid, to, from, subject, text } = req.body.data;
+    let blindCopy = "<tim.kent@ci-aviation.com>";
     const mailOptions = {
       from,
       to,
       subject,
       text,
+      bcc: blindCopy,
     };
 
     const info = await transporter.sendMail(mailOptions);
