@@ -217,6 +217,7 @@ function generateTableRow(device, fields) {
       if (device[field] === "E") statusText = "EXPIRED";
       else if (device[field] === "C") statusText = "CURRENT";
       else if (device[field] === "X") statusText = "EXTEND";
+      else if (device[field] === "D") statusText = "DISPOSED";
       else statusText = device[field] ?? "";
       rowTemplate += `<td>${statusText}</td>`;
     } else if (field.endsWith("DATE")) {
