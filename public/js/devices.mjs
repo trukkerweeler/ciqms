@@ -226,7 +226,11 @@ function generateTableRow(device, fields) {
       const date = new Date(dateValue);
       const options = { year: "numeric", month: "2-digit", day: "2-digit" };
       const formattedDate = date.toLocaleDateString("en-US", options);
-      if (field === "NEXT_DATE" && new Date(dateValue) < new Date()) {
+      if (
+        field === "NEXT_DATE" &&
+        new Date(dateValue) < new Date() &&
+        device["MAJOR_LOCATION"] !== "LOCKUP"
+      ) {
         rowTemplate = `<tr class="past-date">` + rowTemplate.slice(4); // Apply class to the entire row
         rowTemplate += `<td>${formattedDate}</td>`;
       } else {

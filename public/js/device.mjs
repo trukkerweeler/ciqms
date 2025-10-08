@@ -205,6 +205,7 @@ async function initializePage() {
         );
 
         calibrationFields.forEach((field) => {
+          if (field === "DEVICE_NOTE") return;
           let calibrationDiv = document.createElement("div");
           calibrationDiv.classList.add("device-info-field");
           if (field.endsWith("DATE") && data[field]) {
