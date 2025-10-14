@@ -1,107 +1,253 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Input - Detail</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
     <dialog id="actionDialog" class="editDialog">
-        <div class="dialogTitle">Edit Action</div>
-        <form class="dialogForm">
-            <textarea type="textarea" id="newTextAction" class="notestext" rows="4" cols="40"></textarea>
-            <button class="btnDialog" id="cancelAction" type="submit" formmethod="dialog">Cancel</button>
-            <button class="btnDialog dialogSaveBtn" id="saveAction" type="submit">Save</button>
-        </form>
-        <!-- <button id="btnCloseActionDlg" class="closedialog">Close</button> -->
+      <div class="dialogTitle">Edit Action</div>
+      <form class="dialogForm">
+        <textarea
+          type="textarea"
+          id="newTextAction"
+          class="notestext"
+          rows="4"
+          cols="40"
+        ></textarea>
+        <button
+          class="btnDialog"
+          id="cancelAction"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button class="btnDialog dialogSaveBtn" id="saveAction" type="submit">
+          Save
+        </button>
+      </form>
+      <!-- <button id="btnCloseActionDlg" class="closedialog">Close</button> -->
     </dialog>
     <dialog id="followupDialog" class="editDialog">
-        <div class="dialogTitle">Edit Followup</div>
-        <form class="dialogForm">
-            <textarea type="textarea" id="newTextFollowup" class="notestext" rows="4" cols="40"></textarea>
-            <button class="btnDialog" id="cancelFollowUp" type="submit" formmethod="dialog">Cancel</button>
-            <button class="btnDialog dialogSaveBtn" id="saveFlup" type="submit">Save</button>
-        </form>
-        <!-- <button id="btnCloseFollowupDlg" class="closedialog">Close</button> -->
+      <div class="dialogTitle">Edit Followup</div>
+      <form class="dialogForm">
+        <textarea
+          type="textarea"
+          id="newTextFollowup"
+          class="notestext"
+          rows="4"
+          cols="40"
+        ></textarea>
+        <button
+          class="btnDialog"
+          id="cancelFollowUp"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button class="btnDialog dialogSaveBtn" id="saveFlup" type="submit">
+          Save
+        </button>
+      </form>
+      <!-- <button id="btnCloseFollowupDlg" class="closedialog">Close</button> -->
     </dialog>
     <dialog id="respDialog" class="editDialog">
-        <div class="dialogTitle">Edit Response</div>
-        <form class="dialogForm">
-            <label for="newResponseDate">Response Date:</label>
-            <input type="date" id="newResponseDate" name="RESPONSE_DATE" required>
-            <textarea type="textarea" id="newTextResp" class="notestext" rows="4" cols="40" required></textarea>
-            <button class="btnDialog" id="cancelResp" type="submit" formmethod="dialog">Cancel</button>
-            <button class="btnDialog dialogSaveBtn" id="saveResp" type="submit">Save</button>
-        </form>
-        <!-- <button id="btnCloseRespDlg" class="closedialog">Close</button> -->
+      <div class="dialogTitle">Edit Response</div>
+      <form class="dialogForm">
+        <label for="newResponseDate">Response Date:</label>
+        <input type="date" id="newResponseDate" name="RESPONSE_DATE" required />
+        <textarea
+          type="textarea"
+          id="newTextResp"
+          class="notestext"
+          rows="4"
+          cols="40"
+          required
+        ></textarea>
+        <button
+          class="btnDialog"
+          id="cancelResp"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button class="btnDialog dialogSaveBtn" id="saveResp" type="submit">
+          Save
+        </button>
+      </form>
+      <!-- <button id="btnCloseRespDlg" class="closedialog">Close</button> -->
     </dialog>
     <dialog id="collectDataDialog" class="editDialog">
-        <div class="dialogTitle">Data Collection</div>
-        <form class="dialogForm" id="collectForm">
-            <label for="CUSTOMER_ID">Customer Id:</label>
-            <input type="text" id="CUSTOMER_ID" name="CUSTOMER_ID" style="text-transform: uppercase" required>
-            <label for="UNIT">Unit:</label>
-            <input type="text" id="UNIT" name="UNIT" required style="text-transform: uppercase">
-            <label for="VALUE">Value:</label>
-            <input type="text" id="VALUE" name="VALUE" required>
-            <label for="SAMPLE_DATE">Date:</label>
-            <input type="date" id="SAMPLE_DATE" name="SAMPLE_DATE" required title="Last day of graded month">
-            <button class="btnDialog" id="cancelCollData" type="submit" formmethod="dialog">Cancel</button>
-            <button class="btnDialog dialogSaveBtn" id="saveCollData" type="submit">Save</button>
-        </form>
+      <div class="dialogTitle">Data Collection</div>
+      <form class="dialogForm" id="collectForm">
+        <label for="CUSTOMER_ID">Customer Id:</label>
+        <input
+          type="text"
+          id="CUSTOMER_ID"
+          name="CUSTOMER_ID"
+          style="text-transform: uppercase"
+          required
+        />
+        <label for="UNIT">Unit:</label>
+        <input
+          type="text"
+          id="UNIT"
+          name="UNIT"
+          required
+          style="text-transform: uppercase"
+        />
+        <label for="VALUE">Value:</label>
+        <input type="text" id="VALUE" name="VALUE" required />
+        <label for="SAMPLE_DATE">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE"
+          name="SAMPLE_DATE"
+          required
+          title="Last day of graded month"
+        />
+        <button
+          class="btnDialog"
+          id="cancelCollData"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button class="btnDialog dialogSaveBtn" id="saveCollData" type="submit">
+          Save
+        </button>
+      </form>
     </dialog>
     <dialog id="collectDataDialog2" class="editDialog">
-        <div class="dialogTitle">Supplier Data Collection</div>
-        <form class="dialogForm" id="collectForm2">
-            <label for="SUPPLIER_ID">Supplier Id:</label>
-            <input type="text" id="SUPPLIER_ID" name="SUPPLIER_ID" style="text-transform: uppercase" required>
-            <label for="UNIT">Unit:</label>
-            <input type="text" id="UNIT" name="UNIT" required style="text-transform: uppercase">
-            <label for="VALUE">Value:</label>
-            <input type="text" id="VALUE" name="VALUE" required>
-            <label for="SAMPLE_DATE">Date:</label>
-            <input type="date" id="SAMPLE_DATE" name="SAMPLE_DATE" required>
-            <button class="btnDialog" id="cancelCollData2" type="submit" formmethod="dialog">Cancel</button>
-            <button class="btnDialog dialogSaveBtn" id="saveCollData2" type="submit">Save</button>
-        </form>
+      <div class="dialogTitle">Supplier Data Collection</div>
+      <form class="dialogForm" id="collectForm2">
+        <label for="SUPPLIER_ID">Supplier Id:</label>
+        <input
+          type="text"
+          id="SUPPLIER_ID"
+          name="SUPPLIER_ID"
+          style="text-transform: uppercase"
+          required
+        />
+        <label for="UNIT">Unit:</label>
+        <input
+          type="text"
+          id="UNIT"
+          name="UNIT"
+          required
+          style="text-transform: uppercase"
+        />
+        <label for="VALUE">Value:</label>
+        <input type="text" id="VALUE" name="VALUE" required />
+        <label for="SAMPLE_DATE">Date:</label>
+        <input type="date" id="SAMPLE_DATE" name="SAMPLE_DATE" required />
+        <button
+          class="btnDialog"
+          id="cancelCollData2"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button
+          class="btnDialog dialogSaveBtn"
+          id="saveCollData2"
+          type="submit"
+        >
+          Save
+        </button>
+      </form>
     </dialog>
     <!-- Edit Input dialog -->
     <dialog id="inputDialog" class="editDialog">
-        <div class="dialogTitle">Edit Input</div>
-        <form class="dialogForm" name="inputeditform" id="editInputForm">
-            <label for="ASSIGNED_TO">Assigned to:</label>
-            <input type="text" id="ASSIGNED_TO" name="ASSIGNED_TO" required style="text-transform: uppercase">
-            <label for="REQUESTED_BY">Req. By:</label>
-            <input type="text" id="REQUESTED_BY" required style="text-transform: uppercase;">
-            <label for="SUBJECT">Subject:</label>
-            <input type="text" id="SUBJECT" required>
-            <label for="DUE_DATE">Due Date:</label>
-            <input type="date" id="DUE_DATE" required>
-            <label for="PROJECT_ID">Project:</label>
-            <input type="text" id="PROJECT_ID">            
-            <button class="btnDialog" id="cancelEdit" type="submit" formmethod="dialog">Cancel</button>
-            <button class="btnDialog dialogSaveBtn" id="saveDetail" type="submit">Save</button>
-        </form>
-        <!-- <button id="btnCloseDlg" class="closedialog">Close</button> -->
+      <div class="dialogTitle">Edit Input</div>
+      <form class="dialogForm" name="inputeditform" id="editInputForm">
+        <label for="ASSIGNED_TO">Assigned to:</label>
+        <input
+          type="text"
+          id="ASSIGNED_TO"
+          name="ASSIGNED_TO"
+          required
+          style="text-transform: uppercase"
+        />
+        <label for="REQUESTED_BY">Req. By:</label>
+        <input
+          type="text"
+          id="REQUESTED_BY"
+          required
+          style="text-transform: uppercase"
+        />
+        <label for="SUBJECT">Subject:</label>
+        <input
+          type="text"
+          id="SUBJECT"
+          required
+          style="text-transform: uppercase"
+        />
+        <label for="DUE_DATE">Due Date:</label>
+        <input type="date" id="DUE_DATE" required />
+        <label for="PROJECT_ID">Project:</label>
+        <input type="text" id="PROJECT_ID" />
+        <button
+          class="btnDialog"
+          id="cancelEdit"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button class="btnDialog dialogSaveBtn" id="saveDetail" type="submit">
+          Save
+        </button>
+      </form>
+      <!-- <button id="btnCloseDlg" class="closedialog">Close</button> -->
     </dialog>
     <dialog id="emailDialog" class="editDialog">
-        <div class="dialogTitle">Add Email Comment</div>
-        <form class="dialogForm" id="emailCommentForm">
-            <textarea id="emailCommentText" class="notestext" rows="4" cols="40" placeholder="Enter your email comment here..." required></textarea>
-            <button class="btnDialog" id="cancelEmailComment" type="submit" formmethod="dialog">Cancel</button>
-            <button class="btnDialog dialogSaveBtn" id="saveEmailComment" type="submit">Save</button>
-        </form>
+      <div class="dialogTitle">Add Email Comment</div>
+      <form class="dialogForm" id="emailCommentForm">
+        <textarea
+          id="emailCommentText"
+          class="notestext"
+          rows="4"
+          cols="40"
+          placeholder="Enter your email comment here..."
+          required
+        ></textarea>
+        <button
+          class="btnDialog"
+          id="cancelEmailComment"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button
+          class="btnDialog dialogSaveBtn"
+          id="saveEmailComment"
+          type="submit"
+        >
+          Save
+        </button>
+      </form>
     </dialog>
 
     <main id="main"></main>
     <footer id="footer"></footer>
-</body>
-<script type="module" src="/js/input.js"></script>
+  </body>
+  <script type="module" src="/js/input.mjs"></script>
 </html>

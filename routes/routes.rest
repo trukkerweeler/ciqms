@@ -76,3 +76,8 @@ Content-Type: application/json
     "NOTIFIED_DATE": "2025-02-19",
     "ASSIGNED_TO": "TKENT"
 }
+###
+GET http://localhost:3003/ncm/subjects
+
+###
+http://localhost:3003/ncm/test

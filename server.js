@@ -1,4 +1,3 @@
-
 const exp = require("constants");
 const cors = require("cors");
 const express = require("express");
@@ -7,7 +6,7 @@ const port = process.env.APP_PORT || 3003;
 
 app.use(cors());
 
-app.use(express.static('public'));
+app.use(express.static("public"));
 app.use(express.json());
 
 app.use((req, res, next) => {
@@ -116,6 +115,12 @@ app.use("/invoice", invoiceRoutes);
 const continuationRoutes = require("./routes/continuation");
 app.use("/continuation", continuationRoutes);
 
-app.listen(port, async() => {
+const subjectmaintRoutes = require("./routes/subjectmaint");
+app.use("/subjectmaint", subjectmaintRoutes);
+
+const causemaintRoutes = require("./routes/causemaint");
+app.use("/causemaint", causemaintRoutes);
+
+app.listen(port, async () => {
   console.log(`Example app listening at http://localhost:${port}`);
 });

@@ -4,101 +4,185 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="js node test page." />
+    <meta
+      name="description"
+      content="CIQMS - Quality Management System Dashboard"
+    />
     <meta name="author" content="This page authored by timokent" />
     <link
       rel="stylesheet"
-      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&family=Roboto:wght@300;400;500;600;700&display=swap"
     />
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/index.css" />
     <link rel="icon" href="images/ci-logo.png" />
-    <title>CIQMS3</title>
+    <title>CIQMS - Quality Management System</title>
   </head>
   <body>
     <header id="header"></header>
-    <h1>Actions</h1>
-    <main id="main">
-      <div id="menudiv">
-        <section class="indexsection">
-          <button class="program" id="ai">Actions (Input)</button>
-          <!-- <p>Nonconformance is a deviation from a specification, standard, or requirement. It is a failure to meet the quality requirements of a product or service. Nonconformance can be a minor issue that does not affect the overall quality of the product or service, or it can be a major issue that renders the product or service unusable.</p> -->
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../inputs.html">View</a></li>
-            <li><a href="../inputentry.html">Add</a></li>
-            <!-- <li><a href="../exportncm.html">Export Records</a></li> -->
-          </div>
-        </section>
-        <section class="indexsection">
-          <button class="program" id="ncm">Nonconformance</button>
-          <!-- <p>Nonconformance is a deviation from a specification, standard, or requirement. It is a failure to meet the quality requirements of a product or service. Nonconformance can be a minor issue that does not affect the overall quality of the product or service, or it can be a major issue that renders the product or service unusable.</p> -->
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../ncms.html">View</a></li>
-            <li><a href="../enterncm.html">Add</a></li>
-            <!-- <li><a href="../exportncm.html">Export</a></li> -->
-          </div>
-        </section>
-        <section class="indexsection">
-          <button class="program" id="ca">Corrective Action</button>
-          <!-- <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p> -->
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../correctives.html">View</a></li>
-            <li><a href="../correctiveentry.html">Add</a></li>
-            <li><a href="../correctiveedit.html">Edit</a></li>
-            <!-- <li><a href="../caexport.html">Export</a></li> -->
-          </div>
-        </section>
-        <section class="indexsection">
-          <button class="program" id="sysdoc">Sysdoc</button>
-          <!-- <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p> -->
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../documents.html">View</a></li>
-            <li><a href="../docentry.html">Add</a></li>
-            <li><a href="../dcrs.html">DCRs</a></li>
-            <li><a href="../sysdocexport.html">Export</a></li>
-          </div>
-        </section>
-        <section class="indexsection">
-          <button class="program" id="supplier">Suppliers</button>
-          <!-- <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p> -->
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../suppliers.html">View</a></li>
-            <li><a href="../supplierlist.html">ASL</a></li>
-            <!-- <li><a href="../dcrs.html">DCRs</a></li> -->
-          </div>
-        </section>
-        <!-- <section class="indexsection">
-          <button class="program" id="cust">Customers</button>
-          <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p>
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../customers.html">Customers</a></li>
-          </div>
-        </section> -->
-        <section class="indexsection">
-          <button class="program" id="cta">Competency</button>
-          <!-- <p>Corrective action is a set of actions taken to eliminate the cause of a nonconformity, defect, or other undesirable situation in order to prevent recurrence. Corrective action is a fundamental part of the quality management system and is essential for maintaining the effectiveness of the system.</p> -->
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../attendance.html">View</a></li>
-            <li><a href="../ctaentry.html">Add</a></li>
-          </div>
-        </section>
-        <section class="indexsection">
-          <button class="program" id="cert">Cert</button>
-          <p>Global Cert</p>
-          <h3 id="indexsubheader">Activities</h3>
-          <div class="sectionlinks">
-            <li><a href="../cert.html">Cert</a></li>
-            <li><a href="../opcodes.html">OP Codes</a></li>
-          </div>
-        </section>
+
+    <div class="dashboard-container">
+      <div class="dashboard-header">
+        <h1 class="dashboard-title">Quality Management System</h1>
+        <p class="dashboard-subtitle">
+          Comprehensive quality control and compliance management platform
+        </p>
       </div>
-    </main>
+
+      <div class="modules-grid">
+        <!-- Actions Module -->
+        <div class="module-card actions">
+          <div class="module-header">
+            <div class="module-icon">📋</div>
+            <h2 class="module-title" id="ai">Actions & Inputs</h2>
+          </div>
+          <p class="module-description">
+            Manage action items, tasks, and input tracking. Monitor progress and
+            ensure timely completion of quality-related activities.
+          </p>
+          <div class="module-actions">
+            <a href="inputs.html" class="action-link primary">📊 View All</a>
+            <a href="inputentry.html" class="action-link">➕ Add New</a>
+          </div>
+        </div>
+
+        <!-- Nonconformance Module -->
+        <div class="module-card ncm">
+          <div class="module-header">
+            <div class="module-icon">⚠️</div>
+            <h2 class="module-title" id="ncm">Nonconformance Management</h2>
+          </div>
+          <p class="module-description">
+            Track and manage nonconformance reports, deviations from
+            specifications, and quality failures requiring immediate attention.
+          </p>
+          <div class="module-actions">
+            <a href="ncms.html" class="action-link primary">📋 View Reports</a>
+            <a href="enterncm.html" class="action-link">🚨 Report Issue</a>
+          </div>
+        </div>
+
+        <!-- Corrective Actions Module -->
+        <div class="module-card corrective">
+          <div class="module-header">
+            <div class="module-icon">🔧</div>
+            <h2 class="module-title" id="ca">Corrective Actions</h2>
+          </div>
+          <p class="module-description">
+            Implement systematic corrective actions to eliminate root causes of
+            nonconformities and prevent recurrence.
+          </p>
+          <div class="module-actions">
+            <a href="correctives.html" class="action-link primary"
+              >📈 View Actions</a
+            >
+            <a href="correctiveentry.html" class="action-link"
+              >➕ Create Action</a
+            >
+            <a href="correctiveedit.html" class="action-link">✏️ Edit</a>
+          </div>
+        </div>
+
+        <!-- System Documents Module -->
+        <div class="module-card sysdoc">
+          <div class="module-header">
+            <div class="module-icon">📚</div>
+            <h2 class="module-title" id="sysdoc">System Documents</h2>
+          </div>
+          <p class="module-description">
+            Manage system documentation, procedures, work instructions, and
+            document change requests (DCRs).
+          </p>
+          <div class="module-actions">
+            <a href="documents.html" class="action-link primary"
+              >📖 Browse Docs</a
+            >
+            <a href="docentry.html" class="action-link">📝 Add Document</a>
+            <a href="dcrs.html" class="action-link">🔄 DCRs</a>
+            <a href="sysdocexport.html" class="action-link">📤 Export</a>
+          </div>
+        </div>
+
+        <!-- Suppliers Module -->
+        <div class="module-card supplier">
+          <div class="module-header">
+            <div class="module-icon">🏢</div>
+            <h2 class="module-title" id="supplier">Supplier Management</h2>
+          </div>
+          <p class="module-description">
+            Monitor supplier performance, maintain approved supplier lists, and
+            ensure supply chain quality compliance.
+          </p>
+          <div class="module-actions">
+            <a href="suppliers.html" class="action-link primary"
+              >🏭 View Suppliers</a
+            >
+            <a href="supplierlist.html" class="action-link">✅ Approved List</a>
+          </div>
+        </div>
+
+        <!-- Competency Module -->
+        <div class="module-card competency">
+          <div class="module-header">
+            <div class="module-icon">🎓</div>
+            <h2 class="module-title" id="cta">Competency & Training</h2>
+          </div>
+          <p class="module-description">
+            Track employee competency, training records, certifications, and
+            skill development progress.
+          </p>
+          <div class="module-actions">
+            <a href="attendance.html" class="action-link primary"
+              >📊 View Records</a
+            >
+            <a href="ctaentry.html" class="action-link">➕ Add Training</a>
+          </div>
+        </div>
+
+        <!-- Certification Module -->
+        <div class="module-card cert">
+          <div class="module-header">
+            <div class="module-icon">🏆</div>
+            <h2 class="module-title" id="cert">Certifications</h2>
+          </div>
+          <p class="module-description">
+            Manage global certifications, operation codes, and compliance
+            documentation for regulatory requirements.
+          </p>
+          <div class="module-actions">
+            <a href="cert.html" class="action-link primary">🏅 Certificates</a>
+            <a href="opcodes.html" class="action-link">🔢 OP Codes</a>
+          </div>
+        </div>
+
+        <!-- Maintenance Module (TKENT only) -->
+        <div
+          class="module-card maintenance"
+          id="maintenanceSection"
+          style="display: none"
+        >
+          <div class="module-header">
+            <div class="module-icon">⚙️</div>
+            <h2 class="module-title" id="maintenance">System Maintenance</h2>
+          </div>
+          <p class="module-description">
+            Administrative tools for maintaining system code tables and
+            reference data used throughout the QMS.
+          </p>
+          <div class="module-actions">
+            <a
+              href="subjectmaint.html"
+              class="action-link primary"
+              id="subjectCodesLink"
+              >📋 Subject Codes</a
+            >
+            <a href="causemaint.html" class="action-link" id="causeCodesLink"
+              >🔍 Cause Codes</a
+            >
+          </div>
+        </div>
+      </div>
+    </div>
     <footer id="footer"></footer>
   </body>
   <script type="module" src="/js/index.js"></script>

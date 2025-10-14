@@ -1,62 +1,90 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Input - Detail</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
     <table>
-        <thead>
-            <tr>
-                <th>Code</th>
-                <th>Description</th>
-            </tr>
-        </thead>
-        <tbody>
-            <tr>
-                <td>CSR</td>
-                <td>
-                    <ul>For suppliers like ACME that do not send any report, enter the information from the Global Shop On-Time Delivery Report.</ul>
-                    <ul>Run custsat.py in notifier. Save charts, print, hang up. Send to GM.</ul>
-                    <ul>.png files that end with trend are the trends plotted at CI. Screen shots go in Customer Ratings folder.</ul>
-                    <ul>If no deliveries, should any record be entered?</ul>
-                </td>
-            </tr>
-            <tr>
-                <td>PM</td>
-                <td>
-                    <ul>If there are entries, enter -scanned and filed.-.</ul>
-                    <ul>If there are NO entries, enter -no entries!-.</ul>
-                    <ul>If there is no file/record, enter -expired, not done!-.</ul>
-                </td>
-            </tr>
-            <tr>
-                <td>SUPE1</td>
-                <td>
-                    <ul>
-                        <li>In NOTIFIER, theres an xml reader called supplierratexml.py that will read the 'Vendor Stats' report from global (export xml...) and put the data into CIQMS.</li>
-                        <li>Then run suppliertrendcharts.py, which will create trend charts for each supplier.</li>
-                        <li>If sending to suppliers, run 'Vendor Performance' and print to pdf. The supplierratings.py breaks these into individual pdfs. Multi-page reports may have to be rejoined.</li>
-                        <li>Ref. AS9100D 8.4.1.1c, d & 8.4.2c3 & 9.1.3</li>
-                    </ul>
-                </td>
-            </tr>
-        </tbody>
+      <thead>
+        <tr>
+          <th>Code</th>
+          <th>Description</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>CSR</td>
+          <td>
+            <ul>
+              For suppliers like ACME that do not send any report, enter the
+              information from the Global Shop On-Time Delivery Report.
+            </ul>
+            <ul>
+              Run custsat.py in notifier. Save charts, print, hang up. Send to
+              GM.
+            </ul>
+            <ul>
+              .png files that end with trend are the trends plotted at CI.
+              Screen shots go in Customer Ratings folder.
+            </ul>
+            <ul>
+              If no deliveries, should any record be entered?
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>PM</td>
+          <td>
+            <ul>
+              If there are entries, enter -scanned and filed.-.
+            </ul>
+            <ul>
+              If there are NO entries, enter -no entries!-.
+            </ul>
+            <ul>
+              If there is no file/record, enter -expired, not done!-.
+            </ul>
+          </td>
+        </tr>
+        <tr>
+          <td>SUPE1</td>
+          <td>
+            <ul>
+              <li>
+                In NOTIFIER, theres an xml reader called supplierratexml.py that
+                will read the 'Vendor Stats' report from global (export xml...)
+                and put the data into CIQMS.
+              </li>
+              <li>
+                Then run suppliertrendcharts.py, which will create trend charts
+                for each supplier.
+              </li>
+              <li>
+                If sending to suppliers, run 'Vendor Performance' and print to
+                pdf. The supplierratings.py breaks these into individual pdfs.
+                Multi-page reports may have to be rejoined.
+              </li>
+              <li>Ref. AS9100D 8.4.1.1c, d & 8.4.2c3 & 9.1.3</li>
+            </ul>
+          </td>
+        </tr>
+      </tbody>
     </table>
-    
 
-    <main id="main">
-        
-    </main>
+    <main id="main"></main>
     <footer id="footer"></footer>
-</body>
-<script type="module" src="/js/input.js"></script>
+  </body>
+  <script type="module" src="/js/input.mjs"></script>
 </html>

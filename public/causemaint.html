@@ -1,0 +1,325 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Cause Maintenance</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .causes-container {
+        max-width: 1000px;
+        margin: 20px auto;
+        padding: 20px;
+      }
+
+      .causes-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #ccc;
+        padding-bottom: 10px;
+      }
+
+      .add-cause-btn {
+        background: #4caf50;
+        color: white;
+        border: none;
+        padding: 10px 20px;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .add-cause-btn:hover {
+        background: #45a049;
+      }
+
+      .causes-table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      .causes-table th,
+      .causes-table td {
+        padding: 12px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      .causes-table th {
+        background-color: #f2f2f2;
+        font-weight: bold;
+        color: #333;
+      }
+
+      .causes-table tbody tr {
+        background-color: #ffffff;
+        color: #333;
+      }
+
+      .causes-table tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      .causes-table tbody tr:hover {
+        background-color: #e3f2fd;
+      }
+
+      .action-buttons {
+        display: flex;
+        gap: 10px;
+      }
+
+      .edit-btn,
+      .delete-btn {
+        padding: 5px 10px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 12px;
+      }
+
+      .edit-btn {
+        background: #2196f3;
+        color: white;
+      }
+
+      .edit-btn:hover {
+        background: #1976d2;
+      }
+
+      .delete-btn {
+        background: #f44336;
+        color: white;
+      }
+
+      .delete-btn:hover {
+        background: #d32f2f;
+      }
+
+      .modal {
+        display: none;
+        position: fixed;
+        z-index: 1000;
+        left: 0;
+        top: 0;
+        width: 100%;
+        height: 100%;
+        background-color: rgba(0, 0, 0, 0.5);
+      }
+
+      .modal-content {
+        background-color: #fefefe;
+        margin: 15% auto;
+        padding: 20px;
+        border: 1px solid #888;
+        width: 400px;
+        border-radius: 5px;
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 10px;
+      }
+
+      .close {
+        color: #aaa;
+        font-size: 28px;
+        font-weight: bold;
+        cursor: pointer;
+      }
+
+      .close:hover {
+        color: black;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .form-group input {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        box-sizing: border-box;
+      }
+
+      .form-buttons {
+        display: flex;
+        justify-content: flex-end;
+        gap: 10px;
+        margin-top: 20px;
+      }
+
+      .btn {
+        padding: 8px 16px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+      }
+
+      .btn-primary {
+        background: #4caf50;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background: #45a049;
+      }
+
+      .btn-secondary {
+        background: #ccc;
+        color: black;
+      }
+
+      .btn-secondary:hover {
+        background: #bbb;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+
+      .error {
+        background: #f8d7da;
+        color: #721c24;
+        border: 1px solid #f5c6cb;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 10px 0;
+      }
+
+      .success {
+        background: #d4edda;
+        color: #155724;
+        border: 1px solid #c3e6cb;
+        border-radius: 3px;
+        padding: 10px;
+        margin: 10px 0;
+      }
+    </style>
+  </head>
+  <body>
+    <header></header>
+
+    <main>
+      <div class="causes-container">
+        <div class="causes-header">
+          <h1>Cause Code Maintenance</h1>
+          <button class="add-cause-btn" id="addCauseBtn">Add New Cause</button>
+        </div>
+
+        <div id="messageContainer"></div>
+
+        <div id="loadingContainer" class="loading">Loading causes...</div>
+
+        <table class="causes-table" id="causesTable" style="display: none">
+          <thead>
+            <tr>
+              <th>Cause Code</th>
+              <th>Description</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody id="causesTableBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <!-- Add/Edit Cause Modal -->
+    <div id="causeModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2 id="modalTitle">Add Cause</h2>
+          <span class="close" id="closeModal">&times;</span>
+        </div>
+
+        <form id="causeForm">
+          <div class="form-group">
+            <label for="causeCode">Cause Code:</label>
+            <input
+              type="text"
+              id="causeCode"
+              name="causeCode"
+              maxlength="16"
+              required
+              placeholder="Enter cause code (max 16 chars)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="causeDescription">Description:</label>
+            <input
+              type="text"
+              id="causeDescription"
+              name="causeDescription"
+              maxlength="40"
+              required
+              placeholder="Enter description (max 40 chars)"
+            />
+          </div>
+
+          <div class="form-buttons">
+            <button type="button" class="btn btn-secondary" id="cancelBtn">
+              Cancel
+            </button>
+            <button type="submit" class="btn btn-primary" id="saveBtn">
+              Save
+            </button>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- Delete Confirmation Modal -->
+    <div id="deleteModal" class="modal">
+      <div class="modal-content">
+        <div class="modal-header">
+          <h2>Confirm Delete</h2>
+          <span class="close" id="closeDeleteModal">&times;</span>
+        </div>
+
+        <p>
+          Are you sure you want to delete the cause "<span
+            id="deleteCauseName"
+          ></span
+          >"?
+        </p>
+        <p><strong>This action cannot be undone.</strong></p>
+
+        <div class="form-buttons">
+          <button type="button" class="btn btn-secondary" id="cancelDeleteBtn">
+            Cancel
+          </button>
+          <button
+            type="button"
+            class="btn"
+            style="background: #f44336; color: white"
+            id="confirmDeleteBtn"
+          >
+            Delete
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <footer></footer>
+
+    <script type="module" src="/js/causemaint.mjs"></script>
+  </body>
+</html>

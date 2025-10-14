@@ -61,6 +61,50 @@ export async function loadHeaderFooter() {
 
   renderWithTemplate(headerTemplate, headerElement);
   renderWithTemplate(footerTemplate, footerElement);
+
+  // Initialize mobile navigation after header is loaded
+  initializeMobileNav();
+}
+
+// Initialize mobile navigation functionality
+function initializeMobileNav() {
+  // Wait for DOM to be fully rendered
+  setTimeout(() => {
+    const navToggle = document.getElementById("nav-toggle");
+    const navMenu = document.querySelector("#main-nav ul");
+
+    if (navToggle && navMenu) {
+      navToggle.addEventListener("click", function () {
+        navMenu.classList.toggle("show");
+
+        // Update button text and aria-expanded
+        const isExpanded = navMenu.classList.contains("show");
+        navToggle.setAttribute("aria-expanded", isExpanded);
+        navToggle.textContent = isExpanded ? "✕ Close" : "☰ Menu";
+      });
+
+      // Close menu when clicking outside
+      document.addEventListener("click", function (event) {
+        if (
+          !navToggle.contains(event.target) &&
+          !navMenu.contains(event.target)
+        ) {
+          navMenu.classList.remove("show");
+          navToggle.setAttribute("aria-expanded", "false");
+          navToggle.textContent = "☰ Menu";
+        }
+      });
+
+      // Close menu when window is resized to larger screen
+      window.addEventListener("resize", function () {
+        if (window.innerWidth > 768) {
+          navMenu.classList.remove("show");
+          navToggle.setAttribute("aria-expanded", "false");
+          navToggle.textContent = "☰ Menu";
+        }
+      });
+    }
+  }, 100);
 }
 
 // get user value from config.json file
@@ -272,12 +316,10 @@ export function displayDate(date) {
   return `${year}-${month}-${day}`;
 }
 
-
 export function getEmail(user) {
   const email = user + "@example.com";
   return email;
 }
-
 
 // Move fetchAndParseXML to a separate utils file
 export function fetchAndParseXML(filePath, searchKey, searchValue) {
@@ -500,8 +542,7 @@ export async function getDetails(
 // Render a section as an HTML table using the provided data and title
 export function renderTableFromArray(data, title) {
   console.log("Data to render:", data);
-  if (!Array.isArray(data) || !data.length)
-    return "";
+  if (!Array.isArray(data) || !data.length) return "";
 
   // Determine if we need to add the Specification column
   const showSpecification = title !== "Raw Materials";
@@ -523,7 +564,9 @@ export function renderTableFromArray(data, title) {
 
   data.forEach((line) => {
     html += `    <tr class="fontmed">
-      <td class="py-4 w-32">${line.JOB ? line.JOB + (line.SUFFIX ? "-" + line.SUFFIX : "") : ""}</td>
+      <td class="py-4 w-32">${
+        line.JOB ? line.JOB + (line.SUFFIX ? "-" + line.SUFFIX : "") : ""
+      }</td>
       <td class="py-4">${line.part2 || line.PART || ""}</td>`;
     if (showSpecification) {
       let spec = "";
@@ -545,25 +588,25 @@ export function renderTableFromArray(data, title) {
             spec = "MIL-DTL-5541 Type II Class 3";
             break;
           case "HT61A":
-              spec = "HEAT TREAT 6061 NON CLAD .032";
-              break;
+            spec = "HEAT TREAT 6061 NON CLAD .032";
+            break;
           case "HT61B":
-              spec = "HEAT TREAT 6061 NON CLAD .064";
-              break;
+            spec = "HEAT TREAT 6061 NON CLAD .064";
+            break;
           case "HT61C":
-              spec = "HEAT TREAT 6061 NON CLAD .091";
-              break;
+            spec = "HEAT TREAT 6061 NON CLAD .091";
+            break;
           case "HT75A":
-              spec = "HEAT TREAT 7075 NON CLAD .033";
-              break;
+            spec = "HEAT TREAT 7075 NON CLAD .033";
+            break;
           case "HT75B":
-              spec = "HEAT TREAT 7075 NON CLAD .064";
-              break;
+            spec = "HEAT TREAT 7075 NON CLAD .064";
+            break;
           case "HT75C":
-              spec = "HEAT TREAT 7075 NON CLAD .091";
-              break;
+            spec = "HEAT TREAT 7075 NON CLAD .091";
+            break;
           case "HT75D":
-              spec = "HEAT TREAT 7075 NON CLAD .126";
+            spec = "HEAT TREAT 7075 NON CLAD .126";
         }
       }
       if (spec === "") {
@@ -571,7 +614,9 @@ export function renderTableFromArray(data, title) {
       }
       html += `<td class="py-4">${spec}</td>`;
     }
-    html += `<td class="py-4">${(line.PURCHASE_ORDER || line.DATE_COMPLETED || "")}</td>
+    html += `<td class="py-4">${
+      line.PURCHASE_ORDER || line.DATE_COMPLETED || ""
+    }</td>
     </tr>
     `;
   });
@@ -587,7 +632,9 @@ export function timestampAndJoinNotes(existingNotes, newNote, user) {
   const timestamp = new Date().toLocaleString();
   let updatedNotes = `${timestamp} by ${user}:\n${newNote}\n`;
   if (existingNotes && existingNotes.trim() !== "") {
-    updatedNotes += existingNotes.startsWith("---") ? existingNotes : "\n" + existingNotes;
+    updatedNotes += existingNotes.startsWith("---")
+      ? existingNotes
+      : "\n" + existingNotes;
   }
   return updatedNotes;
 }
