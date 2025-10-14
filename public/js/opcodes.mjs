@@ -1,87 +1,122 @@
-import { myport } from "./utils.mjs";
+// Opcodes Display Module
+import { renderWithTemplate } from "./utils.mjs";
 
-const port  = myport() || 3003;
-const url = `http://localhost:${port}/opcodes`;
+let opcodesData = [];
+let filteredOpcodes = [];
 
-let allData = [];
-
-function getMachineNoInput() {
-  const machineInput = document.getElementById("machineNo");
-  return machineInput ? machineInput.value.trim().toLowerCase() : "";
-}
-
-function filterData() {
-  const machineNo = getMachineNoInput();
-  return machineNo
-    ? allData.filter(record => String(record.MACHINE || '').toLowerCase().startsWith(machineNo))
-    : allData;
-}
-
-function updateTable() {
-  renderTable(filterData());
-}
-
-async function fetchData() {
-  try {
-    const response = await fetch(url, {
-      method: "GET",
-      headers: {
-        "Content-Type": "application/json",
-      },
-    });
-
-    if (!response.ok) {
-      const errorText = await response.text();
-      throw new Error(`Network response was not ok (${response.status} ${response.statusText}): ${errorText}`);
-    }
-
-    allData = await response.json();
-    updateTable();
-  } catch (error) {
-    console.error("Error fetching OP_CODES data:", error);
-  }
-}
-
-function renderTable(data) {
-  const oldTable = document.getElementById('opcodes');
-  if (oldTable) oldTable.remove();
-
-  if (!data.length) return;
-
-  const table = document.createElement('table');
-  table.id = 'opcodes';
-  table.className = 'table';
-
-  const thead = document.createElement('thead');
-  const headerRow = document.createElement('tr');
-  Object.keys(data[0]).forEach(key => {
-    const th = document.createElement('th');
-    th.textContent = key;
-    headerRow.appendChild(th);
-  });
-  thead.appendChild(headerRow);
-  table.appendChild(thead);
-
-  const tbody = document.createElement('tbody');
-  data.forEach(record => {
-    const row = document.createElement('tr');
-    Object.values(record).forEach(value => {
-      const td = document.createElement('td');
-      td.textContent = value;
-      row.appendChild(td);
-    });
-    tbody.appendChild(row);
-  });
-  table.appendChild(tbody);
-
-  const tableContainer = document.getElementById('opcodesTable') || document.querySelector('main');
-  tableContainer.appendChild(table);
-}
-
-document.addEventListener('DOMContentLoaded', () => {
-  const machineInput = document.getElementById("machineNo");
-  if (machineInput) {
-    machineInput.addEventListener('input', updateTable);
-  }
-  fetchData();
+// Initialize the page
+document.addEventListener("DOMContentLoaded", async () => {
+  await loadOpcodes();
+  renderOpcodesTable();
+  setupEventListeners();
 });
+
+// Load opcodes from the API
+async function loadOpcodes() {
+  try {
+    const response = await fetch("/opcodes");
+    if (!response.ok) {
+      throw new Error("HTTP error! status: " + response.status);
+    }
+    opcodesData = await response.json();
+    filteredOpcodes = [...opcodesData];
+  } catch (error) {
+    console.error("Error loading opcodes:", error);
+    showError("Failed to load opcodes");
+  }
+}
+
+// Render the opcodes table
+function renderOpcodesTable() {
+  const table = document.getElementById("opcodes");
+
+  if (filteredOpcodes.length === 0) {
+    table.innerHTML =
+      '<tr><td colspan="3" class="no-data">No opcodes found</td></tr>';
+    return;
+  }
+
+  // Create table header
+  const headerRow =
+    "<thead><tr><th>OP Code</th><th>Description</th><th>Comments</th></tr></thead>";
+
+  // Create table body
+  const bodyRows = filteredOpcodes
+    .map((opcode) => {
+      return (
+        "<tr><td>" +
+        escapeHtml(opcode.OPCODE || "") +
+        "</td><td>" +
+        escapeHtml(opcode.DESCRIPTION || "") +
+        "</td><td>" +
+        escapeHtml(opcode.COMMENTS || "") +
+        "</td></tr>"
+      );
+    })
+    .join("");
+
+  table.innerHTML = headerRow + "<tbody>" + bodyRows + "</tbody>";
+}
+
+// Setup event listeners
+function setupEventListeners() {
+  const searchInput = document.getElementById("searchInput");
+  const clearButton = document.getElementById("clearButton");
+
+  // Search functionality
+  searchInput.addEventListener("input", handleSearch);
+  clearButton.addEventListener("click", clearSearch);
+
+  // Enter key to search
+  searchInput.addEventListener("keypress", (e) => {
+    if (e.key === "Enter") {
+      handleSearch();
+    }
+  });
+}
+
+// Handle search functionality
+function handleSearch() {
+  const searchTerm = document
+    .getElementById("searchInput")
+    .value.toLowerCase()
+    .trim();
+
+  if (searchTerm === "") {
+    filteredOpcodes = [...opcodesData];
+  } else {
+    filteredOpcodes = opcodesData.filter((opcode) => {
+      return (
+        (opcode.OPCODE || "").toLowerCase().includes(searchTerm) ||
+        (opcode.DESCRIPTION || "").toLowerCase().includes(searchTerm) ||
+        (opcode.COMMENTS || "").toLowerCase().includes(searchTerm)
+      );
+    });
+  }
+
+  renderOpcodesTable();
+}
+
+// Clear search
+function clearSearch() {
+  document.getElementById("searchInput").value = "";
+  filteredOpcodes = [...opcodesData];
+  renderOpcodesTable();
+}
+
+// Show error message
+function showError(message) {
+  const table = document.getElementById("opcodes");
+  table.innerHTML =
+    '<tr><td colspan="3" class="error">' + escapeHtml(message) + "</td></tr>";
+}
+
+// Escape HTML to prevent XSS
+function escapeHtml(text) {
+  const div = document.createElement("div");
+  div.textContent = text;
+  return div.innerHTML;
+}
+
+// Export functions for potential use by other modules
+export { loadOpcodes, renderOpcodesTable, handleSearch, clearSearch };

@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document Converter - CIQMS</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      .upload-container {
+        max-width: 800px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #f9f9f9;
+      }
+
+      .upload-area {
+        border: 2px dashed #ccc;
+        border-radius: 8px;
+        padding: 40px;
+        text-align: center;
+        margin: 20px 0;
+        cursor: pointer;
+        transition: border-color 0.3s;
+      }
+
+      .upload-area:hover {
+        border-color: #007bff;
+      }
+
+      .upload-area.dragover {
+        border-color: #007bff;
+        background: #e3f2fd;
+      }
+
+      .file-input {
+        display: none;
+      }
+
+      .upload-btn {
+        background: #007bff;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin: 10px;
+      }
+
+      .upload-btn:hover {
+        background: #0056b3;
+      }
+
+      .progress-bar {
+        width: 100%;
+        height: 20px;
+        background: #e0e0e0;
+        border-radius: 10px;
+        overflow: hidden;
+        margin: 10px 0;
+        display: none;
+      }
+
+      .progress-fill {
+        height: 100%;
+        background: #007bff;
+        width: 0%;
+        transition: width 0.3s;
+      }
+
+      .result-area {
+        margin-top: 20px;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background: white;
+        display: none;
+      }
+
+      .document-list {
+        margin-top: 20px;
+      }
+
+      .document-item {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 10px;
+        border: 1px solid #eee;
+        margin: 5px 0;
+        border-radius: 4px;
+      }
+
+      .error-message {
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        display: none;
+      }
+
+      .success-message {
+        color: #155724;
+        background: #d4edda;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        display: none;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Document Converter</h1>
+      <p>Convert Word documents (.doc, .docx) to HTML webpages</p>
+
+      <div class="upload-container">
+        <div class="upload-area" id="uploadArea">
+          <div class="upload-icon">📄</div>
+          <h3>Drop your Word document here</h3>
+          <p>or click to browse files</p>
+          <input
+            type="file"
+            id="fileInput"
+            class="file-input"
+            accept=".doc,.docx"
+          />
+          <button
+            type="button"
+            class="upload-btn"
+            onclick="document.getElementById('fileInput').click()"
+          >
+            Choose File
+          </button>
+        </div>
+
+        <div class="progress-bar" id="progressBar">
+          <div class="progress-fill" id="progressFill"></div>
+        </div>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <div class="result-area" id="resultArea">
+          <h3>Conversion Result</h3>
+          <div id="resultContent"></div>
+        </div>
+      </div>
+
+      <div class="document-list">
+        <h3>Uploaded Documents</h3>
+        <div id="documentsList"></div>
+      </div>
+    </div>
+
+    <script>
+      const uploadArea = document.getElementById("uploadArea");
+      const fileInput = document.getElementById("fileInput");
+      const progressBar = document.getElementById("progressBar");
+      const progressFill = document.getElementById("progressFill");
+      const errorMessage = document.getElementById("errorMessage");
+      const successMessage = document.getElementById("successMessage");
+      const resultArea = document.getElementById("resultArea");
+      const resultContent = document.getElementById("resultContent");
+      const documentsList = document.getElementById("documentsList");
+
+      // Drag and drop handlers
+      uploadArea.addEventListener("dragover", (e) => {
+        e.preventDefault();
+        uploadArea.classList.add("dragover");
+      });
+
+      uploadArea.addEventListener("dragleave", () => {
+        uploadArea.classList.remove("dragover");
+      });
+
+      uploadArea.addEventListener("drop", (e) => {
+        e.preventDefault();
+        uploadArea.classList.remove("dragover");
+
+        const files = e.dataTransfer.files;
+        if (files.length > 0) {
+          handleFile(files[0]);
+        }
+      });
+
+      uploadArea.addEventListener("click", () => {
+        fileInput.click();
+      });
+
+      fileInput.addEventListener("change", (e) => {
+        if (e.target.files.length > 0) {
+          handleFile(e.target.files[0]);
+        }
+      });
+
+      function handleFile(file) {
+        // Validate file type
+        if (!file.name.match(/\.(doc|docx)$/i)) {
+          showError("Please select a Word document (.doc or .docx)");
+          return;
+        }
+
+        // Validate file size (10MB)
+        if (file.size > 10 * 1024 * 1024) {
+          showError("File size must be less than 10MB");
+          return;
+        }
+
+        uploadFile(file);
+      }
+
+      function uploadFile(file) {
+        const formData = new FormData();
+        formData.append("document", file);
+
+        hideMessages();
+        showProgress();
+
+        fetch("/documents/upload-convert", {
+          method: "POST",
+          body: formData,
+        })
+          .then((response) => response.json())
+          .then((data) => {
+            hideProgress();
+
+            if (data.success) {
+              showSuccess(
+                `Document "${data.originalFile}" converted successfully!`
+              );
+              showResult(data);
+              loadDocumentsList();
+            } else {
+              showError(data.error || "Conversion failed");
+            }
+          })
+          .catch((error) => {
+            hideProgress();
+            showError("Upload failed: " + error.message);
+            console.error("Error:", error);
+          });
+      }
+
+      function showProgress() {
+        progressBar.style.display = "block";
+        progressFill.style.width = "100%";
+      }
+
+      function hideProgress() {
+        progressBar.style.display = "none";
+        progressFill.style.width = "0%";
+      }
+
+      function showError(message) {
+        errorMessage.textContent = message;
+        errorMessage.style.display = "block";
+        successMessage.style.display = "none";
+      }
+
+      function showSuccess(message) {
+        successMessage.textContent = message;
+        successMessage.style.display = "block";
+        errorMessage.style.display = "none";
+      }
+
+      function hideMessages() {
+        errorMessage.style.display = "none";
+        successMessage.style.display = "none";
+      }
+
+      function showResult(data) {
+        resultContent.innerHTML = `
+                <p><strong>Original File:</strong> ${data.originalFile}</p>
+                <div class="action-buttons">
+                    <button class="upload-btn" onclick="viewDocument('${
+                      data.downloadUrl
+                    }')">
+                        View HTML
+                    </button>
+                    <button class="upload-btn" onclick="downloadDocument('${
+                      data.downloadUrl
+                    }')">
+                        Download HTML
+                    </button>
+                </div>
+                <div style="margin-top: 15px;">
+                    <strong>Preview:</strong>
+                    <div style="border: 1px solid #ddd; padding: 10px; max-height: 200px; overflow-y: auto; margin-top: 5px;">
+                        ${data.htmlContent
+                          .substring(
+                            data.htmlContent.indexOf("<body>") + 6,
+                            data.htmlContent.indexOf("</body>")
+                          )
+                          .substring(0, 500)}...
+                    </div>
+                </div>
+            `;
+        resultArea.style.display = "block";
+      }
+
+      function viewDocument(url) {
+        window.open(url.replace("/download/", "/view/"), "_blank");
+      }
+
+      function downloadDocument(url) {
+        window.open(url, "_blank");
+      }
+
+      function loadDocumentsList() {
+        fetch("/documents/list")
+          .then((response) => response.json())
+          .then((data) => {
+            if (data.documents && data.documents.length > 0) {
+              documentsList.innerHTML = data.documents
+                .map(
+                  (doc) => `
+                            <div class="document-item">
+                                <div>
+                                    <strong>${doc.filename}</strong>
+                                    <br>
+                                    <small>Size: ${formatFileSize(
+                                      doc.size
+                                    )} | Uploaded: ${new Date(
+                    doc.uploadDate
+                  ).toLocaleDateString()}</small>
+                                </div>
+                                <div>
+                                    ${
+                                      doc.type === ".html"
+                                        ? `
+                                        <button class="upload-btn" onclick="viewDocument('/documents/download/${doc.filename}')">View</button>
+                                        <button class="upload-btn" onclick="downloadDocument('/documents/download/${doc.filename}')">Download</button>
+                                    `
+                                        : `
+                                        <span style="color: #666;">Original Document</span>
+                                    `
+                                    }
+                                </div>
+                            </div>
+                        `
+                )
+                .join("");
+            } else {
+              documentsList.innerHTML = "<p>No documents uploaded yet.</p>";
+            }
+          })
+          .catch((error) => {
+            console.error("Error loading documents:", error);
+            documentsList.innerHTML = "<p>Error loading documents list.</p>";
+          });
+      }
+
+      function formatFileSize(bytes) {
+        if (bytes === 0) return "0 Bytes";
+        const k = 1024;
+        const sizes = ["Bytes", "KB", "MB", "GB"];
+        const i = Math.floor(Math.log(bytes) / Math.log(k));
+        return parseFloat((bytes / Math.pow(k, i)).toFixed(2)) + " " + sizes[i];
+      }
+
+      // Load documents list on page load
+      document.addEventListener("DOMContentLoaded", loadDocumentsList);
+    </script>
+  </body>
+</html>

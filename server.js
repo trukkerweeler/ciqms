@@ -106,6 +106,9 @@ app.use("/image", imageRoutes);
 const receiverRoutes = require("./routes/receiver");
 app.use("/receiver", receiverRoutes);
 
+const opcodesGlobalRoutes = require("./routes/opcodesGlobal");
+app.use("/opcodesGlobal", opcodesGlobalRoutes);
+
 const opcodesRoutes = require("./routes/opcodes");
 app.use("/opcodes", opcodesRoutes);
 

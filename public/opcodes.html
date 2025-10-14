@@ -4,26 +4,37 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <link rel="stylesheet" href="/css/styles.css" />
-    <title>OP Codes</title>
+    <title>CIQMS Op Codes</title>
   </head>
   <body>
     <header>
-      <h1 class="greenfont">Global Op Codes</h1>
+      <h1 class="greenfont">CIQMS Op Codes</h1>
     </header>
     <nav>
-      <button id="home"  onclick="window.location.href='index.html'">Home</button>
+      <button id="home" onclick="window.location.href='index.html'">
+        Home
+      </button>
+      <button
+        id="maintenance"
+        onclick="window.location.href='opcodemaint.html'"
+      >
+        Maintain OP Codes
+      </button>
     </nav>
     <main>
-      <div id="historyButton"></div>
-      </div>
       <div id="searchForm">
-        <label for="machineNo">Machine:</label>
-        <input type="text" id="machineNo" name="machineNo"/>
-        <!-- <button type="submit" id="btnSearch">Search</button> -->
+        <label for="searchInput">Search:</label>
+        <input
+          type="text"
+          id="searchInput"
+          name="searchInput"
+          placeholder="Search by OP code, description, or comments"
+        />
+        <button type="button" id="clearButton">Clear</button>
       </div>
       <div id="opcodesTable">
-        <table id="opcodes" class="table">
-        </table>
+        <table id="opcodes" class="table"></table>
+      </div>
     </main>
     <footer>
       <p>&copy; 2025 CIQMS</p>

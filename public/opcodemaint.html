@@ -1,0 +1,187 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <title>OP Code Maintenance</title>
+    <style>
+      .form-container {
+        max-width: 600px;
+        margin: 20px auto;
+        padding: 20px;
+        border: 1px solid #ddd;
+        border-radius: 8px;
+        background: #f9f9f9;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      .form-group label {
+        display: block;
+        margin-bottom: 5px;
+        font-weight: bold;
+      }
+
+      .form-group input,
+      .form-group textarea {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 14px;
+        box-sizing: border-box;
+      }
+
+      .form-group textarea {
+        height: 80px;
+        resize: vertical;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        justify-content: flex-start;
+        margin-top: 20px;
+      }
+
+      .btn {
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+      }
+
+      .btn-primary {
+        background-color: #007bff;
+        color: white;
+      }
+
+      .btn-primary:hover {
+        background-color: #0056b3;
+      }
+
+      .btn-secondary {
+        background-color: #6c757d;
+        color: white;
+      }
+
+      .btn-secondary:hover {
+        background-color: #545b62;
+      }
+
+      .btn-danger {
+        background-color: #dc3545;
+        color: white;
+      }
+
+      .btn-danger:hover {
+        background-color: #c82333;
+      }
+
+      .error-message {
+        color: #dc3545;
+        background: #f8d7da;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        display: none;
+      }
+
+      .success-message {
+        color: #155724;
+        background: #d4edda;
+        padding: 10px;
+        border-radius: 4px;
+        margin: 10px 0;
+        display: none;
+      }
+
+      .page-title {
+        text-align: center;
+        margin-bottom: 20px;
+      }
+
+      .required {
+        color: #dc3545;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <h1 class="greenfont">OP Code Maintenance</h1>
+    </header>
+    <nav>
+      <button id="home" onclick="window.location.href='index.html'">
+        Home
+      </button>
+      <button id="viewOpcodes" onclick="window.location.href='opcodes.html'">
+        View OP Codes
+      </button>
+    </nav>
+    <main>
+      <div class="form-container">
+        <h2 class="page-title" id="formTitle">Add New OP Code</h2>
+
+        <div class="error-message" id="errorMessage"></div>
+        <div class="success-message" id="successMessage"></div>
+
+        <form id="opcodeForm">
+          <div class="form-group">
+            <label for="opcode">OP Code <span class="required">*</span></label>
+            <input
+              type="text"
+              id="opcode"
+              name="opcode"
+              maxlength="16"
+              required
+              placeholder="Enter OP code (max 16 characters)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              placeholder="Enter description (optional)"
+            ></textarea>
+          </div>
+
+          <div class="form-group">
+            <label for="comments">Comments</label>
+            <textarea
+              id="comments"
+              name="comments"
+              placeholder="Enter comments (optional)"
+            ></textarea>
+          </div>
+
+          <div class="button-group">
+            <button type="submit" class="btn btn-primary" id="saveButton">
+              Save
+            </button>
+            <button type="button" class="btn btn-secondary" id="clearButton">
+              Clear
+            </button>
+            <button
+              type="button"
+              class="btn btn-danger"
+              id="deleteButton"
+              style="display: none"
+            >
+              Delete
+            </button>
+          </div>
+        </form>
+      </div>
+    </main>
+    <footer>
+      <p>&copy; 2025 CIQMS</p>
+    </footer>
+  </body>
+  <script type="module" src="/js/opcodemaint.mjs"></script>
+</html>
