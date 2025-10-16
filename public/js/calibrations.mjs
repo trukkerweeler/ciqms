@@ -4,7 +4,6 @@ loadHeaderFooter();
 const port = myport();
 const user = await getUserValue();
 
-
 const calibrationUrl = `http://localhost:${port}/calibrate`;
 const idsUrl = `http://localhost:${port}/ids`;
 const deviceUrl = `http://localhost:${port}/device/nextdue`;
@@ -15,9 +14,13 @@ const id = urlParams.get("id");
 
 const createCalHeader = document.querySelector("#create-cal-header");
 if (createCalHeader) {
-  createCalHeader.innerHTML = "Create Calibration for Device: " + id;
+  if (id) {
+    createCalHeader.innerHTML = "Create Calibration for Device: " + id;
+  } else {
+    createCalHeader.innerHTML = "Create Calibration";
+  }
 } else {
-    console.error("Header element with id 'create-cal-header' not found.");
+  console.error("Header element with id 'create-cal-header' not found.");
 }
 
 // Make the page header div
@@ -26,8 +29,11 @@ function makePageHeaderDiv() {
   divTitle.classList.add("page-header-div");
   const pageTitle = document.createElement("h1");
   pageTitle.classList.add("page-header");
-  pageTitle.innerHTML = "Calibrations List: " + id;
-  // pageTitle.innerHTML = "Calibrations List";
+  if (id) {
+    pageTitle.innerHTML = "Calibrations List: " + id;
+  } else {
+    pageTitle.innerHTML = "All Calibrations";
+  }
   divTitle.appendChild(pageTitle);
   // Add the button to the header div
   let AddCalBtn = document.createElement("button");
@@ -37,6 +43,29 @@ function makePageHeaderDiv() {
   AddCalBtn.textContent = "+ Add Cal";
 
   AddCalBtn.setAttribute("title", "Click to add a new calibration");
+
+  // Add event listener to the Add Cal button immediately when creating it
+  AddCalBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    const createCalibrationDialog = document.querySelector(
+      "[create-calibration-dialog]"
+    );
+    const deviceIdField = document.getElementById("device-id");
+
+    // If we have a device ID from the URL, pre-populate the field
+    if (id && deviceIdField) {
+      deviceIdField.value = id;
+    }
+
+    if (createCalibrationDialog) {
+      createCalibrationDialog.showModal();
+    } else {
+      console.error(
+        "Dialog element with id 'create-calibration-dialog' not found."
+      );
+    }
+  });
+
   divTitle.appendChild(AddCalBtn);
   mainElement.appendChild(divTitle);
 }
@@ -51,125 +80,142 @@ function getRecords() {
   });
   // Create the header div again
   makePageHeaderDiv();
-  
-  fetch(`${calibrationUrl}`, {
+
+  // Determine the URL to fetch from based on whether we have a device ID
+  const fetchUrl = id ? `${calibrationUrl}/${id}` : calibrationUrl;
+
+  fetch(fetchUrl, {
     method: "GET",
     headers: {
-    "Content-Type": "application/json",
+      "Content-Type": "application/json",
     },
   })
     .then((response) => response.json())
     .then((data) => {
-    // Filter records by DEVICE_ID matching the id from params
-    const filteredData = data.filter(record => record.DEVICE_ID === id);
+      // If we have an id parameter, the backend route /:id already filters
+      // If no id parameter, we get all records from the base route
+      const displayData = data;
 
-    let myFields = [
-      "CALIBRATION_ID",
-      "DEVICE_ID",
-      "CALIBRATED_BY",
-      "SUPPLIER_ID",
-      "CALIBRATE_DATE",
-      "RESULT",
-      "EMPLOYEE_ID",
-    ];
-    let table = document.createElement("table");
-    table.className = "table table-striped table-bordered table-hover";
+      let myFields = [
+        "CALIBRATION_ID",
+        "DEVICE_ID",
+        "CALIBRATED_BY",
+        "SUPPLIER_ID",
+        "CALIBRATE_DATE",
+        "RESULT",
+        "EMPLOYEE_ID",
+      ];
+      // Create a scrollable container for the table
+      let tableContainer = document.createElement("div");
+      tableContainer.className = "table-container";
+      // Calculate height to account for footer (footer height ~50px + some padding)
+      tableContainer.style.maxHeight = "calc(80vh - 60px)"; // Increased height due to compact header
+      tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
+      tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling if needed
+      tableContainer.style.border = "1px solid #ddd"; // Add border for better visual separation
+      tableContainer.style.borderRadius = "4px"; // Add rounded corners
+      tableContainer.style.marginTop = "10px"; // Add some top margin
+      tableContainer.style.marginBottom = "80px"; // Add bottom margin to clear footer
 
-    // Create table header
-    let thead = document.createElement("thead");
-    let headerRow = document.createElement("tr");
-    myFields.forEach((field) => {
-      let th = document.createElement("th");
-      if (field === "CALIBRATE_DATE") {
-        th.textContent = "NEXT DUE";
-      } else {
-        th.textContent = field.replace(/_/g, " ");
-      }
-      headerRow.appendChild(th);
-    });
-    thead.appendChild(headerRow);
-    table.appendChild(thead);
+      let table = document.createElement("table");
+      table.className = "table table-striped table-bordered table-hover";
+      table.style.marginBottom = "0"; // Remove default table margin
 
-    // Create table body
-    let tbody = document.createElement("tbody");
-    if (filteredData.length === 0) {
-      let row = document.createElement("tr");
-      let td = document.createElement("td");
-      td.colSpan = myFields.length;
-      td.textContent = "No records found";
-      td.style.textAlign = "center";
-      row.appendChild(td);
-      tbody.appendChild(row);
-    }
-    filteredData.forEach((record) => {
-      let row = document.createElement("tr");
+      // Create table header
+      let thead = document.createElement("thead");
+      thead.style.position = "sticky"; // Make header sticky
+      thead.style.top = "0"; // Stick to top of container
+      thead.style.backgroundColor = "#f8f9fa"; // Light background for header
+      thead.style.zIndex = "10"; // Ensure header stays on top
+
+      let headerRow = document.createElement("tr");
       myFields.forEach((field) => {
-      let td = document.createElement("td");
-      if (record[field] === "I") {
-        td.textContent = "Internal";
-      } else if (record[field] === "P") {
-        td.textContent = "Passed";
-      } else if (field.toLowerCase().endsWith("date") && record[field]) {
-        const date = new Date(record[field]);
-        td.textContent = `${date.getMonth() + 1}/${date.getDate()}/${date.getFullYear()}`;
-      } else {
-        td.textContent = record[field] || "";
-      }
-      row.appendChild(td);
+        let th = document.createElement("th");
+        if (field === "CALIBRATE_DATE") {
+          th.textContent = "NEXT DUE";
+        } else {
+          th.textContent = field.replace(/_/g, " ");
+        }
+        headerRow.appendChild(th);
       });
-      tbody.appendChild(row);
-    });
-    table.appendChild(tbody);
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
 
-    // Append the table to the main element
-    mainElement.appendChild(table);
+      // Create table body
+      let tbody = document.createElement("tbody");
+      if (displayData.length === 0) {
+        let row = document.createElement("tr");
+        let td = document.createElement("td");
+        td.colSpan = myFields.length;
+        td.textContent = "No records found";
+        td.style.textAlign = "center";
+        row.appendChild(td);
+        tbody.appendChild(row);
+      }
+      displayData.forEach((record) => {
+        let row = document.createElement("tr");
+        myFields.forEach((field) => {
+          let td = document.createElement("td");
+          if (record[field] === "I") {
+            td.textContent = "Internal";
+          } else if (record[field] === "P") {
+            td.textContent = "Passed";
+          } else if (field.toLowerCase().endsWith("date") && record[field]) {
+            const date = new Date(record[field]);
+            td.textContent = `${
+              date.getMonth() + 1
+            }/${date.getDate()}/${date.getFullYear()}`;
+          } else {
+            td.textContent = record[field] || "";
+          }
+          row.appendChild(td);
+        });
+        tbody.appendChild(row);
+      });
+      table.appendChild(tbody);
+
+      // Append the table to the container, then container to the main element
+      tableContainer.appendChild(table);
+      mainElement.appendChild(tableContainer);
     })
     .catch((error) => {
-    console.error("Error fetching records:", error);
+      console.error("Error fetching records:", error);
     });
 }
 
 getRecords();
 
-// Add event listener to the Add Cal button (Show)
-const AddCalBtn = document.getElementById("btnAddCal");
-AddCalBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const createCalibrationDialog = document.querySelector("[create-calibration-dialog]");
-    if (createCalibrationDialog) {
-        createCalibrationDialog.showModal();
-    } else {
-        console.error("Dialog element with id 'create-calibration-dialog' not found.");
-    }
-});
-
 // Listen for the cancel-add-calibration event
 const cancelAddCal = document.getElementById("cancel-add-calibration");
 cancelAddCal.addEventListener("click", (e) => {
-    e.preventDefault();
-    const createCalibrationDialog = document.querySelector("[create-calibration-dialog]");
-    if (createCalibrationDialog) {
-        createCalibrationDialog.close();
-    } else {
-        console.error("Dialog element with id 'create-calibration-dialog' not found.");
-    }
+  e.preventDefault();
+  const createCalibrationDialog = document.querySelector(
+    "[create-calibration-dialog]"
+  );
+  if (createCalibrationDialog) {
+    createCalibrationDialog.close();
+  } else {
+    console.error(
+      "Dialog element with id 'create-calibration-dialog' not found."
+    );
+  }
 });
 
 let nextId;
 const submitFormAddCal = document.querySelector("#buttonAddCalibration");
 submitFormAddCal.addEventListener("click", async (e) => {
-  e.preventDefault();  
+  e.preventDefault();
   try {
     nextId = await fetch(idsUrl, { method: "GET" })
-    .then((res) => res.json())
-    .then((data) => {
-      // console.log("Next ID fetched:", JSON.stringify(data));
-      return data;
-    });
+      .then((res) => res.json())
+      .then((data) => {
+        // console.log("Next ID fetched:", JSON.stringify(data));
+        return data;
+      });
   } catch (error) {
     console.error("Error fetching next ID:", error);
   }
-  
+
   const myForm = document.querySelector("#create-calibration-form");
   if (!myForm) {
     console.error("Form with id 'create-calibration-form' not found.");
@@ -177,76 +223,85 @@ submitFormAddCal.addEventListener("click", async (e) => {
   }
   const formData = new FormData(myForm);
   const data = Object.fromEntries(formData.entries());
-    data["CALIBRATION_ID"] = nextId;
-    data["DEVICE_ID"] = data["DEVICE_ID"].toUpperCase();
-    data["CREATE_BY"] = user;
-    const now = new Date();
-    const mysqlDate = now.toISOString().slice(0, 19).replace('T', ' ');
-    data["CREATE_DATE"] = mysqlDate;
-    if (data["EMPLOYEE_ID"]) {
-      data["EMPLOYEE_ID"] = data["EMPLOYEE_ID"].toUpperCase();
-    }
-    if (data["SUPPLIER_ID"]) {
-      data["SUPPLIER_ID"] = data["SUPPLIER_ID"].toUpperCase();
-    }
-    // console.log(data);
-    
-    // Send the data to the server
-    fetch(calibrationUrl, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(data),
-    })
-      .then((response) => {
-        if (response.ok) {
-          // console.log("Calibration created successfully");
-          const createCalibrationDialog = document.querySelector("[create-calibration-dialog]");
-          if (createCalibrationDialog) {
-            createCalibrationDialog.close();
-          } else {
-            console.error("Dialog element with id 'create-calibration-dialog' not found.");
-          }
-          getRecords();
-          // nextId = parseInt(nextId) + 1; //This is incremented in the router
-          fetch(idsUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ nextId: nextId }),
-          })
-          .then((response) => {
-            if (response.ok) {
-              // console.log("Next ID updated successfully");
-            } else {
-              console.error("Error updating next ID:", response.statusText);
-            }
-          })
+  data["CALIBRATION_ID"] = nextId;
+  data["DEVICE_ID"] = data["DEVICE_ID"].toUpperCase();
+  data["CREATE_BY"] = user;
+  const now = new Date();
+  const mysqlDate = now.toISOString().slice(0, 19).replace("T", " ");
+  data["CREATE_DATE"] = mysqlDate;
+  if (data["EMPLOYEE_ID"]) {
+    data["EMPLOYEE_ID"] = data["EMPLOYEE_ID"].toUpperCase();
+  }
+  if (data["SUPPLIER_ID"]) {
+    data["SUPPLIER_ID"] = data["SUPPLIER_ID"].toUpperCase();
+  }
+  // console.log(data);
+
+  // Send the data to the server
+  fetch(calibrationUrl, {
+    method: "POST",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify(data),
+  })
+    .then((response) => {
+      if (response.ok) {
+        // console.log("Calibration created successfully");
+        const createCalibrationDialog = document.querySelector(
+          "[create-calibration-dialog]"
+        );
+        if (createCalibrationDialog) {
+          createCalibrationDialog.close();
         } else {
-          console.error("Error creating calibration:", response.statusText);
+          console.error(
+            "Dialog element with id 'create-calibration-dialog' not found."
+          );
         }
-        // call the deviceUrl and pass in the device ID and the next calibration date
-        fetch(deviceUrl, {
+
+        // Clear the form for next entry
+        myForm.reset();
+
+        getRecords();
+        // nextId = parseInt(nextId) + 1; //This is incremented in the router
+        fetch(idsUrl, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
-          body: JSON.stringify({
-            DEVICE_ID: data["DEVICE_ID"],
-            NEXT_DATE: data["CALIBRATE_DATE"],
-          }),
-        })
-        .then((response) => {
+          body: JSON.stringify({ nextId: nextId }),
+        }).then((response) => {
           if (response.ok) {
-            // console.log("Device next date updated successfully");
+            // console.log("Next ID updated successfully");
           } else {
-            console.error("Error updating device next date:", response.statusText);
+            console.error("Error updating next ID:", response.statusText);
           }
-        })
-      })
-      .catch((error) => {
-        console.error("Error creating calibration:", error);
+        });
+      } else {
+        console.error("Error creating calibration:", response.statusText);
+      }
+      // call the deviceUrl and pass in the device ID and the next calibration date
+      fetch(deviceUrl, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          DEVICE_ID: data["DEVICE_ID"],
+          NEXT_DATE: data["CALIBRATE_DATE"],
+        }),
+      }).then((response) => {
+        if (response.ok) {
+          // console.log("Device next date updated successfully");
+        } else {
+          console.error(
+            "Error updating device next date:",
+            response.statusText
+          );
+        }
       });
+    })
+    .catch((error) => {
+      console.error("Error creating calibration:", error);
+    });
 });

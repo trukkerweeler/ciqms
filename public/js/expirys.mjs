@@ -130,13 +130,28 @@ if (response.ok) {
   table.appendChild(thead);
   table.appendChild(tbody);
 
-  document.getElementById("main").appendChild(table);
+  // Create scrollable container
+  const tableContainer = document.createElement("div");
+  tableContainer.className = "table-container";
+  tableContainer.style.maxHeight = "calc(80vh - 80px)";
+  tableContainer.style.overflowY = "auto";
+  tableContainer.style.marginBottom = "2rem";
+
+  // Add table to container and container to main
+  tableContainer.appendChild(table);
+  document.getElementById("main").appendChild(tableContainer);
 }
 
 // listen for saveExpiry and call url and save the form data
 document.getElementById("saveExpiry").addEventListener("click", async () => {
   const formData = new FormData(document.getElementById("expiryForm"));
   const data = Object.fromEntries(formData.entries());
+
+  // Convert empty date strings to null
+  if (data.RECV_DATE === "") data.RECV_DATE = null;
+  if (data.MFG_DATE === "") data.MFG_DATE = null;
+  if (data.EXPIRY_DATE === "") data.EXPIRY_DATE = null;
+
   const nextIdResponse = await fetch(`${url}/nextId`);
   const nextId = await nextIdResponse.json();
   data.EXPIRATION_ID = nextId;
@@ -209,7 +224,7 @@ document
     }
   });
 
-  // listen for closeEditBtn and close the modal
-  document.querySelector("#closeEditBtn").addEventListener("click", () => {
-    document.getElementById("dispositionModal").close();
-  });
+// listen for closeEditBtn and close the modal
+document.querySelector("#closeEditBtn").addEventListener("click", () => {
+  document.getElementById("dispositionModal").close();
+});

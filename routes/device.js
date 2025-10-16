@@ -1,8 +1,9 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const fs = require("fs");
+const path = require("path");
 // update for updating
-
 
 // ==================================================
 // Set next due for device
@@ -25,10 +26,7 @@ router.post("/nextdue", async (req, res) => {
 
       const query = `UPDATE DEVICES SET NEXT_DATE = ? WHERE DEVICE_ID = ?`;
 
-      const values = [
-        req.body.NEXT_DATE,
-        req.body.DEVICE_ID,
-      ];
+      const values = [req.body.NEXT_DATE, req.body.DEVICE_ID];
 
       connection.query(query, values, (err) => {
         if (err) {
@@ -174,12 +172,54 @@ router.post("/create", async (req, res) => {
         if (err) {
           console.error("Failed to insert device: " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
-        res.json({ message: "Record created successfully" });
-      });
 
-      connection.end();
+        // After successful device creation, check/create calibration folder
+        const deviceId = req.body.DEVICE_ID;
+        const calibrationBasePath =
+          "K:\\Quality - Records\\7150 - Calibration\\Calibration";
+
+        try {
+          // Check if the base calibration directory exists
+          if (fs.existsSync(calibrationBasePath)) {
+            // Read all folders in the calibration directory
+            const folders = fs
+              .readdirSync(calibrationBasePath, { withFileTypes: true })
+              .filter((dirent) => dirent.isDirectory())
+              .map((dirent) => dirent.name);
+
+            // Check if any folder starts with the DEVICE_ID
+            const existingFolder = folders.find((folder) =>
+              folder.startsWith(deviceId)
+            );
+
+            if (!existingFolder) {
+              // Create new folder with DEVICE_ID name
+              const newFolderPath = path.join(calibrationBasePath, deviceId);
+              fs.mkdirSync(newFolderPath, { recursive: true });
+              console.log(`Created calibration folder: ${newFolderPath}`);
+            } else {
+              console.log(
+                `Calibration folder already exists: ${existingFolder}`
+              );
+            }
+          } else {
+            console.warn(
+              `Calibration base directory does not exist: ${calibrationBasePath}`
+            );
+          }
+        } catch (folderError) {
+          console.error(
+            "Error checking/creating calibration folder: " + folderError
+          );
+          // Don't fail the device creation if folder operations fail
+        }
+
+        res.json({ message: "Record created successfully" });
+        connection.end();
+      });
     });
   } catch (err) {
     console.error("Error connecting to DB: ", err);
@@ -270,13 +310,13 @@ router.put("/editdevcal", async (req, res) => {
         "STANDARD_INTERVAL",
         "WARNING_INTERVAL",
         "MODIFIED_BY",
-        "MODIFIED_DATE"
+        "MODIFIED_DATE",
       ];
 
       const setClauses = [];
       const values = [];
 
-      allowedFields.forEach(field => {
+      allowedFields.forEach((field) => {
         if (req.body[field] !== undefined) {
           setClauses.push(`${field} = ?`);
           values.push(req.body[field]);
@@ -297,7 +337,9 @@ router.put("/editdevcal", async (req, res) => {
         return;
       }
 
-      const query = `UPDATE DEVICES SET ${setClauses.join(", ")} WHERE DEVICE_ID = ?`;
+      const query = `UPDATE DEVICES SET ${setClauses.join(
+        ", "
+      )} WHERE DEVICE_ID = ?`;
       values.push(req.body.DEVICE_ID);
 
       connection.query(query, values, (err) => {
@@ -363,7 +405,7 @@ router.put("/savenote", async (req, res) => {
       password: process.env.DB_PASS,
       port: 3306,
       database: "quality",
-    }); 
+    });
     connection.connect((err) => {
       if (err) {
         console.error("Error connecting: " + err.stack);
@@ -388,8 +430,7 @@ router.put("/savenote", async (req, res) => {
         res.json({ message: "Note saved successfully" });
         connection.end();
       });
-      return; 
-      
+      return;
     });
   } catch (err) {
     console.error("Error connecting to DB: ", err);

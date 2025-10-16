@@ -33,6 +33,9 @@ function getRecords() {
       // Create table container for scrolling
       const tableContainer = document.createElement("div");
       tableContainer.setAttribute("class", "table-container");
+      tableContainer.style.maxHeight = "calc(75vh - 60px)"; // Reduced height to account for filter
+      tableContainer.style.overflowY = "auto";
+      tableContainer.style.marginBottom = "2rem";
 
       const table = document.createElement("table");
       const thead = document.createElement("thead");

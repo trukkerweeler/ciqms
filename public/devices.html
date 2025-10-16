@@ -1,24 +1,47 @@
 <!DOCTYPE html>
-<!-- update for updating -->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Devices</title>
-    <link rel="stylesheet" href="css/stylescal.css" />
-    <link rel="stylesheet" href="css/styles.css" />
-    <link rel="icon" href="./images/ci-logo.png" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Devices (CIQMS)</title>
   </head>
   <body>
     <header id="header"></header>
-    <!-- <nav></nav> -->
-    <main id="main-content">
+    <div class="recordsaddrecordheading">
+      <h1>Devices List</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="btnAddDevice"
+        title="Add new Device"
+      >
+        +
+      </button>
+    </div>
+    <div id="deviceFilter">
+      <label for="deviceName">Filter by Device Name:</label>
+      <input type="text" id="deviceName" />
+    </div>
+    <main id="main">
       <dialog create-device-dialog class="dialog">
         <form id="create-device-form">
-          <!-- <form id="create-device-form" method="POST" action="/devices/create"> -->
           <h2>Create Device Record</h2>
           <label for="device-id">Device ID:</label>
-            <input type="text" id="device-id" name="DEVICE_ID" style="text-transform: uppercase;" required />
+          <input
+            type="text"
+            id="device-id"
+            name="DEVICE_ID"
+            style="text-transform: uppercase"
+            required
+          />
 
           <label for="name">Name:</label>
           <input type="text" id="name" name="NAME" autocomplete="name" />
@@ -32,7 +55,12 @@
           </select>
 
           <label for="device-type">Device Type:</label>
-            <input type="text" id="device-type" name="DEVICE_TYPE" style="text-transform: uppercase;" />
+          <input
+            type="text"
+            id="device-type"
+            name="DEVICE_TYPE"
+            style="text-transform: uppercase"
+          />
 
           <label for="manufacturer-name">Manufacturer Name:</label>
           <input type="text" id="manufacturer-name" name="MANUFACTURER_NAME" />
@@ -44,31 +72,37 @@
           <input type="text" id="serial-number" name="SERIAL_NUMBER" />
 
           <label for="major-location">Major Location:</label>
-          <input type="text" id="major-location" name="MAJOR_LOCATION" style="text-transform: uppercase;"/>
+          <input
+            type="text"
+            id="major-location"
+            name="MAJOR_LOCATION"
+            style="text-transform: uppercase"
+          />
 
           <label for="minor-location">Minor Location:</label>
-          <input type="text" id="minor-location" name="MINOR_LOCATION" style="text-transform: uppercase;"/>
+          <input
+            type="text"
+            id="minor-location"
+            name="MINOR_LOCATION"
+            style="text-transform: uppercase"
+          />
 
           <label for="purchase-date">Purchase Date:</label>
           <input type="date" id="purchase-date" name="PURCHASE_DATE" />
 
-          
           <label for="purchase-price">Purchase Price:</label>
           <input
-          type="number"
-          id="purchase-price"
-          name="PURCHASE_PRICE"
-          step="0.01"
+            type="number"
+            id="purchase-price"
+            name="PURCHASE_PRICE"
+            step="0.01"
           />
-          
+
           <label for="next-date">Next Date:</label>
           <input type="date" id="next-date" name="NEXT_DATE" />
-          
+
           <div class="dialog-actions">
-            <button
-              id="create-device-button"
-              class="btn btn-primary"
-            >
+            <button id="create-device-button" class="btn btn-primary">
               Create
             </button>
             <button type="button" id="cancel-dialog" class="btn btn-cancel">
