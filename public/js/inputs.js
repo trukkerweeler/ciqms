@@ -1,4 +1,9 @@
 import { loadHeaderFooter, myport } from "./utils.mjs";
+// import { requireAuth } from "./auth-utils.mjs";
+
+// TEMPORARILY DISABLED: Check authentication before loading page
+// await requireAuth();
+
 loadHeaderFooter();
 const port = myport();
 document

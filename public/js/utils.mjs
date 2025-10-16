@@ -64,6 +64,53 @@ export async function loadHeaderFooter() {
 
   // Initialize mobile navigation after header is loaded
   initializeMobileNav();
+
+  // Setup authentication UI after header is loaded
+  await setupAuthUI();
+}
+
+// Setup authentication-related UI elements
+async function setupAuthUI() {
+  try {
+    const port = myport();
+    const response = await fetch(`http://localhost:${port}/auth/status`, {
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      const authData = await response.json();
+      const loginLink = document.querySelector("#login");
+
+      if (authData.loggedIn && loginLink) {
+        // User is logged in, replace login link with logout
+        loginLink.textContent = "Logout";
+        loginLink.href = "#";
+        loginLink.addEventListener("click", async (e) => {
+          e.preventDefault();
+          await logoutUser();
+        });
+      }
+    }
+  } catch (err) {
+    console.error("Error setting up auth UI:", err);
+  }
+}
+
+// Logout function
+async function logoutUser() {
+  try {
+    const port = myport();
+    const response = await fetch(`http://localhost:${port}/auth/logout`, {
+      method: "POST",
+      credentials: "include",
+    });
+
+    if (response.ok) {
+      window.location.href = `http://localhost:${port}/login.html`;
+    }
+  } catch (err) {
+    console.error("Logout failed:", err);
+  }
 }
 
 // Initialize mobile navigation functionality

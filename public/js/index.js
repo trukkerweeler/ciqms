@@ -1,8 +1,15 @@
 import { loadHeaderFooter, getUserValue } from "./utils.mjs";
+import { requireAuth } from "./auth-utils.mjs";
+
 loadHeaderFooter();
 
 // Check user and show maintenance section only for TKENT
 document.addEventListener("DOMContentLoaded", async () => {
+  // TEMPORARILY DISABLED: Check authentication first
+  // const isAuthenticated = await requireAuth();
+  // if (!isAuthenticated) {
+  //   return; // Will redirect to login page
+  // }
   try {
     const user = await getUserValue();
     if (user === "TKENT") {

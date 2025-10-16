@@ -1,10 +1,25 @@
 const exp = require("constants");
 const cors = require("cors");
 const express = require("express");
+const session = require("express-session");
 const app = express();
 const port = process.env.APP_PORT || 3003;
 
 app.use(cors());
+
+// Session configuration
+app.use(
+  session({
+    secret: process.env.SESSION_SECRET || "your-secret-key-change-this",
+    resave: false,
+    saveUninitialized: false,
+    cookie: {
+      secure: false, // Set to true in production with HTTPS
+      httpOnly: true,
+      maxAge: 24 * 60 * 60 * 1000, // 24 hours
+    },
+  })
+);
 
 app.use(express.static("public"));
 app.use(express.json());
@@ -23,8 +38,8 @@ app.use("/project", projectRoutes);
 const userRoutes = require("./routes/user");
 app.use("/user", userRoutes);
 
-// const authRoutes = require("./routes/auth");
-// app.use("/auth", authRoutes);
+const authRoutes = require("./routes/auth");
+app.use("/auth", authRoutes);
 
 const recurRoutes = require("./routes/recur");
 app.use("/recur", recurRoutes);
