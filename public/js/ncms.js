@@ -94,19 +94,14 @@ function getRecords() {
       table.appendChild(thead);
       table.appendChild(tbody);
 
-      // Create a scrollable container for the table
+      // Create scrollable container
       const tableContainer = document.createElement("div");
       tableContainer.className = "table-container";
-      // Calculate height to account for footer (footer height ~50px + some padding)
-      tableContainer.style.maxHeight = "calc(80vh - 60px)"; // Increased height due to compact header
-      tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
-      tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling if needed
-      tableContainer.style.border = "1px solid #ddd"; // Add border for better visual separation
-      tableContainer.style.borderRadius = "4px"; // Add rounded corners
-      tableContainer.style.marginTop = "10px"; // Add some top margin
-      tableContainer.style.marginBottom = "80px"; // Add bottom margin to clear footer
+      tableContainer.style.maxHeight = "calc(80vh - 60px)";
+      tableContainer.style.overflowY = "auto";
+      tableContainer.style.marginBottom = "2rem";
 
-      // Append the table to the container, then container to the main element
+      // Add table to container and container to main
       tableContainer.appendChild(table);
       main.appendChild(tableContainer);
     });

@@ -1,0 +1,286 @@
+/* NCM-specific styles */
+.ncm-table {
+  width: 100%;
+  margin-top: 1rem;
+}
+
+.ncm-container {
+  padding: 1rem;
+}
+
+/* NCM table styling - if you want different from main styles */
+.ncm-table th {
+  background-color: #f8f9fa;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+/* Optional: NCM-specific colors/branding */
+.ncm-header {
+  background-color: #dc3545; /* Red theme for nonconformance */
+  color: white;
+}
+
+.ncm-status-open {
+  background-color: #fff3cd;
+  color: #856404;
+}
+
+.ncm-status-closed {
+  background-color: #d1edff;
+  color: #0c5460;
+}
+
+/* Section grid layout for proper button positioning */
+.section-grid {
+  display: grid !important;
+  grid-template-columns: 1fr auto !important;
+  grid-template-rows: auto 1fr !important;
+  align-items: start !important;
+  background-color: white !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  border-top: 4px solid #eee !important;
+  gap: 0 !important;
+}
+
+/* Title text in first column, first row */
+.section-grid .title-text {
+  grid-column: 1 !important;
+  grid-row: 1 !important;
+  text-align: left !important;
+  font-weight: bold !important;
+  margin: 0 !important;
+  padding: 0.25rem 0 !important;
+  background-color: white !important;
+  border: none !important;
+}
+
+/* Button in second column, first row */
+.section-grid button {
+  grid-column: 2 !important;
+  grid-row: 1 !important;
+  justify-self: end !important;
+  align-self: start !important;
+  margin: 0 !important;
+  margin-top: 4px !important;
+  margin-right: 1rem !important;
+  white-space: nowrap !important;
+}
+
+/* Content spans both columns in second row */
+.section-grid .notes {
+  grid-column: 1 / -1 !important;
+  grid-row: 2 !important;
+  margin: 0 !important;
+  padding: 0.5rem !important;
+  background-color: white !important;
+  border: none !important;
+  border-top: none !important;
+  outline: none !important;
+}
+
+/* Remove any lines/borders between grid items */
+.section-grid * {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  outline: none !important;
+  box-shadow: none !important;
+}
+
+/* Extra aggressive override for any inherited borders - but keep section-grid border-top */
+.notesgrid .section-grid .notes,
+.notesgrid .section-grid .title-text,
+.notesgrid .section-grid button {
+  border: 0 !important;
+  border-bottom: 0 !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  outline: 0 !important;
+  box-shadow: none !important;
+  background-clip: padding-box !important;
+}
+
+/* Ensure section-grid border-top is visible with higher specificity */
+.notesgrid .section-grid {
+  border-top: 2px solid black !important;
+  border-left: 0 !important;
+  border-right: 0 !important;
+  border-bottom: 0 !important;
+}
+
+/* Left align the Detail heading */
+#detailTitle {
+  text-align: left !important;
+}
+
+/* Make NCM ID and Close NCM button inline */
+.subtitlewithbutton {
+  display: flex !important;
+  justify-content: space-between !important;
+  align-items: center !important;
+  margin-bottom: 5px !important;
+  margin-top: 0 !important;
+  padding-left: 1rem !important;
+  padding-bottom: 0 !important;
+  gap: 1rem !important;
+}
+
+/* Extra specific override for subtitle spacing */
+div.subtitlewithbutton {
+  margin-bottom: 5px !important;
+  margin-top: 0 !important;
+  padding-bottom: 0 !important;
+}
+
+/* Reduce internal spacing of elements inside subtitlewithbutton */
+.subtitlewithbutton * {
+  margin: 0 !important;
+  padding: 2px 0 !important;
+}
+
+/* Specifically target the NCM ID heading */
+.subtitlewithbutton h2 {
+  margin: 0 !important;
+  padding: 0 !important;
+  line-height: 1.2 !important;
+}
+
+/* Specifically target the Close NCM button */
+.subtitlewithbutton button {
+  margin: 0 !important;
+  padding: 4px 8px !important;
+}
+
+/* Ensure text spans stay left aligned */
+.notesgrid h3 .title-text {
+  text-align: left !important;
+  justify-self: start !important;
+  font-weight: bold !important;
+}
+
+/* Ensure edit buttons are positioned in the far right grid column */
+.notesgrid h3 button {
+  justify-self: end !important;
+  white-space: nowrap !important;
+  margin: 0 !important;
+}
+
+/* Compact styling for print */
+@media print {
+  .notesgrid h3 {
+    margin-bottom: 0.25rem !important;
+    padding-bottom: 0.1rem !important;
+    font-size: 1rem !important;
+  }
+
+  .notesgrid h3 button {
+    font-size: 0.8rem !important;
+    padding: 2px 6px !important;
+  }
+
+  /* Hide all buttons when printing */
+  .section-grid button,
+  .btnEditNotes,
+  button {
+    display: none !important;
+  }
+
+  /* Adjust grid layout for print without buttons */
+  .section-grid {
+    grid-template-columns: 1fr !important;
+  }
+}
+
+/* Extra compact styling for detail section */
+#detailSection .tbl {
+  margin: 2px 0 !important;
+  padding: 2px 5px !important;
+  line-height: 1.1 !important;
+  font-size: 0.85rem !important;
+}
+
+#detailSection h3 {
+  margin: 4px 0 !important;
+  font-size: 1rem !important;
+}
+
+/* Reduce spacing above detail section */
+#detailSection {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+}
+
+/* More aggressive override with higher specificity */
+section#detailSection.section {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+}
+
+/* Universal override for any detail section spacing */
+*[id="detailSection"] {
+  margin-top: 2px !important;
+  padding-top: 0 !important;
+}
+
+/* White backgrounds for notes content areas */
+.notesgrid .notes {
+  background-color: white !important;
+  border: 1px solid #ddd !important;
+  border-radius: 4px !important;
+  padding: 0.5rem !important;
+  margin: 0.25rem 0 !important;
+}
+
+/* White background for header3 class */
+.header3 {
+  background-color: white !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove all spacing from notes elements */
+.notes {
+  margin: 0 !important;
+  padding: 0.5rem !important;
+  background-color: white !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Remove all spacing from the notesgrid container */
+.notesgrid {
+  background-color: white !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  gap: 0 !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Ensure no spacing between any elements in notesgrid */
+.notesgrid > * {
+  margin: 0 !important;
+  border: none !important;
+  outline: none !important;
+}
+
+/* Specific targeting for header3 followed by notes */
+.notesgrid .header3 + .notes {
+  margin-top: 0 !important;
+  padding-top: 0.5rem !important;
+  border-top: none !important;
+}
+
+/* Remove any borders from h3 elements in notesgrid */
+.notesgrid h3 {
+  border: none !important;
+  border-top: none !important;
+  border-bottom: none !important;
+  outline: none !important;
+}

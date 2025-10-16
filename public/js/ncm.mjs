@@ -317,19 +317,40 @@ fetch(url, { method: "GET" })
 
       const divDesc = document.createElement("div");
       divDesc.setAttribute("class", "notes");
-      ncDescTitle.textContent = "Description:";
+
+      // Create a grid container for this section
+      const descSectionGrid = document.createElement("div");
+      descSectionGrid.setAttribute("class", "section-grid");
+
+      // Create title text span
+      const titleTextSpan = document.createElement("span");
+      titleTextSpan.setAttribute("class", "title-text");
+      titleTextSpan.textContent = "Description:";
+
+      // Add all three elements to the grid: title, button, content
+      descSectionGrid.appendChild(titleTextSpan);
+      descSectionGrid.appendChild(btnEditDesc);
+      descSectionGrid.appendChild(divDesc);
+
       divDesc.textContent = record[key]["DESCRIPTION"];
       divDesc.setAttribute("id", "inputtext");
       divDesc.innerHTML = divDesc.innerHTML.replace(/\n/g, "<br>");
-      notesSection.appendChild(ncDescTitle);
-      notesSection.appendChild(divDesc);
-      notesSection.appendChild(btnEditDesc);
+      notesSection.appendChild(descSectionGrid);
 
       const divDisposition = document.createElement("div");
       divDisposition.setAttribute("class", "disposition");
       divDisposition.setAttribute("class", "notes");
       divDisposition.setAttribute("id", "disptext");
-      dispositionTitle.textContent = "Disposition:";
+
+      // Create a grid container for this section
+      const dispSectionGrid = document.createElement("div");
+      dispSectionGrid.setAttribute("class", "section-grid");
+
+      // Create title text span
+      const dispTitleTextSpan = document.createElement("span");
+      dispTitleTextSpan.setAttribute("class", "title-text");
+      dispTitleTextSpan.textContent = "Disposition:";
+
       dispositionTitle.setAttribute("id", "dispTitle");
       if (
         record[key]["DISPOSITION"] === null ||
@@ -344,15 +365,27 @@ fetch(url, { method: "GET" })
           "<br>"
         );
       }
-      notesSection.appendChild(dispositionTitle);
-      notesSection.appendChild(divDisposition);
-      notesSection.appendChild(btnEditDisposition);
+
+      // Add all three elements to the grid: title, button, content
+      dispSectionGrid.appendChild(dispTitleTextSpan);
+      dispSectionGrid.appendChild(btnEditDisposition);
+      dispSectionGrid.appendChild(divDisposition);
+      notesSection.appendChild(dispSectionGrid);
 
       const divVerification = document.createElement("div");
       divVerification.setAttribute("class", "verification");
       divVerification.setAttribute("class", "notes");
       divVerification.setAttribute("id", "verftext");
-      verificationTitle.textContent = "Verification:";
+
+      // Create a grid container for this section
+      const verfSectionGrid = document.createElement("div");
+      verfSectionGrid.setAttribute("class", "section-grid");
+
+      // Create title text span
+      const verfTitleTextSpan = document.createElement("span");
+      verfTitleTextSpan.setAttribute("class", "title-text");
+      verfTitleTextSpan.textContent = "Verification:";
+
       verificationTitle.setAttribute("id", "verificationTitle");
       divVerification.innerHTML = divVerification.innerHTML.replace(
         /\n/g,
@@ -371,15 +404,27 @@ fetch(url, { method: "GET" })
           "<br>"
         );
       }
-      notesSection.appendChild(verificationTitle);
-      notesSection.appendChild(divVerification);
-      notesSection.appendChild(btnEditVerf);
+
+      // Add all three elements to the grid: title, button, content
+      verfSectionGrid.appendChild(verfTitleTextSpan);
+      verfSectionGrid.appendChild(btnEditVerf);
+      verfSectionGrid.appendChild(divVerification);
+      notesSection.appendChild(verfSectionGrid);
 
       const divNcmNotes = document.createElement("div");
       divNcmNotes.setAttribute("class", "ncmnotes");
       divNcmNotes.setAttribute("class", "notes");
       divNcmNotes.setAttribute("id", "notetext");
-      notesTitle.textContent = "Notes:";
+
+      // Create a grid container for this section
+      const notesSectionGrid = document.createElement("div");
+      notesSectionGrid.setAttribute("class", "section-grid");
+
+      // Create title text span
+      const notesTitleTextSpan = document.createElement("span");
+      notesTitleTextSpan.setAttribute("class", "title-text");
+      notesTitleTextSpan.textContent = "Notes:";
+
       notesTitle.setAttribute("id", "notesTitle");
       divNcmNotes.innerHTML = divNcmNotes.innerHTML.replace(/\n/g, "<br>");
       if (
@@ -392,9 +437,12 @@ fetch(url, { method: "GET" })
         divNcmNotes.textContent = record[key]["NCM_NOTE"];
         divNcmNotes.innerHTML = divNcmNotes.innerHTML.replace(/\n/g, "<br>");
       }
-      notesSection.appendChild(notesTitle);
-      notesSection.appendChild(divNcmNotes);
-      notesSection.appendChild(btnEditNote);
+
+      // Add all three elements to the grid: title, button, content
+      notesSectionGrid.appendChild(notesTitleTextSpan);
+      notesSectionGrid.appendChild(btnEditNote);
+      notesSectionGrid.appendChild(divNcmNotes);
+      notesSection.appendChild(notesSectionGrid);
 
       main.appendChild(elemRpt);
       main.appendChild(divSubTitle);
