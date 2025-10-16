@@ -1479,3 +1479,42 @@ footer div p {
     gap: 1rem;
   }
 }
+
+/* Past date styling for devices table */
+.past-date {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.past-date td {
+  background-color: #ffebee !important;
+  color: #c62828 !important;
+}
+
+.past-date:hover {
+  background-color: #ffcdd2 !important;
+}
+
+.past-date:hover td {
+  background-color: #ffcdd2 !important;
+}
+
+/* Device ID links styling */
+table td a {
+  color: #007bff !important;
+  text-decoration: underline;
+}
+
+table td a:hover {
+  color: #0056b3 !important;
+}
+
+/* Device ID links in past-due rows */
+.past-date td a {
+  color: #1565c0 !important;
+  text-decoration: underline;
+}
+
+.past-date td a:hover {
+  color: #0d47a1 !important;
+}
