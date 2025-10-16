@@ -1401,3 +1401,81 @@ footer div p {
   outline-offset: 2px;
   border-color: var(--accent-color);
 }
+
+/* Reports Card Layout */
+#main {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+  gap: 1.5rem;
+  padding: 2rem;
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.report-card {
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.report-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card-header {
+  background: linear-gradient(135deg, #2c3e50 0%, #f0f8ff 100%);
+  color: white;
+  padding: 1rem;
+}
+
+.card-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+}
+
+.card-body {
+  padding: 1rem;
+}
+
+.card-description {
+  margin: 0;
+  color: #666;
+  font-size: 0.95rem;
+  line-height: 1.4;
+}
+
+.card-footer {
+  padding: 1rem;
+  border-top: 1px solid #f0f0f0;
+  text-align: center;
+}
+
+.card-link {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: #2c3e50;
+  color: white;
+  text-decoration: none;
+  border-radius: 4px;
+  font-weight: 500;
+  transition: background 0.2s ease;
+}
+
+.card-link:hover {
+  background: #34495e;
+  color: white;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  #main {
+    grid-template-columns: 1fr;
+    padding: 1rem;
+    gap: 1rem;
+  }
+}
