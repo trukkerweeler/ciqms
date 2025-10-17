@@ -15,9 +15,116 @@
   </head>
   <body>
     <header id="header"></header>
-    <h1>Training Records</h1>
-    <main id="main"></main>
+    <div class="recordsaddrecordheading">
+      <h1>Training Records</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addTrainingBtn"
+        title="Add new Training Record"
+      >
+        +
+      </button>
+    </div>
+
+    <main id="main">
+      <!-- Add Training Record Dialog -->
+      <dialog id="addTrainingDialog" class="dialog">
+        <form id="addTrainingForm" class="cta-form">
+          <div class="form-header">
+            <h2>Add Training Record</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="COURSE_ID"
+                >Course ID <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="COURSE_ID"
+                name="COURSE_ID"
+                placeholder="Enter course ID"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="DATE_TIME"
+                >Date <span class="required">*</span></label
+              >
+              <input type="date" id="DATE_TIME" name="DATE_TIME" required />
+            </div>
+
+            <div class="form-group">
+              <label for="PEOPLE_ID"
+                >Person <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="PEOPLE_ID"
+                name="PEOPLE_ID"
+                placeholder="Enter person ID"
+                style="text-transform: uppercase"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="INSTRUCTOR">Instructor</label>
+              <input
+                type="text"
+                id="INSTRUCTOR"
+                name="INSTRUCTOR"
+                placeholder="Enter instructor ID"
+                style="text-transform: uppercase"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="MINUTES"
+                >Duration (minutes) <span class="required">*</span></label
+              >
+              <input
+                type="number"
+                id="MINUTES"
+                name="MINUTES"
+                placeholder="Enter duration"
+                min="1"
+                step="1"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="LINK">Link</label>
+              <input
+                type="text"
+                id="LINK"
+                name="LINK"
+                placeholder="Enter link"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="saveTrainingBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Training
+            </button>
+            <button type="button" id="closeAddBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for training data -->
+      <div id="trainingTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
+    </main>
     <footer id="footer"></footer>
   </body>
-  <script type="module" src="/js/ctaattend.js"></script>
+  <script type="module" src="/js/ctaattend.mjs"></script>
 </html>

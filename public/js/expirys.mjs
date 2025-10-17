@@ -1,211 +1,311 @@
-import {
-  loadHeaderFooter,
-  createNotesSection,
-  getUserValue,
-  getDateTime,
-  myport,
-} from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+
+// Initialize header/footer
 loadHeaderFooter();
 
-const port = myport();
-let user = await getUserValue();
-
+// Configuration
+const port = myport() || 3004;
 const url = `http://localhost:${port}/expiry`;
+let sortOrder = "asc";
 
-// Function to handle EXPIRATION_ID link click
-function handleExpirationIdClick(item) {
-  return function (e) {
-    e.preventDefault();
-    document.getElementById("modalExpirationId").value = item.EXPIRATION_ID;
-    const dispositionSelect = document.getElementById("modalDisposition");
-    if (dispositionSelect) {
-      Array.from(dispositionSelect.options).forEach((option) => {
-        option.selected = option.value === item.DISPOSITION;
-      });
-    }
-    document.getElementById("dispositionModal").showModal();
-  };
-}
+document.addEventListener("DOMContentLoaded", async function () {
+  setupEventListeners();
+  await loadExpiryData();
+});
 
-const response = await fetch(url);
-if (response.ok) {
-  const data = await response.json();
-  const table = document.createElement("table");
-  const thead = document.createElement("thead");
-  const tbody = document.createElement("tbody");
+function setupEventListeners() {
+  const addExpiryBtn = document.getElementById("addExpiryBtn");
+  if (addExpiryBtn) {
+    addExpiryBtn.addEventListener("click", openAddExpiryDialog);
+  }
 
-  // Get table headers from the first object, excluding CREATE_BY and CREATE_DATE
-  const headers = Object.keys(data[0]).filter(
-    (key) => key !== "CREATE_BY" && key !== "CREATE_DATE"
-  );
-
-  // Helper function to sort data
-  function sortData(data, key, asc) {
-    return [...data].sort((a, b) => {
-      let valA = a[key];
-      let valB = b[key];
-
-      // Try to parse as date if key ends with DATE
-      if (key.endsWith("DATE")) {
-        valA = Date.parse(valA) || valA;
-        valB = Date.parse(valB) || valB;
-      }
-
-      if (valA < valB) return asc ? -1 : 1;
-      if (valA > valB) return asc ? 1 : -1;
-      return 0;
+  const closeAddBtn = document.getElementById("closeAddBtn");
+  if (closeAddBtn) {
+    closeAddBtn.addEventListener("click", () => {
+      document.getElementById("addExpiryDialog").close();
     });
   }
 
-  // Create header row
-  const headerRow = document.createElement("tr");
-  let sortState = {}; // Track sort direction per column
+  const saveExpiryBtn = document.getElementById("saveExpiryBtn");
+  if (saveExpiryBtn) {
+    saveExpiryBtn.addEventListener("click", saveExpiry);
+  }
 
-  headers.forEach((header) => {
+  const closeEditBtn = document.getElementById("closeEditBtn");
+  if (closeEditBtn) {
+    closeEditBtn.addEventListener("click", () => {
+      document.getElementById("dispositionDialog").close();
+    });
+  }
+
+  const saveDispositionBtn = document.getElementById("saveDispositionBtn");
+  if (saveDispositionBtn) {
+    saveDispositionBtn.addEventListener("click", saveDisposition);
+  }
+
+  // Close dialog on outside click for add expiry dialog
+  const addExpiryDialog = document.getElementById("addExpiryDialog");
+  if (addExpiryDialog) {
+    addExpiryDialog.addEventListener("click", (e) => {
+      if (e.target === addExpiryDialog) {
+        addExpiryDialog.close();
+      }
+    });
+  }
+
+  // Close dialog on outside click for disposition dialog
+  const dispositionDialog = document.getElementById("dispositionDialog");
+  if (dispositionDialog) {
+    dispositionDialog.addEventListener("click", (e) => {
+      if (e.target === dispositionDialog) {
+        dispositionDialog.close();
+      }
+    });
+  }
+}
+
+function openAddExpiryDialog() {
+  const dialog = document.getElementById("addExpiryDialog");
+  if (dialog) {
+    document.getElementById("addExpiryForm").reset();
+    dialog.showModal();
+  }
+}
+
+async function saveExpiry() {
+  const form = document.getElementById("addExpiryForm");
+  const formData = new FormData(form);
+
+  try {
+    const data = {
+      PRODUCT_ID: formData.get("PRODUCT_ID").toUpperCase(),
+      DESCRIPTION: formData.get("DESCRIPTION"),
+      EXPIRY_DATE: formData.get("EXPIRY_DATE"),
+      RECV_DATE: formData.get("RECV_DATE"),
+      LOT: formData.get("LOT").toUpperCase(),
+      PO: formData.get("PO").toUpperCase(),
+      MFG_DATE: formData.get("MFG_DATE"),
+      COMMENT: formData.get("COMMENT"),
+    };
+
+    const response = await fetch(url, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    });
+
+    if (response.ok) {
+      document.getElementById("addExpiryDialog").close();
+      await loadExpiryData();
+    } else {
+      const errorText = await response.text();
+      alert(`Failed to save expiry: ${errorText}`);
+    }
+  } catch (error) {
+    console.error("Error saving expiry:", error);
+    alert("Failed to save expiry. Please try again.");
+  }
+}
+
+async function loadExpiryData() {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+    displayExpiryTable(data);
+  } catch (error) {
+    console.error("Error loading expiry data:", error);
+    document.getElementById("expiryTableContainer").innerHTML =
+      '<p class="error">Failed to load expiry data. Please refresh the page.</p>';
+  }
+}
+
+function displayExpiryTable(data) {
+  const container = document.getElementById("expiryTableContainer");
+  if (!container) return;
+
+  if (!data || data.length === 0) {
+    container.innerHTML = "<p>No expiry records found.</p>";
+    return;
+  }
+
+  const table = document.createElement("table");
+  table.className = "data-table";
+
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+
+  const headers = [
+    "ID",
+    "Product ID",
+    "Description",
+    "Expiry Date",
+    "Lot #",
+    "PO #",
+    "Received Date",
+    "Mfg Date",
+    "Disposition",
+    "Comment",
+    "Actions",
+  ];
+
+  headers.forEach((header, index) => {
     const th = document.createElement("th");
     th.textContent = header;
-    th.style.cursor = "pointer";
-    th.addEventListener("click", () => {
-      // Toggle sort direction
-      sortState[header] = !sortState[header];
-      const sortedData = sortData(data, header, sortState[header]);
-      // Clear tbody
-      tbody.innerHTML = "";
-      // Re-render rows
-      sortedData.forEach((item) => {
-        const row = document.createElement("tr");
-        headers.forEach((key) => {
-          const td = document.createElement("td");
-          if (
-            key.endsWith("DATE") &&
-            typeof item[key] === "string" &&
-            item[key].includes("T")
-          ) {
-            td.textContent = item[key].split("T")[0];
-          } else if (key === "EXPIRATION_ID") {
-            const link = document.createElement("a");
-            link.href = "#";
-            link.textContent = item[key];
-            link.addEventListener("click", handleExpirationIdClick(item));
-            td.appendChild(link);
-          } else {
-            td.textContent = item[key];
-          }
-          row.appendChild(td);
-        });
-        tbody.appendChild(row);
-      });
-    });
+
+    if (header !== "Actions") {
+      th.style.cursor = "pointer";
+      th.addEventListener("click", () => sortTable(index));
+    }
+
     headerRow.appendChild(th);
   });
-  thead.appendChild(headerRow);
 
-  // Create data rows
+  thead.appendChild(headerRow);
+  table.appendChild(thead);
+
+  const tbody = document.createElement("tbody");
+  tbody.id = "expiryTableBody";
+
   data.forEach((item) => {
     const row = document.createElement("tr");
-    headers.forEach((key) => {
-      const td = document.createElement("td");
-      if (
-        key.endsWith("DATE") &&
-        typeof item[key] === "string" &&
-        item[key].includes("T")
-      ) {
-        td.textContent = item[key].split("T")[0];
-      } else if (key === "EXPIRATION_ID") {
-        const link = document.createElement("a");
-        link.href = "#";
-        link.textContent = item[key];
-        link.addEventListener("click", handleExpirationIdClick(item));
-        td.appendChild(link);
-      } else if (key === "COMMENT") {
-        td.innerHTML = item[key] ? item[key].replace(/\n/g, "<br>") : "";
-      } else {
-        td.textContent = item[key];
-      }
-      row.appendChild(td);
-    });
+
+    if (item.DISPOSITION === "SCRAP") {
+      row.classList.add("scrap-row");
+    } else if (item.DISPOSITION === "USE") {
+      row.classList.add("use-row");
+    }
+
+    row.innerHTML = `
+      <td>${item.EXPIRATION_ID || ""}</td>
+      <td>${item.PRODUCT_ID || ""}</td>
+      <td>${item.DESCRIPTION || ""}</td>
+      <td>${item.EXPIRY_DATE ? formatDate(item.EXPIRY_DATE) : ""}</td>
+      <td>${item.LOT || ""}</td>
+      <td>${item.PO || ""}</td>
+      <td>${item.RECV_DATE ? formatDate(item.RECV_DATE) : ""}</td>
+      <td>${item.MFG_DATE ? formatDate(item.MFG_DATE) : ""}</td>
+      <td>${item.DISPOSITION || ""}</td>
+      <td>${item.COMMENT || ""}</td>
+      <td>
+        <button type="button" class="btn-secondary" onclick="editDisposition('${
+          item.EXPIRATION_ID
+        }')">
+          <span class="btn-icon">✏️</span> Edit
+        </button>
+      </td>
+    `;
+
     tbody.appendChild(row);
   });
 
-  table.appendChild(thead);
   table.appendChild(tbody);
-
-  // Create scrollable container
-  const tableContainer = document.createElement("div");
-  tableContainer.className = "table-container";
-  tableContainer.style.maxHeight = "calc(80vh - 80px)";
-  tableContainer.style.overflowY = "auto";
-  tableContainer.style.marginBottom = "2rem";
-
-  // Add table to container and container to main
-  tableContainer.appendChild(table);
-  document.getElementById("main").appendChild(tableContainer);
+  container.innerHTML = "";
+  container.appendChild(table);
 }
 
-// listen for saveExpiry and call url and save the form data
-document.getElementById("saveExpiry").addEventListener("click", async () => {
-  const formData = new FormData(document.getElementById("expiryForm"));
-  const data = Object.fromEntries(formData.entries());
+function formatDate(dateString) {
+  if (!dateString) return "";
+  const date = new Date(dateString);
+  return date.toLocaleDateString();
+}
 
-  // Convert empty date strings to null
-  if (data.RECV_DATE === "") data.RECV_DATE = null;
-  if (data.MFG_DATE === "") data.MFG_DATE = null;
-  if (data.EXPIRY_DATE === "") data.EXPIRY_DATE = null;
+function sortTable(columnIndex) {
+  const tbody = document.getElementById("expiryTableBody");
+  if (!tbody) return;
 
-  const nextIdResponse = await fetch(`${url}/nextId`);
-  const nextId = await nextIdResponse.json();
-  data.EXPIRATION_ID = nextId;
-  data.CREATE_BY = user;
-  data.CREATE_DATE = getDateTime();
-  // console.log(nextId);
+  const rows = Array.from(tbody.querySelectorAll("tr"));
+  const headerCells = document.querySelectorAll("thead th");
 
-  const response = await fetch(url, {
-    method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
-    body: JSON.stringify(data),
+  sortOrder = sortOrder === "asc" ? "desc" : "asc";
+
+  rows.sort((a, b) => {
+    const aVal = a.cells[columnIndex].textContent.trim();
+    const bVal = b.cells[columnIndex].textContent.trim();
+
+    if (columnIndex === 0) {
+      const aNum = parseFloat(aVal) || 0;
+      const bNum = parseFloat(bVal) || 0;
+      return sortOrder === "asc" ? aNum - bNum : bNum - aNum;
+    }
+
+    if (columnIndex === 3 || columnIndex === 6 || columnIndex === 7) {
+      const aDate = new Date(aVal) || new Date(0);
+      const bDate = new Date(bVal) || new Date(0);
+      return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
+    }
+
+    return sortOrder === "asc"
+      ? aVal.localeCompare(bVal)
+      : bVal.localeCompare(aVal);
   });
 
-  if (response.ok) {
-    // alert("Expiry saved successfully!");
-    // increment nextId for next entry
-    const incrementResponse = await fetch(`${url}/incrementId`, {
-      method: "PUT",
-    });
-    window.location.reload();
-  } else {
-    alert("Failed to save expiry.");
+  tbody.innerHTML = "";
+  rows.forEach((row) => tbody.appendChild(row));
+
+  updateSortIndicators(headerCells, columnIndex);
+}
+
+function updateSortIndicators(headerCells, activeColumnIndex) {
+  headerCells.forEach((th, index) => {
+    th.textContent = th.textContent.replace(/ [↑↓]$/, "");
+
+    if (index === activeColumnIndex) {
+      const indicator = sortOrder === "asc" ? " ↑" : " ↓";
+      th.textContent += indicator;
+    }
+  });
+}
+
+window.editDisposition = async function (expirationId) {
+  try {
+    const response = await fetch(`${url}/${expirationId}`);
+    if (!response.ok) {
+      throw new Error(`HTTP error! status: ${response.status}`);
+    }
+
+    const data = await response.json();
+
+    document.getElementById("editExpirationId").value = expirationId;
+    document.getElementById("editDisposition").value = data.DISPOSITION || "";
+    document.getElementById("editComment").value = data.COMMENT || "";
+
+    document.getElementById("dispositionDialog").showModal();
+  } catch (error) {
+    console.error("Error loading expiry data for edit:", error);
+    alert("Failed to load expiry data for editing.");
   }
-});
+};
 
-// Save disposition and comment changes
-document
-  .getElementById("saveDisposition")
-  .addEventListener("click", async () => {
-    event.preventDefault();
+async function saveDisposition() {
+  const expirationId = document.getElementById("editExpirationId").value;
+  const disposition = document.getElementById("editDisposition").value;
+  const comment = document.getElementById("editComment").value;
 
-    const expirationId = document.getElementById("modalExpirationId").value;
-    const disposition = document.getElementById("modalDisposition").value;
-    let comment = document.getElementById("modalComment").value.trim();
-
+  try {
     let old_comment = "";
     try {
-      const commentResponse = await fetch(`${url}/${expirationId}`);
-      if (commentResponse.ok) {
-        const item = await commentResponse.json();
-        old_comment = item[0].COMMENT || "";
+      const currentResponse = await fetch(`${url}/${expirationId}`);
+      if (currentResponse.ok) {
+        const currentData = await currentResponse.json();
+        old_comment = currentData.COMMENT || "";
       }
     } catch (err) {
       console.error("Failed to fetch current comment:", err);
     }
-    // Concatenate old_comment and comment unless either is zero length
+
+    let finalComment;
     if (old_comment.length === 0) {
-      comment = comment;
+      finalComment = comment;
     } else if (comment.length === 0) {
-      comment = old_comment;
+      finalComment = old_comment;
     } else {
-      comment = `${comment}\n${old_comment}`;
+      finalComment = `${comment}\n${old_comment}`;
     }
 
     const response = await fetch(`${url}/${expirationId}`, {
@@ -213,18 +313,21 @@ document
       headers: {
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ DISPOSITION: disposition, COMMENT: comment }),
+      body: JSON.stringify({
+        DISPOSITION: disposition,
+        COMMENT: finalComment,
+      }),
     });
 
     if (response.ok) {
-      document.getElementById("dispositionModal").close();
-      window.location.reload();
+      document.getElementById("dispositionDialog").close();
+      await loadExpiryData();
     } else {
-      alert("Failed to update disposition and comment.");
+      const errorText = await response.text();
+      alert(`Failed to update disposition: ${errorText}`);
     }
-  });
-
-// listen for closeEditBtn and close the modal
-document.querySelector("#closeEditBtn").addEventListener("click", () => {
-  document.getElementById("dispositionModal").close();
-});
+  } catch (error) {
+    console.error("Error saving disposition:", error);
+    alert("Failed to update disposition. Please try again.");
+  }
+}

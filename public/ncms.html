@@ -1,24 +1,237 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Nonconformance (CI QMS)</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
-    <div class="recordsaddrecordheading" id="addncmheading">
-        <h1>Nonconformance</h1>
-        <button class="addrecordheadingbutton" id="addncmlink" title="Add new NCM" onclick="location.href='ncmentry.html'">+</button>
+    <div class="recordsaddrecordheading">
+      <h1>Nonconformance</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addNcmBtn"
+        title="Add new NCM"
+      >
+        +
+      </button>
     </div>
-    <main id="main"></main>
-    <footer id="footer"></footer>    
-</body>
-<script type="module" src="/js/ncms.js"></script>
+
+    <main id="main">
+      <!-- Add NCM Dialog -->
+      <dialog id="addNcmDialog" class="dialog">
+        <form id="addNcmForm" class="ncm-form">
+          <div class="form-header">
+            <h2>Add Nonconformance</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="NCM_DATE">Date</label>
+              <input
+                type="date"
+                id="NCM_DATE"
+                name="NCM_DATE"
+                placeholder="Enter NCM date"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="DUE_DATE">Due Date</label>
+              <input
+                type="date"
+                id="DUE_DATE"
+                name="DUE_DATE"
+                placeholder="Enter due date"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="PEOPLE_ID">Requestor</label>
+              <input
+                type="text"
+                id="PEOPLE_ID"
+                name="PEOPLE_ID"
+                placeholder="Enter requestor ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="ASSIGNED_TO">Assignee</label>
+              <select name="ASSIGNED_TO" id="ASSIGNED_TO">
+                <option value="" selected>Select assignee</option>
+                <option value="BOBBI">BOBBI</option>
+                <option value="CHARRISON">CHARRISON</option>
+                <option value="RMATSAMAS">RMATSAMAS</option>
+                <option value="TKENT">TKENT</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="NCM_TYPE">NCM Type</label>
+              <select name="NCM_TYPE" id="NCM_TYPE">
+                <option value="VPP">
+                  Verification of Purchased Product (Receiving Inspection)
+                </option>
+                <option value="WIP" selected>Work In Process (Traveler)</option>
+                <option value="FIN">Final Inspection</option>
+                <option value="RET">Returns incl. Complaints</option>
+                <option value="CAL">Calibration</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="SUBJECT">Subject</label>
+              <select name="SUBJECT" id="SUBJECT">
+                <option value="">Select Subject</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="PRODUCT_ID">Part No.</label>
+              <input
+                type="text"
+                id="PRODUCT_ID"
+                name="PRODUCT_ID"
+                placeholder="Part number"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="PO_NUMBER">PO</label>
+              <input
+                type="text"
+                id="PO_NUMBER"
+                name="PO_NUMBER"
+                placeholder="PO number"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="CAUSE">Cause</label>
+              <input
+                type="text"
+                id="CAUSE"
+                name="CAUSE"
+                placeholder="Enter cause"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="LOT_NUMBER">Lot Number</label>
+              <input
+                type="text"
+                id="LOT_NUMBER"
+                name="LOT_NUMBER"
+                placeholder="Enter lot number (WO)"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="LOT_SIZE">Quantity</label>
+              <input
+                type="number"
+                id="LOT_SIZE"
+                name="LOT_SIZE"
+                placeholder="Enter quantity"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="USER_DEFINED_1">RMA</label>
+              <input
+                type="text"
+                id="USER_DEFINED_1"
+                name="USER_DEFINED_1"
+                placeholder="Enter RMA number"
+              />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="DESCRIPTION"
+                >Nonconformance stmt: <span class="required">*</span></label
+              >
+              <textarea
+                id="DESCRIPTION"
+                name="DESCRIPTION"
+                placeholder="Enter nonconformance text (Should-be/Is)"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="SUPPLIER_ID">Supplier Code</label>
+              <input
+                type="text"
+                id="SUPPLIER_ID"
+                name="SUPPLIER_ID"
+                placeholder="Enter supplier ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="CUSTOMER_ID">Customer Code</label>
+              <input
+                type="text"
+                id="CUSTOMER_ID"
+                name="CUSTOMER_ID"
+                placeholder="Enter customer ID"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="saveNcmBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save NCM
+            </button>
+            <button type="button" id="closeAddBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Trend Edit Dialog -->
+      <dialog id="trendDialog" class="dialog">
+        <div class="dialog-header">
+          <h2 id="trendDialogTitle">Edit Trend Data</h2>
+        </div>
+        <form id="trendForm" class="trend-form">
+          <div id="trendFormContainer" class="form-grid">
+            <!-- Form fields will be dynamically generated here -->
+          </div>
+          <div class="dialog-actions">
+            <button id="saveTrendBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Trend
+            </button>
+            <button type="button" id="closeTrendBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for NCM data -->
+      <div id="ncmTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/ncms.mjs"></script>
 </html>

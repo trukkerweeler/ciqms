@@ -20,7 +20,7 @@
       <h1>Expiry Records</h1>
       <button
         class="addrecordheadingbutton button"
-        id="openModalBtn"
+        id="addExpiryBtn"
         title="Add new Expiry"
       >
         +
@@ -28,165 +28,167 @@
     </div>
 
     <main id="main">
-      <!-- Modal Structure -->
-      <div id="expiryModal" class="modal" style="display: none">
-        <div class="modal-content">
-          <span class="close" id="closeModalBtn">&times;</span>
-          <h2>Add Expiry Record</h2>
-          <form id="expiryForm">
-            <label for="PRODUCT_ID">Product ID</label>
-            <input
-              type="text"
-              id="PRODUCT_ID"
-              name="PRODUCT_ID"
-              required
-              style="text-transform: uppercase"
-              oninput="this.value = this.value.toUpperCase();"
-            />
+      <!-- Add Expiry Dialog -->
+      <dialog id="addExpiryDialog" class="dialog">
+        <form id="addExpiryForm" class="expiry-form">
+          <div class="form-header">
+            <h2>Add Expiry Record</h2>
+          </div>
 
-            <label for="PO">PO</label>
-            <input type="text" id="PO" name="PO" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="PRODUCT_ID"
+                >Product ID <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="PRODUCT_ID"
+                name="PRODUCT_ID"
+                placeholder="Enter product ID"
+                required
+                style="text-transform: uppercase"
+              />
+            </div>
 
-            <label for="DESCRIPTION">Description</label>
-            <input type="text" id="DESCRIPTION" name="DESCRIPTION" />
+            <div class="form-group">
+              <label for="PO">Purchase Order</label>
+              <input
+                type="text"
+                id="PO"
+                name="PO"
+                placeholder="Enter PO number"
+                style="text-transform: uppercase"
+              />
+            </div>
 
-            <label for="LOT">Lot</label>
-            <input
-              type="text"
-              id="LOT"
-              name="LOT"
-              style="text-transform: uppercase"
-              oninput="this.value = this.value.toUpperCase();"
-            />
+            <div class="form-group full-width">
+              <label for="DESCRIPTION">Description</label>
+              <input
+                type="text"
+                id="DESCRIPTION"
+                name="DESCRIPTION"
+                placeholder="Enter product description"
+              />
+            </div>
 
-            <label for="RECV_DATE">Received Date</label>
-            <input type="date" id="RECV_DATE" name="RECV_DATE" />
+            <div class="form-group">
+              <label for="LOT">Lot Number</label>
+              <input
+                type="text"
+                id="LOT"
+                name="LOT"
+                placeholder="Enter lot number"
+                style="text-transform: uppercase"
+              />
+            </div>
 
-            <label for="MFG_DATE">Manufacture Date</label>
-            <input type="date" id="MFG_DATE" name="MFG_DATE" />
+            <div class="form-group">
+              <label for="EXPIRY_DATE"
+                >Expiry Date <span class="required">*</span></label
+              >
+              <input type="date" id="EXPIRY_DATE" name="EXPIRY_DATE" required />
+            </div>
 
-            <label for="EXPIRY_DATE">Expiry Date</label>
-            <input type="date" id="EXPIRY_DATE" name="EXPIRY_DATE" required />
+            <div class="form-group">
+              <label for="RECV_DATE">Received Date</label>
+              <input type="date" id="RECV_DATE" name="RECV_DATE" />
+            </div>
 
-            <label for="COMMENT">Comment</label>
-            <textarea id="COMMENT" name="COMMENT"></textarea>
+            <div class="form-group">
+              <label for="MFG_DATE">Manufacture Date</label>
+              <input type="date" id="MFG_DATE" name="MFG_DATE" />
+            </div>
 
-            <button type="submit" id="saveExpiry">Save</button>
-          </form>
-        </div>
-      </div>
-      <dialog id="dispositionModal" class="modal">
-        <div class="modal-content">
-          <span class="close" id="closeEditBtn" style="cursor: pointer"
-            >&times;</span
-          >
-          <h2>Edit Disposition</h2>
-          <form id="dispositionForm">
-            <label for="modalExpirationId">Expiration ID</label>
-            <input
-              type="text"
-              id="modalExpirationId"
-              name="EXPIRATION_ID"
-              required
-              readonly
-            />
+            <div class="form-group full-width">
+              <label for="COMMENT">Comment</label>
+              <textarea
+                id="COMMENT"
+                name="COMMENT"
+                placeholder="Enter any additional comments..."
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
 
-            <label for="modalDisposition">Disposition</label>
-            <select id="modalDisposition" name="DISPOSITION">
-              <option value="" selected disabled>Select disposition</option>
-              <!-- <option value="E">E</option> -->
-              <!-- <option value="A">A</option> -->
-              <option value="C">Consumed</option>
-              <option value="D">Disposed</option>
-              <option value="H">Hold Area</option>
-            </select>
-
-            <label for="modalComment">Comment</label>
-            <textarea
-              id="modalComment"
-              name="COMMENT"
-              placeholder="Always enter a disposition comment. Note that 'Disposed' means it is not in the building"
-            ></textarea>
-
-            <button type="submit" id="saveDisposition">Save</button>
-            <!-- <button type="button" id="closeEditBtn">Close</button> -->
-          </form>
-        </div>
+          <div class="dialog-actions">
+            <button id="saveExpiryBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Expiry
+            </button>
+            <button type="button" id="closeAddBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
       </dialog>
 
-      <script>
-        // Modal open/close logic
-        const modal = document.getElementById("expiryModal");
-        const openBtn = document.getElementById("openModalBtn");
-        const closeBtn = document.getElementById("closeModalBtn");
+      <!-- Edit Disposition Dialog -->
+      <dialog id="dispositionDialog" class="dialog">
+        <form id="dispositionForm" class="expiry-form">
+          <div class="form-header">
+            <h2>Edit Disposition</h2>
+          </div>
 
-        openBtn.onclick = () => {
-          modal.style.display = "block";
-        };
-        closeBtn.onclick = () => {
-          modal.style.display = "none";
-        };
-        window.onclick = (event) => {
-          if (event.target == modal) modal.style.display = "none";
-        };
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="editExpirationId">Expiration ID</label>
+              <input
+                type="text"
+                id="editExpirationId"
+                name="EXPIRATION_ID"
+                required
+                readonly
+              />
+            </div>
 
-        // Example form submit handler
-        document.getElementById("expiryForm").onsubmit = function (e) {
-          e.preventDefault();
-          // Collect form data and handle as needed
-          const data = Object.fromEntries(new FormData(this).entries());
-          console.log(data);
-          modal.style.display = "none";
-          // Add your data handling logic here
-        };
-      </script>
+            <div class="form-group">
+              <label for="editDisposition"
+                >Disposition <span class="required">*</span></label
+              >
+              <select id="editDisposition" name="DISPOSITION" required>
+                <option value="">Select disposition</option>
+                <option value="SCRAP">Scrap</option>
+                <option value="USE">Use</option>
+                <option value="HOLD">Hold</option>
+              </select>
+            </div>
 
-      <style>
-        .modal {
-          position: fixed;
-          z-index: 1000;
-          left: 0;
-          top: 0;
-          width: 100%;
-          height: 100%;
-          overflow: auto;
-          background: rgba(0, 0, 0, 0.4);
-        }
-        .modal-content {
-          background: #fff;
-          margin: 10% auto;
-          padding: 20px;
-          border-radius: 8px;
-          width: 90%;
-          max-width: 400px;
-          position: relative;
-        }
-        .close {
-          position: absolute;
-          right: 16px;
-          top: 8px;
-          font-size: 28px;
-          cursor: pointer;
-        }
-        .modal-open-btn {
-          margin-bottom: 1em;
-        }
-        form label {
-          display: block;
-          margin-top: 10px;
-        }
-        form input,
-        form select,
-        form textarea {
-          width: 100%;
-          padding: 6px;
-          margin-top: 2px;
-        }
-        form button[type="submit"] {
-          margin-top: 15px;
-          width: 100%;
-        }
-      </style>
+            <div class="form-group full-width">
+              <label for="editComment"
+                >Comment <span class="required">*</span></label
+              >
+              <textarea
+                id="editComment"
+                name="COMMENT"
+                placeholder="Enter disposition comment..."
+                rows="4"
+                required
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button
+              id="saveDispositionBtn"
+              type="submit"
+              class="btn btn-primary"
+            >
+              <span class="btn-icon">✓</span>
+              Save Disposition
+            </button>
+            <button type="button" id="closeEditBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for expiry data -->
+      <div id="expiryTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
     </main>
     <footer id="footer"></footer>
   </body>

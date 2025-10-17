@@ -1,0 +1,16 @@
+{
+  "ui": {
+    "enableRowColors": true,
+    "theme": "default"
+  },
+  "table": {
+    "defaultSortOrder": "desc",
+    "itemsPerPage": 50,
+    "enableStickyHeaders": true
+  },
+  "features": {
+    "enableEmailNotifications": true,
+    "enableAutoSave": false,
+    "enableAdvancedFiltering": true
+  }
+}

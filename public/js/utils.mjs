@@ -685,3 +685,20 @@ export function timestampAndJoinNotes(existingNotes, newNote, user) {
   }
   return updatedNotes;
 }
+
+// =================================================
+// Get application configuration from server
+export async function getConfig() {
+  try {
+    const port = myport() || 3003;
+    const response = await fetch(`http://localhost:${port}/config`);
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching config:", error);
+    return {
+      ui: { enableRowColors: false },
+      table: { defaultSortOrder: "desc" },
+      features: { enableEmailNotifications: true },
+    }; // Default fallback
+  }
+}

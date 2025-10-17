@@ -365,11 +365,558 @@ dialog {
   border-radius: 1rem;
 }
 
+/* Override old dialog form styles for corrective form */
+dialog .corrective-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
 dialog form {
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: 5px;
-  margin-bottom: 25px;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.dialog-actions {
+  grid-column: 1 / -1;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  margin-top: 1rem;
+}
+
+.btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 1rem;
+  transition: background-color 0.2s ease;
+}
+
+.btn-primary {
+  background-color: #007bff;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #0056b3;
+}
+
+.btn-cancel {
+  background-color: #6c757d;
+  color: white;
+}
+
+.btn-cancel:hover {
+  background-color: #545b62;
+}
+
+/* Enhanced Expiry Form Styling */
+.expiry-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for expiry form */
+dialog .expiry-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Enhanced Device Form Styling */
+.device-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for device form */
+dialog .device-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Enhanced Document Form Styling */
+.document-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for document form */
+dialog .document-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Enhanced Corrective Form Styling */
+.corrective-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+.form-header {
+  background: linear-gradient(135deg, #a91730 0%, #8b1229 100%);
+  color: white;
+  padding: 15px 20px;
+  border-radius: 12px 12px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.form-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  font-weight: 600;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+}
+
+.form-grid {
+  display: grid !important;
+  grid-template-columns: 1fr 1fr !important;
+  gap: 15px !important;
+  padding: 15px 20px !important;
+}
+
+.form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.form-group label {
+  font-weight: 600;
+  color: #495057;
+  font-size: 0.9rem;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+.required {
+  color: #dc3545;
+  font-weight: bold;
+}
+
+.form-group input,
+.form-group select,
+.form-group textarea {
+  padding: 12px;
+  border: 2px solid #e9ecef;
+  border-radius: 8px;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+  background-color: white;
+  font-family: inherit;
+}
+
+.form-group input:focus,
+.form-group select:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: #a91730;
+  box-shadow: 0 0 0 3px rgba(169, 23, 48, 0.1);
+  transform: translateY(-1px);
+}
+
+.form-group input:hover,
+.form-group select:hover,
+.form-group textarea:hover {
+  border-color: #ced4da;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.5;
+}
+
+.form-group select {
+  cursor: pointer;
+  background-image: url("data:image/svg+xml,%3csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 20 20'%3e%3cpath stroke='%236b7280' stroke-linecap='round' stroke-linejoin='round' stroke-width='1.5' d='m6 8 4 4 4-4'/%3e%3c/svg%3e");
+  background-position: right 0.75rem center;
+  background-repeat: no-repeat;
+  background-size: 1.5em 1.5em;
+  padding-right: 2.5rem;
+  appearance: none;
+}
+
+.dialog-actions {
+  padding: 15px 20px;
+  display: flex;
+  gap: 1rem;
+  justify-content: flex-end;
+  border-top: 1px solid #e9ecef;
+  background-color: #f8f9fa;
+  border-radius: 0 0 12px 12px;
+}
+
+.btn {
+  padding: 0.75rem 1.5rem;
+  border: none;
+  border-radius: 8px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: 600;
+  transition: all 0.3s ease;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.btn:active {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.btn-primary {
+  background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+  color: white;
+}
+
+.btn-primary:hover {
+  background: linear-gradient(135deg, #218838 0%, #1ea080 100%);
+}
+
+.btn-cancel {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+}
+
+.btn-cancel:hover {
+  background: linear-gradient(135deg, #545b62 0%, #4e555b 100%);
+}
+
+.btn-secondary {
+  background: linear-gradient(135deg, #6c757d 0%, #5a6268 100%);
+  color: white;
+  padding: 0.5rem 1rem;
+  font-size: 0.875rem;
+  min-width: auto;
+  white-space: nowrap;
+}
+
+.btn-secondary:hover {
+  background: linear-gradient(135deg, #5a6268 0%, #495057 100%);
+  transform: translateY(-1px);
+}
+
+/* Enhanced CTA Form Styling */
+.cta-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for cta form */
+dialog .cta-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Enhanced NCM Form Styling */
+.ncm-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for ncm form */
+dialog .ncm-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+.btn-icon {
+  font-size: 1.1rem;
+  font-weight: bold;
+}
+
+/* Enhanced Trend Form Styling */
+.trend-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for trend form */
+dialog .trend-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Enhanced Project Form Styling */
+.project-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for project form */
+dialog .project-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Enhanced Input Form Styling */
+.input-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for input form */
+dialog .input-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Enhanced Supplier Form Styling */
+.supplier-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for supplier form */
+dialog .supplier-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Projects Page - No Scrollbar Layout */
+.projects-page {
+  height: 100vh;
+  overflow: hidden;
+  display: flex;
+  flex-direction: column;
+}
+
+.projects-page main {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  padding: 10px;
+}
+
+.projects-page #projectTableContainer {
+  flex: 1;
+  overflow-y: auto;
+  min-height: 0;
+  max-height: calc(100vh - 200px);
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+.projects-page .data-table {
+  margin-bottom: 0 !important;
+}
+
+.projects-page .recordsaddrecordheading {
+  flex-shrink: 0;
+  margin-bottom: 5px;
+}
+
+.projects-page #footer {
+  flex-shrink: 0;
+}
+
+/* Dialog backdrop styling */
+dialog {
+  border: none;
+  border-radius: 12px;
+  padding: 0;
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+}
+
+dialog::backdrop {
+  background: rgba(0, 0, 0, 0.6);
+  backdrop-filter: blur(4px);
+}
+
+/* Responsive design for smaller screens */
+@media (max-width: 768px) {
+  .corrective-form,
+  .document-form,
+  .device-form,
+  .expiry-form {
+    min-width: 90vw;
+    max-width: 95vw;
+  }
+
+  .form-grid {
+    grid-template-columns: 1fr;
+    padding: 20px;
+    gap: 16px;
+  }
+
+  .form-header {
+    padding: 16px;
+  }
+
+  .dialog-actions {
+    padding: 16px;
+    flex-direction: column;
+  }
+  .btn {
+    width: 100%;
+    justify-content: center;
+  }
+}
+
+/* Dialog form specific styling */
+dialog form h2 {
+  grid-column: 1 / -1;
+  margin: 0 0 1rem 0;
+  color: #333;
+  text-align: center;
+}
+
+dialog form textarea {
+  grid-column: 1 / -1;
+  min-height: 80px;
+  resize: vertical;
+  font-family: inherit;
+}
+
+dialog form label {
+  align-self: center;
+  font-weight: 500;
+}
+
+dialog form input,
+dialog form select,
+dialog form textarea {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  font-size: 1rem;
+}
+
+dialog form input:focus,
+dialog form select:focus,
+dialog form textarea:focus {
+  outline: none;
+  border-color: #007bff;
+  box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.25);
 }
 
 button {
@@ -1455,4 +2002,76 @@ body:has(script[src*="devices.mjs"]) #main {
 body:has(script[src*="devices.mjs"]) #deviceFilter {
   margin: 0 !important;
   padding: 0 !important;
+}
+
+/* Supplier QMS Form Styling */
+.supplier-qms-form {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 2rem;
+  border-radius: 12px;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+  max-width: 600px;
+  margin: 0 auto;
+}
+
+.supplier-qms-form .form-header h2 {
+  margin: 0 0 1.5rem 0;
+  color: white;
+  text-align: center;
+  font-size: 1.5rem;
+}
+
+.supplier-qms-form .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.supplier-qms-form .form-group {
+  display: flex;
+  flex-direction: column;
+}
+
+.supplier-qms-form .form-group.full-width {
+  grid-column: 1 / -1;
+}
+
+.supplier-qms-form label {
+  margin-bottom: 0.5rem;
+  font-weight: 600;
+  color: #f0f0f0;
+}
+
+.supplier-qms-form input,
+.supplier-qms-form select,
+.supplier-qms-form textarea {
+  padding: 0.75rem;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  border-radius: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  color: white;
+  font-size: 1rem;
+  backdrop-filter: blur(10px);
+  transition: all 0.3s ease;
+}
+
+.supplier-qms-form input::placeholder,
+.supplier-qms-form textarea::placeholder {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.supplier-qms-form input:focus,
+.supplier-qms-form select:focus,
+.supplier-qms-form textarea:focus {
+  outline: none;
+  border-color: rgba(255, 255, 255, 0.8);
+  background: rgba(255, 255, 255, 0.2);
+  box-shadow: 0 0 0 3px rgba(255, 255, 255, 0.1);
+}
+
+.supplier-qms-form .required {
+  color: #ffeb3b;
+  font-weight: bold;
 }

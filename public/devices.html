@@ -32,80 +32,148 @@
     </div>
     <main id="main">
       <dialog create-device-dialog class="dialog">
-        <form id="create-device-form">
-          <h2>Create Device Record</h2>
-          <label for="device-id">Device ID:</label>
-          <input
-            type="text"
-            id="device-id"
-            name="DEVICE_ID"
-            style="text-transform: uppercase"
-            required
-          />
+        <form id="create-device-form" class="device-form">
+          <div class="form-header">
+            <h2>Add Device Record</h2>
+          </div>
 
-          <label for="name">Name:</label>
-          <input type="text" id="name" name="NAME" autocomplete="name" />
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="device-id"
+                >Device ID <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="device-id"
+                name="DEVICE_ID"
+                placeholder="Enter device ID"
+                style="text-transform: uppercase"
+                required
+              />
+            </div>
 
-          <label for="status">Status:</label>
-          <select id="status" name="STATUS">
-            <option value="C">Current</option>
-            <option value="E">Expired</option>
-            <option value="X">Extend</option>
-            <option value="D">Disposed</option>
-          </select>
+            <div class="form-group">
+              <label for="status">Status <span class="required">*</span></label>
+              <select id="status" name="STATUS" required>
+                <option value="C" selected>Current</option>
+                <option value="E">Expired</option>
+                <option value="X">Extend</option>
+                <option value="D">Disposed</option>
+              </select>
+            </div>
 
-          <label for="device-type">Device Type:</label>
-          <input
-            type="text"
-            id="device-type"
-            name="DEVICE_TYPE"
-            style="text-transform: uppercase"
-          />
+            <div class="form-group full-width">
+              <label for="name"
+                >Device Name <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="name"
+                name="NAME"
+                placeholder="Enter device name"
+                autocomplete="name"
+                required
+              />
+            </div>
 
-          <label for="manufacturer-name">Manufacturer Name:</label>
-          <input type="text" id="manufacturer-name" name="MANUFACTURER_NAME" />
+            <div class="form-group">
+              <label for="device-type">Device Type</label>
+              <input
+                type="text"
+                id="device-type"
+                name="DEVICE_TYPE"
+                placeholder="Enter device type"
+                style="text-transform: uppercase"
+              />
+            </div>
 
-          <label for="model">Model:</label>
-          <input type="text" id="model" name="MODEL" required />
+            <div class="form-group">
+              <label for="model">Model <span class="required">*</span></label>
+              <input
+                type="text"
+                id="model"
+                name="MODEL"
+                placeholder="Enter model"
+                required
+              />
+            </div>
 
-          <label for="serial-number">Serial Number:</label>
-          <input type="text" id="serial-number" name="SERIAL_NUMBER" />
+            <div class="form-group full-width">
+              <label for="manufacturer-name">Manufacturer Name</label>
+              <input
+                type="text"
+                id="manufacturer-name"
+                name="MANUFACTURER_NAME"
+                placeholder="Enter manufacturer name"
+              />
+            </div>
 
-          <label for="major-location">Major Location:</label>
-          <input
-            type="text"
-            id="major-location"
-            name="MAJOR_LOCATION"
-            style="text-transform: uppercase"
-          />
+            <div class="form-group">
+              <label for="serial-number">Serial Number</label>
+              <input
+                type="text"
+                id="serial-number"
+                name="SERIAL_NUMBER"
+                placeholder="Enter serial number"
+              />
+            </div>
 
-          <label for="minor-location">Minor Location:</label>
-          <input
-            type="text"
-            id="minor-location"
-            name="MINOR_LOCATION"
-            style="text-transform: uppercase"
-          />
+            <div class="form-group">
+              <label for="purchase-date">Purchase Date</label>
+              <input type="date" id="purchase-date" name="PURCHASE_DATE" />
+            </div>
 
-          <label for="purchase-date">Purchase Date:</label>
-          <input type="date" id="purchase-date" name="PURCHASE_DATE" />
+            <div class="form-group">
+              <label for="major-location">Major Location</label>
+              <input
+                type="text"
+                id="major-location"
+                name="MAJOR_LOCATION"
+                placeholder="Enter major location"
+                style="text-transform: uppercase"
+              />
+            </div>
 
-          <label for="purchase-price">Purchase Price:</label>
-          <input
-            type="number"
-            id="purchase-price"
-            name="PURCHASE_PRICE"
-            step="0.01"
-          />
+            <div class="form-group">
+              <label for="minor-location">Minor Location</label>
+              <input
+                type="text"
+                id="minor-location"
+                name="MINOR_LOCATION"
+                placeholder="Enter minor location"
+                style="text-transform: uppercase"
+              />
+            </div>
 
-          <label for="next-date">Next Date:</label>
-          <input type="date" id="next-date" name="NEXT_DATE" />
+            <div class="form-group">
+              <label for="purchase-price">Purchase Price</label>
+              <input
+                type="number"
+                id="purchase-price"
+                name="PURCHASE_PRICE"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="next-date">Next Calibration Date</label>
+              <input type="date" id="next-date" name="NEXT_DATE" />
+            </div>
+          </div>
 
           <div class="dialog-actions">
-            <button id="create-device-button" class="btn btn-primary">
-              Create
+            <button
+              id="create-device-button"
+              type="submit"
+              class="btn btn-primary"
+            >
+              <span class="btn-icon">✓</span>
+              Create Device
             </button>
             <button type="button" id="cancel-dialog" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
               Cancel
             </button>
           </div>

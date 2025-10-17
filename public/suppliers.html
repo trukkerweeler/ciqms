@@ -16,9 +16,144 @@
   </head>
   <body>
     <header id="header"></header>
-    <h1>Suppliers View</h1>
-    <main id="main"></main>
+    <div class="recordsaddrecordheading">
+      <h1>Suppliers</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addSupplierBtn"
+        title="Add Supplier"
+      >
+        +
+      </button>
+    </div>
+    <main id="main">
+      <!-- Add Supplier Dialog -->
+      <dialog id="addSupplierDialog" class="dialog">
+        <div class="dialog-header">
+          <h2>Add New Supplier</h2>
+        </div>
+        <form id="addSupplierForm" class="supplier-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="SUPPLIER_ID" class="required">Supplier ID</label>
+              <input
+                type="text"
+                id="SUPPLIER_ID"
+                name="SUPPLIER_ID"
+                required
+                placeholder="Enter supplier ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="NAME" class="required">Supplier Name</label>
+              <input
+                type="text"
+                id="NAME"
+                name="NAME"
+                required
+                placeholder="Enter supplier name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="CITY">City</label>
+              <input
+                type="text"
+                id="CITY"
+                name="CITY"
+                placeholder="Enter city"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="STATE">State</label>
+              <input
+                type="text"
+                id="STATE"
+                name="STATE"
+                placeholder="Enter state/province"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="ZIP">Code (Zip)</label>
+              <input type="text" id="ZIP" name="ZIP" placeholder="Enter code" />
+            </div>
+
+            <div class="form-group">
+              <label for="STATUS">Status</label>
+              <select name="STATUS" id="STATUS">
+                <option value="A">Approved</option>
+                <option value="I">Inactive</option>
+                <option value="P" selected>Pending</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="SCOPE">Cmmdty/Srvce</label>
+              <input
+                type="text"
+                id="SCOPE"
+                name="SCOPE"
+                placeholder="Leave one space between each commodity/service code"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="FIRST_NAME">First Name</label>
+              <input
+                type="text"
+                id="FIRST_NAME"
+                name="FIRST_NAME"
+                placeholder="Enter contact first name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="LAST_NAME">Last Name</label>
+              <input
+                type="text"
+                id="LAST_NAME"
+                name="LAST_NAME"
+                placeholder="Enter contact last name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="WORK_EMAIL_ADDRESS">Email</label>
+              <input
+                type="email"
+                id="WORK_EMAIL_ADDRESS"
+                name="WORK_EMAIL_ADDRESS"
+                placeholder="Enter email"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="saveSupplierBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Supplier
+            </button>
+            <button
+              type="button"
+              id="closeAddSupplierBtn"
+              class="btn btn-cancel"
+            >
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for supplier data -->
+      <div id="supplierTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
+    </main>
     <footer id="footer"></footer>
   </body>
-  <script type="module" src="/js/suppliers.js"></script>
+  <script type="module" src="/js/suppliers.mjs"></script>
 </html>

@@ -1,24 +1,105 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Projects</title>
-</head>
-<body>
+  </head>
+  <body class="projects-page">
     <header id="header"></header>
-    <div class="recordsaddrecordheading" id="addprojectheading">
-        <h1>Project Records</h1>
-        <button class="addrecordheadingbutton" id="addprojectlink" title="Add Project" onclick="location.href='projectentry.html'">+</button>
+    <div class="recordsaddrecordheading">
+      <h1>Project Records</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addProjectBtn"
+        title="Add Project"
+      >
+        +
+      </button>
     </div>
-    <main id="main"></main>
-    <footer id="footer"></footer>    
-</body>
-<script type="module" src="/js/projects.js"></script>
+    <main>
+      <!-- Add Project Dialog -->
+      <dialog id="addProjectDialog" class="dialog">
+        <div class="dialog-header">
+          <h2>Add New Project</h2>
+        </div>
+        <form id="addProjectForm" class="project-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="LEADER" class="required">Assignee</label>
+              <input
+                type="text"
+                id="LEADER"
+                name="LEADER"
+                required
+                placeholder="Enter Leader ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="PROJECT_TYPE">Project Type</label>
+              <select name="PROJECT_TYPE" id="PROJECT_TYPE">
+                <option value="CAR">Corrective</option>
+                <option value="CTRL">Control</option>
+                <option value="QMS" selected>QMS</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="NAME" class="required">Project Name</label>
+              <input
+                type="text"
+                id="NAME"
+                name="NAME"
+                required
+                placeholder="Enter project name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="PROJECT_ID" class="required">Project ID</label>
+              <input
+                type="text"
+                id="PROJECT_ID"
+                name="PROJECT_ID"
+                required
+                placeholder="Project ID"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="saveProjectBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Project
+            </button>
+            <button
+              type="button"
+              id="closeAddProjectBtn"
+              class="btn btn-cancel"
+            >
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for project data -->
+      <div id="projectTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/projects.mjs"></script>
 </html>

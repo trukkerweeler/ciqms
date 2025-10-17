@@ -29,6 +29,26 @@ app.use((req, res, next) => {
   next();
 });
 
+// Configuration endpoint
+app.get("/config", (req, res) => {
+  try {
+    const fs = require("fs");
+    const path = require("path");
+    const configPath = path.join(__dirname, "ncm.config.json");
+    const configData = fs.readFileSync(configPath, "utf8");
+    const config = JSON.parse(configData);
+    res.json(config);
+  } catch (error) {
+    console.error("Error reading config file:", error);
+    // Fallback configuration
+    res.json({
+      ui: { enableRowColors: false },
+      table: { defaultSortOrder: "desc" },
+      features: { enableEmailNotifications: true },
+    });
+  }
+});
+
 const inputRoutes = require("./routes/input");
 app.use("/input", inputRoutes);
 
@@ -138,6 +158,13 @@ app.use("/subjectmaint", subjectmaintRoutes);
 
 const causemaintRoutes = require("./routes/causemaint");
 app.use("/causemaint", causemaintRoutes);
+
+// Serve training files from a dedicated directory
+const path = require("path");
+// Use a network path that all users can access, or fallback to local
+const trainingFilesPath =
+  process.env.TRAINING_FILES_PATH || path.join(__dirname, "training-files");
+app.use("/training-files", express.static(trainingFilesPath));
 
 app.listen(port, async () => {
   console.log(`Example app listening at http://localhost:${port}`);

@@ -1,27 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Correctives (CI QMS)</title>
-</head>
+  </head>
 
-<body>
+  <body>
     <header id="header"></header>
     <div class="recordsaddrecordheading" id="addncmheading">
-        <h1>Corrective Records</h1>
-        <button class="addrecordheadingbutton" id="addcalink" title="Add new CA" onclick="location.href='correctiveentry.html'">+</button>
+      <h1>Corrective Records</h1>
+      <button
+        class="addrecordheadingbutton"
+        id="btnAddCorrective"
+        title="Add new CA"
+      >
+        +
+      </button>
     </div>
-    <main id="main"></main>    
-    <footer id="footer"></footer>
-</body>
+    <main id="main"></main>
 
-<script type="module" src="/js/correctives.js"></script>
+    <dialog create-corrective-dialog class="dialog">
+      <form id="corrective-form" class="corrective-form">
+        <div class="form-header">
+          <h2>Add Corrective Record</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="corrdate">Date <span class="required">*</span></label>
+            <input type="date" name="CORRECTIVE_DATE" id="corrdate" required />
+          </div>
+
+          <div class="form-group">
+            <label for="corType"
+              >Corrective Type <span class="required">*</span></label
+            >
+            <select name="corType" id="corType" required>
+              <option value="IA" selected>Internal Audit</option>
+              <option value="Supplier">Supplier</option>
+              <option value="Product">Product</option>
+              <option value="Customer">Customer</option>
+              <option value="3PA">Audit</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="reqby">Requestor <span class="required">*</span></label>
+            <input
+              type="text"
+              name="REQUEST_BY"
+              id="reqby"
+              placeholder="Enter requestor ID"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="assto"
+              >Assigned to <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              name="ASSIGNED_TO"
+              id="assto"
+              placeholder="Enter assigned ID"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="reference">Reference</label>
+            <input
+              type="text"
+              name="REFERENCE"
+              id="reference"
+              placeholder="Enter reference (QMS clause)"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="ud1">External Reference</label>
+            <input
+              type="text"
+              name="USER_DEFINED_1"
+              id="ud1"
+              placeholder="External Reference"
+            />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="catitle">Title <span class="required">*</span></label>
+            <input
+              type="text"
+              name="TITLE"
+              id="catitle"
+              placeholder="Enter descriptive title"
+              required
+            />
+          </div>
+
+          <div class="form-group full-width">
+            <label for="nc">Nonconformance Description</label>
+            <textarea
+              name="NC_TREND"
+              id="nc"
+              placeholder="Describe the nonconformance in detail..."
+              rows="4"
+            ></textarea>
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <button
+            id="create-corrective-button"
+            type="submit"
+            class="btn btn-primary"
+          >
+            <span class="btn-icon">✓</span>
+            Create Record
+          </button>
+          <button
+            type="button"
+            id="cancel-corrective-dialog"
+            class="btn btn-cancel"
+          >
+            <span class="btn-icon">✕</span>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </dialog>
+
+    <footer id="footer"></footer>
+  </body>
+
+  <script type="module" src="/js/correctives.mjs"></script>
 </html>

@@ -1,28 +1,150 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Inputs (CIQMS)</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
     <div class="recordsaddrecordheading">
-        <h1>Input Records</h1>
-        <button class="addinputheadingbutton button" id="addinputlink" title="Add new Input" onclick="location.href='inputentry.html'">+</button>
+      <h1>Input Records</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addInputBtn"
+        title="Add new Input"
+      >
+        +
+      </button>
     </div>
     <div id="subjectFilter">
-        <label for="subject">Filter by Subject:</label>
-        <input type="text" id="subject">
+      <label for="subject">Filter by Subject:</label>
+      <input type="text" id="subject" />
     </div>
-    <main id="main"></main>
-    <footer id="footer"></footer>    
-</body>
-<script type="module" src="/js/inputs.js"></script>
+    <main id="main">
+      <!-- Add Input Dialog -->
+      <dialog id="addInputDialog" class="dialog">
+        <div class="dialog-header">
+          <h2>Add New Input</h2>
+        </div>
+        <form id="addInputForm" class="input-form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="INPUT_DATE">Action Date</label>
+              <input
+                type="date"
+                id="INPUT_DATE"
+                name="INPUT_DATE"
+                placeholder="Enter action date"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="DUE_DATE">Due Date</label>
+              <input
+                type="date"
+                id="DUE_DATE"
+                name="DUE_DATE"
+                placeholder="Enter due date"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="PEOPLE_ID">Requestor</label>
+              <input
+                type="text"
+                id="PEOPLE_ID"
+                name="PEOPLE_ID"
+                placeholder="Enter requestor ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="ASSIGNED_TO">Assignee</label>
+              <input
+                type="text"
+                id="ASSIGNED_TO"
+                name="ASSIGNED_TO"
+                placeholder="Enter assigned ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="INPUT_TYPE">Input Type</label>
+              <select name="INPUT_TYPE" id="INPUT_TYPE">
+                <option value="REQ" selected>Request</option>
+                <option value="BUY">Purchase</option>
+                <option value="EVAL">Evaluate</option>
+                <option value="FIND">Find</option>
+                <option value="SCH">Schedule</option>
+                <option value="REP">Repair</option>
+                <option value="DATA">Collect Data</option>
+                <option value="RISK">Risk</option>
+                <option value="OPPR">Opportunity</option>
+                <option value="TRN">Train</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="SUBJECT" class="required">Subject</label>
+              <input
+                type="text"
+                id="SUBJECT"
+                name="SUBJECT"
+                required
+                placeholder="Enter subject"
+              />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="INPUT_TEXT">Request</label>
+              <textarea
+                id="INPUT_TEXT"
+                name="INPUT_TEXT"
+                placeholder="Enter request text..."
+                rows="4"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="PROJECT_ID">Project</label>
+              <input
+                type="text"
+                id="PROJECT_ID"
+                name="PROJECT_ID"
+                placeholder="Project ID"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="saveInputBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Input
+            </button>
+            <button type="button" id="closeAddInputBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for input data -->
+      <div id="inputTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/inputs.mjs"></script>
 </html>

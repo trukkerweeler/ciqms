@@ -1,26 +1,108 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Approved Suppliers List</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
-    <h1>Approved Suppliers List</h1>
-    
+    <div class="recordsaddrecordheading">
+      <h1>Approved Suppliers List</h1>
+      <button
+        class="addrecordheadingbutton"
+        id="addQmsBtn"
+        title="Add QMS Certification"
+      >
+        +
+      </button>
+    </div>
+
     <main id="main"></main>
-    
+
+    <!-- Add QMS Dialog -->
+    <dialog id="addQmsDialog" class="dialog">
+      <form id="addQmsForm" class="supplier-qms-form">
+        <div class="form-header">
+          <h2>Add Supplier QMS Certification</h2>
+        </div>
+
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="SUPPLIER_ID"
+              >Supplier ID <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              name="SUPPLIER_ID"
+              id="supplier_id"
+              placeholder="Enter supplier ID"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="QMS">QMS <span class="required">*</span></label>
+            <select name="QMS" id="qms" required>
+              <option value="AS9100" selected>AS 9100</option>
+              <option value="AS9120">AS 9120</option>
+              <option value="ISO9001">ISO 9001</option>
+              <option value="A2LA">A2LA</option>
+              <option value="ASA100">ASA 100</option>
+              <option value="AC7004">AC 7004 (NADCAP QMS)</option>
+              <option value="HEAT">HEAT (NADCAP)</option>
+              <option value="WELD">WELD (NADCAP)</option>
+              <option value="BASIC">Basic QMS</option>
+              <option value="ISO17025">ISO 17025</option>
+            </select>
+          </div>
+
+          <div class="form-group">
+            <label for="CERTIFICATE"
+              >Certificate No <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              name="CERTIFICATE"
+              id="certificate"
+              placeholder="Enter certificate number"
+              required
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="EXPIRY_DATE"
+              >Expiry Date <span class="required">*</span></label
+            >
+            <input type="date" name="EXPIRY_DATE" id="expiry_date" required />
+          </div>
+        </div>
+
+        <div class="dialog-actions">
+          <button type="submit" id="saveQmsBtn" class="btn btn-primary">
+            <span class="btn-icon">✓</span>
+            Add Certification
+          </button>
+          <button type="button" id="closeQmsBtn" class="btn btn-cancel">
+            <span class="btn-icon">✕</span>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </dialog>
+
     <footer id="footer">
-        <p>Substitute form F8400-3 Approved Suppliers List</p>
+      <p>Substitute form F8400-3 Approved Suppliers List</p>
     </footer>
-    
-</body>
-<script type="module" src="/js/supplierlist.js"></script>
+  </body>
+  <script type="module" src="/js/supplierlist.mjs"></script>
 </html>

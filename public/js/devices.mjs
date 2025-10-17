@@ -18,7 +18,28 @@ if (!addDeviceBtn) {
     e.preventDefault();
     const createDialog = document.querySelector("[create-device-dialog]");
     if (createDialog) {
+      // Set default values
+      const purchaseDateField = document.getElementById("purchase-date");
+      if (purchaseDateField && !purchaseDateField.value) {
+        purchaseDateField.value = new Date().toISOString().slice(0, 10);
+      }
+
       createDialog.showModal();
+
+      // Close dialog on outside click
+      createDialog.addEventListener("click", (e) => {
+        if (e.target === createDialog) {
+          createDialog.close();
+        }
+      });
+
+      // Handle ESC key
+      createDialog.addEventListener("keydown", (e) => {
+        if (e.key === "Escape") {
+          createDialog.close();
+        }
+      });
+
       const closeButton = createDialog.querySelector("#cancel-dialog");
       if (closeButton) {
         closeButton.addEventListener("click", () => {
@@ -32,13 +53,7 @@ if (!addDeviceBtn) {
           const formData = new FormData(createDialog.querySelector("form"));
           const deviceData = Object.fromEntries(formData.entries());
           // Validate required fields
-          const requiredFields = [
-            "DEVICE_ID",
-            "NAME",
-            "DEVICE_TYPE",
-            "STATUS",
-            "MAJOR_LOCATION",
-          ];
+          const requiredFields = ["DEVICE_ID", "NAME", "MODEL"];
           for (const field of requiredFields) {
             if (!deviceData[field]) {
               alert(`Please fill in the required field: ${field}`);
