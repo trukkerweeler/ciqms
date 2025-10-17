@@ -51,6 +51,14 @@ function setupEventListeners() {
     });
   }
 
+  // Show closed records toggle
+  const showClosedToggle = document.getElementById("showClosedToggle");
+  if (showClosedToggle) {
+    showClosedToggle.addEventListener("change", () => {
+      loadInputData();
+    });
+  }
+
   // Subject filter functionality
   const subjectFilter = document.querySelector("#subjectFilter input");
   if (subjectFilter) {
@@ -219,13 +227,19 @@ async function sendEmailNotification(dataJson, nextId, myRequestDate) {
 
 async function loadInputData() {
   try {
-    const response = await fetch(url);
+    const showClosedToggle = document.getElementById("showClosedToggle");
+    const includeClosed = showClosedToggle ? showClosedToggle.checked : false;
+
+    // Choose endpoint based on toggle state
+    const endpoint = includeClosed ? `${url}/closed` : url;
+
+    const response = await fetch(endpoint);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
     const data = await response.json();
-    displayInputTable(data);
+    displayInputTable(data, includeClosed);
   } catch (error) {
     console.error("Error loading input data:", error);
     document.getElementById("inputTableContainer").innerHTML =
@@ -233,32 +247,30 @@ async function loadInputData() {
   }
 }
 
-function displayInputTable(data) {
+function displayInputTable(data, includeClosed = false) {
   const container = document.getElementById("inputTableContainer");
   if (!container) return;
 
   if (!data || data.length === 0) {
-    container.innerHTML = "<p>No input records found.</p>";
+    const message = includeClosed
+      ? "No input records found."
+      : "No open input records found.";
+    container.innerHTML = `<p>${message}</p>`;
     return;
   }
 
-  // Create table container for scrolling
+  // Clear container
+  container.innerHTML = "";
+
+  // Create scrollable table container
   const tableContainer = document.createElement("div");
-  tableContainer.setAttribute("class", "table-container");
-  tableContainer.style.maxHeight = "calc(75vh - 60px)";
-  tableContainer.style.overflowY = "auto";
-  tableContainer.style.marginBottom = "2rem";
+  tableContainer.className = "table-container scrollable-table";
 
   const table = document.createElement("table");
   table.className = "data-table";
-  table.style.marginBottom = "0";
 
   // Create header
   const thead = document.createElement("thead");
-  thead.style.position = "sticky";
-  thead.style.top = "0";
-  thead.style.zIndex = "1";
-
   const headerRow = document.createElement("tr");
 
   // Define preferred column order for inputs
@@ -311,11 +323,26 @@ function displayInputTable(data) {
     const row = document.createElement("tr");
 
     // Apply row styling based on closed status (if enabled in config)
-    if (config && config.ui && config.ui.enableRowColors) {
+    if (config && config.inputs && config.inputs.enableRowColors) {
       if (item.CLOSED === "Y") {
-        row.style.backgroundColor = "#d4edda"; // Green for closed
+        const closedColor = config.inputs.colorScheme?.closed || "#d4edda";
+        row.style.backgroundColor = closedColor; // Green for closed
       } else {
-        row.style.backgroundColor = "#f8d7da"; // Light red for open
+        // Check if item is past due or due soon
+        const dueDate = new Date(item.DUE_DATE);
+        const today = new Date();
+        const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
+
+        if (daysDiff < 0) {
+          // Past due
+          const pastDueColor = config.inputs.colorScheme?.pastDue || "#ffebee";
+          row.style.backgroundColor = pastDueColor;
+        } else if (daysDiff <= 3) {
+          // Due soon (within 3 days)
+          const dueSoonColor = config.inputs.colorScheme?.dueSoon || "#fff3e0";
+          row.style.backgroundColor = dueSoonColor;
+        }
+        // No background color for items due more than 3 days out
       }
     }
 
@@ -345,8 +372,8 @@ function displayInputTable(data) {
   });
 
   table.appendChild(tbody);
-  container.innerHTML = "";
-  container.appendChild(table);
+  tableContainer.appendChild(table);
+  container.appendChild(tableContainer);
 }
 
 function formatFieldName(fieldName) {

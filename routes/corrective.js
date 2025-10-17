@@ -1,6 +1,128 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const fs = require("fs");
+const path = require("path");
+
+// ==================================================
+// Corrective Action Folder Creation Function
+function createCorrectiveFolder(correctiveId) {
+  try {
+    // Get 4-digit current year
+    const currentYear = new Date().getFullYear().toString();
+
+    const caFilesLocation = `K:\\Quality - Records\\10200 - Corrective Actions\\${currentYear}`;
+
+    // Check if the year folder exists, if not create it
+    if (!fs.existsSync(caFilesLocation)) {
+      fs.mkdirSync(caFilesLocation, { recursive: true });
+      console.log("Corrective Actions year folder created:", caFilesLocation);
+    }
+
+    // Create folder for this specific Corrective Action ID
+    const correctiveFolderPath = path.join(caFilesLocation, correctiveId);
+
+    if (!fs.existsSync(correctiveFolderPath)) {
+      fs.mkdirSync(correctiveFolderPath, { recursive: true });
+      console.log(
+        "Corrective Action folder created:",
+        correctiveId,
+        "at",
+        correctiveFolderPath
+      );
+    } else {
+      console.log("Corrective Action folder already exists for:", correctiveId);
+    }
+  } catch (error) {
+    console.error(
+      "Error creating Corrective Action folder for",
+      correctiveId,
+      ":",
+      error.message
+    );
+    // Don't throw error - folder creation failure shouldn't break corrective action creation
+  }
+}
+
+// ==================================================
+// Function to create folders for all open Corrective Actions (equivalent to makedirectory)
+function makeCorrectiveFolders() {
+  try {
+    const currentYear = new Date().getFullYear().toString();
+    const caFilesLocation = `K:\\Quality - Records\\10200 - Corrective Actions\\${currentYear}`;
+
+    // Check if the year folder exists, if not create it
+    if (!fs.existsSync(caFilesLocation)) {
+      fs.mkdirSync(caFilesLocation, { recursive: true });
+      console.log("Corrective Actions year folder created:", caFilesLocation);
+    }
+
+    // Get list of existing folders
+    const existingFolders = fs.readdirSync(caFilesLocation);
+    const hasFolders = existingFolders.map((folder) => folder.substring(0, 7)); // First 7 characters (CA ID)
+
+    // Get all open Corrective Action records from database
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error(
+          "Error connecting to DB for corrective folder creation:",
+          err.stack
+        );
+        return;
+      }
+
+      const query =
+        "SELECT CORRECTIVE_ID, CLOSED FROM CORRECTIVE WHERE CLOSED = 'N'";
+
+      connection.query(query, (err, rows) => {
+        if (err) {
+          console.log(
+            "Failed to query for Corrective Action folder creation:",
+            err
+          );
+          connection.end();
+          return;
+        }
+
+        rows.forEach((row) => {
+          const correctiveId = row.CORRECTIVE_ID;
+
+          // Create folder if it doesn't already exist
+          if (!hasFolders.includes(correctiveId)) {
+            try {
+              const correctiveFolderPath = path.join(
+                caFilesLocation,
+                correctiveId
+              );
+              fs.mkdirSync(correctiveFolderPath, { recursive: true });
+              console.log("Corrective Action folder created:", correctiveId);
+            } catch (folderError) {
+              console.error(
+                "Error creating folder for",
+                correctiveId,
+                ":",
+                folderError.message
+              );
+            }
+          }
+        });
+
+        console.log("makeCorrectiveFolders done");
+        connection.end();
+      });
+    });
+  } catch (error) {
+    console.error("Error in makeCorrectiveFolders:", error.message);
+  }
+}
 
 // ==================================================
 // Get all records
@@ -40,8 +162,6 @@ router.get("/", (req, res) => {
     });
   });
 });
-
-
 
 // Get the next ID for a new record
 router.get("/nextId", (req, res) => {
@@ -182,6 +302,9 @@ router.post("/", (req, res) => {
           res.sendStatus(500);
           return;
         }
+
+        // Create Corrective Action folder after successful database insert
+        createCorrectiveFolder(req.body.CORRECTIVE_ID);
       });
 
       connection.end();
@@ -189,6 +312,25 @@ router.post("/", (req, res) => {
   } catch (err) {
     console.log("Error connecting to Db (changes 196)");
     return;
+  }
+});
+
+// ==================================================
+// Manual trigger for creating all Corrective Action folders
+router.post("/create-folders", (req, res) => {
+  try {
+    makeCorrectiveFolders();
+    res.json({
+      success: true,
+      message:
+        "Corrective Action folder creation process started. Check server logs for progress.",
+    });
+  } catch (error) {
+    console.error("Error starting Corrective Action folder creation:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to start folder creation process",
+    });
   }
 });
 
@@ -290,7 +432,7 @@ router.put("/:id", (req, res) => {
     CREATE_DATE = IF(CREATE_DATE IS NULL, NOW(), CREATE_DATE),
     CREATE_BY = IF(CREATE_BY IS NULL OR CREATE_BY = '', '${req.body.MODIFIED_BY}', CREATE_BY);
 `;
-        // console.log(query);
+      // console.log(query);
       break;
     case "CORRECTION_TEXT":
       mytable = "CORRECTION";
@@ -299,7 +441,7 @@ router.put("/:id", (req, res) => {
       appended = req.body.CORRECTION_TEXT.replace(/<br>/g, "\n");
       // appended = appended.replace(/<br>/g, "\n");
       query = `insert into CORRECTION (CORRECTIVE_ID, CORRECTION_DATE, ACTION_BY, CORRECTION_TEXT) values ('${req.params.id}', '${correctiondate}', '${actionby}','${appended}') on duplicate key update CORRECTION_TEXT = '${appended}', CORRECTION_DATE = '${correctiondate}', ACTION_BY = '${actionby}';`;
-    //   console.log(query);
+      //   console.log(query);
       break;
     default:
       mytable = "CORRECTIVE";

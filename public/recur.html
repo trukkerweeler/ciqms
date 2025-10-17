@@ -1,27 +1,73 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
-    <title>Recurring Input - Entry</title>
-</head>
-<body>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Recurring Inputs (CI QMS)</title>
+  </head>
+  <body>
     <header id="header"></header>
-    <h1>Add Recurring Input</h1>
+    <div class="recordsaddrecordheading">
+      <h1>Recurring Inputs</h1>
+      <button
+        class="addrecordheadingbutton"
+        id="addRecurBtn"
+        title="Add new Recurring Input"
+      >
+        +
+      </button>
+    </div>
+
     <main id="main">
-        <form action="submit" name="form" id="recurEntryform">
-            <label for="INPUT_ID">Master Input Id</label>
-            <input type="text" name="INPUT_ID" id="iid">
-            <label for="ASSIGNED_TO">Assignee</label>
-            <input type="text" name="ASSIGNED_TO" id="assto" placeholder="Enter assigned ID">
-            <label for="corType">Frequency</label>
-            <select name="FREQUENCY" id="freq">
+      <!-- Add Recurring Input Dialog -->
+      <dialog id="addRecurDialog" class="dialog">
+        <form id="addRecurForm" class="recur-form">
+          <div class="form-header">
+            <h2>Add Recurring Input</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="INPUT_ID"
+                >Master Input ID <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                name="INPUT_ID"
+                id="iid"
+                placeholder="Enter master input ID"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="ASSIGNED_TO"
+                >Assignee <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                name="ASSIGNED_TO"
+                id="assto"
+                placeholder="Enter assigned ID"
+                style="text-transform: uppercase"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="FREQUENCY"
+                >Frequency <span class="required">*</span></label
+              >
+              <select name="FREQUENCY" id="freq" required>
                 <option value="W" selected>Weekly</option>
                 <option value="O">Bi-Monthly (Odd)</option>
                 <option value="M">Monthly</option>
@@ -29,15 +75,43 @@
                 <option value="H">Half-Yearly</option>
                 <option value="A">Annually</option>
                 <option value="BE">Biennially</option>
-            </select>
-            <label for="SUBJECT">Subject</label>
-            <input type="text" name="SUBJECT" id="subject" placeholder="Enter subject code">                                
-            
-            <input type="submit" value="Submit" id="btnRecurs">
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="SUBJECT"
+                >Subject <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                name="SUBJECT"
+                id="subject"
+                placeholder="Enter subject code"
+                style="text-transform: uppercase"
+                required
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button type="submit" id="saveRecurBtn" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Recurring Input
+            </button>
+            <button type="button" id="closeRecurBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
         </form>
-        <table id="view"></table>
+      </dialog>
+
+      <!-- Table container for recurring input data -->
+      <div id="recurTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
     </main>
     <footer id="footer"></footer>
-</body>
-<script type="module" src="/js/recur.js"></script>
+  </body>
+  <script type="module" src="/js/recur.mjs"></script>
 </html>

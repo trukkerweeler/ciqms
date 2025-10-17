@@ -2,7 +2,120 @@ const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
+const fs = require("fs");
+const path = require("path");
 let test = false;
+
+// ==================================================
+// NCM Folder Creation Function
+function createNcmFolder(ncmId) {
+  try {
+    // Get 4-digit current year
+    const thisYear = new Date().getFullYear().toString();
+    const lastYear = (new Date().getFullYear() - 1).toString();
+
+    const basePath =
+      "K:\\Quality - Records\\8700 - Control of Nonconforming Product";
+    const lyPath = path.join(basePath, lastYear);
+    const tyPath = path.join(basePath, thisYear);
+
+    // Check if the current year path exists, if not create it
+    if (!fs.existsSync(tyPath)) {
+      fs.mkdirSync(tyPath, { recursive: true });
+      console.log("Year path created:", tyPath);
+    }
+
+    // Create folder for this specific NCM ID
+    const ncmFolderPath = path.join(tyPath, ncmId);
+
+    // Check if folder already exists in either year
+    const lyNcmPath = path.join(lyPath, ncmId);
+
+    if (!fs.existsSync(lyNcmPath) && !fs.existsSync(ncmFolderPath)) {
+      fs.mkdirSync(ncmFolderPath, { recursive: true });
+      console.log("NCM folder created:", ncmId, "at", ncmFolderPath);
+    } else {
+      console.log("NCM folder already exists for:", ncmId);
+    }
+  } catch (error) {
+    console.error("Error creating NCM folder for", ncmId, ":", error.message);
+    // Don't throw error - folder creation failure shouldn't break NCM creation
+  }
+}
+
+// ==================================================
+// Function to create folders for all open NCMs (equivalent to makeNcmFolders)
+function makeNcmFolders() {
+  try {
+    // Get 4-digit current year
+    const thisYear = new Date().getFullYear().toString();
+    const lastYear = (new Date().getFullYear() - 1).toString();
+
+    const basePath =
+      "K:\\Quality - Records\\8700 - Control of Nonconforming Product";
+    const lyPath = path.join(basePath, lastYear);
+    const tyPath = path.join(basePath, thisYear);
+
+    // Check if the current year path exists, if not create it
+    if (!fs.existsSync(tyPath)) {
+      fs.mkdirSync(tyPath, { recursive: true });
+      console.log("Year path created:", tyPath);
+    }
+
+    // Get all open NCM records from database
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting to DB for folder creation:", err.stack);
+        return;
+      }
+
+      const query =
+        "SELECT NCM_ID, CLOSED FROM NONCONFORMANCE WHERE CLOSED = 'N'";
+
+      connection.query(query, (err, rows) => {
+        if (err) {
+          console.log("Failed to query for NCM folder creation:", err);
+          connection.end();
+          return;
+        }
+
+        rows.forEach((row) => {
+          const ncmId = row.NCM_ID;
+          const lyNcmPath = path.join(lyPath, ncmId);
+          const tyNcmPath = path.join(tyPath, ncmId);
+
+          // Create folder if it doesn't exist in either year
+          if (!fs.existsSync(lyNcmPath) && !fs.existsSync(tyNcmPath)) {
+            try {
+              fs.mkdirSync(tyNcmPath, { recursive: true });
+              console.log("NCM folder created:", ncmId);
+            } catch (folderError) {
+              console.error(
+                "Error creating folder for",
+                ncmId,
+                ":",
+                folderError.message
+              );
+            }
+          }
+        });
+
+        console.log("makeNcmFolders done");
+        connection.end();
+      });
+    });
+  } catch (error) {
+    console.error("Error in makeNcmFolders:", error.message);
+  }
+}
 
 // ==================================================
 // Get all records
@@ -258,6 +371,9 @@ router.post("/", (req, res) => {
           res.sendStatus(500);
           return;
         }
+
+        // Create NCM folder after successful database insert
+        createNcmFolder(req.body.NCM_ID);
       });
 
       connection.end();
@@ -265,6 +381,25 @@ router.post("/", (req, res) => {
   } catch (err) {
     console.log("Error connecting to Db 205");
     return;
+  }
+});
+
+// ==================================================
+// Manual trigger for creating all NCM folders
+router.post("/create-folders", (req, res) => {
+  try {
+    makeNcmFolders();
+    res.json({
+      success: true,
+      message:
+        "NCM folder creation process started. Check server logs for progress.",
+    });
+  } catch (error) {
+    console.error("Error starting NCM folder creation:", error);
+    res.status(500).json({
+      success: false,
+      error: "Failed to start folder creation process",
+    });
   }
 });
 

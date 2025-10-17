@@ -1,77 +1,54 @@
-import { loadHeaderFooter, myport } from './utils.mjs';
-loadHeaderFooter();
-const port = myport();
+import { loadHeaderFooter, getConfig } from "/js/utils.mjs";
 
+let config;
 
-document.querySelector('#subjectFilter').addEventListener('keyup', function(event) {
-    const filter = event.target.value.toLowerCase();
-    const rows = document.querySelectorAll('tbody tr');
-    
-    rows.forEach(row => {
-        const subjectCell = row.querySelector('td:nth-child(3)'); // Assuming SUBJECT is the third column
-        if (subjectCell) {
-            const subjectText = subjectCell.textContent.toLowerCase();
-            if (subjectText.includes(filter)) {
-                row.style.display = '';
-            } else {
-                row.style.display = 'none';
-            }
-        }
-    });
+document.addEventListener("DOMContentLoaded", async () => {
+  loadHeaderFooter();
+  config = await getConfig();
+  renderMgmtTable();
 });
 
-const url = `http://localhost:${port}/mgmt`;
+async function renderMgmtTable() {
+  try {
+    const response = await fetch("/mgmt");
+    const data = await response.json();
+    const tbody = document.querySelector("#mgmt-table tbody");
+    tbody.innerHTML = "";
+    data.forEach((row) => {
+      const tr = document.createElement("tr");
 
-function getRecords () {
-    const main = document.querySelector('main');
-    
-    fetch(url, { method: 'GET' })
-
-    .then(response => response.json())
-    .then(records => {
-        // console.log(records);
-        const table = document.createElement('table');
-        const thead = document.createElement('thead');
-        const tbody = document.createElement('tbody');
-        const header = document.createElement('tr');
-        const td = document.createElement('td');
-        
-        for (let key in records[0]) {
-            // if (fieldList.includes(key)){
-            const th = document.createElement('th');
-            th.textContent = key;
-            header.appendChild(th);
-            // }
+      // Row coloring logic (like inputs)
+      if (config && config.inputs && config.inputs.enableRowColors) {
+        // Use STATUS for mgmt (e.g., 'Closed', 'Open', 'Past Due')
+        if (row.STATUS && row.STATUS.toUpperCase() === "CLOSED") {
+          const closedColor = config.inputs.colorScheme?.closed || "#e8f5e8";
+          tr.style.backgroundColor = closedColor;
+        } else if (
+          row.STATUS &&
+          row.STATUS.toUpperCase().includes("PAST DUE")
+        ) {
+          const pastDueColor = config.inputs.colorScheme?.pastDue || "#ffebee";
+          tr.style.backgroundColor = pastDueColor;
+        } else if (
+          row.STATUS &&
+          row.STATUS.toUpperCase().includes("DUE SOON")
+        ) {
+          const dueSoonColor = config.inputs.colorScheme?.dueSoon || "#fff3e0";
+          tr.style.backgroundColor = dueSoonColor;
         }
-        thead.appendChild(header);
+      }
 
-        for (let record of records) {
-            const tr = document.createElement('tr');
-            for (let key in record) {
-                const td = document.createElement('td');
-                // console.log(key.substring(key.length - 4));
-                if (key !== null) {
-                    if (key.substring(key.length - 4) === 'DATE' && key.length > 0 && record[key] !== null) {
-                        td.textContent = record[key].slice(0,10);
-                    } else {
-                        if (key == 'INPUT_ID') {
-                            td.innerHTML = `<a href="http://localhost:${port}/input.html?id=${record[key]}">${record[key]}</a>`;
-                        } else {
-                            td.textContent = record[key];
-                        }
-                    }
-                } else {
-                    td.textContent = record[key];
-            }
-            tr.appendChild(td);
-        }
-            tbody.appendChild(tr);
-        }
-
-        table.appendChild(thead);
-        table.appendChild(tbody);
-        main.appendChild(table);
-    })
+      tr.innerHTML = `
+        <td>${row.ID ?? ""}</td>
+        <td>${row.DATE ? row.DATE.slice(0, 10) : ""}</td>
+        <td>${row.TOPIC ?? ""}</td>
+        <td>${row.OWNER ?? ""}</td>
+        <td>${row.STATUS ?? ""}</td>
+        <td><!-- actions here --></td>
+      `;
+      tbody.appendChild(tr);
+    });
+  } catch (err) {
+    console.error("Failed to load management review data:", err);
+  }
 }
-
-getRecords();

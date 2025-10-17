@@ -801,6 +801,98 @@ dialog .supplier-form {
   padding: 0 !important;
 }
 
+.recur-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for recur form */
+dialog .recur-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+.inputcopy-form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for inputcopy form */
+dialog .inputcopy-form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
+/* Input Copy specific styles */
+.results-container {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: #f8f9fa;
+  border-radius: 8px;
+  border: 1px solid #dee2e6;
+}
+
+.info-message {
+  color: #495057;
+}
+
+.info-message h3 {
+  color: #212529;
+  margin-bottom: 1rem;
+}
+
+.info-message ul {
+  margin-left: 1.5rem;
+  margin-bottom: 0;
+}
+
+.info-message li {
+  margin-bottom: 0.5rem;
+}
+
+.success-message {
+  background: #d4edda;
+  border: 1px solid #c3e6cb;
+  color: #155724;
+  padding: 1.5rem;
+  border-radius: 8px;
+  text-align: center;
+}
+
+.success-message h3 {
+  color: #155724;
+  margin-bottom: 1rem;
+}
+
+.field-help {
+  display: block;
+  font-size: 0.875rem;
+  color: #6c757d;
+  margin-top: 0.25rem;
+}
+
 /* Projects Page - No Scrollbar Layout */
 .projects-page {
   height: 100vh;
@@ -1919,6 +2011,23 @@ footer div p {
   background: var(--accent-color);
 }
 
+/* Enhanced scrollable table for large datasets like closed inputs */
+.scrollable-table {
+  max-height: calc(85vh - 120px); /* Account for header, filter, and footer */
+  min-height: 400px; /* Ensure minimum scrollable area */
+}
+
+.scrollable-table table {
+  min-width: 100%;
+}
+
+.scrollable-table thead th {
+  position: sticky;
+  top: 0;
+  background: var(--primary-color);
+  z-index: 10;
+}
+
 /* Subject Filter Styling - Reduced spacing and height */
 #subjectFilter {
   margin: 0.125rem 0;
@@ -1947,6 +2056,70 @@ footer div p {
   outline: 2px solid var(--accent-color);
   outline-offset: 2px;
   border-color: var(--accent-color);
+}
+
+/* Filter Controls - Toggle Switch */
+.filter-controls {
+  display: inline-block;
+  margin-left: 2rem;
+  vertical-align: top;
+}
+
+.toggle-switch {
+  position: relative;
+  display: inline-block;
+  font-size: 0.75rem;
+  font-weight: 600;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #ccc;
+  transition: 0.4s;
+  border-radius: 24px;
+  width: 44px;
+  height: 24px;
+}
+
+.slider:before {
+  position: absolute;
+  content: "";
+  height: 18px;
+  width: 18px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.4s;
+  border-radius: 50%;
+}
+
+input:checked + .slider {
+  background-color: var(--accent-color);
+}
+
+input:focus + .slider {
+  box-shadow: 0 0 1px var(--accent-color);
+}
+
+input:checked + .slider:before {
+  transform: translateX(20px);
+}
+
+.toggle-label {
+  margin-left: 50px;
+  line-height: 24px;
+  vertical-align: top;
 }
 
 /* General layout for all pages */

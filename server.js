@@ -34,7 +34,7 @@ app.get("/config", (req, res) => {
   try {
     const fs = require("fs");
     const path = require("path");
-    const configPath = path.join(__dirname, "ncm.config.json");
+    const configPath = path.join(__dirname, "qms.config.json");
     const configData = fs.readFileSync(configPath, "utf8");
     const config = JSON.parse(configData);
     res.json(config);

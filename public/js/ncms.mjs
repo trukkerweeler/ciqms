@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport, getConfig } from "./utils.mjs";
 import users from "./users.mjs";
 
 // Initialize header/footer
@@ -9,9 +9,11 @@ const port = myport() || 3003;
 const url = `http://localhost:${port}/ncm`;
 let sortOrder = "asc";
 let user; // Will be set in initialization
+let config; // Will be set in initialization
 
 document.addEventListener("DOMContentLoaded", async function () {
   user = await getUserValue();
+  config = await getConfig();
   setupEventListeners();
   await loadNcmData();
   await loadSubjects(); // Load subjects for the dropdown
@@ -229,11 +231,13 @@ function displayNcmTable(data) {
   data.forEach((item) => {
     const row = document.createElement("tr");
 
-    // Apply row styling based on status
-    if (item.STATUS === "CLOSED") {
-      row.style.backgroundColor = "#d4edda";
-    } else if (item.STATUS === "OPEN") {
-      row.style.backgroundColor = "#f8d7da";
+    // Apply row styling based on status (if enabled in config)
+    if (config && config.ncm && config.ncm.enableRowColors) {
+      if (item.STATUS === "CLOSED") {
+        row.style.backgroundColor = "#d4edda";
+      } else if (item.STATUS === "OPEN") {
+        row.style.backgroundColor = "#f8d7da";
+      }
     }
 
     row.innerHTML = `

@@ -12,5 +12,16 @@
     "enableEmailNotifications": true,
     "enableAutoSave": false,
     "enableAdvancedFiltering": true
+  },
+  "inputs": {
+    "enableRowColors": false,
+    "colorScheme": {
+      "pastDue": "#ffebee",
+      "dueSoon": "#fff3e0",
+      "closed": "#e8f5e8"
+    }
+  },
+  "ncm": {
+    "enableRowColors": true
   }
 }
