@@ -15,6 +15,13 @@ document.addEventListener("DOMContentLoaded", async function () {
   user = await getUserValue();
   config = await getConfig();
   setupEventListeners();
+  // Add event listener for closed toggle
+  const showClosedToggle = document.getElementById("showClosedToggle");
+  if (showClosedToggle) {
+    showClosedToggle.addEventListener("change", () => {
+      loadNcmData();
+    });
+  }
   await loadNcmData();
   await loadSubjects(); // Load subjects for the dropdown
 });
@@ -164,7 +171,12 @@ async function saveNcm(event) {
 
 async function loadNcmData() {
   try {
-    const response = await fetch(url);
+    const showClosedToggle = document.getElementById("showClosedToggle");
+    const includeClosed = showClosedToggle ? showClosedToggle.checked : false;
+    // Choose endpoint based on toggle state
+    const endpoint = includeClosed ? `${url}/closed` : url;
+
+    const response = await fetch(endpoint);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
@@ -231,11 +243,11 @@ function displayNcmTable(data) {
   data.forEach((item) => {
     const row = document.createElement("tr");
 
-    // Apply row styling based on status (if enabled in config)
+    // Apply row styling based on CLOSED field (if enabled in config)
     if (config && config.ncm && config.ncm.enableRowColors) {
-      if (item.STATUS === "CLOSED") {
+      if (item.CLOSED === "Y") {
         row.style.backgroundColor = "#d4edda";
-      } else if (item.STATUS === "OPEN") {
+      } else if (item.CLOSED === "N") {
         row.style.backgroundColor = "#f8d7da";
       }
     }
@@ -251,11 +263,11 @@ function displayNcmTable(data) {
       <td>${item.PO_NUMBER || ""}</td>
       <td>${
         item.PROCESS_ID
-          ? `<button type="button" class="btn-secondary" onclick="openTrendDialog('${item.NCM_ID}')"><!-- <span class="btn-icon">📈</span> --> ${item.PROCESS_ID}</button>`
+          ? `<button type="button" class="btn-secondary" onclick="openTrendDialog('${item.NCM_ID}')"><!-- <span class=\"btn-icon\">📈</span> --> ${item.PROCESS_ID}</button>`
           : `<button type="button" class="btn-secondary" onclick="openTrendDialog('${item.NCM_ID}')">Edit</button>`
       }</td>
       <td>${truncateText(item.DESCRIPTION || "", 50)}</td>
-      <td>${item.STATUS === "CLOSED" ? "Yes" : "No"}</td>
+      <td>${item.CLOSED === "Y" ? "Yes" : "No"}</td>
     `;
 
     tbody.appendChild(row);

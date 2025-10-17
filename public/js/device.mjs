@@ -171,7 +171,12 @@ async function initializePage() {
         let editCalibrationButton = document.createElement("button");
         editCalibrationButton.textContent = "Edit";
         editCalibrationButton.style.display = "none";
-        if (user === "TKENT" || user === "superuser" || user === "QC2") {
+        if (
+          user === "TKENT" ||
+          user === "superuser" ||
+          user === "QC2" ||
+          user === "BOBBI"
+        ) {
           editCalibrationButton.style.display = "inline-block";
         }
         editCalibrationButton.classList.add(
@@ -231,6 +236,7 @@ async function initializePage() {
         notesSection.id = "notes-section";
         let notesDiv = document.createElement("div");
         notesDiv.classList.add("section-header-edit");
+        notesDiv.style.paddingTop = "12px"; // Match top padding of other section headers
         notesDiv.innerHTML = `<h2>Notes</h2>`;
         let editNotesButton = document.createElement("button");
         editNotesButton.id = "btnEditNotes";
@@ -240,8 +246,8 @@ async function initializePage() {
           editNotesButton.style.display = "inline-block";
         }
         editNotesButton.classList.add("btn", "btn-primary", "edit-button");
+        editNotesButton.style.marginTop = "0"; // Remove any default margin
         editNotesButton.addEventListener("click", () => {
-          // document.getElementById("notes-textarea").value = data["DEVICE_NOTE"] || "";
           document.getElementById("editNotes").showModal();
         });
 
