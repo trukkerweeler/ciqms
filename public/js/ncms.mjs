@@ -172,16 +172,17 @@ async function saveNcm(event) {
 async function loadNcmData() {
   try {
     const showClosedToggle = document.getElementById("showClosedToggle");
-    const includeClosed = showClosedToggle ? showClosedToggle.checked : false;
-    // Choose endpoint based on toggle state
-    const endpoint = includeClosed ? `${url}/closed` : url;
-
-    const response = await fetch(endpoint);
+    const closedNOnly = showClosedToggle ? showClosedToggle.checked : false;
+    // Always fetch all records
+    const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-
-    const data = await response.json();
+    let data = await response.json();
+    // If toggle is checked, filter to CLOSED === 'N' (open only)
+    if (closedNOnly) {
+      data = data.filter((item) => item.CLOSED === "N");
+    }
     displayNcmTable(data);
   } catch (error) {
     console.error("Error loading NCM data:", error);
