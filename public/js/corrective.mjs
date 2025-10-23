@@ -262,47 +262,34 @@ fetch(url, { method: "GET" })
         // show the dialog
         document.getElementById("correctionDialog").showModal();
 
-        // save the changes
-        document
-          .getElementById("correctionSave")
-          .addEventListener("click", async (e) => {
+        // Attach save handler only once
+        const correctionSaveBtn = document.getElementById("correctionSave");
+        if (!correctionSaveBtn.dataset.listener) {
+          correctionSaveBtn.addEventListener("click", async (e) => {
             e.preventDefault();
-            // get the values from the form
             let newactioner = document.getElementById("actionby").value;
-            if (newactioner === "") {
-              newactioner = "";
-            } else {
-              newactioner = newactioner.toUpperCase();
-            }
+            newactioner = newactioner ? newactioner.toUpperCase() : "";
             let correctiontext =
               document.getElementById("correctiontext").value;
             let newcorrectiontext = document.getElementById(
               "new-correction-text"
             ).value;
-            let formatteddate = new Date().toISOString();
-            formatteddate = formatteddate.replace("T", " ").substring(0, 19);
-            // replace the colon
-            // formatteddate = formatteddate.replace(':', '');
+            let formatteddate = new Date()
+              .toISOString()
+              .replace("T", " ")
+              .substring(0, 19);
             newcorrectiontext =
               user + " - " + formatteddate + "\n " + newcorrectiontext + "\n";
-            let concatText = "";
-            // if correctiontext is empty, just use the newcorrectiontext
-            if (correctiontext === "" || correctiontext === null) {
-              concatText = newcorrectiontext;
-            } else {
-              concatText = newcorrectiontext + "\n" + correctiontext;
-              // console.log(concatText);
-            }
+            let concatText =
+              !correctiontext || correctiontext === ""
+                ? newcorrectiontext
+                : newcorrectiontext + "\n" + correctiontext;
             let correctiondate =
               document.getElementById("correctiondate").value;
-            // let correctiondate = new Date().toISOString().slice(0, 10);
-            // update the record
             let url = `http://localhost:${port}/corrective/${caid}`;
             await fetch(url, {
               method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
+              headers: { "Content-Type": "application/json" },
               body: JSON.stringify({
                 CORRECTION_DATE: correctiondate,
                 CORRECTION_TEXT: concatText,
@@ -310,11 +297,11 @@ fetch(url, { method: "GET" })
                 MODIFIED_BY: user,
               }),
             });
-            // close the dialog
             document.getElementById("correctionDialog").close();
-            // reload the page
             location.reload();
           });
+          correctionSaveBtn.dataset.listener = "true";
+        }
       });
       // Append child elements to the correction section
       correctionSection.appendChild(correctionHeader);

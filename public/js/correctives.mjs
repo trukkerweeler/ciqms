@@ -51,7 +51,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  */
 async function loadCorrectiveData() {
   try {
-    console.log("Fetching corrective data from:", url);
+    // console.log("Fetching corrective data from:", url);
     const response = await fetch(url, { method: "GET" });
 
     if (!response.ok) {
@@ -59,7 +59,7 @@ async function loadCorrectiveData() {
     }
 
     const data = await response.json();
-    console.log("Corrective data received:", data);
+    // console.log("Corrective data received:", data);
 
     if (data && data.length > 0) {
       createTable(data);

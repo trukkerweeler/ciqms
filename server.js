@@ -111,6 +111,7 @@ app.use("/mgmt", mgmtRoutes);
 
 const expiryRoutes = require("./routes/expiry");
 app.use("/expiry", expiryRoutes);
+
 const rmaRoutes = require("./routes/rmahistory");
 app.use("/rmahistory", rmaRoutes);
 
@@ -160,11 +161,22 @@ const causemaintRoutes = require("./routes/causemaint");
 app.use("/causemaint", causemaintRoutes);
 
 // Serve training files from a dedicated directory
+
 const path = require("path");
-// Use a network path that all users can access, or fallback to local
+// Use environment variable for training files path
 const trainingFilesPath =
   process.env.TRAINING_FILES_PATH || path.join(__dirname, "training-files");
 app.use("/training-files", express.static(trainingFilesPath));
+
+// Use environment variable for input files path
+const inputFilesPath =
+  process.env.INPUT_FILES_PATH ||
+  "\\\\fs1\\Common\\Quality\\00000_Work Instructions";
+app.use("/input-files", express.static(inputFilesPath));
+
+// API route to list input files
+const inputFilesApiRoutes = require("./routes/inputFiles");
+app.use("/input-files", inputFilesApiRoutes);
 
 app.listen(port, async () => {
   console.log(`Example app listening at http://localhost:${port}`);

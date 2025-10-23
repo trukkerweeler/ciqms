@@ -416,7 +416,7 @@ router.put("/:id", (req, res) => {
       break;
     case "CONTROL_TEXT":
       mytable = "CORRECTIVE_CTRL";
-      console.log(mytable);
+      // console.log(mytable);
       appended = req.body.CONTROL_TEXT;
       appended = appended.replace(/<br>/g, "\n");
       // query = `insert into CORRECTIVE_CTRL (CORRECTIVE_ID, CONTROL_TEXT, MODIFIED_DATE) values ('${req.params.id}','${appended}', NOW()) on duplicate key update CONTROL_TEXT = '${appended}';`;
@@ -439,7 +439,8 @@ router.put("/:id", (req, res) => {
       let correctiondate = req.body.CORRECTION_DATE;
       let actionby = req.body.ACTION_BY;
       appended = req.body.CORRECTION_TEXT.replace(/<br>/g, "\n");
-      // appended = appended.replace(/<br>/g, "\n");
+      // Escape single quotes to prevent SQL syntax errors
+      appended = appended.replace(/'/g, "''");
       query = `insert into CORRECTION (CORRECTIVE_ID, CORRECTION_DATE, ACTION_BY, CORRECTION_TEXT) values ('${req.params.id}', '${correctiondate}', '${actionby}','${appended}') on duplicate key update CORRECTION_TEXT = '${appended}', CORRECTION_DATE = '${correctiondate}', ACTION_BY = '${actionby}';`;
       //   console.log(query);
       break;

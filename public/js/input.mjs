@@ -43,6 +43,7 @@ fetch(url, { method: "GET" })
 
       // detail title (Two buttons: Edit and Close)
       const detailTitle = document.createElement("h3");
+      detailTitle.classList.add("span-2");
       detailTitle.textContent = "Detail";
 
       // detail buttons div
