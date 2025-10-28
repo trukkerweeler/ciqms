@@ -1,3 +1,9 @@
+// Basic /docsavail endpoint to prevent 404 and allow frontend integration
+router.post("/docsavail", (req, res) => {
+  console.log("/docsavail called with:", req.body);
+  // Echo back received data for now
+  res.json({ status: "ok", received: req.body });
+});
 // Document Upload and Conversion Route for CIQMS
 // Add this to your routes/ directory
 

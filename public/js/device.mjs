@@ -272,6 +272,13 @@ async function initializePage() {
             const deviceId = urlParams.get("id");
             const modal = document.getElementById("view-device-image-dialog");
             const imgElement = document.getElementById("device-image");
+            const imageDiv = document.getElementById("view-device-image-div");
+
+            // Hide image by default
+            imgElement.style.display = "none";
+            // Remove any previous placeholder
+            let placeholder = imageDiv.querySelector(".no-image-placeholder");
+            if (placeholder) imageDiv.removeChild(placeholder);
 
             try {
               const response = await fetch(
@@ -285,18 +292,47 @@ async function initializePage() {
               );
 
               if (!response.ok) {
-                throw new Error("Image not found");
+                // No image in DB, show placeholder
+                imgElement.src = "";
+                imgElement.style.display = "none";
+                placeholder = document.createElement("div");
+                placeholder.className = "no-image-placeholder";
+                placeholder.textContent = "No image found";
+                placeholder.style.textAlign = "center";
+                placeholder.style.padding = "24px";
+                placeholder.style.color = "#888";
+                imageDiv.appendChild(placeholder);
+              } else {
+                const blob = await response.blob();
+                const objectURL = URL.createObjectURL(blob);
+                imgElement.src = objectURL;
+                imgElement.style.display = "block";
               }
-
-              const blob = await response.blob();
-              const objectURL = URL.createObjectURL(blob);
-              imgElement.src = objectURL;
             } catch (error) {
-              imgElement.src = "./images/default.png";
+              // Network or other error, show placeholder
+              imgElement.src = "";
+              imgElement.style.display = "none";
+              placeholder = document.createElement("div");
+              placeholder.className = "no-image-placeholder";
+              placeholder.textContent = "No image found";
+              placeholder.style.textAlign = "center";
+              placeholder.style.padding = "24px";
+              placeholder.style.color = "#888";
+              imageDiv.appendChild(placeholder);
             }
 
             imgElement.onerror = () => {
-              imgElement.src = `./images/default.png`;
+              imgElement.src = "";
+              imgElement.style.display = "none";
+              if (!imageDiv.querySelector(".no-image-placeholder")) {
+                placeholder = document.createElement("div");
+                placeholder.className = "no-image-placeholder";
+                placeholder.textContent = "No image found";
+                placeholder.style.textAlign = "center";
+                placeholder.style.padding = "24px";
+                placeholder.style.color = "#888";
+                imageDiv.appendChild(placeholder);
+              }
             };
 
             modal.showModal();
@@ -564,6 +600,10 @@ if (saveNotes) {
 
     const editNotesDialog = document.getElementById("editNotes");
     editNotesDialog.close();
-    window.location.href = `./device.html?id=${deviceId}`;
+    if (deviceId) {
+      window.location.href = `./device.html?id=${deviceId}`;
+    } else {
+      window.location.reload();
+    }
   });
 }

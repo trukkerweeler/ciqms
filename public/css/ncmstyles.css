@@ -52,7 +52,7 @@
   grid-row: 1 !important;
   text-align: left !important;
   font-weight: bold !important;
-  margin: 0 !important;
+  margin: 0 0 0 4px !important;
   padding: 0.25rem 0 !important;
   background-color: white !important;
   border: none !important;

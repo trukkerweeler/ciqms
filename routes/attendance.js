@@ -125,6 +125,7 @@ router.post("/", (req, res) => {
         if (err) {
           console.log("Failed to query for attendance insert: " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
 
@@ -132,6 +133,11 @@ router.post("/", (req, res) => {
         if (req.body.LINK && req.body.LINK.trim() !== "") {
           const linkQuery = `INSERT INTO CTA_ATTENDANCE_LINK (COURSE_ATND_ID, CTA_ATTENDANCE_LINK) VALUES (?, ?)`;
           const linkValues = [req.body.COURSE_ATND_ID, req.body.LINK];
+          // console.log(
+          //   "Attempting to insert into CTA_ATTENDANCE_LINK:",
+          //   linkQuery,
+          //   linkValues
+          // );
 
           connection.query(
             linkQuery,
@@ -139,27 +145,47 @@ router.post("/", (req, res) => {
             (linkErr, linkRows, linkFields) => {
               if (linkErr) {
                 console.log("Failed to insert attendance link: " + linkErr);
+                // console.log("Link insert values:", linkValues);
                 // Don't fail the whole operation for link insert failure
+              } else {
+                console.log(
+                  "Successfully inserted attendance link:",
+                  linkValues
+                );
               }
+              // After link insert, update SYSTEM_IDS
+              const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body.COURSE_ATND_ID}' WHERE TABLE_NAME = 'CTA_ATTENDANCE'`;
+              connection.query(updateQuery, (err2, rows2, fields2) => {
+                if (err2) {
+                  console.log(
+                    "Failed to query for attendance system id update: " + err2
+                  );
+                  res.sendStatus(500);
+                  connection.end();
+                  return;
+                }
+                res.json(rows);
+                connection.end();
+              });
             }
           );
+        } else {
+          // If no link, just update SYSTEM_IDS
+          const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body.COURSE_ATND_ID}' WHERE TABLE_NAME = 'CTA_ATTENDANCE'`;
+          connection.query(updateQuery, (err2, rows2, fields2) => {
+            if (err2) {
+              console.log(
+                "Failed to query for attendance system id update: " + err2
+              );
+              res.sendStatus(500);
+              connection.end();
+              return;
+            }
+            res.json(rows);
+            connection.end();
+          });
         }
-
-        res.json(rows);
       });
-
-      const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body.COURSE_ATND_ID}' WHERE TABLE_NAME = 'CTA_ATTENDANCE'`;
-      connection.query(updateQuery, (err, rows, fields) => {
-        if (err) {
-          console.log(
-            "Failed to query for attendance system id update: " + err
-          );
-          res.sendStatus(500);
-          return;
-        }
-      });
-
-      connection.end();
     });
   } catch (err) {
     console.log("Error connecting to Db (changes 144)");

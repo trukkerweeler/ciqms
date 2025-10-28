@@ -663,76 +663,103 @@ fetch(url, { method: "GET" })
     editDetail.addEventListener("click", async (event) => {
       const detailDialog = document.querySelector("#detailDialog");
       const editdetailform = document.querySelector("#editdetailform");
-      const label = document.createElement("label");
       // prevent the default action
       event.preventDefault();
 
-      // Fetch subjects and causes data for the dropdowns
+      // Clear previous form content
+      editdetailform.innerHTML = "";
+
+      // Define fields and their types
+      const fields = [
+        { name: "PEOPLE_ID", label: "Request By", type: "text" },
+        { name: "NCM_DATE", label: "Request Date", type: "date" },
+        { name: "ASSIGNED_TO", label: "Assigned To", type: "text" },
+        { name: "DUE_DATE", label: "Due Date", type: "date" },
+        { name: "NCM_TYPE", label: "Type", type: "text" },
+        { name: "SUBJECT", label: "Subject", type: "select" },
+        { name: "CAUSE", label: "Cause", type: "select" },
+        { name: "PRODUCT_ID", label: "Product Id", type: "text" },
+        { name: "LOT_NUMBER", label: "Lot Number", type: "text" },
+        { name: "LOT_SIZE", label: "Lot Qty", type: "text" },
+        { name: "USER_DEFINED_1", label: "RMA Id", type: "text" },
+        { name: "CUSTOMER_ID", label: "Customer Id", type: "text" },
+        { name: "SUPPLIER_ID", label: "Supplier Id", type: "text" },
+      ];
+
+      // Fetch subjects and causes for dropdowns
       const subjects = await fetchSubjects();
       const causes = await fetchCauses();
 
-      // Populate SUBJECT dropdown
-      const subjectSelect = document.querySelector("#SUBJECT");
-      // Clear existing options except the first one
-      while (subjectSelect.children.length > 1) {
-        subjectSelect.removeChild(subjectSelect.lastChild);
-      }
+      // Get current record (first key)
+      const recKey = Object.keys(record)[0];
+      const rec = record[recKey] || {};
 
-      subjects.forEach((subject) => {
-        const option = document.createElement("option");
-        option.value = subject.SUBJECT;
-        option.textContent = `${subject.SUBJECT} - ${subject.DESCRIPTION}`;
-        subjectSelect.appendChild(option);
-      });
+      fields.forEach((field) => {
+        const fieldWrapper = document.createElement("div");
+        fieldWrapper.className = "formFieldWrapper";
+        const label = document.createElement("label");
+        label.htmlFor = field.name;
+        label.textContent = field.label + ": ";
+        fieldWrapper.appendChild(label);
 
-      // Populate CAUSE dropdown
-      const causeSelect = document.querySelector("#CAUSE");
-      // Clear existing options except the first one
-      while (causeSelect.children.length > 1) {
-        causeSelect.removeChild(causeSelect.lastChild);
-      }
-
-      causes.forEach((cause) => {
-        const option = document.createElement("option");
-        option.value = cause.CAUSE;
-        option.textContent = `${cause.CAUSE} - ${cause.DESCRIPTION}`;
-        causeSelect.appendChild(option);
-      });
-
-      // Populate form fields with current record data
-      for (const key in record) {
-        const fields = [
-          "PEOPLE_ID",
-          "NCM_DATE",
-          "ASSIGNED_TO",
-          "DUE_DATE",
-          "NCM_TYPE",
-          "SUBJECT",
-          "CAUSE",
-          "PRODUCT_ID",
-          "LOT_NUMBER",
-          "LOT_SIZE",
-          "USER_DEFINED_1",
-          "CUSTOMER_ID",
-          "SUPPLIER_ID",
-        ];
-
-        fields.forEach((fieldName) => {
-          const fieldElement = document.querySelector(`#${fieldName}`);
-          if (fieldElement && record[key][fieldName] !== undefined) {
-            if (
-              ["NCM_DATE", "DUE_DATE"].includes(fieldName) &&
-              record[key][fieldName]
-            ) {
-              // Handle date fields
-              fieldElement.value = record[key][fieldName].substring(0, 10);
-            } else {
-              // Handle all other fields
-              fieldElement.value = record[key][fieldName] || "";
-            }
+        let input;
+        if (field.type === "select") {
+          input = document.createElement("select");
+          input.id = field.name;
+          input.name = field.name;
+          // Add default empty option
+          const defaultOpt = document.createElement("option");
+          defaultOpt.value = "";
+          defaultOpt.textContent = "--Select--";
+          input.appendChild(defaultOpt);
+          if (field.name === "SUBJECT") {
+            subjects.forEach((subject) => {
+              const option = document.createElement("option");
+              option.value = subject.SUBJECT;
+              option.textContent = `${subject.SUBJECT} - ${subject.DESCRIPTION}`;
+              input.appendChild(option);
+            });
+          } else if (field.name === "CAUSE") {
+            causes.forEach((cause) => {
+              const option = document.createElement("option");
+              option.value = cause.CAUSE;
+              option.textContent = `${cause.CAUSE} - ${cause.DESCRIPTION}`;
+              input.appendChild(option);
+            });
           }
-        });
-      }
+        } else {
+          input = document.createElement("input");
+          input.type = field.type;
+          input.id = field.name;
+          input.name = field.name;
+        }
+
+        // Set value from record
+        if (rec[field.name] !== undefined && rec[field.name] !== null) {
+          if (field.type === "date" && rec[field.name]) {
+            input.value = rec[field.name].substring(0, 10);
+          } else {
+            input.value = rec[field.name];
+          }
+        }
+        fieldWrapper.appendChild(input);
+        editdetailform.appendChild(fieldWrapper);
+      });
+
+      // Add Save and Cancel buttons
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.id = "saveDetail";
+      saveBtn.className = "btnDialog dialogSaveBtn";
+      saveBtn.textContent = "Save";
+      editdetailform.appendChild(saveBtn);
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.id = "btnCancelDetail";
+      cancelBtn.className = "btnDialog";
+      cancelBtn.textContent = "Cancel";
+      editdetailform.appendChild(cancelBtn);
 
       // show the detail dialog
       detailDialog.showModal();
@@ -741,9 +768,7 @@ fetch(url, { method: "GET" })
       const saveDetail = document.querySelector("#saveDetail");
       const detailsUrl = `http://localhost:${port}/ncm/details/${iid}`;
       saveDetail.addEventListener("click", async (event) => {
-        // prevent the default action
         event.preventDefault();
-        // get the input id
         const nid = document.querySelector("#nid");
         let nidValue = iid;
 
@@ -754,7 +779,6 @@ fetch(url, { method: "GET" })
           MODIFIED_DATE: getDateTime(),
         };
 
-        // Read all form fields directly instead of relying on record object
         const fields = [
           "PEOPLE_ID",
           "NCM_DATE",
@@ -775,17 +799,25 @@ fetch(url, { method: "GET" })
           try {
             const fieldElement = document.querySelector("#" + fieldName);
             let fieldvalue = fieldElement ? fieldElement.value : "";
-            // if the field value is undefined, set it to empty string
             if (fieldvalue === undefined) {
-              console.log("field value is undefined: " + fieldName);
               fieldvalue = "";
             }
             data[fieldName] = fieldvalue;
           } catch (error) {
-            console.log("error reading field: " + fieldName, error);
             data[fieldName] = "";
           }
         });
+
+        // Subject length validation
+        if (data.SUBJECT && data.SUBJECT.length > 6) {
+          alert(
+            "Subject must be 6 characters or less. Please see the help file for valid codes."
+          );
+          window.open("/ncmhelp.html", "_blank");
+          const subjectNcm = document.querySelector("#SUBJECT");
+          if (subjectNcm) subjectNcm.focus();
+          return;
+        }
 
         if (test) {
           console.log("=== SAVE DETAIL DATA ===");
@@ -803,9 +835,7 @@ fetch(url, { method: "GET" })
 
         const response = await fetch(detailsUrl, options);
         const json = await response.json();
-        // searchbutton.click();
         detailDialog.close();
-        // refresh the page
         window.location.reload();
       });
 

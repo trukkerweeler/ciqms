@@ -1,3 +1,16 @@
+// Fetch and display training records
+async function loadTrainingData() {
+  try {
+    const response = await fetch(url);
+    if (!response.ok) throw new Error("Failed to fetch training records");
+    const data = await response.json();
+    displayTrainingTable(data);
+  } catch (error) {
+    console.error("Error loading training data:", error);
+    document.getElementById("trainingTableContainer").innerHTML =
+      '<p class="error">Failed to load training data. Please refresh the page.</p>';
+  }
+}
 import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
 
 // Initialize header/footer
@@ -79,62 +92,76 @@ async function saveTraining(event) {
       .slice(0, 19)
       .replace("T", " ");
 
-    // Build data object
-    const dataJson = {
-      COURSE_ATND_ID: nextId,
-      CREATED_DATE: myRequestDate,
-      CREATE_BY: "TKENT",
-    };
-
-    // Add form data with proper case handling
-    for (let field of formData.keys()) {
-      if (["PEOPLE_ID", "INSTRUCTOR"].includes(field)) {
-        dataJson[field] = formData.get(field).toUpperCase();
-      } else if (field === "LINK") {
-        // Extract just the filename from a full path
-        const linkValue = formData.get(field);
-        if (linkValue) {
-          // If it's a UNC path or local path, extract just the filename
-          const filename = linkValue.split("\\").pop().split("/").pop();
-          dataJson[field] = filename;
-        } else {
-          dataJson[field] = linkValue;
-        }
-      } else {
-        dataJson[field] = formData.get(field);
+    try {
+      // Get attendees from PEOPLE_ID textarea, split by comma, trim, and filter out blanks
+      const attendeesRaw = formData.get("PEOPLE_ID") || "";
+      const attendees = attendeesRaw
+        .split(",")
+        .map((x) => x.trim().toUpperCase())
+        .filter((x) => x);
+      if (attendees.length === 0) {
+        alert("Please enter at least one attendee.");
+        return;
       }
-    }
 
-    const response = await fetch(url, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify(dataJson),
-    });
+      // Prepare current timestamp
+      const attendanceDate = new Date();
+      const myRequestDate = attendanceDate
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
 
-    if (response.ok) {
+      // Loop through attendees and submit each record
+      for (const personId of attendees) {
+        // Get next ID from server for each attendee
+        const nextIdResponse = await fetch(`${url}/nextId`);
+        const nextId = await nextIdResponse.json();
+
+        // Build data object
+        const dataJson = {
+          COURSE_ATND_ID: nextId,
+          CREATED_DATE: myRequestDate,
+          CREATE_BY: "TKENT",
+        };
+
+        for (let field of formData.keys()) {
+          if (field === "PEOPLE_ID") {
+            dataJson[field] = personId;
+          } else if (field === "INSTRUCTOR") {
+            dataJson[field] = formData.get(field).toUpperCase();
+          } else if (field === "LINK") {
+            const linkValue = formData.get(field);
+            console.log("LINK field value before send:", linkValue);
+            if (linkValue) {
+              const filename = linkValue.split("\\").pop().split("/").pop();
+              dataJson[field] = filename;
+            } else {
+              dataJson[field] = linkValue;
+            }
+          } else {
+            dataJson[field] = formData.get(field);
+          }
+        }
+
+        const response = await fetch(url, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataJson),
+        });
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          alert(`Failed to save training record for ${personId}: ` + errorText);
+        }
+      }
+
       document.getElementById("addTrainingDialog").close();
-      await loadTrainingData(); // Reload the data
-    } else {
-      const errorText = await response.text();
-      alert(`Failed to save training record: ${errorText}`);
+      // await loadTrainingData(); // Reload the data (refresh commented out)
+    } catch (err) {
+      alert("Error saving training record: " + err);
     }
-  } catch (error) {
-    console.error("Error saving training record:", error);
-    alert("Failed to save training record. Please try again.");
-  }
-}
-
-async function loadTrainingData() {
-  try {
-    const response = await fetch(url);
-    if (!response.ok) {
-      throw new Error(`HTTP error! status: ${response.status}`);
-    }
-
-    const data = await response.json();
-    displayTrainingTable(data);
   } catch (error) {
     console.error("Error loading training data:", error);
     document.getElementById("trainingTableContainer").innerHTML =

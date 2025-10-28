@@ -57,7 +57,7 @@ document.addEventListener("DOMContentLoaded", async () => {
  */
 async function loadDocumentData() {
   try {
-    console.log("Fetching document data from:", url);
+    // console.log("Fetching document data from:", url);
     const response = await fetch(url, { method: "GET" });
 
     if (!response.ok) {
@@ -65,7 +65,7 @@ async function loadDocumentData() {
     }
 
     const data = await response.json();
-    console.log("Document data received:", data);
+    // console.log("Document data received:", data);
 
     if (data && data.length > 0) {
       createTable(data);
