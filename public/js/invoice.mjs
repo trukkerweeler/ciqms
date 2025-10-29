@@ -20,7 +20,7 @@ function groupByMonthYear(data) {
 }
 
 function getMonthlySum(records) {
-  return records.reduce((sum, rec) => sum + (parseFloat(rec.AMT_TRANS_TOTAL) || 0), 0);
+  return records.reduce((sum, rec) => sum + (parseFloat(rec.AMT_INVOICE) || 0), 0);
 }
 
 const port  = myport() || 3003; // Get the port from utils.mjs
