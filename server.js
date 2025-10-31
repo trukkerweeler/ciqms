@@ -160,6 +160,9 @@ app.use("/subjectmaint", subjectmaintRoutes);
 const causemaintRoutes = require("./routes/causemaint");
 app.use("/causemaint", causemaintRoutes);
 
+const pnlRoutes = require("./routes/pnl");
+app.use("/pnl", pnlRoutes);
+
 // Serve training files from a dedicated directory
 
 const path = require("path");

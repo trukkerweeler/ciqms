@@ -1,0 +1,50 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>PNL (Unofficial)</title>
+  </head>
+
+  <body>
+    <header id="header"></header>
+    <h1>Calibration PO</h1>
+    <main id="main">
+      <h1>Profit & Loss Summary</h1>
+      <div>
+        <label for="yearPicker">Year:</label>
+        <select id="yearPicker">
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+        </select>
+        <button id="fetchPnlBtn">Fetch P&L</button>
+      </div>
+      <table
+        id="pnlTable"
+        class="data-table"
+        style="margin-top: 20px; width: 100%"
+      >
+        <tr>
+          <th>Month</th>
+          <th>Category</th>
+          <th>Total</th>
+        </tr>
+      </table>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+
+  <script type="module" src="/js/pnl.mjs"></script>
+</html>
