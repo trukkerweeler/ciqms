@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 
@@ -305,6 +306,9 @@ router.post("/", (req, res) => {
 
         // Create Corrective Action folder after successful database insert
         createCorrectiveFolder(req.body.CORRECTIVE_ID);
+
+        // Send email notification after successful creation
+        sendCorrectiveEmail(req.body);
       });
 
       connection.end();
@@ -314,6 +318,80 @@ router.post("/", (req, res) => {
     return;
   }
 });
+
+// ==================================================
+// Send email notification for new corrective action
+async function sendCorrectiveEmail(correctiveData) {
+  try {
+    // Get assignee email from PEOPLE table
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(async function (err) {
+      if (err) {
+        console.error("Error connecting to DB for email lookup:", err.stack);
+        return;
+      }
+
+      const emailQuery = `SELECT EMAIL FROM PEOPLE WHERE PEOPLE_ID = '${correctiveData.ASSIGNED_TO}'`;
+      connection.query(emailQuery, async (err, rows) => {
+        if (err) {
+          console.error("Error querying for assignee email:", err);
+          connection.end();
+          return;
+        }
+
+        if (rows.length > 0 && rows[0].EMAIL) {
+          const assigneeEmail = rows[0].EMAIL;
+
+          const transporter = nodemailer.createTransport({
+            host: process.env.SMTP_HOST,
+            port: process.env.SMTP_PORT,
+            secure: true, // true for 465, false for other ports
+            auth: {
+              user: process.env.SMTP_USER,
+              pass: process.env.SMTP_PASS,
+            },
+          });
+
+          const mailOptions = {
+            from: process.env.SMTP_FROM,
+            to: assigneeEmail,
+            subject: `Corrective Action Notification: ${correctiveData.CORRECTIVE_ID} - ${correctiveData.TITLE}`,
+            text: `The following corrective action has been issued. Please review and take timely action. If you have any questions, please contact the quality manager.\n\n Title: ${
+              correctiveData.TITLE
+            }\n\n Description:\n${
+              correctiveData.USER_DEFINED_1 || "No description provided"
+            }\n\n Due Date: ${correctiveData.DUE_DATE}\n\n Reference: ${
+              correctiveData.REFERENCE || "N/A"
+            }\n\n Requested By: ${correctiveData.REQUEST_BY}\n\n`,
+          };
+
+          try {
+            const info = await transporter.sendMail(mailOptions);
+            console.log("Corrective action email sent to:", assigneeEmail);
+          } catch (emailError) {
+            console.error("Error sending corrective action email:", emailError);
+          }
+        } else {
+          console.log(
+            "No email found for assignee:",
+            correctiveData.ASSIGNED_TO
+          );
+        }
+
+        connection.end();
+      });
+    });
+  } catch (error) {
+    console.error("Error in sendCorrectiveEmail:", error);
+  }
+}
 
 // ==================================================
 // Manual trigger for creating all Corrective Action folders
@@ -331,6 +409,42 @@ router.post("/create-folders", (req, res) => {
       success: false,
       error: "Failed to start folder creation process",
     });
+  }
+});
+
+// ==================================================
+// Send email using nodemailer
+router.post("/email", async (req, res) => {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: true, // true for 465, false for other ports
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+    });
+
+    const mailOptions = {
+      from: process.env.SMTP_FROM,
+      to: req.body.ASSIGNED_TO_EMAIL,
+      subject: `Corrective Action Notification: ${req.body.CORRECTIVE_ID} - ${req.body.TITLE}`,
+      text: `The following corrective action has been issued. Please review and take timely action. If you have any questions, please contact the quality manager.\n\n Title: ${
+        req.body.TITLE
+      }\n\n Description:\n${
+        req.body.USER_DEFINED_1 || "No description provided"
+      }\n\n Due Date: ${req.body.DUE_DATE}\n\n Reference: ${
+        req.body.REFERENCE || "N/A"
+      }\n\n`,
+    };
+
+    const info = await transporter.sendMail(mailOptions);
+    // console.log("Email sent:", info.response);
+    res.status(200).send("Email sent successfully");
+  } catch (error) {
+    console.log("Error sending email:", error);
+    res.status(500).send(error.toString());
   }
 });
 

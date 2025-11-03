@@ -281,8 +281,7 @@ fetch(url, { method: "GET" })
 
       // Add close button to the div
       const btnClose = document.createElement("button");
-      btnClose.setAttribute("class", "btn");
-      // btnClose.setAttribute('class', 'btnEditNotes');
+      btnClose.setAttribute("class", "closebutton");
       btnClose.textContent = "Close NCM";
       btnClose.setAttribute("id", "btnCloseNCM");
       btnClose.setAttribute("type", "submit");

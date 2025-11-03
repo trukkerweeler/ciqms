@@ -148,20 +148,17 @@
         <section class="section image-section">
           <h2>Device Image</h2>
           <div id="view-device-image-div">
-            <img id="device-image" src="" alt="Device Image" />
+            <img id="device-image" src="" alt="Device Image" style="max-width:200px;height:auto;" />
             <div id="image-actions">
-              <!-- <label for="imagePicker">Change Image:</label> -->
-              <section>
-                <h3>Change image</h3>
-                <button type="button" id="changeImage" class="btn btn-primary">
-                  Change Image</button>
-                <input type="file" id="imagePicker" accept="image/*" />
-              </section>
               <section>
                 <h3>Delete image</h3>
                 <button type="button" id="deleteImage" class="btn btn-cancel">
                   Delete Image</button>
               </section>
+              <div style="margin-top:32px;text-align:center">
+                <input type="file" id="imagePicker" accept="image/*" style="margin-bottom:12px" />
+                <button type="button" id="changeImage" class="btn btn-primary" style="width:120px">Save</button>
+              </div>
             </div>
           </div>
           </button>

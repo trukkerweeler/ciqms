@@ -139,6 +139,9 @@ app.use("/device", deviceRoutes);
 const imageRoutes = require("./routes/image");
 app.use("/image", imageRoutes);
 
+const gldetailRoutes = require("./routes/gldetail");
+app.use("/gldetail", gldetailRoutes);
+
 const receiverRoutes = require("./routes/receiver");
 app.use("/receiver", receiverRoutes);
 
@@ -176,6 +179,16 @@ const inputFilesPath =
   process.env.INPUT_FILES_PATH ||
   "\\\\fs1\\Common\\Quality\\00000_Work Instructions";
 app.use("/input-files", express.static(inputFilesPath));
+
+// Use environment variable for device images path
+const baseDeviceImagesPath =
+  process.env.DEVICE_IMAGES_PATH ||
+  "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration\\";
+const deviceImagesPath = require("path").join(
+  baseDeviceImagesPath,
+  "_device-images"
+);
+app.use("/_device-images", express.static(deviceImagesPath));
 
 // API route to list input files
 const inputFilesApiRoutes = require("./routes/inputFiles");

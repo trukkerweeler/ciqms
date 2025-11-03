@@ -5,6 +5,9 @@ import {
   timestampAndJoinNotes,
 } from "./utils.mjs";
 
+// Debug mode flag - set to true to enable console logging
+const DEBUG_MODE = false;
+
 loadHeaderFooter();
 const port = myport();
 let user = (await getUserValue("user")) || "Unknown User";
@@ -44,8 +47,91 @@ async function initializePage() {
         let imageBtn = document.createElement("button");
         imageBtn.id = "imageBtn";
         imageBtn.classList.add("btn", "btn-primary", "image-button");
-        imageBtn.innerHTML = "Image";
-        divTitle.appendChild(imageBtn);
+        imageBtn.innerHTML = "Edit Image";
+        imageBtn.style.fontSize = "0.85rem";
+        imageBtn.style.padding = "2px 8px";
+        imageBtn.style.height = "28px";
+        // Create image/button container
+        const imageContainer = document.createElement("div");
+        imageContainer.style.display = "flex";
+        imageContainer.style.alignItems = "flex-end";
+        imageContainer.style.gap = "16px";
+        imageContainer.appendChild(imageBtn);
+        // Show device image on page load if it exists
+        fetch(`http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`)
+          .then((response) => response.json())
+          .then((result) => {
+            const imageFilename = result.filename;
+            if (imageFilename) {
+              let mainImage = document.createElement("img");
+              mainImage.id = "main-device-image";
+              mainImage.alt = "Device Image";
+              mainImage.style.maxWidth = "200px";
+              mainImage.style.height = "auto";
+              mainImage.src = `/_device-images/${encodeURIComponent(
+                imageFilename
+              )}`;
+              imageContainer.appendChild(mainImage);
+            } else {
+              // No image found, show placeholder
+              let noImageDiv = document.createElement("div");
+              noImageDiv.id = "main-device-image";
+              noImageDiv.style.width = "200px";
+              noImageDiv.style.padding = "20px";
+              noImageDiv.style.textAlign = "center";
+              noImageDiv.style.color = "#888";
+              noImageDiv.style.border = "1px dashed #ccc";
+              noImageDiv.style.borderRadius = "4px";
+              noImageDiv.textContent = "No image";
+              imageContainer.appendChild(noImageDiv);
+            }
+          });
+        divTitle.appendChild(imageContainer);
+        // ...existing code...
+        // Add image display logic
+        imageBtn.addEventListener("click", () => {
+          // Remove any previous preview image before opening dialog
+          let oldImg = document.getElementById("device-image-preview");
+          if (oldImg) oldImg.remove();
+          // Fetch the image filename from DEVICE_IMAGES table
+          fetch(`http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`)
+            .then((response) => response.json())
+            .then((result) => {
+              const imageFilename = result.filename;
+              if (imageFilename) {
+                const img = document.createElement("img");
+                img.id = "device-image-preview";
+                img.src = `/_device-images/${encodeURIComponent(
+                  imageFilename
+                )}`;
+                img.alt = "Device Image";
+                img.style.maxWidth = "400px";
+                img.style.maxHeight = "400px";
+                divTitle.appendChild(img);
+                // Remove preview image when dialog closes
+                const modal = document.getElementById(
+                  "view-device-image-dialog"
+                );
+                if (modal) {
+                  modal.addEventListener(
+                    "close",
+                    () => {
+                      let previewImg = document.getElementById(
+                        "device-image-preview"
+                      );
+                      if (previewImg) previewImg.remove();
+                    },
+                    { once: true }
+                  );
+                }
+              } else {
+                alert("No image available for this device.");
+              }
+            })
+            .catch(() => {
+              alert("No image available for this device.");
+            });
+        });
 
         let calibrationsBtn = document.createElement("button");
         calibrationsBtn.id = "calibrationsBtn";
@@ -58,6 +144,7 @@ async function initializePage() {
         calibrationsBtn.addEventListener("click", () => {
           window.location.href = `./calibrations.html?id=${data["DEVICE_ID"]}`;
         });
+        // Move calibrationsBtn to bottom of divTitle
         divTitle.appendChild(calibrationsBtn);
         mainElement.appendChild(divTitle);
 
@@ -228,6 +315,9 @@ async function initializePage() {
           calibrationSection.appendChild(calibrationDiv);
         });
 
+        // Now append calibrationsBtn as the last object in calibrationSection
+        calibrationSection.appendChild(calibrationsBtn);
+
         sectionsDiv.appendChild(calibrationSection);
         // =====================================================
         // Notes section
@@ -280,19 +370,33 @@ async function initializePage() {
             let placeholder = imageDiv.querySelector(".no-image-placeholder");
             if (placeholder) imageDiv.removeChild(placeholder);
 
+            // Fetch the image filename from DEVICE_IMAGES
             try {
-              const response = await fetch(
-                `http://localhost:${port}/image/${deviceId}`,
-                {
-                  method: "GET",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                }
+              const filenameRes = await fetch(
+                `http://localhost:${port}/image/filename/${deviceId}`
               );
-
-              if (!response.ok) {
-                // No image in DB, show placeholder
+              const filenameJson = await filenameRes.json();
+              const imageFilename = filenameJson.filename;
+              if (imageFilename) {
+                imgElement.src = `/_device-images/${encodeURIComponent(
+                  imageFilename
+                )}`;
+                imgElement.style.display = "block";
+                imgElement.onerror = () => {
+                  imgElement.src = "";
+                  imgElement.style.display = "none";
+                  if (!imageDiv.querySelector(".no-image-placeholder")) {
+                    const placeholder = document.createElement("div");
+                    placeholder.className = "no-image-placeholder";
+                    placeholder.textContent = "No image found";
+                    placeholder.style.textAlign = "center";
+                    placeholder.style.padding = "24px";
+                    placeholder.style.color = "#888";
+                    imageDiv.appendChild(placeholder);
+                  }
+                };
+              } else {
+                // No image filename, show placeholder
                 imgElement.src = "";
                 imgElement.style.display = "none";
                 placeholder = document.createElement("div");
@@ -302,11 +406,6 @@ async function initializePage() {
                 placeholder.style.padding = "24px";
                 placeholder.style.color = "#888";
                 imageDiv.appendChild(placeholder);
-              } else {
-                const blob = await response.blob();
-                const objectURL = URL.createObjectURL(blob);
-                imgElement.src = objectURL;
-                imgElement.style.display = "block";
               }
             } catch (error) {
               // Network or other error, show placeholder
@@ -320,22 +419,17 @@ async function initializePage() {
               placeholder.style.color = "#888";
               imageDiv.appendChild(placeholder);
             }
-
-            imgElement.onerror = () => {
-              imgElement.src = "";
-              imgElement.style.display = "none";
-              if (!imageDiv.querySelector(".no-image-placeholder")) {
-                placeholder = document.createElement("div");
-                placeholder.className = "no-image-placeholder";
-                placeholder.textContent = "No image found";
-                placeholder.style.textAlign = "center";
-                placeholder.style.padding = "24px";
-                placeholder.style.color = "#888";
-                imageDiv.appendChild(placeholder);
-              }
-            };
-
             modal.showModal();
+
+            // Hide image when dialog closes
+            modal.addEventListener(
+              "close",
+              () => {
+                imgElement.src = "";
+                imgElement.style.display = "none";
+              },
+              { once: true }
+            );
           });
         mainElement.appendChild(sectionsDiv);
       });
@@ -428,7 +522,7 @@ document
     // console.log("User: ", user);
     const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
     // console.log("Mod Date: ", modDate);
-    console.log("Status: ", status);
+    if (DEBUG_MODE) console.log("Status: ", status);
 
     const devCalEditUrl = `http://localhost:${port}/device/editdevcal`;
 
@@ -464,7 +558,7 @@ document
 
 // listen for changeImage
 const changeImageButton = document.getElementById("changeImage");
-changeImageButton.addEventListener("click", () => {
+changeImageButton.addEventListener("click", async () => {
   const imagePicker = document.getElementById("imagePicker");
   if (!imagePicker.value) {
     alert("Must choose an image first.");
@@ -472,47 +566,25 @@ changeImageButton.addEventListener("click", () => {
   }
   const file = imagePicker.files[0];
   if (file) {
-    const reader = new FileReader();
-    reader.onload = async (event) => {
-      const img = new Image();
-      img.onload = async () => {
-        const canvas = document.createElement("canvas");
-        const ctx = canvas.getContext("2d");
-        const aspectRatio = img.height / img.width;
-        canvas.width = 300;
-        canvas.height = 300 * aspectRatio;
-        ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
-
-        const resizedImage = canvas.toDataURL("image/jpeg");
-        const blob = await (await fetch(resizedImage)).blob();
-
-        const formData = new FormData();
-        formData.append("image", blob, file.name);
-
-        const urlParams = new URLSearchParams(window.location.search);
-        const deviceId = urlParams.get("id");
-        formData.append("deviceId", deviceId);
-
-        try {
-          const response = await fetch(`http://localhost:${port}/image`, {
-            method: "POST",
-            body: formData,
-          });
-
-          if (response.ok) {
-            alert("Image uploaded successfully!");
-          } else {
-            alert("Failed to upload image.");
-          }
-        } catch (error) {
-          console.error("Error uploading image:", error);
-          alert("An error occurred while uploading the image.");
-        }
-      };
-      img.src = event.target.result;
-    };
-    reader.readAsDataURL(file);
-    // Clear the file input after upload
+    const formData = new FormData();
+    formData.append("image", file, file.name);
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get("id");
+    formData.append("deviceId", deviceId);
+    try {
+      const response = await fetch(`http://localhost:${port}/image`, {
+        method: "POST",
+        body: formData,
+      });
+      if (response.ok) {
+        alert("Image uploaded and copied successfully!");
+      } else {
+        alert("Failed to upload image.");
+      }
+    } catch (error) {
+      console.error("Error uploading image:", error);
+      alert("An error occurred while uploading the image.");
+    }
     imagePicker.value = ""; // Reset the file input value
   }
 });
@@ -525,6 +597,8 @@ deleteImageButton.addEventListener("click", async () => {
   const deleteImageUrl = `http://localhost:${port}/image/${deviceId}`;
 
   try {
+    if (DEBUG_MODE)
+      console.log(`Attempting to delete image for device ${deviceId}`);
     const response = await fetch(deleteImageUrl, {
       method: "DELETE",
       headers: {
@@ -532,10 +606,22 @@ deleteImageButton.addEventListener("click", async () => {
       },
     });
 
+    if (DEBUG_MODE) console.log(`Delete response status: ${response.status}`);
+    const responseData = await response.json().catch(() => null);
+    if (DEBUG_MODE) console.log("Delete response data:", responseData);
+
     if (response.ok) {
       alert("Image deleted successfully!");
+      // Close the dialog and reload the page to reflect the deletion
+      const dialog = document.getElementById("view-device-image-dialog");
+      if (dialog) {
+        dialog.close();
+      }
+      window.location.reload();
     } else {
-      alert("Failed to delete image.");
+      const errorMsg = responseData?.message || "Failed to delete image.";
+      console.error("Delete failed:", errorMsg);
+      alert(`Failed to delete image: ${errorMsg}`);
     }
   } catch (error) {
     console.error("Error deleting image:", error);

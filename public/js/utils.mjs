@@ -248,7 +248,11 @@ export async function createNotesSection(title, notes) {
       notesTitle.textContent = "Notes";
   }
 
-  notesSection.appendChild(notesTitle);
+  // Create a header container for title and button
+  const headerContainer = document.createElement("div");
+  headerContainer.classList.add("notes-header");
+
+  headerContainer.appendChild(notesTitle);
 
   // append notes to notes section
   // if the length of notes replace new line characters with <br> tag
@@ -257,10 +261,41 @@ export async function createNotesSection(title, notes) {
   }
   note.innerHTML = notes;
   note.id = noteid;
-  notesSection.appendChild(note);
 
-  // call createButton and append button to section
-  createButton(notesSection, buttonText, buttonid, "editNoteButton");
+  // Special handling for RESPONSE section - add Collect button to the left of Respond button
+  if (title === "RESPONSE_TEXT") {
+    // Create container for buttons
+    const buttonContainer = document.createElement("div");
+    buttonContainer.classList.add("response-buttons");
+
+    // Create Collect button
+    const collectButton = document.createElement("button");
+    collectButton.textContent = "Collect";
+    collectButton.id = "btnCollData";
+    collectButton.classList.add("editNoteButton");
+    collectButton.type = "submit";
+
+    // Create Respond button
+    const respondButton = document.createElement("button");
+    respondButton.textContent = buttonText;
+    respondButton.id = buttonid;
+    respondButton.classList.add("editNoteButton");
+    respondButton.type = "submit";
+
+    // Add buttons to container
+    buttonContainer.appendChild(collectButton);
+    buttonContainer.appendChild(respondButton);
+
+    // Add button container to header
+    headerContainer.appendChild(buttonContainer);
+  } else {
+    // call createButton and append button to header container
+    createButton(headerContainer, buttonText, buttonid, "editNoteButton");
+  }
+
+  // Append header container and note to section
+  notesSection.appendChild(headerContainer);
+  notesSection.appendChild(note);
 
   // // insert notes adjacent to #detailSection
   // const detailSection = document.querySelector("#detailSection");

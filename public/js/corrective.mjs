@@ -200,6 +200,7 @@ fetch(url, { method: "GET" })
       // Trend section=======================================
       const trendSection = document.createElement("section");
       trendSection.setAttribute("id", "trendSection");
+      trendSection.setAttribute("class", "notes-section");
       const trendHeader = document.createElement("h3");
       trendHeader.textContent = "NC Trend";
       const trendText = document.createElement("p");
@@ -211,6 +212,7 @@ fetch(url, { method: "GET" })
       // Correction section=======================================
       const correctionSection = document.createElement("section");
       correctionSection.setAttribute("id", "correctionSection");
+      correctionSection.setAttribute("class", "notes-section");
       const correctionHeader = document.createElement("h3");
       correctionHeader.textContent = "Correction";
       const correctionText = document.createElement("p");
@@ -303,16 +305,29 @@ fetch(url, { method: "GET" })
           correctionSaveBtn.dataset.listener = "true";
         }
       });
-      // Append child elements to the correction section
-      correctionSection.appendChild(correctionHeader);
-      correctionSection.appendChild(correctionDate);
-      correctionSection.appendChild(actionby);
-      correctionSection.appendChild(correctionText);
-      correctionSection.appendChild(btnCorrection);
+      // Create a grid container for the correction header and button
+      const correctionHeaderGrid = document.createElement("div");
+      correctionHeaderGrid.setAttribute("class", "section-header-grid");
+
+      // Add header and button to the grid
+      correctionHeaderGrid.appendChild(correctionHeader);
+      correctionHeaderGrid.appendChild(btnCorrection);
+
+      // Create container for correction content
+      const correctionContent = document.createElement("div");
+      correctionContent.setAttribute("class", "section-content");
+      correctionContent.appendChild(correctionDate);
+      correctionContent.appendChild(actionby);
+      correctionContent.appendChild(correctionText);
+
+      // Append to correction section
+      correctionSection.appendChild(correctionHeaderGrid);
+      correctionSection.appendChild(correctionContent);
 
       // Cause section=======================================
       const causeSection = document.createElement("section");
       causeSection.setAttribute("id", "causeSection");
+      causeSection.setAttribute("class", "notes-section");
       const causeHeader = document.createElement("h3");
       causeHeader.textContent = "Cause";
       const causeText = document.createElement("p");
@@ -375,14 +390,27 @@ fetch(url, { method: "GET" })
           });
       });
 
+      // Create a grid container for the cause header and button
+      const causeHeaderGrid = document.createElement("div");
+      causeHeaderGrid.setAttribute("class", "section-header-grid");
+
+      // Add header and button to the grid
+      causeHeaderGrid.appendChild(causeHeader);
+      causeHeaderGrid.appendChild(btnCause);
+
+      // Create container for cause content
+      const causeContent = document.createElement("div");
+      causeContent.setAttribute("class", "section-content");
+      causeContent.appendChild(causeText);
+
       // Add child elements to the cause section
-      causeSection.appendChild(causeHeader);
-      causeSection.appendChild(causeText);
-      causeSection.appendChild(btnCause);
+      causeSection.appendChild(causeHeaderGrid);
+      causeSection.appendChild(causeContent);
 
       // Control section=======================================
       const controlSection = document.createElement("section");
       controlSection.setAttribute("id", "controlSection");
+      controlSection.setAttribute("class", "notes-section");
       const controlHeader = document.createElement("h3");
       controlHeader.textContent = "Systemic Remedy";
       const controlText = document.createElement("p");
@@ -457,11 +485,23 @@ fetch(url, { method: "GET" })
           });
       });
 
+      // Create a grid container for the control header and button
+      const controlHeaderGrid = document.createElement("div");
+      controlHeaderGrid.setAttribute("class", "section-header-grid");
+
+      // Add header and button to the grid
+      controlHeaderGrid.appendChild(controlHeader);
+      controlHeaderGrid.appendChild(btnControl);
+
+      // Create container for control content
+      const controlContent = document.createElement("div");
+      controlContent.setAttribute("class", "section-content");
+      controlContent.appendChild(controlDate);
+      controlContent.appendChild(controlText);
+
       // Add child elements to the control section
-      controlSection.appendChild(controlHeader);
-      controlSection.appendChild(controlDate);
-      controlSection.appendChild(controlText);
-      controlSection.appendChild(btnControl);
+      controlSection.appendChild(controlHeaderGrid);
+      controlSection.appendChild(controlContent);
 
       // Append the elements to the main element================
       main.appendChild(mainTitle);

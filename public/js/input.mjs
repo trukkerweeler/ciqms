@@ -56,20 +56,6 @@ fetch(url, { method: "GET" })
       btnEditDetail.setAttribute("id", "btnEditDetail");
       btnEditDetail.textContent = "Edit";
 
-      // Create the close button
-      const btnCloseDetail = document.createElement("button");
-      btnCloseDetail.setAttribute("class", "btn");
-      btnCloseDetail.setAttribute("class", "btnEdit");
-      btnCloseDetail.setAttribute("id", "btnClose");
-      btnCloseDetail.textContent = "Close";
-
-      // Create the collect data button
-      const btnCollData = document.createElement("button");
-      btnCollData.setAttribute("class", "btn");
-      btnCollData.setAttribute("class", "btnEdit");
-      btnCollData.setAttribute("id", "btnCollData");
-      btnCollData.textContent = "Collect";
-
       // Create the follow-up button
       const btnFollowUp = document.createElement("button");
       btnFollowUp.setAttribute("class", "btn");
@@ -78,8 +64,6 @@ fetch(url, { method: "GET" })
       btnFollowUp.textContent = "Email";
 
       detailButtons.appendChild(btnFollowUp);
-      detailButtons.appendChild(btnCollData);
-      detailButtons.appendChild(btnCloseDetail);
       detailButtons.appendChild(btnEditDetail);
 
       const elemFUP = document.createElement("p");
@@ -174,6 +158,22 @@ fetch(url, { method: "GET" })
       elemId.textContent = "Action Id: " + record[key]["INPUT_ID"];
       elemId.setAttribute("class", "header2");
 
+      // make a div for the subtitle and add the subtitle to the div and a button
+      const divSubTitle = document.createElement("div");
+      divSubTitle.setAttribute("class", "subtitlewithbutton");
+
+      // Add title to the div
+      divSubTitle.appendChild(elemId);
+
+      // Add close button to the div
+      const btnClose = document.createElement("button");
+      btnClose.setAttribute("class", "closebutton");
+      btnClose.textContent = "Close Action";
+      btnClose.setAttribute("id", "btnClose");
+      btnClose.setAttribute("type", "submit");
+
+      divSubTitle.appendChild(btnClose);
+
       detailSection.appendChild(detailTitle);
       detailSection.appendChild(detailButtons);
       detailSection.appendChild(aiDate);
@@ -186,7 +186,7 @@ fetch(url, { method: "GET" })
       detailSection.appendChild(responseDate);
 
       main.appendChild(elemRpt);
-      main.appendChild(elemId);
+      main.appendChild(divSubTitle);
 
       main.appendChild(detailSection);
       // main.appendChild(notesSection);

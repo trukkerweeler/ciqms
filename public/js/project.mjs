@@ -102,13 +102,18 @@ Promise.all([
     // descriptionSection.appendChild(detailParagraph);
     main.appendChild(descriptionSection);
 
-    // Create the Actions header section with checkbox
+    // Create the Actions header section
     const actionsSection = document.createElement("div");
     actionsSection.setAttribute("class", "actions-header-section");
 
     const actionsHeader = document.createElement("h1");
     actionsHeader.textContent = "Actions";
 
+    actionsSection.appendChild(actionsHeader);
+
+    main.appendChild(actionsSection);
+
+    // Create the recurring checkbox container separately
     const recurringContainer = document.createElement("div");
     recurringContainer.setAttribute("class", "recurring-container");
 
@@ -124,10 +129,7 @@ Promise.all([
     recurringContainer.appendChild(recurringCheckbox);
     recurringContainer.appendChild(recurringLabel);
 
-    actionsSection.appendChild(actionsHeader);
-    actionsSection.appendChild(recurringContainer);
-
-    main.appendChild(actionsSection);
+    main.appendChild(recurringContainer);
 
     // Function to filter and render table
     function renderTable(showRecurring = true) {
