@@ -199,93 +199,96 @@ fetch(url, { method: "GET" })
     // Edit and Save response
     // listen for the Response button click
     const btnEditResp = document.getElementById("editResponse");
-    btnEditResp.addEventListener("click", async (event) => {
-      // prevent default action
-      event.preventDefault();
-      // get the action item id
-      let queryString = window.location.search;
-      let urlParams = new URLSearchParams(queryString);
-      let iid = urlParams.get("id");
-      // alert('Edit Response button clicked');
-      const responseDialog = document.querySelector("#respDialog");
-      const storedResponseDate = document.querySelector("#responseDate").value;
-      // console.log(storedResponseDate);
-      if (storedResponseDate === "") {
-        const d = new Date();
-        const date = d.toISOString().substring(0, 10);
-        const time = d.toLocaleTimeString();
-        const mydate = date + " " + time;
-        document.querySelector("#responseDate").value = mydate;
-      } else {
-        const newResponseDate = document.querySelector("#newResponseDate");
-        const d = new Date();
-        newResponseDate.value = d.toISOString().substring(0, 10);
-        // console.log(responseDate);
-      }
-
-      responseDialog.showModal();
-
-      // listen for the cancel button click
-      const btnCancelResp = document.querySelector("#cancelResp");
-      btnCancelResp.addEventListener("click", async (event) => {
-        // alert('Cancel Response button clicked');
-        responseDialog.close();
-      });
-
-      // listen for the save response button click
-      const btnSaveResp = document.querySelector("#saveResp");
-      btnSaveResp.addEventListener("click", async (event) => {
+    if (btnEditResp) {
+      btnEditResp.addEventListener("click", async (event) => {
         // prevent default action
         event.preventDefault();
-        // alert('Save Response button clicked');
+        // get the action item id
+        let queryString = window.location.search;
+        let urlParams = new URLSearchParams(queryString);
+        let iid = urlParams.get("id");
+        // alert('Edit Response button clicked');
+        const responseDialog = document.querySelector("#respDialog");
+        const storedResponseDate =
+          document.querySelector("#responseDate").value;
+        // console.log(storedResponseDate);
+        if (storedResponseDate === "") {
+          const d = new Date();
+          const date = d.toISOString().substring(0, 10);
+          const time = d.toLocaleTimeString();
+          const mydate = date + " " + time;
+          document.querySelector("#responseDate").value = mydate;
+        } else {
+          const newResponseDate = document.querySelector("#newResponseDate");
+          const d = new Date();
+          newResponseDate.value = d.toISOString().substring(0, 10);
+          // console.log(responseDate);
+        }
 
-        // get the response text
-        const oldResponseText =
-          document.querySelector("#responseNote").innerHTML;
-        const newResponseText = document.querySelector("#newTextResp").value;
-        let responseText = newResponseText + "\n" + oldResponseText;
-        const d = new Date();
-        const date = d.toISOString().substring(0, 10);
-        const time = d.toLocaleTimeString();
-        const mydate = date + " " + time;
-        // prepend response text with user name and date
-        responseText =
-          user +
-          " - " +
-          mydate +
-          "\n" +
-          newResponseText +
-          "\n\n" +
-          oldResponseText;
-        // responseText = responseText.replace(/\n/g, "<br>");
-        // fix the apostrophe issue
-        // responseText = responseText.replace(/'/g, "''");
+        responseDialog.showModal();
 
-        let data = {
-          INPUT_ID: iid,
-          INPUT_USER: user,
-          RESPONSE_TEXT: responseText,
-          RESPONSE_DATE: document.querySelector("#newResponseDate").value,
-          MODIFIED_BY: user,
-          MODIFIED_DATE: getDateTime(),
-        };
-        // console.log(data);
-
-        // update the response text
-        const url = `http://localhost:${port}/input/${iid}`;
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data }),
+        // listen for the cancel button click
+        const btnCancelResp = document.querySelector("#cancelResp");
+        btnCancelResp.addEventListener("click", async (event) => {
+          // alert('Cancel Response button clicked');
+          responseDialog.close();
         });
-        // close the dialog
-        responseDialog.close();
-        // reload the page
-        location.reload();
+
+        // listen for the save response button click
+        const btnSaveResp = document.querySelector("#saveResp");
+        btnSaveResp.addEventListener("click", async (event) => {
+          // prevent default action
+          event.preventDefault();
+          // alert('Save Response button clicked');
+
+          // get the response text
+          const oldResponseText =
+            document.querySelector("#responseNote").innerHTML;
+          const newResponseText = document.querySelector("#newTextResp").value;
+          let responseText = newResponseText + "\n" + oldResponseText;
+          const d = new Date();
+          const date = d.toISOString().substring(0, 10);
+          const time = d.toLocaleTimeString();
+          const mydate = date + " " + time;
+          // prepend response text with user name and date
+          responseText =
+            user +
+            " - " +
+            mydate +
+            "\n" +
+            newResponseText +
+            "\n\n" +
+            oldResponseText;
+          // responseText = responseText.replace(/\n/g, "<br>");
+          // fix the apostrophe issue
+          // responseText = responseText.replace(/'/g, "''");
+
+          let data = {
+            INPUT_ID: iid,
+            INPUT_USER: user,
+            RESPONSE_TEXT: responseText,
+            RESPONSE_DATE: document.querySelector("#newResponseDate").value,
+            MODIFIED_BY: user,
+            MODIFIED_DATE: getDateTime(),
+          };
+          // console.log(data);
+
+          // update the response text
+          const url = `http://localhost:${port}/input/${iid}`;
+          const response = await fetch(url, {
+            method: "PUT",
+            headers: {
+              "Content-Type": "application/json",
+            },
+            body: JSON.stringify({ data }),
+          });
+          // close the dialog
+          responseDialog.close();
+          // reload the page
+          location.reload();
+        });
       });
-    });
+    }
 
     // Action=======================================================================================================
     // listen for the Edit Action button click
