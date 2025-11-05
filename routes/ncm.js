@@ -268,6 +268,9 @@ router.get("/nextId", (req, res) => {
 // Send email using nodemailer
 router.post("/email", async (req, res) => {
   try {
+    // SMTP debug flag - set to true to enable detailed SMTP logging
+    const SMTP_DEBUG = false;
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: process.env.SMTP_PORT,
@@ -276,6 +279,7 @@ router.post("/email", async (req, res) => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      debug: SMTP_DEBUG, // Enable/disable SMTP debugging
     });
 
     const mailOptions = {

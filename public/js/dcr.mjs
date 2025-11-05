@@ -42,6 +42,7 @@ fetch(url, { method: "GET" })
       const elemRpt = document.createElement("h1");
       const elemId = document.createElement("h2");
       const detailHeading = document.createElement("h3");
+      detailHeading.setAttribute("id", "detailTitle");
       detailHeading.textContent = "Request Detail";
 
       const divDetailBtns = document.createElement("div");

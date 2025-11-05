@@ -1,88 +1,92 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/ncmstyles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Document Change Request - Detail</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
     <dialog id="confirmDialog" class="confirmDialog">
-        <div class="dialogTitle">Confirm</div>
-        <div id="confirmMessage"></div>
-        <button id="btnConfirmYes" class="confirmYes">Yes</button>
-        <button id="btnConfirmNo" class="confirmNo">No</button>
+      <div class="dialogTitle">Confirm</div>
+      <div id="confirmMessage"></div>
+      <button id="btnConfirmYes" class="confirmYes">Yes</button>
+      <button id="btnConfirmNo" class="confirmNo">No</button>
     </dialog>
     <dialog id="detailDialog" class="editDialog">
-        <div class="dialogTitle">Edit Details</div>
-        <form class="editdetail" id="editreqform">
-            <label for="assignedto"></label>
-            <input type="text" id="assignedto" name="assignedto">
-            <label for="duedate"></label>
-            <input type="date" id="duedate" name="duedate">
-            <label for="response"></label>
-            <textarea id="response" name="response"></textarea>
-        </form>
-        <button id="btnSaveEditReq" class="save">Save</button>
-        <button id="btnCloseEditReq" class="closedialog">Cancel</button>
+      <div class="dialogTitle">Edit Details</div>
+      <form class="editdetail" id="editreqform">
+        <label for="assignedto"></label>
+        <input type="text" id="assignedto" name="assignedto" />
+        <label for="duedate"></label>
+        <input type="date" id="duedate" name="duedate" />
+        <label for="response"></label>
+        <textarea id="response" name="response"></textarea>
+      </form>
+      <button id="btnSaveEditReq" class="save">Save</button>
+      <button id="btnCloseEditReq" class="closedialog">Cancel</button>
     </dialog>
-    
+
     <dialog id="requestDialog" class="editDialog">
-        <div class="dialogTitle">Append Request</div>
-        <form class="editdetail newreq" id="newreqform">
-            <label for="request"></label>
-            <textarea id="request" name="request"></textarea>
-        </form>
-        <!-- Save button -->
-        <button id="btnSaveRequest" class="save">Save</button>
-        <!-- Close button -->
-        <button id="btnCloseRequest" class="closedialog">Cancel</button>
+      <div class="dialogTitle">Append Request</div>
+      <form class="editdetail newreq" id="newreqform">
+        <label for="request"></label>
+        <textarea id="request" name="request"></textarea>
+      </form>
+      <!-- Save button -->
+      <button id="btnSaveRequest" class="save">Save</button>
+      <!-- Close button -->
+      <button id="btnCloseRequest" class="closedialog">Cancel</button>
     </dialog>
 
     <dialog id="responseDialog" class="editDialog">
-        <div class="dialogTitle">Append Response</div>
-        <form class="editdetail newresp" id="newrespform">
-            <label for="dcrresponse"></label>
-            <textarea id="dcrresponse" name="dcrresponse"></textarea>
-        </form>
-        <!-- Save button -->
-        <button id="btnSaveResponse" class="save">Save</button>
-        <!-- Close button -->
-        <button id="btnCloseResponse" class="closedialog">Cancel</button>
+      <div class="dialogTitle">Append Response</div>
+      <form class="editdetail newresp" id="newrespform">
+        <label for="dcrresponse"></label>
+        <textarea id="dcrresponse" name="dcrresponse"></textarea>
+      </form>
+      <!-- Save button -->
+      <button id="btnSaveResponse" class="save">Save</button>
+      <!-- Close button -->
+      <button id="btnCloseResponse" class="closedialog">Cancel</button>
     </dialog>
     <!-- Close dialog -->
     <dialog id="closeDialog" class="editDialog">
-        <div class="dialogTitle">Close DCR</div>
-        <form class="editdetail" id="closedcrform">
-            <label for="decision">Decision:</label>
-            <select id="decision" name="decision">
-                <option value="Approved">Approved</option>
-                <option value="Rejected">Rejected</option>
-                <option value="Deferred">Deferred</option>
-            </select>
-            <label for="decisiondate">Decision date:</label>
-            <input type="date" id="decisiondate" name="decisiondate">
-            <!-- <label for="closedate">Close date:</label> -->
-            <!-- <input type="date" id="closedate" name="closedate"> -->
-            <label for="docnewrev">New rev:</label>
-            <input type="text" id="docnewrev" name="docnewrev">
-            <label for="docnewrevdate">New rev date:</label>
-            <input type="date" id="docnewrevdate" name="docnewrevdate">
-        </form>
-        <!-- Save button -->
-        <button id="btnSaveClose" class="save">Save</button>
-        <!-- Close button -->
-        <button id="btnCloseClose" class="closedialog">Cancel</button>
+      <div class="dialogTitle">Close DCR</div>
+      <form class="editdetail" id="closedcrform">
+        <label for="decision">Decision:</label>
+        <select id="decision" name="decision">
+          <option value="Approved">Approved</option>
+          <option value="Rejected">Rejected</option>
+          <option value="Deferred">Deferred</option>
+        </select>
+        <label for="decisiondate">Decision date:</label>
+        <input type="date" id="decisiondate" name="decisiondate" />
+        <!-- <label for="closedate">Close date:</label> -->
+        <!-- <input type="date" id="closedate" name="closedate"> -->
+        <label for="docnewrev">New rev:</label>
+        <input type="text" id="docnewrev" name="docnewrev" />
+        <label for="docnewrevdate">New rev date:</label>
+        <input type="date" id="docnewrevdate" name="docnewrevdate" />
+      </form>
+      <!-- Save button -->
+      <button id="btnSaveClose" class="save">Save</button>
+      <!-- Close button -->
+      <button id="btnCloseClose" class="closedialog">Cancel</button>
     </dialog>
 
     <main id="main"></main>
     <footer id="footer"></footer>
-</body>
-<script type="module" src="/js/dcr.js"></script>
+  </body>
+  <script type="module" src="/js/dcr.mjs"></script>
 </html>

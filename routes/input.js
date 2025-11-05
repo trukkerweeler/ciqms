@@ -180,6 +180,9 @@ router.post("/email", async (req, res) => {
   // console.log('Email route');
   // console.log(req.body);
   try {
+    // SMTP debug flag - set to true to enable detailed SMTP logging
+    const SMTP_DEBUG = false;
+
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
       port: Number(process.env.SMTP_PORT),
@@ -188,8 +191,7 @@ router.post("/email", async (req, res) => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      logger: true,
-      debug: true,
+      debug: SMTP_DEBUG, // Enable/disable SMTP debugging
     });
 
     // Verify connection configuration

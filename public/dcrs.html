@@ -1,27 +1,148 @@
 <!DOCTYPE html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="js node test page.">
-    <meta name="author" content="This page authored by timokent">
-    <link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
-    <link rel="stylesheet" href="/css/styles.css">
-    <link rel="icon" href="images/ci-logo.png">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
     <title>Document Change Requests</title>
-</head>
-<body>
+  </head>
+  <body>
     <header id="header"></header>
     <div class="recordsaddrecordheading" id="addrequestheading">
-        <h1>Change Requests</h1>
-        <button class="addrecordheadingbutton" id="addrequestlink" title="Add Change Request" onclick="location.href='docrequest.html'">+</button>
+      <h1>Change Requests</h1>
+      <button
+        class="addrecordheadingbutton"
+        id="addrequestlink"
+        title="Add Change Request"
+      >
+        +
+      </button>
     </div>
-    
+
     <main id="main"></main>
-    
+
+    <!-- Document Request Dialog -->
+    <dialog id="docRequestDialog" class="dialog">
+      <form id="docRequestForm" class="ncm-form">
+        <div class="form-header">
+          <h2>Enter Document Change Request</h2>
+        </div>
+        <div class="form-grid">
+          <div class="form-group">
+            <label for="document_id"
+              >Document ID <span class="required">*</span></label
+            >
+            <input
+              required
+              type="text"
+              name="DOCUMENT_ID"
+              id="document_id"
+              placeholder="Enter document id"
+              style="text-transform: uppercase"
+            />
+          </div>
+          <div class="form-group">
+            <label for="doc_rev">Revision</label>
+            <input
+              type="text"
+              name="doc_rev"
+              id="doc_rev"
+              placeholder="Enter revision"
+            />
+          </div>
+          <div class="form-group">
+            <label for="status">Status</label>
+            <input
+              type="text"
+              name="status"
+              id="status"
+              placeholder="Enter status"
+            />
+          </div>
+          <div class="form-group">
+            <label for="chtype">Type <span class="required">*</span></label>
+            <select name="CHANGE_TYPE" id="chtype" required>
+              <option value="C">Cancel</option>
+              <option value="E">Enhancement/Clarification</option>
+              <option value="F">Format</option>
+              <option value="P" selected>Process</option>
+              <option value="I">Initial</option>
+            </select>
+          </div>
+          <div class="form-group">
+            <label for="reason">Reason</label>
+            <input
+              type="text"
+              name="CHANGE_REASON"
+              id="reason"
+              placeholder="Enter reason"
+            />
+          </div>
+          <div class="form-group">
+            <label for="priority">Priority</label>
+            <input
+              type="text"
+              name="PRIORITY"
+              id="priority"
+              placeholder="Enter priority"
+            />
+          </div>
+          <div class="form-group full-width">
+            <label for="change">Change <span class="required">*</span></label>
+            <textarea
+              name="REQUEST_TEXT"
+              id="change"
+              placeholder="Enter change"
+              required
+              rows="4"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="createby"
+              >Requestor <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              name="CREATE_BY"
+              id="createby"
+              placeholder="Enter requestor ID"
+              style="text-transform: uppercase"
+              required
+            />
+          </div>
+          <div class="form-group">
+            <label for="assto">Assignee</label>
+            <input
+              type="text"
+              name="ASSIGNED_TO"
+              id="assto"
+              placeholder="Enter assignee"
+              style="text-transform: uppercase"
+            />
+          </div>
+        </div>
+        <div class="dialog-actions">
+          <button type="submit" class="btn btn-primary">
+            <span class="btn-icon">✓</span>
+            Submit
+          </button>
+          <button type="button" id="cancelRequestDialog" class="btn btn-cancel">
+            <span class="btn-icon">✕</span>
+            Cancel
+          </button>
+        </div>
+      </form>
+    </dialog>
+
     <footer id="footer"></footer>
-    
-</body>
-<script type="module" src="/js/dcrs.js"></script>
+  </body>
+  <script type="module" src="/js/dcrs.mjs"></script>
 </html>

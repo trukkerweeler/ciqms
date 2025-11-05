@@ -24,6 +24,14 @@ if (!addDeviceBtn) {
         purchaseDateField.value = new Date().toISOString().slice(0, 10);
       }
 
+      // Add input event listener to transform DEVICE_TYPE to uppercase as user types
+      const deviceTypeField = document.getElementById("device-type");
+      if (deviceTypeField) {
+        deviceTypeField.addEventListener("input", (e) => {
+          e.target.value = e.target.value.toUpperCase();
+        });
+      }
+
       createDialog.showModal();
 
       // Close dialog on outside click
@@ -69,9 +77,8 @@ if (!addDeviceBtn) {
               return;
             }
           }
-          // uppercase the DEVICe_TYPE, STATUS, MAJOR_LOCATION, MINOR_LOCATION
+          // uppercase the DEVICE_ID, STATUS, MAJOR_LOCATION, MINOR_LOCATION
           deviceData["DEVICE_ID"] = deviceData["DEVICE_ID"].toUpperCase();
-          deviceData["DEVICE_TYPE"] = deviceData["DEVICE_TYPE"].toUpperCase();
           deviceData["STATUS"] = deviceData["STATUS"].toUpperCase();
           deviceData["MAJOR_LOCATION"] =
             deviceData["MAJOR_LOCATION"].toUpperCase();

@@ -112,11 +112,6 @@
   border-bottom: 0 !important;
 }
 
-/* Left align the Detail heading */
-#detailTitle {
-  text-align: left !important;
-}
-
 /* Make NCM ID and Close NCM button inline */
 .subtitlewithbutton {
   display: flex !important;
@@ -204,13 +199,13 @@ div.subtitlewithbutton {
 }
 
 #detailSection h3 {
-  margin: 4px 0 !important;
+  margin: 2px 0 !important;
   font-size: 1rem !important;
 }
 
 /* Reduce spacing above detail section */
 #detailSection {
-  margin-top: 2px !important;
+  margin-top: 1px !important;
   padding-top: 0 !important;
 }
 

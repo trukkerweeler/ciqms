@@ -480,7 +480,7 @@ document
       }),
     });
     document.getElementById("edit-device-dialog").close();
-    window.location.href = `./device.html?id=${deviceId}`;
+    window.location.reload();
   });
 
 document
