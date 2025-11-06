@@ -4,7 +4,7 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="js node test page." />
+    <meta name="description" content="Input Help - CIQMS" />
     <meta name="author" content="This page authored by timokent" />
     <link
       rel="stylesheet"
@@ -12,109 +12,92 @@
     />
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="images/ci-logo.png" />
-    <title>Input - Detail</title>
+    <title>Input Help (CIQMS)</title>
   </head>
   <body>
     <header id="header"></header>
-    <table>
-      <thead>
-        <tr>
-          <th>Code</th>
-          <th>Description</th>
-          <th>Work Instructions</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr>
-          <td>CSR</td>
-          <td>
-            <ul>
-              For suppliers like ACME that do not send any report, enter the
-              information from the Global Shop On-Time Delivery Report.
-            </ul>
-            <ul>
-              Run custsat.py in notifier. Save charts, print, hang up. Send to
-              GM.
-            </ul>
-            <ul>
-              .png files that end with trend are the trends plotted at CI.
-              Screen shots go in Customer Ratings folder.
-            </ul>
-            <ul>
-              If no deliveries, should any record be entered?
-            </ul>
-          </td>
-          <td id="wi-CSR"></td>
-        </tr>
-        <tr>
-          <td>PM</td>
-          <td>
-            <ul>
-              If there are entries, enter -scanned and filed.-.
-            </ul>
-            <ul>
-              If there are NO entries, enter -no entries!-.
-            </ul>
-            <ul>
-              If there is no file/record, enter -expired, not done!-.
-            </ul>
-          </td>
-          <td id="wi-PM"></td>
-        </tr>
-        <tr>
-          <td>SUPE1</td>
-          <td>
-            <ul>
-              <li>
-                In NOTIFIER, theres an xml reader called supplierratexml.py that
-                will read the 'Vendor Stats' report from global (export xml...)
-                and put the data into CIQMS.
-              </li>
-              <li>
-                Then run suppliertrendcharts.py, which will create trend charts
-                for each supplier.
-              </li>
-              <li>
-                If sending to suppliers, run 'Vendor Performance' and print to
-                pdf. The supplierratings.py breaks these into individual pdfs.
-                Multi-page reports may have to be rejoined.
-              </li>
-              <li>Ref. AS9100D 8.4.1.1c, d & 8.4.2c3 & 9.1.3</li>
-            </ul>
-          </td>
-          <td id="wi-SUPE1"></td>
-        </tr>
-      </tbody>
-    </table>
+    <div class="recordsaddrecordheading">
+      <h1>Input Help</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addHelpBtn"
+        title="Add new help record"
+      >
+        +
+      </button>
+    </div>
 
-    <main id="main"></main>
+    <main id="main">
+      <!-- Add Help Dialog -->
+      <dialog id="addHelpDialog" class="dialog">
+        <form id="addHelpForm" class="form">
+          <div class="form-header">
+            <h2>Add Help Record</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="SUBJECT"
+                >Subject <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="subject"
+                name="SUBJECT"
+                placeholder="Enter help subject"
+                required
+              />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="DESCRIPTION"
+                >Description <span class="required">*</span></label
+              >
+              <textarea
+                id="description"
+                name="DESCRIPTION"
+                placeholder="Enter help description"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="LINK">Link/Document</label>
+              <input
+                type="file"
+                id="linkFile"
+                accept=".pdf,.doc,.docx,.txt"
+                style="margin-bottom: 0.5rem"
+              />
+              <input
+                type="text"
+                id="link"
+                name="LINK"
+                placeholder="Or enter URL/path manually"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="saveHelpBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Help Record
+            </button>
+            <button type="button" id="closeAddBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for help data -->
+      <div id="inputHelpTableContainer" class="table-container">
+        <!-- Table will be dynamically generated here -->
+      </div>
+    </main>
     <footer id="footer"></footer>
   </body>
-  <script type="module" src="/js/input.mjs"></script>
-  <script>
-    // Codes to match in the table
-    const codes = ["CSR", "PM", "SUPE1"];
-    // Fetch the list of input files from the server
-    fetch("/input-files/list")
-      .then((res) => res.json())
-      .then((files) => {
-        codes.forEach((code) => {
-          // Find a file with (CODE) in the filename
-          const match = files.find((f) =>
-            f.toUpperCase().includes(`(${code})`)
-          );
-          if (match) {
-            const cell = document.getElementById(`wi-${code}`);
-            if (cell) {
-              cell.innerHTML = `<a href="/input-files/${encodeURIComponent(
-                match
-              )}" target="_blank">${match}</a>`;
-            }
-          }
-        });
-      })
-      .catch(() => {
-        // Optionally show error or leave blank
-      });
-  </script>
+  <script type="module" src="/js/inputhelp.mjs"></script>
 </html>

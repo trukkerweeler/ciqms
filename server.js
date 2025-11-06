@@ -49,8 +49,8 @@ app.get("/config", (req, res) => {
   }
 });
 
-const inputRoutes = require("./routes/input");
-app.use("/input", inputRoutes);
+const inputhelpRoutes = require("./routes/inputhelp");
+app.use("/inputhelp", inputhelpRoutes);
 
 const projectRoutes = require("./routes/project");
 app.use("/project", projectRoutes);

@@ -511,6 +511,28 @@ dialog .document-form {
   z-index: 10;
 }
 
+.form {
+  background: linear-gradient(135deg, #f8f9fa 0%, #e9ecef 100%);
+  border-radius: 12px;
+  padding: 0 !important;
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.15);
+  min-width: 600px;
+  max-width: 800px;
+  max-height: 90vh;
+  overflow-y: auto;
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+}
+
+/* Override old dialog form styles for form */
+dialog .form {
+  display: block !important;
+  grid-template-columns: unset !important;
+  gap: unset !important;
+  padding: 0 !important;
+}
+
 .form-header h2 {
   margin: 0;
   font-size: 1.5rem;

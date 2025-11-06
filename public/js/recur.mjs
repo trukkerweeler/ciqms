@@ -174,12 +174,12 @@ class RecurringInputManager {
                     <td>${recur.SUBJECT || ""}</td>
                     <td>${recur.STATUS || ""}</td>
                     <td>
-                        <button class="btn btn-danger btn-sm" onclick="recurManager.deleteRecurringInput('${
+                        <button class="btn btn-secondary btn-sm" onclick="recurManager.inactivateRecurringInput('${
                           recur.INPUT_ID
                         }', '${
         recur.ASSIGNED_TO
-      }')" title="Delete recurring input">
-                            <span class="btn-icon">🗑</span>
+      }')" title="Inactivate recurring input">
+                            <span class="btn-icon">⏸</span>
                         </button>
                     </td>
                 </tr>
@@ -194,18 +194,18 @@ class RecurringInputManager {
     this.tableContainer.innerHTML = tableHTML;
   }
 
-  async deleteRecurringInput(inputId, assignedTo) {
+  async inactivateRecurringInput(inputId, assignedTo) {
     if (
       !confirm(
-        `Are you sure you want to delete the recurring input for ${inputId} assigned to ${assignedTo}?`
+        `Are you sure you want to inactivate the recurring input for ${inputId} assigned to ${assignedTo}?`
       )
     ) {
       return;
     }
 
     try {
-      const response = await fetch("/recur", {
-        method: "DELETE",
+      const response = await fetch("/recur/inactivate", {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -217,14 +217,14 @@ class RecurringInputManager {
 
       if (response.ok) {
         await this.loadRecurringInputs();
-        this.showSuccessMessage("Recurring input deleted successfully!");
+        this.showSuccessMessage("Recurring input inactivated successfully!");
       } else {
         const errorText = await response.text();
-        throw new Error(`Failed to delete recurring input: ${errorText}`);
+        throw new Error(`Failed to inactivate recurring input: ${errorText}`);
       }
     } catch (error) {
-      console.error("Error deleting recurring input:", error);
-      alert(`Error deleting recurring input: ${error.message}`);
+      console.error("Error inactivating recurring input:", error);
+      alert(`Error inactivating recurring input: ${error.message}`);
     }
   }
 
@@ -258,7 +258,7 @@ class RecurringInputManager {
 // Initialize the recurring input manager
 const recurManager = new RecurringInputManager();
 
-// Make it globally available for delete function
+// Make it globally available for inactivate function
 window.recurManager = recurManager;
 
 // Start the application

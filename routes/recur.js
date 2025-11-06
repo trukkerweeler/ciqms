@@ -150,8 +150,8 @@ router.get("/", (req, res) => {
   }
 });
 
-// Delete a recurring input
-router.delete("/", (req, res) => {
+// Inactivate a recurring input
+router.put("/inactivate", (req, res) => {
   try {
     const { INPUT_ID, ASSIGNED_TO } = req.body;
 
@@ -175,16 +175,16 @@ router.delete("/", (req, res) => {
         return;
       }
 
-      // Soft delete by setting STATUS to 'D'
+      // Inactivate by setting STATUS to 'I'
       const inputIdPadded = INPUT_ID.toString().padStart(7, "0");
       const query =
-        'UPDATE PPL_INPT_RCUR SET STATUS = "D" WHERE INPUT_ID = ? AND ASSIGNED_TO = ? AND STATUS = "A"';
+        'UPDATE PPL_INPT_RCUR SET STATUS = "I" WHERE INPUT_ID = ? AND ASSIGNED_TO = ? AND STATUS = "A"';
 
       connection.query(query, [inputIdPadded, ASSIGNED_TO], (err, result) => {
         if (err) {
-          console.log("Failed to delete recurrence: " + err);
+          console.log("Failed to inactivate recurrence: " + err);
           connection.end();
-          res.status(500).json({ error: "Failed to delete recurrence" });
+          res.status(500).json({ error: "Failed to inactivate recurrence" });
           return;
         }
 
@@ -197,12 +197,12 @@ router.delete("/", (req, res) => {
         connection.end();
         res.json({
           success: true,
-          message: "Recurring input deleted successfully",
+          message: "Recurring input inactivated successfully",
         });
       });
     });
   } catch (err) {
-    console.log("Error in DELETE /recur: ", err);
+    console.log("Error in PUT /recur: ", err);
     res.status(500).json({ error: "Server error" });
   }
 });
