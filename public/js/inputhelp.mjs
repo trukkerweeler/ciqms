@@ -245,11 +245,41 @@ function updateSortIndicators(headerCells, activeColumnIndex) {
   });
 }
 
-function handleFileSelect(event) {
+async function handleFileSelect(event) {
   const file = event.target.files[0];
   if (file) {
-    // Set the full path for the file that can be served by the static middleware
-    const linkInput = document.getElementById("link");
-    linkInput.value = `/input-files/${file.name}`;
+    try {
+      // Show loading state
+      const linkInput = document.getElementById("link");
+      linkInput.value = "Uploading...";
+      linkInput.disabled = true;
+
+      // Create FormData for file upload
+      const formData = new FormData();
+      formData.append("file", file);
+
+      // Upload the file
+      const response = await fetch(`${url}/upload`, {
+        method: "POST",
+        body: formData,
+      });
+
+      if (response.ok) {
+        const result = await response.json();
+        linkInput.value = result.path;
+        linkInput.disabled = false;
+      } else {
+        const error = await response.json();
+        alert(`File upload failed: ${error.error}`);
+        linkInput.value = "";
+        linkInput.disabled = false;
+      }
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      alert("Failed to upload file. Please try again.");
+      const linkInput = document.getElementById("link");
+      linkInput.value = "";
+      linkInput.disabled = false;
+    }
   }
 }

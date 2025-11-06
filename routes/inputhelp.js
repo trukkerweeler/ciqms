@@ -1,6 +1,68 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const multer = require("multer");
+const path = require("path");
+const fs = require("fs");
+
+// Configure multer for file uploads to the input files directory
+const inputFilesPath =
+  process.env.INPUT_FILES_PATH ||
+  String.raw`\\fs1\Common\Quality\00000_Work Instructions`;
+
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    // Ensure the directory exists
+    if (!fs.existsSync(inputFilesPath)) {
+      fs.mkdirSync(inputFilesPath, { recursive: true });
+    }
+    cb(null, inputFilesPath);
+  },
+  filename: function (req, file, cb) {
+    // Use original filename but ensure uniqueness if file already exists
+    let filename = file.originalname;
+    let filepath = path.join(inputFilesPath, filename);
+
+    // If file exists, add timestamp to make it unique
+    if (fs.existsSync(filepath)) {
+      const ext = path.extname(filename);
+      const base = path.basename(filename, ext);
+      const timestamp = Date.now();
+      filename = `${base}_${timestamp}${ext}`;
+    }
+
+    cb(null, filename);
+  },
+});
+
+const upload = multer({
+  storage: storage,
+  limits: {
+    fileSize: 100 * 1024 * 1024, // 100MB limit for videos/documents
+  },
+});
+
+// ==================================================
+// Upload file endpoint
+router.post("/upload", upload.single("file"), (req, res) => {
+  try {
+    if (!req.file) {
+      return res.status(400).json({ error: "No file uploaded" });
+    }
+
+    // Return the file information
+    res.json({
+      success: true,
+      filename: req.file.filename,
+      originalname: req.file.originalname,
+      path: `/input-files/${req.file.filename}`,
+      size: req.file.size,
+    });
+  } catch (err) {
+    console.log("Error uploading file: ", err);
+    res.status(500).json({ error: "File upload failed" });
+  }
+});
 
 // ==================================================
 // Get all help records
