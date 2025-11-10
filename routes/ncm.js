@@ -355,6 +355,14 @@ router.post("/", (req, res) => {
       }
       // console.log('Connected to DB');
 
+      // Convert CLOSED field from "Yes/No" to "Y/N"
+      let closedValue = req.body.CLOSED;
+      if (closedValue === "Yes") {
+        closedValue = "Y";
+      } else if (closedValue === "No") {
+        closedValue = "N";
+      }
+
       const query = `insert into NONCONFORMANCE (NCM_ID
             , NCM_DATE
             , PEOPLE_ID
@@ -389,7 +397,7 @@ router.post("/", (req, res) => {
                 , '${req.body.LOT_SIZE}'
                 , '${req.body.LOT_NUMBER}'
                 , '${req.body.USER_DEFINED_1}'
-                , '${req.body.CLOSED}'
+                , '${closedValue}'
                 , '${req.body.CREATE_DATE}'
                 , '${req.body.CREATE_BY}'
             )`;
