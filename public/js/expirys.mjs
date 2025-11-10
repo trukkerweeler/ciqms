@@ -7,8 +7,10 @@ loadHeaderFooter();
 const port = myport() || 3004;
 const url = `http://localhost:${port}/expiry`;
 let sortOrder = "asc";
+let user; // Will be set in initialization
 
 document.addEventListener("DOMContentLoaded", async function () {
+  user = await getUserValue();
   setupEventListeners();
   await loadExpiryData();
 });
@@ -77,7 +79,20 @@ async function saveExpiry() {
   const formData = new FormData(form);
 
   try {
+    // Get next ID from server
+    const nextIdResponse = await fetch(`${url}/nextId`);
+    const nextId = await nextIdResponse.json();
+
+    // Prepare current timestamp
+    const currentDate = new Date();
+    const myRequestDate = currentDate
+      .toISOString()
+      .slice(0, 19)
+      .replace("T", " ");
+
+    // Build data object
     const data = {
+      EXPIRATION_ID: nextId,
       PRODUCT_ID: formData.get("PRODUCT_ID").toUpperCase(),
       DESCRIPTION: formData.get("DESCRIPTION"),
       EXPIRY_DATE: formData.get("EXPIRY_DATE"),
@@ -86,6 +101,8 @@ async function saveExpiry() {
       PO: formData.get("PO").toUpperCase(),
       MFG_DATE: formData.get("MFG_DATE"),
       COMMENT: formData.get("COMMENT"),
+      CREATE_BY: user || "TKENT",
+      CREATE_DATE: myRequestDate,
     };
 
     const response = await fetch(url, {
@@ -97,6 +114,15 @@ async function saveExpiry() {
     });
 
     if (response.ok) {
+      // Increment the ID in the system
+      await fetch(`${url}/incrementId`, {
+        method: "PUT",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({}),
+      });
+
       document.getElementById("addExpiryDialog").close();
       await loadExpiryData();
     } else {
