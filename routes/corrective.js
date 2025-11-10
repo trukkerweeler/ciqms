@@ -338,7 +338,7 @@ async function sendCorrectiveEmail(correctiveData) {
         return;
       }
 
-      const emailQuery = `SELECT EMAIL FROM PEOPLE WHERE PEOPLE_ID = '${correctiveData.ASSIGNED_TO}'`;
+      const emailQuery = `SELECT WORK_EMAIL_ADDRESS FROM PEOPLE WHERE PEOPLE_ID = '${correctiveData.ASSIGNED_TO}'`;
       connection.query(emailQuery, async (err, rows) => {
         if (err) {
           console.error("Error querying for assignee email:", err);

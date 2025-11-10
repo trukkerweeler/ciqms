@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Equipment list page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Equipment (CIQMS)</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <div class="recordsaddrecordheading">
+      <h1>Equipment List</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="btnAddEquipment"
+        title="Add new Equipment"
+      >
+        +
+      </button>
+    </div>
+    <div id="equipmentFilter">
+      <label for="equipmentName">Filter by Equipment Name:</label>
+      <input type="text" id="equipmentName" />
+    </div>
+    <main id="main">
+      <dialog create-equipment-dialog class="dialog">
+        <form id="create-equipment-form" class="form">
+          <div class="form-header">
+            <h2>Add Equipment Record</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="equipment-id"
+                >Equipment ID <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="equipment-id"
+                name="EQUIPMENT_ID"
+                placeholder="Enter equipment ID"
+                style="text-transform: uppercase"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="status">Status <span class="required">*</span></label>
+              <select id="status" name="STATUS" required>
+                <option value="C" selected>Current</option>
+                <option value="E">Expired</option>
+                <option value="X">Extend</option>
+                <option value="D">Disposed</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="name"
+                >Equipment Name <span class="required">*</span></label
+              >
+              <input
+                type="text"
+                id="name"
+                name="NAME"
+                placeholder="Enter equipment name"
+                autocomplete="name"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="equipment-type">Equipment Type</label>
+              <input
+                type="text"
+                id="equipment-type"
+                name="EQUIPMENT_TYPE"
+                placeholder="Enter equipment type"
+                style="text-transform: uppercase"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="customer-id">Customer ID</label>
+              <input
+                type="text"
+                id="customer-id"
+                name="CUSTOMER_ID"
+                placeholder="Enter customer ID"
+                style="text-transform: uppercase"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="assigned-to">Assigned To</label>
+              <input
+                type="text"
+                id="assigned-to"
+                name="ASSIGNED_TO"
+                placeholder="Enter assigned to"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="major-location">Major Location</label>
+              <input
+                type="text"
+                id="major-location"
+                name="MAJOR_LOCATION"
+                placeholder="Enter major location"
+                style="text-transform: uppercase"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="minor-location">Minor Location</label>
+              <input
+                type="text"
+                id="minor-location"
+                name="MINOR_LOCATION"
+                placeholder="Enter minor location"
+                style="text-transform: uppercase"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="manufacturer-name">Manufacturer Name</label>
+              <input
+                type="text"
+                id="manufacturer-name"
+                name="MANUFACTURER_NAME"
+                placeholder="Enter manufacturer name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="model-number">Model Number</label>
+              <input
+                type="text"
+                id="model-number"
+                name="MODEL_NUMBER"
+                placeholder="Enter model number"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="serial-number">Serial Number</label>
+              <input
+                type="text"
+                id="serial-number"
+                name="SERIAL_NUMBER"
+                placeholder="Enter serial number"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="purchase-date">Purchase Date</label>
+              <input type="date" id="purchase-date" name="PURCHASE_DATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="purchase-price">Purchase Price</label>
+              <input
+                type="number"
+                id="purchase-price"
+                name="PURCHASE_PRICE"
+                placeholder="0.00"
+                step="0.01"
+                min="0"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="warranty-date">Warranty Date</label>
+              <input type="date" id="warranty-date" name="WARRANTY_DATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="in-use">In Use</label>
+              <select id="in-use" name="IN_USE">
+                <option value="Y" selected>Yes</option>
+                <option value="N">No</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button
+              id="create-equipment-button"
+              type="submit"
+              class="btn btn-primary"
+            >
+              <span class="btn-icon">✓</span>
+              Create Equipment
+            </button>
+            <button type="button" id="cancel-dialog" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="js/equipments.mjs"></script>
+</html>

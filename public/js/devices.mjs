@@ -142,6 +142,16 @@ function getRecords() {
   })
     .then((response) => response.json())
     .then((data) => {
+      // Handle case where no records are found
+      if (!Array.isArray(data) || data.length === 0) {
+        console.log("No device records found");
+        let tableContainer = document.createElement("div");
+        tableContainer.className = "table-container";
+        tableContainer.innerHTML = `<p>No device records found</p>`;
+        mainElement.appendChild(tableContainer);
+        return;
+      }
+
       let myFields = [
         "DEVICE_ID",
         "NAME",

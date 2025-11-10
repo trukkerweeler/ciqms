@@ -139,6 +139,9 @@ app.use("/calibrate", calibrateRoutes);
 const deviceRoutes = require("./routes/device");
 app.use("/device", deviceRoutes);
 
+const equipmentRoutes = require("./routes/equipment");
+app.use("/equipment", equipmentRoutes);
+
 const imageRoutes = require("./routes/image");
 app.use("/image", imageRoutes);
 

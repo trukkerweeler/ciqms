@@ -74,7 +74,7 @@ router.get("/", async (req, res) => {
           return;
         }
         if (rows.length === 0) {
-          res.json({ message: "No records found" });
+          res.json([]);
         } else {
           res.json(rows);
         }
@@ -116,7 +116,7 @@ router.get("/:id", async (req, res) => {
           return;
         }
         if (rows.length === 0) {
-          res.json({ message: "No records found" });
+          res.json([]);
         } else {
           res.json(rows[0]);
         }
