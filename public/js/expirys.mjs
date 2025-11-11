@@ -74,7 +74,8 @@ function openAddExpiryDialog() {
   }
 }
 
-async function saveExpiry() {
+async function saveExpiry(event) {
+  event.preventDefault(); // Prevent form submission
   const form = document.getElementById("addExpiryForm");
   const formData = new FormData(form);
 
@@ -124,7 +125,8 @@ async function saveExpiry() {
       });
 
       document.getElementById("addExpiryDialog").close();
-      await loadExpiryData();
+      await loadExpiryData(); // Uncommented page refresh
+      console.log("Expiry saved successfully!");
     } else {
       const errorText = await response.text();
       alert(`Failed to save expiry: ${errorText}`);
@@ -347,7 +349,8 @@ async function saveDisposition() {
 
     if (response.ok) {
       document.getElementById("dispositionDialog").close();
-      await loadExpiryData();
+      await loadExpiryData(); // Uncommented page refresh
+      console.log("Disposition updated successfully!");
     } else {
       const errorText = await response.text();
       alert(`Failed to update disposition: ${errorText}`);
