@@ -1,0 +1,4 @@
+.schedule-table tr[style] {
+  background-color: #e0e0e0 !important;
+  color: #888 !important;
+}

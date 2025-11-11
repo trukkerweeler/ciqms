@@ -113,6 +113,57 @@
         </form>
       </dialog>
     </main>
+
+    <!-- Image view dialog - outside main content -->
+    <dialog id="view-equipment-image-dialog" class="dialog">
+      <button
+        id="closeEquipmentDialog"
+        class="close-button"
+        onclick="document.getElementById('view-equipment-image-dialog').close()"
+      >
+        &times;
+      </button>
+      <section class="section image-section">
+        <h2>Equipment Image</h2>
+        <div id="view-equipment-image-div">
+          <img
+            id="equipment-image"
+            src=""
+            alt="Equipment Image"
+            style="max-width: 200px; height: auto"
+          />
+          <div id="equipment-image-actions">
+            <section>
+              <h3>Delete image</h3>
+              <button
+                type="button"
+                id="deleteEquipmentImage"
+                class="btn btn-cancel"
+              >
+                Delete Image
+              </button>
+            </section>
+            <div style="margin-top: 32px; text-align: center">
+              <input
+                type="file"
+                id="equipmentImagePicker"
+                accept="image/*"
+                style="margin-bottom: 12px"
+              />
+              <button
+                type="button"
+                id="changeEquipmentImage"
+                class="btn btn-primary"
+                style="width: 120px"
+              >
+                Save
+              </button>
+            </div>
+          </div>
+        </div>
+      </section>
+    </dialog>
+
     <footer id="footer"></footer>
   </body>
   <script type="module" src="js/equipment.mjs"></script>

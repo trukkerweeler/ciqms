@@ -65,10 +65,72 @@ function displayEquipment(equipment) {
 
   mainContent.insertBefore(equipmentDiv, mainContent.firstChild);
 
+  // Create image/button container
+  const imageContainer = document.createElement("div");
+  imageContainer.style.display = "flex";
+  imageContainer.style.alignItems = "flex-end";
+  imageContainer.style.gap = "16px";
+  imageContainer.style.marginTop = "20px";
+
+  let imageBtn = document.createElement("button");
+  imageBtn.id = "equipmentImageBtn";
+  imageBtn.classList.add("btn", "btn-primary", "equipment-image-button");
+  imageBtn.innerHTML = "Edit Image";
+  imageBtn.style.fontSize = "0.85rem";
+  imageBtn.style.padding = "2px 8px";
+  imageBtn.style.height = "28px";
+
+  imageContainer.appendChild(imageBtn);
+  equipmentDiv.appendChild(imageContainer);
+
+  // Show equipment image on page load if it exists
+  fetch(
+    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
+  )
+    .then((response) => response.json())
+    .then((result) => {
+      const imageFilename = result.filename;
+      if (imageFilename) {
+        // Create image element
+        const img = document.createElement("img");
+        img.src = `/_equipment-images/${imageFilename}`;
+        img.alt = "Equipment Image";
+        img.style.maxWidth = "200px";
+        img.style.height = "auto";
+        img.style.border = "1px solid #ddd";
+        img.style.borderRadius = "4px";
+        img.style.cursor = "pointer";
+
+        // Add click handler to open image dialog
+        img.addEventListener("click", () => {
+          const dialog = document.getElementById("view-equipment-image-dialog");
+          const dialogImg = document.getElementById("equipment-image");
+          dialogImg.src = img.src;
+          dialog.showModal();
+        });
+
+        imageContainer.insertBefore(img, imageBtn);
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching equipment image:", error);
+    });
+
   // Add event listener for edit button
-  document.getElementById("editEquipmentBtn").addEventListener("click", () => {
-    openEditDialog(equipment);
-  });
+  const editBtn = document.getElementById("editEquipmentBtn");
+  if (editBtn) {
+    editBtn.addEventListener("click", () => {
+      openEditDialog(equipment);
+    });
+  }
+
+  // Add event listener for image button
+  const equipmentImageBtn = document.getElementById("equipmentImageBtn");
+  if (equipmentImageBtn) {
+    equipmentImageBtn.addEventListener("click", () => {
+      openImageDialog(equipment);
+    });
+  }
 }
 
 function openEditDialog(equipment) {
@@ -132,4 +194,134 @@ function saveEquipmentEdit() {
     .catch((error) => {
       console.error("Error updating equipment:", error);
     });
+}
+
+function openImageDialog(equipment) {
+  const dialog = document.getElementById("view-equipment-image-dialog");
+  const dialogImg = document.getElementById("equipment-image");
+
+  // Show equipment image if it exists
+  fetch(
+    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
+  )
+    .then((response) => response.json())
+    .then((result) => {
+      const imageFilename = result.filename;
+      if (imageFilename && dialogImg) {
+        dialogImg.src = `/_equipment-images/${imageFilename}`;
+        dialogImg.style.display = "block";
+      } else if (dialogImg) {
+        dialogImg.style.display = "none";
+      }
+      if (dialog) dialog.showModal();
+    })
+    .catch((error) => {
+      console.error("Error fetching equipment image:", error);
+      if (dialogImg) dialogImg.style.display = "none";
+      if (dialog) dialog.showModal();
+    });
+}
+
+// Event listener for the "Cancel" button in the edit equipment dialog
+const editDialog = document.getElementById("edit-equipment-dialog");
+if (editDialog) {
+  const cancelEditButton = editDialog.querySelector("#cancelEquipmentEdit");
+  if (cancelEditButton) {
+    cancelEditButton.addEventListener("click", (e) => {
+      e.preventDefault();
+      editDialog.close();
+    });
+  } else {
+    console.error(
+      "Button with id 'cancelEquipmentEdit' not found in edit dialog."
+    );
+  }
+}
+
+// listen for changeEquipmentImage
+const changeEquipmentImageButton = document.getElementById(
+  "changeEquipmentImage"
+);
+if (changeEquipmentImageButton) {
+  changeEquipmentImageButton.addEventListener("click", async () => {
+    const equipmentImagePicker = document.getElementById(
+      "equipmentImagePicker"
+    );
+    if (!equipmentImagePicker || !equipmentImagePicker.value) {
+      alert("Must choose an image first.");
+      return;
+    }
+    const file = equipmentImagePicker.files[0];
+    if (file) {
+      const formData = new FormData();
+      formData.append("image", file, file.name);
+      const urlParams = new URLSearchParams(window.location.search);
+      const equipmentId = urlParams.get("id");
+      formData.append("equipmentId", equipmentId);
+      try {
+        const response = await fetch(
+          `http://localhost:${port}/equipmentImage`,
+          {
+            method: "POST",
+            body: formData,
+          }
+        );
+        if (response.ok) {
+          alert("Image uploaded successfully!");
+          // Close the dialog and reload the page to reflect the upload
+          const dialog = document.getElementById("view-equipment-image-dialog");
+          if (dialog) {
+            dialog.close();
+          }
+          window.location.reload();
+        } else {
+          alert("Failed to upload image.");
+        }
+      } catch (error) {
+        console.error("Error uploading image:", error);
+        alert("An error occurred while uploading the image.");
+      }
+      equipmentImagePicker.value = ""; // Reset the file input value
+    }
+  });
+}
+
+// listen for deleteEquipmentImage click event
+const deleteEquipmentImageButton = document.getElementById(
+  "deleteEquipmentImage"
+);
+if (deleteEquipmentImageButton) {
+  deleteEquipmentImageButton.addEventListener("click", async () => {
+    const urlParams = new URLSearchParams(window.location.search);
+    const equipmentId = urlParams.get("id");
+    const deleteEquipmentImageUrl = `http://localhost:${port}/equipmentImage/${equipmentId}`;
+
+    try {
+      const response = await fetch(deleteEquipmentImageUrl, {
+        method: "DELETE",
+        headers: {
+          "Content-Type": "application/json",
+        },
+      });
+
+      const responseData = await response.json().catch(() => null);
+
+      if (response.ok) {
+        alert("Image deleted successfully!");
+        // Close the dialog and reload the page to reflect the deletion
+        const dialog = document.getElementById("view-equipment-image-dialog");
+        if (dialog) {
+          dialog.close();
+        }
+        window.location.reload();
+      } else {
+        const errorMsg = responseData?.message || "Failed to delete image.";
+        console.error("Delete failed:", errorMsg);
+        alert(`Failed to delete image: ${errorMsg}`);
+      }
+    } catch (error) {
+      console.error("Error deleting image:", error);
+      alert("An error occurred while deleting the image.");
+    }
+  });
 }

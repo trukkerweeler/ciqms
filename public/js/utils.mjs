@@ -737,3 +737,15 @@ export async function getConfig() {
     }; // Default fallback
   }
 }
+
+export async function getcodedesc(code) {
+  const res = await fetch(`../json/qmssubjects.json`);
+  const data = await res.json();
+  let mySubjects = data.qmsSubjects;
+  for (let i = 0; i < mySubjects.length; i++) {
+    if (mySubjects[i].code === code) {
+      return mySubjects[i].name;
+    }
+  }
+}
+

@@ -145,6 +145,9 @@ app.use("/equipment", equipmentRoutes);
 const imageRoutes = require("./routes/image");
 app.use("/image", imageRoutes);
 
+const equipmentImageRoutes = require("./routes/equipmentImage");
+app.use("/equipmentImage", equipmentImageRoutes);
+
 const gldetailRoutes = require("./routes/gldetail");
 app.use("/gldetail", gldetailRoutes);
 
@@ -172,6 +175,24 @@ app.use("/causemaint", causemaintRoutes);
 const pnlRoutes = require("./routes/pnl");
 app.use("/pnl", pnlRoutes);
 
+const auditRoutes = require("./routes/audit");
+app.use("/audit", auditRoutes);
+
+const checklistRoutes = require("./routes/checklist");
+app.use("/checklist", checklistRoutes);
+
+const managerRoutes = require("./routes/manager");
+app.use("/manager", managerRoutes);
+
+const processRoutes = require("./routes/process");
+app.use("/process", processRoutes);
+
+const resultsRoutes = require("./routes/results");
+app.use("/results", resultsRoutes);
+
+const scheduleRoutes = require("./routes/schedule");
+app.use("/schedule", scheduleRoutes);
+
 // Serve training files from a dedicated directory
 
 const path = require("path");
@@ -195,6 +216,16 @@ const deviceImagesPath = require("path").join(
   "_device-images"
 );
 app.use("/_device-images", express.static(deviceImagesPath));
+
+// Use environment variable for equipment images path
+const baseEquipmentImagesPath =
+  process.env.EQUIPMENT_IMAGES_PATH ||
+  "\\\\fs1\\Common\\Quality - Records\\8511 - Equipment\\";
+const equipmentImagesPath = require("path").join(
+  baseEquipmentImagesPath,
+  "_equipment_images"
+);
+app.use("/_equipment-images", express.static(equipmentImagesPath));
 
 // API route to list input files
 const inputFilesApiRoutes = require("./routes/inputFiles");

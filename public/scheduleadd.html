@@ -1,0 +1,37 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="js node test page.">
+    <meta name="author" content="This page authored by timokent">
+    <link  rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap">
+    <link rel="stylesheet" href="css/audit.css">
+    <link rel="icon" href="images/ci-logo.png">
+    <title>Schedule - Add</title>
+</head>
+<body>
+    <header id="header"></header>
+    <h1>Schedule Audit</h1>
+    <main id="main">
+        <form action="submit" name="form" id="entryform">
+            <!-- <label for="AUDIT_ID">Audit Id:</label> -->
+            <!-- <input type="text" name="AUDIT_ID" id="AUDIT_ID" placeholder="Enter the Audit Id"> -->
+            <label for="Standard">Standard</label>
+            <input type="text" name="STANDARD" id="standard" placeholder="Enter the Standard">
+            <label for="SUBJECT">Subject</label>
+            <input type="text" name="SUBJECT" id="subject" placeholder="Enter subject">            
+            <label for="LEAD_AUDITOR">Auditor</label>
+            <input type="text" name="LEAD_AUDITOR" id="auditor" placeholder="Enter auditor" style="text-transform: uppercase">          
+            <label for="AUDITEE">Auditee</label>
+            <input type="text" name="AUDITEE1" id="auditee" placeholder="enter auditee" style="text-transform: uppercase">
+            <label for="SCHEDULED_DATE">Date</label>
+            <input type="date" name="SCHEDULED_DATE" id="SCHEDULED_DATE" placeholder="Enter schedule date">
+            <input type="submit" value="Submit" id="button">
+        </form>
+    </main>
+    <footer id="footer"></footer>
+</body>
+<script type="module" src="/js/scheduleadd.js"></script>
+</html>

@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/audit.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Audit Manager</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main"></main>
+    <!-- Edit audit dialog -->
+    <dialog id="editaudit" class="editDialog">
+      <form id="editAuditForm" class="form">
+        <h2 class="formh2">Edit Audit</h2>
+        <label for="standard">Standard</label>
+        <input type="text" id="standard" name="standard" required />
+        <label for="SUBJECT">Subject</label>
+        <input type="text" id="subject" name="SUBJECT" required />
+        <label for="scheddate">Scheduled Date</label>
+        <input type="date" id="scheddate" name="scheddate" required />
+        <label for="leadauditor">Lead Auditor</label>
+        <input type="text" id="leadauditor" name="leadauditor" />
+        <label for="auditee">Auditee</label>
+        <input type="text" id="auditee" name="auditee" />
+        <button type="submit" id="saveaudit">Save Audit</button>
+      </form>
+    </dialog>
+    <!-- Add questions dialog -->
+    <dialog id="addquestion" class="editDialog">
+      <form id="addQuestionForm" class="form">
+        <h2 class="formh2">Add Question</h2>
+        <!-- <label for="standard">Standard</label> -->
+        <!-- <input type="text" id="newstandard" name="standard" required> -->
+        <label for="reference">Reference</label>
+        <input type="text" id="newreference" name="reference" required />
+        <label for="question">Question:</label>
+        <textarea
+          type="textarea"
+          id="newquestion"
+          name="question"
+          rows="4"
+          cols="50"
+          wrap="soft"
+          required
+        ></textarea>
+        <button type="submit" id="savenewquestion">Save New Question</button>
+      </form>
+    </dialog>
+
+    <!-- Observation dialog -->
+    <dialog id="editobservation" class="editDialog">
+      <form id="observationForm" class="form">
+        <h2 class="formh2">Observation</h2>
+        <p>Checklist Id:</p>
+        <p id="obsid"></p>
+        <label for="observation">Observation:</label>
+        <textarea
+          type="textarea"
+          id="newobservation"
+          name="observation"
+          rows="4"
+          cols="50"
+          wrap="soft"
+          required
+        ></textarea>
+        <button type="submit" id="saveobservation">Save</button>
+      </form>
+    </dialog>
+    <!-- </main> -->
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/manager.js"></script>
+</html>

@@ -1,0 +1,167 @@
+{
+    "qmsSubjects": [
+        {
+            "code": "AWR",
+            "name": "Awareness"
+        },
+        {
+            "code": "CFP",
+            "name": "Customer Furnished Product"
+        },
+        {
+            "code": "CI",
+            "name": "Continuous Improvement"
+        },
+        {
+            "code": "CA",
+            "name": "Corrective Action"
+        },{
+            "code": "CAL",
+            "name": "Calibration"
+        },
+        {
+            "code": "CHNG",
+            "name": "Change Control"
+        },
+        {
+            "code": "COMMS",
+            "name": "Communication"
+        },
+        {
+            "code": "CTA",
+            "name": "Competency"
+        },
+        {
+            "code": "CNTXT",
+            "name": "Context of the Organization"
+        },
+        {
+            "code": "CPSP",
+            "name": "Control of Production and Service Provision"
+        },
+        {
+            "code": "CS",
+            "name": "Customer Satisfaction"
+        },
+        {
+            "code": "D",
+            "name": "Design and Development"
+        },
+        {
+            "code": "SPRT",
+            "name": "Support"
+        },
+        {
+            "code": "SYSDOC",
+            "name": "Documented Information"
+        },
+        {
+            "code": "IA",
+            "name": "Internal Audit"
+        },
+        {
+            "code": "IT",
+            "name": "Identification and Traceability"
+        },
+        {
+            "code": "MMAE",
+            "name": "Monitoring, Measurement, Analysis and Evaluation"
+        },
+        {
+            "code": "EPPP",
+            "name": "Purchasing"
+        },
+        {
+            "code": "LDR",
+            "name": "Leadership"
+        },
+        {
+            "code": "PR",
+            "name": "Production"
+        },
+        {
+            "code": "PR",
+            "name": "Production"
+        },
+        {
+            "code": "PA",
+            "name": "Preventive Action"
+        },
+        {
+            "code": "QO",
+            "name": "Quality Objectives"
+        },
+        {
+            "code": "QSP",
+            "name": "Quality System Procedures"
+        },
+        {
+            "code": "QC",
+            "name": "Quality Control"
+        },
+        {
+            "code": "QA",
+            "name": "Quality Assurance"
+        },
+        {
+            "code": "QMS",
+            "name": "Quality Management System"
+        },
+        {
+            "code": "RCA",
+            "name": "Root Cause Analysis"
+        },
+        {
+            "code": "CNP",
+            "name": "Control of Nonconforming Product"
+        },
+        {
+            "code": "OK",
+            "name": "Organizational Knowledge"
+        },
+        {
+            "code": "OPC",
+            "name": "Operational Control"
+        },
+        {
+            "code": "PDA",
+            "name": "Post-Delivery Activities"
+        },
+        {
+            "code": "PLN",
+            "name": "Planning"
+        },
+        {
+            "code": "PPV",
+            "name": "Production Process Verification(FAI)"
+        },
+        {
+            "code": "PRSV",
+            "name": "Preservation"
+        },
+        {
+            "code": "ETS",
+            "name": "Preventive Maintenance (Eq. & Tools & Software)"
+        },
+        {
+            "code": "MR",
+            "name": "Management Review"
+        },
+        {
+            "code": "REL",
+            "name": "Release of Products and Services"
+        },
+        {
+            "code": "RM",
+            "name": "Risk Management"
+        },
+        {
+            "code": "RPS",
+            "name": "Requirements for Products and Services"
+        },
+        {
+            "code": "SP",
+            "name": "Special Processes"
+        }
+    ]
+}
