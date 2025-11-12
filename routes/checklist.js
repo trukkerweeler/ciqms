@@ -216,7 +216,9 @@ router.post("/obsn", (req, res) => {
         return;
       }
 
-      const query = `insert into AUDT_CHKL_OBSN (AUDIT_MANAGER_ID, CHECKLIST_ID, OBSERVATION) values (?, ?, ?)`;
+      const query = `INSERT INTO AUDT_CHKL_OBSN (AUDIT_MANAGER_ID, CHECKLIST_ID, OBSERVATION) 
+                      VALUES (?, ?, ?) 
+                      ON DUPLICATE KEY UPDATE OBSERVATION = VALUES(OBSERVATION)`;
       const values = [
         req.body.AUDIT_MANAGER_ID,
         req.body.CHECKLIST_ID,

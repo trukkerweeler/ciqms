@@ -118,7 +118,7 @@ def main():
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\routes", r"\\fs1\Common\Applications\CIQMS\routes")
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\public", r"\\fs1\Common\Applications\CIQMS\html")
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\public\partials", r"\\fs1\Common\Applications\CIQMS\partials")
-    print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>partials may need manual copy.")
+    # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>partials may need manual copy.")
     copypackage()
     copyserverjs()
 
