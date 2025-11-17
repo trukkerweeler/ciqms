@@ -366,6 +366,7 @@ h3 {
 
 dialog {
   border-radius: 1rem;
+  z-index: 10000;
 }
 
 /* Override old dialog form styles for corrective form */
@@ -389,6 +390,16 @@ dialog form {
   gap: 1rem;
   justify-content: flex-end;
   margin-top: 1rem;
+}
+
+/* Specific styling for edit equipment form */
+dialog .edit-equipment-form {
+  gap: 0.2rem;
+}
+
+dialog .edit-equipment-form input,
+dialog .edit-equipment-form select {
+  margin: 0;
 }
 
 .btn {

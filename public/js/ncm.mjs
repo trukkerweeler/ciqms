@@ -84,7 +84,15 @@ fetch(url, { method: "GET" })
       btnEditDetail.setAttribute("id", "btnEditDetail");
       btnEditDetail.setAttribute("type", "submit");
 
+      const btnTrend = document.createElement("button");
+      btnTrend.setAttribute("class", "btn");
+      btnTrend.setAttribute("class", "btnEditNotes");
+      btnTrend.textContent = "Trend";
+      btnTrend.setAttribute("id", "btnTrend");
+      btnTrend.setAttribute("type", "submit");
+
       // divDetailBtns.appendChild(btnClose);
+      divDetailBtns.appendChild(btnTrend);
       divDetailBtns.appendChild(btnEditDetail);
 
       const ncmDate = document.createElement("p");
@@ -504,6 +512,36 @@ fetch(url, { method: "GET" })
     });
 
     // =============================================
+    // Listen for the btnTrend button click
+    const btnTrend = document.querySelector("#btnTrend");
+    btnTrend.addEventListener("click", async (event) => {
+      event.preventDefault();
+      const trendDialog = document.querySelector("#trendDialog");
+      const trendUrl = `http://localhost:${port}/trend/${iid}`;
+      try {
+        const response = await fetch(trendUrl);
+        const trendData = await response.json();
+        if (trendData.length > 0) {
+          const data = trendData[0];
+          document.getElementById("CUSTOMER_ID").value = data.CUSTOMER_ID || "";
+          document.getElementById("SUPPLIER_ID").value = data.SUPPLIER_ID || "";
+          document.getElementById("PROCESS_ID").value = data.PROCESS_ID || "";
+          document.getElementById("AREA_NUMBER").value = data.AREA_NUMBER || "";
+          document.getElementById("ACTIVITY_NO").value = data.ACTIVITY_NO || "";
+          document.getElementById("ELEMENT_NO").value = data.ELEMENT_NO || "";
+          document.getElementById("DISPOSITION_TYPE").value =
+            data.DISPOSITION_TYPE || "";
+          document.getElementById("TOOL_ID").value = data.TOOL_ID || "";
+          document.getElementById("CORRECTIVE_ID").value =
+            data.CORRECTIVE_ID || "";
+        }
+      } catch (error) {
+        console.error("Error fetching trend data:", error);
+      }
+      trendDialog.showModal();
+    });
+
+    // =============================================
     // Listen for click on close dialog button class
     const closedialog = document.querySelectorAll(".closedialog");
     closedialog.forEach((element) => {
@@ -631,12 +669,25 @@ fetch(url, { method: "GET" })
             }
             break;
 
+          case "saveTrend":
+            const formData = new FormData(
+              document.getElementById("edittrendform")
+            );
+            const trendData = Object.fromEntries(formData.entries());
+            data = { ...data, ...trendData };
+            break;
+
           default:
             console.log("default");
         }
 
         if (test) {
           console.log(data);
+        }
+
+        let fetchUrl = url;
+        if (fieldname === "saveTrend") {
+          fetchUrl = `http://localhost:${port}/trend/${iid}`;
         }
 
         const options = {
@@ -647,10 +698,29 @@ fetch(url, { method: "GET" })
           body: JSON.stringify(data),
         };
 
-        const response = await fetch(url, options);
+        const response = await fetch(fetchUrl, options);
         const json = await response.json();
-        // searchbutton.click();
-        trendDialog.close();
+
+        let dialogToClose;
+        switch (fieldname) {
+          case "savetrend":
+          case "saveTrend":
+            dialogToClose = document.querySelector("#trendDialog");
+            break;
+          case "saveDisp":
+            dialogToClose = document.querySelector("#dispDialog");
+            break;
+          case "saveVerf":
+            dialogToClose = document.querySelector("#verfDialog");
+            break;
+          case "saveNote":
+            dialogToClose = document.querySelector("#noteDialog");
+            break;
+          default:
+            dialogToClose = document.querySelector("#trendDialog");
+        }
+        if (dialogToClose) dialogToClose.close();
+
         // refresh the page
         window.location.reload();
       });

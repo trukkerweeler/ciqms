@@ -279,3 +279,9 @@ section#detailSection.section {
   border-bottom: none !important;
   outline: none !important;
 }
+
+/* Detail buttons spacing */
+.detailButtons {
+  display: flex;
+  gap: 10px;
+}

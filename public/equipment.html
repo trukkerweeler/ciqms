@@ -114,6 +114,108 @@
       </dialog>
     </main>
 
+    <!-- Edit equipment dialog - outside main content -->
+    <dialog id="edit-equipment-dialog" class="dialog">
+      <form id="edit-equipment-form" class="edit-equipment-form">
+        <h2>Edit Equipment Record</h2>
+        <label for="edit-equipment-id">Equipment ID:</label>
+        <input
+          type="text"
+          id="edit-equipment-id"
+          name="EQUIPMENT_ID"
+          required
+          readonly
+        />
+
+        <label for="edit-equipment-name">Name:</label>
+        <input type="text" id="edit-equipment-name" name="NAME" required />
+
+        <label for="edit-equipment-type">Equipment Type:</label>
+        <input type="text" id="edit-equipment-type" name="EQUIPMENT_TYPE" />
+
+        <label for="edit-customer-id">Customer ID:</label>
+        <input type="text" id="edit-customer-id" name="CUSTOMER_ID" />
+
+        <label for="edit-assigned-to">Assigned To:</label>
+        <input type="text" id="edit-assigned-to" name="ASSIGNED_TO" />
+
+        <label for="edit-manufacturer-name">Manufacturer Name:</label>
+        <input
+          type="text"
+          id="edit-manufacturer-name"
+          name="MANUFACTURER_NAME"
+        />
+
+        <label for="edit-model-number">Model Number:</label>
+        <input type="text" id="edit-model-number" name="MODEL_NUMBER" />
+
+        <label for="edit-serial-number">Serial Number:</label>
+        <input type="text" id="edit-serial-number" name="SERIAL_NUMBER" />
+
+        <label for="edit-major-location">Major Location:</label>
+        <select id="edit-major-location" name="MAJOR_LOCATION" required>
+          <option value="">Select Location</option>
+          <option value="OFFICE">OFFICE</option>
+          <option value="INSP">INSP</option>
+          <option value="CHEM">CHEM</option>
+          <option value="PAINT">PAINT</option>
+          <option value="ASSY">ASSY</option>
+          <option value="WELD">WELD</option>
+          <option value="LOCKUP">LOCKUP</option>
+        </select>
+
+        <label for="edit-minor-location">Minor Location:</label>
+        <input type="text" id="edit-minor-location" name="MINOR_LOCATION" />
+
+        <label for="edit-purchase-date">Purchase Date:</label>
+        <input type="date" id="edit-purchase-date" name="PURCHASE_DATE" />
+
+        <label for="edit-purchase-price">Purchase Price:</label>
+        <input
+          type="number"
+          id="edit-purchase-price"
+          name="PURCHASE_PRICE"
+          step="0.01"
+        />
+
+        <label for="edit-warranty-date">Warranty Date:</label>
+        <input type="date" id="edit-warranty-date" name="WARRANTY_DATE" />
+
+        <label for="edit-status">Status:</label>
+        <select id="edit-status" name="STATUS" required>
+          <option value="">Select Status</option>
+          <option value="C">Current</option>
+          <option value="E">Expired</option>
+          <option value="X">Extend (Uncommon)</option>
+          <option value="D">Disposed</option>
+        </select>
+
+        <label for="edit-in-use">In Use:</label>
+        <select id="edit-in-use" name="IN_USE">
+          <option value="Y">Yes</option>
+          <option value="N">No</option>
+        </select>
+
+        <div class="dialog-actions">
+          <button
+            type="button"
+            id="saveEquipmentEdit"
+            class="btn btn-primary btn-save"
+          >
+            Save
+          </button>
+          <button
+            type="button"
+            id="cancelEquipmentEdit"
+            class="btn btn-cancel"
+            onclick="document.getElementById('edit-equipment-dialog').close()"
+          >
+            Cancel
+          </button>
+        </div>
+      </form>
+    </dialog>
+
     <!-- Image view dialog - outside main content -->
     <dialog id="view-equipment-image-dialog" class="dialog">
       <button

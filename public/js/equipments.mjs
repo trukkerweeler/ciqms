@@ -162,6 +162,7 @@ function getRecords() {
         "EQUIPMENT_ID",
         "NAME",
         "EQUIPMENT_TYPE",
+        "ASSIGNED_TO",
         "CUSTOMER_ID",
         "STATUS",
         "MAJOR_LOCATION",
