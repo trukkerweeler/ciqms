@@ -266,6 +266,44 @@
       </section>
     </dialog>
 
+    <dialog id="view-all-equipment-images-dialog" class="dialog">
+      <button
+        id="closeAllEquipmentImagesDialog"
+        class="close-button"
+        onclick="document.getElementById('view-all-equipment-images-dialog').close()"
+      >
+        &times;
+      </button>
+      <section class="section image-section">
+        <h2>Equipment Images</h2>
+        <div id="view-all-equipment-images-div" style="text-align: center">
+          <button
+            id="prevEquipmentImage"
+            class="btn btn-primary"
+            style="margin-right: 10px"
+          >
+            &larr; Previous
+          </button>
+          <img
+            id="currentEquipmentImage"
+            src=""
+            alt="Equipment Image"
+            style="max-width: 400px; height: auto; display: none"
+          />
+          <button
+            id="nextEquipmentImage"
+            class="btn btn-primary"
+            style="margin-left: 10px"
+          >
+            Next &rarr;
+          </button>
+          <div id="noEquipmentImages" style="display: none">
+            No images found
+          </div>
+        </div>
+      </section>
+    </dialog>
+
     <footer id="footer"></footer>
   </body>
   <script type="module" src="js/equipment.mjs"></script>

@@ -81,6 +81,15 @@ function displayEquipment(equipment) {
   imageBtn.style.height = "28px";
 
   imageContainer.appendChild(imageBtn);
+
+  let seeAllBtn = document.createElement("button");
+  seeAllBtn.id = "seeAllEquipmentBtn";
+  seeAllBtn.classList.add("btn", "btn-primary", "equipment-image-button");
+  seeAllBtn.innerHTML = "See All Images";
+  seeAllBtn.style.fontSize = "0.85rem";
+  seeAllBtn.style.padding = "2px 8px";
+  seeAllBtn.style.height = "28px";
+  imageContainer.appendChild(seeAllBtn);
   equipmentDiv.appendChild(imageContainer);
 
   // Show equipment image on page load if it exists
@@ -89,11 +98,11 @@ function displayEquipment(equipment) {
   )
     .then((response) => response.json())
     .then((result) => {
-      const imageFilename = result.filename;
-      if (imageFilename) {
+      const filenames = result.filenames;
+      if (filenames.length > 0) {
         // Create image element
         const img = document.createElement("img");
-        img.src = `/_equipment-images/${imageFilename}`;
+        img.src = `/_equipment-images/${encodeURIComponent(filenames[0])}`;
         img.alt = "Equipment Image";
         img.style.maxWidth = "200px";
         img.style.height = "auto";
@@ -129,6 +138,14 @@ function displayEquipment(equipment) {
   if (equipmentImageBtn) {
     equipmentImageBtn.addEventListener("click", () => {
       openImageDialog(equipment);
+    });
+  }
+
+  // Add event listener for see all button
+  const seeAllEquipmentBtn = document.getElementById("seeAllEquipmentBtn");
+  if (seeAllEquipmentBtn) {
+    seeAllEquipmentBtn.addEventListener("click", () => {
+      openSeeAllDialog(equipment);
     });
   }
 }
@@ -196,30 +213,70 @@ function saveEquipmentEdit() {
     });
 }
 
-function openImageDialog(equipment) {
-  const dialog = document.getElementById("view-equipment-image-dialog");
-  const dialogImg = document.getElementById("equipment-image");
+function openSeeAllDialog(equipment) {
+  const dialog = document.getElementById("view-all-equipment-images-dialog");
+  const imagesDiv = document.getElementById("view-all-equipment-images-div");
+  const imgElement = document.getElementById("currentEquipmentImage");
+  const prevBtn = document.getElementById("prevEquipmentImage");
+  const nextBtn = document.getElementById("nextEquipmentImage");
+  const noImagesDiv = document.getElementById("noEquipmentImages");
 
-  // Show equipment image if it exists
+  let filenames = [];
+  let currentIndex = 0;
+
+  // Fetch the image filenames
   fetch(
     `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
   )
     .then((response) => response.json())
     .then((result) => {
-      const imageFilename = result.filename;
-      if (imageFilename && dialogImg) {
-        dialogImg.src = `/_equipment-images/${imageFilename}`;
-        dialogImg.style.display = "block";
-      } else if (dialogImg) {
-        dialogImg.style.display = "none";
+      filenames = result.filenames || [];
+      if (filenames.length > 0) {
+        currentIndex = 0;
+        showImage(currentIndex);
+        imgElement.style.display = "block";
+        noImagesDiv.style.display = "none";
+        prevBtn.disabled = filenames.length <= 1;
+        nextBtn.disabled = filenames.length <= 1;
+      } else {
+        imgElement.style.display = "none";
+        noImagesDiv.style.display = "block";
+        prevBtn.disabled = true;
+        nextBtn.disabled = true;
       }
       if (dialog) dialog.showModal();
     })
     .catch((error) => {
-      console.error("Error fetching equipment image:", error);
-      if (dialogImg) dialogImg.style.display = "none";
+      console.error("Error fetching equipment images:", error);
+      imgElement.style.display = "none";
+      noImagesDiv.style.display = "block";
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
       if (dialog) dialog.showModal();
     });
+
+  function showImage(index) {
+    if (filenames.length > 0 && index >= 0 && index < filenames.length) {
+      imgElement.src = `/_equipment-images/${encodeURIComponent(
+        filenames[index]
+      )}`;
+      currentIndex = index;
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === filenames.length - 1;
+    }
+  }
+
+  prevBtn.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      showImage(currentIndex - 1);
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentIndex < filenames.length - 1) {
+      showImage(currentIndex + 1);
+    }
+  });
 }
 
 // Event listener for the "Cancel" button in the edit equipment dialog

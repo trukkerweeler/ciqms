@@ -56,9 +56,16 @@ router.delete("/:id", async (req, res) => {
         }
         // Delete the physical file if it exists
         if (filename) {
-          const deleteBasePath =
-            process.env.EQUIPMENT_IMAGES_PATH ||
-            "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration";
+          const os = require("os");
+          const hostname = os.hostname();
+          let deleteBasePath;
+          if (hostname === "QUALITY-MGR") {
+            deleteBasePath = "C:\\Quality - Records\\8511 - Equipment";
+          } else {
+            deleteBasePath =
+              process.env.EQUIPMENT_IMAGES_PATH ||
+              "\\\\fs1\\Common\\Quality - Records\\8511 - Equipment";
+          }
           const equipmentImagesPath = path.join(
             deleteBasePath,
             "_equipment_images"
@@ -110,15 +117,16 @@ router.get("/filename/:id", async (req, res) => {
     const query = `SELECT FILENAME FROM EQUIPMENT_IMAGES WHERE EQUIPMENT_ID = ?`;
     connection.execute(query, [equipmentId], (err, rows) => {
       if (err) {
-        console.error("Failed to retrieve image filename: " + err);
+        console.error("Failed to retrieve image filenames: " + err);
         connection.end();
         res.sendStatus(500);
         return;
       }
-      if (rows.length > 0 && rows[0].FILENAME) {
-        res.json({ filename: rows[0].FILENAME });
+      if (rows.length > 0) {
+        const filenames = rows.map((row) => row.FILENAME);
+        res.json({ filenames: filenames });
       } else {
-        res.json({ filename: null });
+        res.json({ filenames: [] });
       }
       connection.end();
     });
@@ -195,9 +203,16 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
 
     // Save the file to the hosted path (_equipment-images subfolder)
-    const basePath =
-      process.env.EQUIPMENT_IMAGES_PATH ||
-      "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration";
+    const os = require("os");
+    const hostname = os.hostname();
+    let basePath;
+    if (hostname === "QUALITY-MGR") {
+      basePath = "C:\\Quality - Records\\8511 - Equipment";
+    } else {
+      basePath =
+        process.env.EQUIPMENT_IMAGES_PATH ||
+        "\\\\fs1\\Common\\Quality - Records\\8511 - Equipment";
+    }
     const equipmentImagesPath = path.join(basePath, "_equipment_images");
     if (!fs.existsSync(equipmentImagesPath)) {
       fs.mkdirSync(equipmentImagesPath, { recursive: true });
@@ -210,7 +225,6 @@ router.post("/", upload.single("image"), async (req, res) => {
     const query = `
       INSERT INTO EQUIPMENT_IMAGES (EQUIPMENT_ID, FILENAME)
       VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE FILENAME = VALUES(FILENAME)
     `;
     connection.execute(query, [equipmentId, filename], (err, result) => {
       if (err) {

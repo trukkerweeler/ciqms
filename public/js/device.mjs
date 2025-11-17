@@ -57,19 +57,28 @@ async function initializePage() {
         imageContainer.style.alignItems = "flex-end";
         imageContainer.style.gap = "16px";
         imageContainer.appendChild(imageBtn);
+
+        let seeAllBtn = document.createElement("button");
+        seeAllBtn.id = "seeAllBtn";
+        seeAllBtn.classList.add("btn", "btn-primary", "image-button");
+        seeAllBtn.innerHTML = "See All Images";
+        seeAllBtn.style.fontSize = "0.85rem";
+        seeAllBtn.style.padding = "2px 8px";
+        seeAllBtn.style.height = "28px";
+        imageContainer.appendChild(seeAllBtn);
         // Show device image on page load if it exists
         fetch(`http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`)
           .then((response) => response.json())
           .then((result) => {
-            const imageFilename = result.filename;
-            if (imageFilename) {
+            const filenames = result.filenames;
+            if (filenames.length > 0) {
               let mainImage = document.createElement("img");
               mainImage.id = "main-device-image";
               mainImage.alt = "Device Image";
               mainImage.style.maxWidth = "200px";
               mainImage.style.height = "auto";
               mainImage.src = `/_device-images/${encodeURIComponent(
-                imageFilename
+                filenames[0]
               )}`;
               imageContainer.appendChild(mainImage);
             } else {
@@ -97,7 +106,8 @@ async function initializePage() {
           fetch(`http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`)
             .then((response) => response.json())
             .then((result) => {
-              const imageFilename = result.filename;
+              const filenames = result.filenames || [];
+              const imageFilename = filenames.length > 0 ? filenames[0] : null;
               if (imageFilename) {
                 const img = document.createElement("img");
                 img.id = "device-image-preview";
@@ -370,16 +380,16 @@ async function initializePage() {
             let placeholder = imageDiv.querySelector(".no-image-placeholder");
             if (placeholder) imageDiv.removeChild(placeholder);
 
-            // Fetch the image filename from DEVICE_IMAGES
+            // Fetch the image filenames from DEVICE_IMAGES
             try {
               const filenameRes = await fetch(
                 `http://localhost:${port}/image/filename/${deviceId}`
               );
               const filenameJson = await filenameRes.json();
-              const imageFilename = filenameJson.filename;
-              if (imageFilename) {
+              const filenames = filenameJson.filenames;
+              if (filenames.length > 0) {
                 imgElement.src = `/_device-images/${encodeURIComponent(
-                  imageFilename
+                  filenames[0]
                 )}`;
                 imgElement.style.display = "block";
                 imgElement.onerror = () => {
@@ -396,7 +406,7 @@ async function initializePage() {
                   }
                 };
               } else {
-                // No image filename, show placeholder
+                // No image filenames, show placeholder
                 imgElement.src = "";
                 imgElement.style.display = "none";
                 placeholder = document.createElement("div");
@@ -438,6 +448,72 @@ async function initializePage() {
 }
 
 initializePage();
+
+// listen for click event on the seeAllBtn
+document.querySelector("#seeAllBtn").addEventListener("click", async () => {
+  const urlParams = new URLSearchParams(window.location.search);
+  const deviceId = urlParams.get("id");
+  const modal = document.getElementById("view-all-device-images-dialog");
+  const imagesDiv = document.getElementById("view-all-device-images-div");
+  const imgElement = document.getElementById("currentDeviceImage");
+  const prevBtn = document.getElementById("prevDeviceImage");
+  const nextBtn = document.getElementById("nextDeviceImage");
+  const noImagesDiv = document.getElementById("noDeviceImages");
+
+  let filenames = [];
+  let currentIndex = 0;
+
+  // Fetch the image filename
+  try {
+    const filenameRes = await fetch(
+      `http://localhost:${port}/image/filename/${deviceId}`
+    );
+    const filenameJson = await filenameRes.json();
+    filenames = filenameJson.filenames;
+    if (filenames.length > 0) {
+      currentIndex = 0;
+      showImage(currentIndex);
+      imgElement.style.display = "block";
+      noImagesDiv.style.display = "none";
+      prevBtn.disabled = filenames.length <= 1;
+      nextBtn.disabled = filenames.length <= 1;
+    } else {
+      imgElement.style.display = "none";
+      noImagesDiv.style.display = "block";
+      prevBtn.disabled = true;
+      nextBtn.disabled = true;
+    }
+  } catch (error) {
+    imgElement.style.display = "none";
+    noImagesDiv.style.display = "block";
+    prevBtn.disabled = true;
+    nextBtn.disabled = true;
+  }
+  modal.showModal();
+
+  function showImage(index) {
+    if (filenames.length > 0 && index >= 0 && index < filenames.length) {
+      imgElement.src = `/_device-images/${encodeURIComponent(
+        filenames[index]
+      )}`;
+      currentIndex = index;
+      prevBtn.disabled = index === 0;
+      nextBtn.disabled = index === filenames.length - 1;
+    }
+  }
+
+  prevBtn.addEventListener("click", () => {
+    if (currentIndex > 0) {
+      showImage(currentIndex - 1);
+    }
+  });
+
+  nextBtn.addEventListener("click", () => {
+    if (currentIndex < filenames.length - 1) {
+      showImage(currentIndex + 1);
+    }
+  });
+});
 
 document
   .getElementById("saveDeviceEdit")

@@ -208,9 +208,16 @@ const inputFilesPath =
 app.use("/input-files", express.static(inputFilesPath));
 
 // Use environment variable for device images path
-const baseDeviceImagesPath =
-  process.env.DEVICE_IMAGES_PATH ||
-  "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration\\";
+const os = require("os");
+const hostname = os.hostname();
+let baseDeviceImagesPath;
+if (hostname === "QUALITY-MGR") {
+  baseDeviceImagesPath = "C:\\Quality - Records\\7150 - Calibration\\";
+} else {
+  baseDeviceImagesPath =
+    process.env.DEVICE_IMAGES_PATH ||
+    "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration\\";
+}
 const deviceImagesPath = require("path").join(
   baseDeviceImagesPath,
   "_device-images"
@@ -218,9 +225,14 @@ const deviceImagesPath = require("path").join(
 app.use("/_device-images", express.static(deviceImagesPath));
 
 // Use environment variable for equipment images path
-const baseEquipmentImagesPath =
-  process.env.EQUIPMENT_IMAGES_PATH ||
-  "\\\\fs1\\Common\\Quality - Records\\8511 - Equipment\\";
+let baseEquipmentImagesPath;
+if (hostname === "QUALITY-MGR") {
+  baseEquipmentImagesPath = "C:\\Quality - Records\\8511 - Equipment\\";
+} else {
+  baseEquipmentImagesPath =
+    process.env.EQUIPMENT_IMAGES_PATH ||
+    "\\\\fs1\\Common\\Quality - Records\\8511 - Equipment\\";
+}
 const equipmentImagesPath = require("path").join(
   baseEquipmentImagesPath,
   "_equipment_images"

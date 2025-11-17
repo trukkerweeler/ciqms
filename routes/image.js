@@ -104,15 +104,16 @@ router.get("/filename/:id", async (req, res) => {
     const query = `SELECT FILENAME FROM DEVICE_IMAGES WHERE DEVICE_ID = ?`;
     connection.execute(query, [deviceId], (err, rows) => {
       if (err) {
-        console.error("Failed to retrieve image filename: " + err);
+        console.error("Failed to retrieve image filenames: " + err);
         connection.end();
         res.sendStatus(500);
         return;
       }
-      if (rows.length > 0 && rows[0].FILENAME) {
-        res.json({ filename: rows[0].FILENAME });
+      if (rows.length > 0) {
+        const filenames = rows.map((row) => row.FILENAME);
+        res.json({ filenames: filenames });
       } else {
-        res.json({ filename: null });
+        res.json({ filenames: [] });
       }
       connection.end();
     });
@@ -187,9 +188,16 @@ router.post("/", upload.single("image"), async (req, res) => {
     }
 
     // Save the file to the hosted path (_device-images subfolder)
-    const basePath =
-      process.env.DEVICE_IMAGES_PATH ||
-      "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration";
+    const os = require("os");
+    const hostname = os.hostname();
+    let basePath;
+    if (hostname === "QUALITY-MGR") {
+      basePath = "C:\\Quality - Records\\7150 - Calibration";
+    } else {
+      basePath =
+        process.env.DEVICE_IMAGES_PATH ||
+        "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration";
+    }
     const deviceImagesPath = path.join(basePath, "_device-images");
     if (!fs.existsSync(deviceImagesPath)) {
       fs.mkdirSync(deviceImagesPath, { recursive: true });
@@ -202,7 +210,6 @@ router.post("/", upload.single("image"), async (req, res) => {
     const query = `
       INSERT INTO DEVICE_IMAGES (DEVICE_ID, FILENAME)
       VALUES (?, ?)
-      ON DUPLICATE KEY UPDATE FILENAME = VALUES(FILENAME)
     `;
     connection.execute(query, [deviceId, filename], (err, result) => {
       if (err) {
@@ -213,7 +220,6 @@ router.post("/", upload.single("image"), async (req, res) => {
       }
       res.json({
         message: "Image filename saved successfully",
-        id: result.insertId,
       });
       connection.end();
     });
