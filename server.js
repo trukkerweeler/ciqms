@@ -175,6 +175,9 @@ app.use("/causemaint", causemaintRoutes);
 const pnlRoutes = require("./routes/pnl");
 app.use("/pnl", pnlRoutes);
 
+const pnlmonthlyRoutes = require("./routes/pnlmonthly");
+app.use("/pnlmonthly", pnlmonthlyRoutes);
+
 const auditRoutes = require("./routes/audit");
 app.use("/audit", auditRoutes);
 
