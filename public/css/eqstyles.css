@@ -1,0 +1,292 @@
+/* Equipment page specific styles */
+
+/* Override the main-content styling to be more compact */
+body {
+  padding-bottom: 50px;
+}
+
+#main-content {
+  margin-top: 1rem;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  margin-bottom: 60px;
+  padding: 15px;
+  background-color: #fff;
+  border-radius: 8px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  min-height: auto;
+  max-width: 100%;
+  box-sizing: border-box;
+}
+
+/* Tighten up spacing in the equipment details */
+#main-content h1 {
+  margin-top: 0;
+  margin-bottom: 10px;
+  font-size: 1.5rem;
+}
+
+#main-content p {
+  margin: 3px 0;
+  line-height: 1.3;
+}
+
+/* Reduce gap in grid */
+#main-content > div > div[style*="grid"] {
+  gap: 15px !important;
+}
+
+/* Make button section more compact */
+#main-content > div > div[style*="margin-top"] {
+  margin-top: 3px !important;
+}
+
+.btn {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+}
+
+/* Edit equipment dialog */
+#edit-equipment-dialog {
+  padding: 20px;
+  max-width: 1000px;
+}
+
+#edit-equipment-dialog h2 {
+  grid-column: 1 / 4;
+  margin-top: 0;
+  color: #333;
+}
+
+#edit-equipment-dialog h3 {
+  margin: 0;
+  color: #333;
+}
+
+.form-fields-container label {
+  font-weight: bold;
+}
+
+.form-fields-container input,
+.form-fields-container select {
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#editEquipmentImage {
+  max-width: 200px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: none;
+}
+
+#editEquipmentImageBtn,
+#seeAllEquipmentImagesBtn {
+  padding: 8px 16px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#editEquipmentImageBtn {
+  background-color: #007bff;
+}
+
+#seeAllEquipmentImagesBtn {
+  background-color: #28a745;
+}
+
+#saveEquipmentEdit,
+#cancelEquipmentEdit {
+  padding: 10px 20px;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#saveEquipmentEdit {
+  background-color: #007bff;
+}
+
+#cancelEquipmentEdit {
+  background-color: #6c757d;
+}
+
+/* Image view dialog */
+#view-equipment-image-dialog {
+  padding: 20px;
+  max-width: 500px;
+}
+
+#closeEquipmentDialog {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+#view-equipment-image-dialog .section {
+  text-align: center;
+}
+
+#view-equipment-image-dialog h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+#view-equipment-image-dialog h3 {
+  margin-top: 0;
+}
+
+#view-equipment-image-dialog h3.delete-heading {
+  color: #d9534f;
+}
+
+#view-equipment-image-dialog h3.upload-heading {
+  color: #333;
+}
+
+#view-equipment-image-div {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 20px;
+}
+
+#equipment-image {
+  max-width: 400px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+}
+
+#equipment-image-actions {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  gap: 15px;
+}
+
+#equipment-image-actions section,
+#equipment-image-actions div {
+  border: 1px solid #eee;
+  padding: 15px;
+  border-radius: 8px;
+}
+
+#equipment-image-actions div {
+  text-align: center;
+}
+
+#deleteEquipmentImage {
+  padding: 8px 16px;
+  background-color: #d9534f;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+#equipmentImagePicker {
+  margin-bottom: 12px;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#changeEquipmentImage {
+  padding: 10px 20px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* View all images dialog */
+#view-all-equipment-images-dialog {
+  padding: 20px;
+  max-width: 700px;
+  position: relative;
+}
+
+#closeAllEquipmentImagesDialog {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  background: none;
+  border: none;
+  font-size: 24px;
+  cursor: pointer;
+  color: #666;
+}
+
+#view-all-equipment-images-dialog .section {
+  text-align: center;
+}
+
+#view-all-equipment-images-dialog h2 {
+  margin-top: 0;
+  color: #333;
+}
+
+#view-all-equipment-images-div {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 20px;
+  min-height: 300px;
+}
+
+#view-all-equipment-images-div > div {
+  flex: 1;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+#prevEquipmentImage,
+#nextEquipmentImage {
+  padding: 10px 15px;
+  background-color: #007bff;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 16px;
+}
+
+#currentEquipmentImage {
+  max-width: 400px;
+  height: auto;
+  border: 1px solid #ddd;
+  border-radius: 8px;
+  display: none;
+}
+
+#noEquipmentImages {
+  display: none;
+  color: #666;
+  font-size: 18px;
+}
+
+#view-all-equipment-images-dialog .close-button-container {
+  margin-top: 20px;
+  text-align: center;
+}
+
+#view-all-equipment-images-dialog .close-button-container button {
+  padding: 10px 20px;
+  background-color: #6c757d;
+  color: white;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+}

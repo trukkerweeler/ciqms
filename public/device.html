@@ -6,6 +6,7 @@
     <title>Devices</title>
     <link rel="stylesheet" href="css/stylescal.css" />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/devstyles.css" />
     <link rel="icon" href="./images/ci-logo.png" />
   </head>
   <body>
@@ -25,7 +26,7 @@
           />
 
           <label for="edit-device-name">Name:</label>
-          <input type="text" id="edit-device-name" name="NAME"required />
+          <input type="text" id="edit-device-name" name="NAME" required />
 
           <label for="edit-device-type">Device Type:</label>
           <input type="text" id="edit-device-type" name="DEVICE_TYPE" />
@@ -43,8 +44,8 @@
           <label for="edit-serial-number">Serial Number:</label>
           <input type="text" id="edit-serial-number" name="SERIAL_NUMBER" />
 
-            <label for="edit-major-location">Major Location:</label>
-            <select id="edit-major-location" name="MAJOR_LOCATION" required>
+          <label for="edit-major-location">Major Location:</label>
+          <select id="edit-major-location" name="MAJOR_LOCATION" required>
             <option value="">Select Location</option>
             <option value="OFFICE">OFFICE</option>
             <option value="INSP">INSP</option>
@@ -53,7 +54,7 @@
             <option value="ASSY">ASSY</option>
             <option value="WELD">WELD</option>
             <option value="LOCKUP">LOCKUP</option>
-            </select>
+          </select>
 
           <label for="edit-minor-location">Minor Location:</label>
           <input type="text" id="edit-minor-location" name="MINOR_LOCATION" />
@@ -70,19 +71,28 @@
           />
 
           <label for="edit-status">Status:</label>
-            <select id="edit-status" name="STATUS" required>
+          <select id="edit-status" name="STATUS" required>
             <option value="">Select Status</option>
             <option value="C">Current</option>
             <option value="E">Expired</option>
             <option value="X">Extend (Uncommon)</option>
             <option value="D">Disposed</option>
-            </select>
+          </select>
 
           <div class="dialog-actions">
-            <button type="button" id="saveDeviceEdit" class="btn btn-primary btn-save">
+            <button
+              type="button"
+              id="saveDeviceEdit"
+              class="btn btn-primary btn-save"
+            >
               Save
             </button>
-            <button type="button" id="cancelDeviceEdit" class="btn btn-cancel" onclick="document.getElementById('edit-device-dialog').close()">
+            <button
+              type="button"
+              id="cancelDeviceEdit"
+              class="btn btn-cancel"
+              onclick="document.getElementById('edit-device-dialog').close()"
+            >
               Cancel
             </button>
           </div>
@@ -102,12 +112,12 @@
           <input type="number" id="edit-days-remaining" name="DAYS_REMAINING" />
 
           <label for="edit-status">Status:</label>
-            <select id="status" name="STATUS" required>
-              <option value="C">Current</option>
-              <option value="E">Expired</option>
-              <option value="X">Extend</option>
-              <option value="D">Disposed</option>
-            </select>
+          <select id="status" name="STATUS" required>
+            <option value="C">Current</option>
+            <option value="E">Expired</option>
+            <option value="X">Extend</option>
+            <option value="D">Disposed</option>
+          </select>
 
           <label for="edit-next-date">Next Date:</label>
           <input type="date" id="edit-next-date" name="NEXT_DATE" />
@@ -137,59 +147,99 @@
             <button type="button" id="saveDevcalEdit" class="btn btn-primary">
               Save
             </button>
-            <button type="button" id="cancelDevcalEdit" class="btn btn-cancel" onclick="document.getElementById('edit-devcal-dialog').close()">Cancel</button>
+            <button
+              type="button"
+              id="cancelDevcalEdit"
+              class="btn btn-cancel"
+              onclick="document.getElementById('edit-devcal-dialog').close()"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </dialog>
 
       <!-- Image view dialog -->
       <dialog id="view-device-image-dialog" class="dialog">
-        <button id="closeDialog" class="close-button" onclick="document.getElementById('view-device-image-dialog').close()">&times;</button>
+        <button
+          id="closeDialog"
+          class="close-button"
+          onclick="document.getElementById('view-device-image-dialog').close()"
+        >
+          &times;
+        </button>
         <section class="section image-section">
           <h2>Device Image</h2>
           <div id="view-device-image-div">
-            <img id="device-image" src="" alt="Device Image" style="max-width:200px;height:auto;" />
+            <img id="device-image" src="" alt="Device Image" />
             <div id="image-actions">
               <section>
                 <h3>Delete image</h3>
                 <button type="button" id="deleteImage" class="btn btn-cancel">
-                  Delete Image</button>
+                  Delete Image
+                </button>
               </section>
-              <div style="margin-top:32px;text-align:center">
-                <input type="file" id="imagePicker" accept="image/*" style="margin-bottom:12px" />
-                <button type="button" id="changeImage" class="btn btn-primary" style="width:120px">Save</button>
+              <div>
+                <h3>Upload new image</h3>
+                <input type="file" id="imagePicker" accept="image/*" />
+                <button type="button" id="changeImage" class="btn btn-primary">
+                  Save
+                </button>
               </div>
             </div>
           </div>
-          </button>
         </section>
       </dialog>
       <dialog id="editNotes" class="dialog">
         <form id="edit-notes-form">
           <h2>Edit Notes</h2>
           <label for="notes-textarea">Notes:</label>
-          <textarea id="notes-textarea" name="NOTES" rows="6" required></textarea>
+          <textarea
+            id="notes-textarea"
+            name="NOTES"
+            rows="6"
+            required
+          ></textarea>
           <div class="dialog-actions">
-            <button type="submit" id="saveNotes" class="btn btn-primary">Save</button>
-            <button type="button" id="cancelNotes" class="btn btn-cancel" onclick="document.getElementById('editNotes').close()">Cancel</button>
+            <button type="submit" id="saveNotes" class="btn btn-primary">
+              Save
+            </button>
+            <button
+              type="button"
+              id="cancelNotes"
+              class="btn btn-cancel"
+              onclick="document.getElementById('editNotes').close()"
+            >
+              Cancel
+            </button>
           </div>
         </form>
       </dialog>
 
-
       <dialog id="view-all-device-images-dialog" class="dialog">
-        <button id="closeAllImagesDialog" class="close-button" onclick="document.getElementById('view-all-device-images-dialog').close()">&times;</button>
+        <button
+          id="closeAllImagesDialog"
+          class="close-button"
+          onclick="document.getElementById('view-all-device-images-dialog').close()"
+        >
+          &times;
+        </button>
         <section class="section image-section">
           <h2>Device Images</h2>
-          <div id="view-all-device-images-div" style="text-align: center;">
-            <button id="prevDeviceImage" class="btn btn-primary" style="margin-right: 10px;">&larr; Previous</button>
-            <img id="currentDeviceImage" src="" alt="Device Image" style="max-width: 400px; height: auto; display: none;" />
-            <button id="nextDeviceImage" class="btn btn-primary" style="margin-left: 10px;">Next &rarr;</button>
-            <div id="noDeviceImages" style="display: none;">No images found</div>
+          <div id="view-all-device-images-div">
+            <button id="prevDeviceImage" class="btn btn-primary">
+              &larr; Previous
+            </button>
+            <div>
+              <img id="currentDeviceImage" src="" alt="Device Image" />
+              <div id="noDeviceImages">No images found</div>
+            </div>
+            <button id="nextDeviceImage" class="btn btn-primary">
+              Next &rarr;
+            </button>
           </div>
         </section>
       </dialog>
-
     </main>
     <footer id="footer"></footer>
   </body>

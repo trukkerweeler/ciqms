@@ -41,26 +41,37 @@ function displayEquipment(equipment) {
   const equipmentDiv = document.createElement("div");
   equipmentDiv.innerHTML = `
     <h1>Equipment Details</h1>
-    <p><strong>Equipment ID:</strong> ${equipment.EQUIPMENT_ID}</p>
-    <p><strong>Name:</strong> ${equipment.NAME}</p>
-    <p><strong>Type:</strong> ${equipment.EQUIPMENT_TYPE}</p>
-    <p><strong>Customer ID:</strong> ${equipment.CUSTOMER_ID}</p>
-    <p><strong>Status:</strong> ${equipment.STATUS}</p>
-    <p><strong>Assigned To:</strong> ${equipment.ASSIGNED_TO}</p>
-    <p><strong>Major Location:</strong> ${equipment.MAJOR_LOCATION}</p>
-    <p><strong>Minor Location:</strong> ${equipment.MINOR_LOCATION}</p>
-    <p><strong>Manufacturer:</strong> ${equipment.MANUFACTURER_NAME}</p>
-    <p><strong>Model:</strong> ${equipment.MODEL_NUMBER}</p>
-    <p><strong>Serial:</strong> ${equipment.SERIAL_NUMBER}</p>
-    <p><strong>Purchase Date:</strong> ${
-      equipment.PURCHASE_DATE ? equipment.PURCHASE_DATE.split("T")[0] : ""
-    }</p>
-    <p><strong>Purchase Price:</strong> ${equipment.PURCHASE_PRICE}</p>
-    <p><strong>Warranty Date:</strong> ${
-      equipment.WARRANTY_DATE ? equipment.WARRANTY_DATE.split("T")[0] : ""
-    }</p>
-    <p><strong>In Use:</strong> ${equipment.IN_USE}</p>
-    <button id="editEquipmentBtn" class="btn btn-primary">Edit Equipment</button>
+    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 20px; align-items: start;">
+      <div class="fields-col1">
+        <p><strong>Equipment ID:</strong> ${equipment.EQUIPMENT_ID}</p>
+        <p><strong>Name:</strong> ${equipment.NAME}</p>
+        <p><strong>Type:</strong> ${equipment.EQUIPMENT_TYPE}</p>
+        <p><strong>Customer ID:</strong> ${equipment.CUSTOMER_ID}</p>
+        <p><strong>Status:</strong> ${equipment.STATUS}</p>
+        <p><strong>Assigned To:</strong> ${equipment.ASSIGNED_TO}</p>
+        <p><strong>Major Location:</strong> ${equipment.MAJOR_LOCATION}</p>
+      </div>
+      <div class="fields-col2">
+        <p><strong>Minor Location:</strong> ${equipment.MINOR_LOCATION}</p>
+        <p><strong>Manufacturer:</strong> ${equipment.MANUFACTURER_NAME}</p>
+        <p><strong>Model:</strong> ${equipment.MODEL_NUMBER}</p>
+        <p><strong>Serial:</strong> ${equipment.SERIAL_NUMBER}</p>
+        <p><strong>Purchase Date:</strong> ${
+          equipment.PURCHASE_DATE ? equipment.PURCHASE_DATE.split("T")[0] : ""
+        }</p>
+        <p><strong>Purchase Price:</strong> ${equipment.PURCHASE_PRICE}</p>
+        <p><strong>Warranty Date:</strong> ${
+          equipment.WARRANTY_DATE ? equipment.WARRANTY_DATE.split("T")[0] : ""
+        }</p>
+        <p><strong>In Use:</strong> ${equipment.IN_USE}</p>
+      </div>
+      <div class="images-col" id="images-col">
+        <!-- Images will be added here -->
+      </div>
+    </div>
+    <div style="margin-top: 5px;">
+      <button id="editEquipmentBtn" class="btn btn-primary">Edit Equipment</button>
+    </div>
   `;
 
   mainContent.insertBefore(equipmentDiv, mainContent.firstChild);
@@ -68,9 +79,10 @@ function displayEquipment(equipment) {
   // Create image/button container
   const imageContainer = document.createElement("div");
   imageContainer.style.display = "flex";
-  imageContainer.style.alignItems = "flex-end";
+  imageContainer.style.flexDirection = "column";
+  imageContainer.style.alignItems = "center";
   imageContainer.style.gap = "16px";
-  imageContainer.style.marginTop = "20px";
+  imageContainer.style.marginTop = "5px";
 
   let imageBtn = document.createElement("button");
   imageBtn.id = "equipmentImageBtn";
@@ -90,7 +102,7 @@ function displayEquipment(equipment) {
   seeAllBtn.style.padding = "2px 8px";
   seeAllBtn.style.height = "28px";
   imageContainer.appendChild(seeAllBtn);
-  equipmentDiv.appendChild(imageContainer);
+  document.getElementById("images-col").appendChild(imageContainer);
 
   // Show equipment image on page load if it exists
   fetch(
@@ -178,12 +190,48 @@ function openEditDialog(equipment) {
   document.getElementById("edit-status").value = equipment.STATUS;
   document.getElementById("edit-in-use").value = equipment.IN_USE;
 
+  // Populate image in edit dialog
+  const editImage = document.getElementById("editEquipmentImage");
+  fetch(
+    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
+  )
+    .then((response) => response.json())
+    .then((result) => {
+      const filenames = result.filenames || [];
+      if (filenames.length > 0) {
+        editImage.src = `/_equipment-images/${encodeURIComponent(
+          filenames[0]
+        )}`;
+        editImage.style.display = "block";
+      } else {
+        editImage.style.display = "none";
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching equipment image for edit dialog:", error);
+      editImage.style.display = "none";
+    });
+
   dialog.showModal();
 
   // Handle save
   document.getElementById("saveEquipmentEdit").addEventListener("click", () => {
     saveEquipmentEdit();
   });
+
+  // Handle edit image button
+  document
+    .getElementById("editEquipmentImageBtn")
+    .addEventListener("click", () => {
+      openImageDialog(equipment);
+    });
+
+  // Handle see all images button
+  document
+    .getElementById("seeAllEquipmentImagesBtn")
+    .addEventListener("click", () => {
+      openSeeAllDialog(equipment);
+    });
 }
 
 function saveEquipmentEdit() {
@@ -211,6 +259,40 @@ function saveEquipmentEdit() {
     .catch((error) => {
       console.error("Error updating equipment:", error);
     });
+}
+
+function openImageDialog(equipment) {
+  const dialog = document.getElementById("view-equipment-image-dialog");
+  const imgElement = document.getElementById("equipment-image");
+  const imageDiv = document.getElementById("view-equipment-image-div");
+
+  // Hide image by default
+  imgElement.style.display = "none";
+
+  // Fetch the image filenames
+  fetch(
+    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
+  )
+    .then((response) => response.json())
+    .then((result) => {
+      const filenames = result.filenames || [];
+      if (filenames.length > 0) {
+        imgElement.src = `/_equipment-images/${encodeURIComponent(
+          filenames[0]
+        )}`;
+        imgElement.style.display = "block";
+        imgElement.onerror = () => {
+          imgElement.src = "";
+          imgElement.style.display = "none";
+        };
+      }
+    })
+    .catch((error) => {
+      console.error("Error fetching equipment image:", error);
+      imgElement.style.display = "none";
+    });
+
+  dialog.showModal();
 }
 
 function openSeeAllDialog(equipment) {
