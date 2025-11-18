@@ -123,12 +123,12 @@ window.addEventListener("DOMContentLoaded", () => {
     let adjustmentsCOGS = 0;
     let adjustmentsSGA = 0;
     let adjustmentsTaxes = 0;
-    
+
     if (adjustments && adjustments.length > 0) {
       for (const adj of adjustments) {
         const amount = Number(adj.AMOUNT);
         const glAccount = Number(adj.GL_ACCOUNT);
-        
+
         if (glAccount >= 400 && glAccount <= 499) {
           // Revenue accounts
           adjustmentsRevenue += Math.abs(amount);
@@ -138,7 +138,10 @@ window.addEventListener("DOMContentLoaded", () => {
         } else if (glAccount >= 600 && glAccount <= 799) {
           // SG&A accounts
           adjustmentsSGA += amount;
-        } else if ((glAccount >= 445 && glAccount <= 447) || (glAccount >= 707 && glAccount <= 750)) {
+        } else if (
+          (glAccount >= 445 && glAccount <= 447) ||
+          (glAccount >= 707 && glAccount <= 750)
+        ) {
           // Other Income/Expense
           adjustmentsSGA += amount;
         } else if (glAccount >= 900 && glAccount <= 999) {
@@ -149,8 +152,14 @@ window.addEventListener("DOMContentLoaded", () => {
     }
 
     // Calculate adjusted profit
-    const adjustedProfit = (revenue + adjustmentsRevenue) - (cogs + adjustmentsCOGS) - (sga + adjustmentsSGA) - (taxes + adjustmentsTaxes);
-    const totalAdjustments = adjustmentsRevenue + adjustmentsCOGS + adjustmentsSGA + adjustmentsTaxes;
+    const adjustedProfit =
+      revenue +
+      adjustmentsRevenue -
+      (cogs + adjustmentsCOGS) -
+      (sga + adjustmentsSGA) -
+      (taxes + adjustmentsTaxes);
+    const totalAdjustments =
+      adjustmentsRevenue + adjustmentsCOGS + adjustmentsSGA + adjustmentsTaxes;
 
     // Add grand total
     html += `<tr style="background:#e0e8ff;font-weight:bold;font-size:1.1em">
