@@ -10,6 +10,16 @@
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="images/ci-logo.png" />
     <title>PNL Monthly (Unofficial)</title>
+    <style>
+      #adjustmentsTable td,
+      #adjustmentsTable th {
+        padding: 2px 6px !important;
+        line-height: 1.1 !important;
+      }
+      #adjustmentsTable {
+        line-height: 1.1 !important;
+      }
+    </style>
   </head>
 
   <body>
@@ -42,19 +52,12 @@
           <option value="2025">2025</option>
         </select>
         <button id="fetchPnlBtn" style="margin-left: 15px">Fetch P&L</button>
-        <button
-          id="addManualGLBtn"
-          class="btn btn-primary"
-          style="margin-left: 20px"
-        >
-          Add Manual GL Entry
-        </button>
       </div>
       <h2 style="margin-top: 30px">Account Details</h2>
       <table
         id="pnlTable"
         class="data-table"
-        style="margin-top: 20px; width: 100%"
+        style="margin-top: 20px; width: 100%; line-height: 0.9"
       >
         <tr>
           <th>GL Account</th>
@@ -64,7 +67,16 @@
         </tr>
       </table>
 
-      <h2 style="margin-top: 40px">Manual Adjustments</h2>
+      <div style="display: flex; align-items: center; margin-top: 40px">
+        <h2 style="margin: 0">Manual Adjustments</h2>
+        <button
+          id="addManualGLBtn"
+          class="btn btn-primary"
+          style="margin-left: 20px"
+        >
+          Add Manual GL Entry
+        </button>
+      </div>
       <table
         id="adjustmentsTable"
         class="data-table"
@@ -115,7 +127,7 @@
             id="batch_num"
             name="batch_num"
             required
-            value="M"
+            value="TK"
           />
         </div>
         <div>
@@ -132,7 +144,7 @@
           <label for="t_date">Transaction Date *:</label>
           <input type="date" id="t_date" name="t_date" required />
         </div>
-        <!-- Hidden fields calculated automatically from T_DATE -->
+        <!-- Hidden fields calculated automatically from POST_DATE -->
         <input type="hidden" id="period" name="period" />
         <input type="hidden" id="period_beg_date" name="period_beg_date" />
         <input type="hidden" id="period_end_date" name="period_end_date" />

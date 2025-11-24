@@ -130,8 +130,8 @@ window.addEventListener("DOMContentLoaded", () => {
         const glAccount = Number(adj.GL_ACCOUNT);
 
         if (glAccount >= 400 && glAccount <= 499) {
-          // Revenue accounts
-          adjustmentsRevenue += Math.abs(amount);
+          // Revenue accounts - negative amounts reduce revenue, positive amounts increase revenue
+          adjustmentsRevenue -= amount;
         } else if (glAccount >= 500 && glAccount <= 599) {
           // COGS accounts
           adjustmentsCOGS += amount;
@@ -310,44 +310,54 @@ window.addEventListener("DOMContentLoaded", () => {
       <th>Actions</th>
     </tr>`;
 
+    let total = 0;
     for (const adj of adjustments) {
       const formattedDate = new Date(adj.POST_DATE).toLocaleDateString();
+      const amount = Number(adj.AMOUNT);
+      total += amount;
       html += `<tr>
         <td>${adj.GL_ACCOUNT}</td>
         <td>${formattedDate}</td>
         <td>${adj.REFERENCE || ""}</td>
         <td>${adj.DESCR || ""}</td>
         <td>${adj.VENDOR || ""}</td>
-        <td style="font-weight:bold">${Number(adj.AMOUNT).toLocaleString(
-          "en-US",
-          {
-            style: "currency",
-            currency: "USD",
-          }
-        )}</td>
+        <td style="font-weight:bold">${amount.toLocaleString("en-US", {
+          style: "currency",
+          currency: "USD",
+        })}</td>
         <td>
-          <button class="btn-small" onclick="editAdjustment('${
+          <button class="btn-small" style="padding: 2px 6px; font-size: 0.85em" onclick="editAdjustment('${
             adj.BATCH_NUM
           }', '${adj.BATCH_LINE}')">Edit</button>
-          <button class="btn-small btn-danger" onclick="deleteAdjustment('${
+          <button class="btn-small btn-danger" style="padding: 2px 6px; font-size: 0.85em" onclick="deleteAdjustment('${
             adj.BATCH_NUM
           }', '${adj.BATCH_LINE}')">Delete</button>
         </td>
       </tr>`;
     }
 
+    // Add total row
+    html += `<tr style="background:#eef;font-weight:bold">
+      <td colspan="5" style="text-align:right">Total:</td>
+      <td>${total.toLocaleString("en-US", {
+        style: "currency",
+        currency: "USD",
+      })}</td>
+      <td></td>
+    </tr>`;
+
     adjustmentsContainer.innerHTML = html;
   }
 
-  // Function to calculate period fields from T_DATE
+  // Function to calculate period fields from POST_DATE
   function updatePeriodFields() {
-    const tDateField = document.getElementById("t_date");
-    if (!tDateField) return;
+    const postDateField = document.getElementById("post_date");
+    if (!postDateField) return;
 
-    const tDateVal = tDateField.value;
-    if (!tDateVal) return;
+    const postDateVal = postDateField.value;
+    if (!postDateVal) return;
 
-    const tDate = new Date(tDateVal);
+    const tDate = new Date(postDateVal);
     if (isNaN(tDate.getTime())) return;
 
     // Calculate PERIOD as 2-digit month (MM)
@@ -382,7 +392,7 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("post_date").value = today;
     document.getElementById("t_date").value = today;
 
-    // Calculate period fields from T_DATE
+    // Calculate period fields from POST_DATE
     updatePeriodFields();
 
     // Clear edit mode
@@ -393,9 +403,9 @@ window.addEventListener("DOMContentLoaded", () => {
     manualGLDialog.showModal();
   });
 
-  // Update period fields when T_DATE changes
+  // Update period fields when POST_DATE changes
   document
-    .getElementById("t_date")
+    .getElementById("post_date")
     .addEventListener("change", updatePeriodFields);
 
   // Close dialog on cancel
