@@ -4,6 +4,7 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const nodemailer = require("nodemailer");
 
 // ==================================================
 // put response text
@@ -23,7 +24,11 @@ router.put("/response/:id", (req, res) => {
       }
       // sql to insert on duplicate key update
       const query = `INSERT INTO DOCM_CHNG_RSPN (REQUEST_ID, RESPONSE_TEXT) VALUES (?, ?) ON DUPLICATE KEY UPDATE RESPONSE_TEXT = ?`;
-      const values = [req.params.id, req.body.RESPONSE_TEXT, req.body.RESPONSE_TEXT];
+      const values = [
+        req.params.id,
+        req.body.RESPONSE_TEXT,
+        req.body.RESPONSE_TEXT,
+      ];
       connection.query(query, values, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for doc change response text: " + err);
@@ -43,7 +48,7 @@ router.put("/response/:id", (req, res) => {
 
 // ==================================================
 // put request text
-router.put("/request/:id", (req, res) => {
+router.put("/request/:id", async (req, res) => {
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -59,17 +64,84 @@ router.put("/request/:id", (req, res) => {
       }
       // sql to insert on duplicate key update
       const query = `INSERT INTO DOC_CHG_REQ_TXT (REQUEST_ID, REQUEST_TEXT) VALUES (?, ?) ON DUPLICATE KEY UPDATE REQUEST_TEXT = ?`;
-      const values = [req.params.id, req.body.REQUEST_TEXT, req.body.REQUEST_TEXT];
-      connection.query(query, values, (err, rows, fields) => {
+      const values = [
+        req.params.id,
+        req.body.REQUEST_TEXT,
+        req.body.REQUEST_TEXT,
+      ];
+      connection.query(query, values, async (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for doc change request text: " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
-        res.json(rows);
-      });
 
-      connection.end();
+        // Get the DCR details including ASSIGNED_TO
+        const dcrQuery = `SELECT ASSIGNED_TO, DOCUMENT_ID, REQUEST_DATE FROM DOCM_CHNG_RQST WHERE REQUEST_ID = ?`;
+        connection.query(dcrQuery, [req.params.id], async (err, dcrRows) => {
+          if (err) {
+            console.log("Failed to query for DCR details: " + err);
+            res.json(rows);
+            connection.end();
+            return;
+          }
+
+          if (dcrRows && dcrRows.length > 0) {
+            const assignedTo = dcrRows[0].ASSIGNED_TO;
+            const documentId = dcrRows[0].DOCUMENT_ID;
+
+            // Get the assignee's email
+            const emailQuery = `SELECT WORK_EMAIL_ADDRESS FROM PEOPLE WHERE PEOPLE_ID = ?`;
+            connection.query(
+              emailQuery,
+              [assignedTo],
+              async (err, emailRows) => {
+                connection.end();
+
+                if (err || !emailRows || emailRows.length === 0) {
+                  console.log("Could not retrieve email for assigned person");
+                  res.json(rows);
+                  return;
+                }
+
+                const assigneeEmail = emailRows[0].WORK_EMAIL_ADDRESS;
+
+                // Send email notification
+                try {
+                  const transporter = nodemailer.createTransport({
+                    host: process.env.SMTP_HOST,
+                    port: Number(process.env.SMTP_PORT),
+                    secure: true,
+                    auth: {
+                      user: process.env.SMTP_USER,
+                      pass: process.env.SMTP_PASS,
+                    },
+                  });
+
+                  const mailOptions = {
+                    to: assigneeEmail,
+                    from: process.env.SMTP_FROM,
+                    subject: `DCR Update: ${req.params.id} - ${documentId}`,
+                    text: `A new comment has been added to Document Change Request ${req.params.id}.\n\nDocument: ${documentId}\n\nPlease log in to the QMS system to view the updated request.\n\nIf you have any questions, please contact the quality manager.`,
+                    bcc: "<tim.kent@ci-aviation.com>",
+                  };
+
+                  await transporter.sendMail(mailOptions);
+                  console.log("Email sent to " + assigneeEmail);
+                } catch (emailError) {
+                  console.log("Error sending email:", emailError);
+                }
+
+                res.json(rows);
+              }
+            );
+          } else {
+            connection.end();
+            res.json(rows);
+          }
+        });
+      });
     });
   } catch (err) {
     console.log("Error connecting to Db 93");
@@ -149,10 +221,17 @@ router.post("/", (req, res) => {
           ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
       const values = [
-        req.body.REQUEST_ID, req.body.REQUEST_DATE, req.body.ASSIGNED_TO, 
-        req.body.DUE_DATE, req.body.DOCUMENT_ID, req.body.CHANGE_TYPE, 
-        req.body.CHANGE_REASON, req.body.PRIORITY, req.body.CREATE_BY, 
-        req.body.CREATE_DATE, "N"
+        req.body.REQUEST_ID,
+        req.body.REQUEST_DATE,
+        req.body.ASSIGNED_TO,
+        req.body.DUE_DATE,
+        req.body.DOCUMENT_ID,
+        req.body.CHANGE_TYPE,
+        req.body.CHANGE_REASON,
+        req.body.PRIORITY,
+        req.body.CREATE_BY,
+        req.body.CREATE_DATE,
+        "N",
       ];
 
       connection.query(query, values, (err, rows, fields) => {
@@ -169,7 +248,7 @@ router.post("/", (req, res) => {
       connection.query(updateQuery, updateValues, (err, rows, fields) => {
         if (err) {
           console.log(
-        "Failed to query for doc change system id update: " + err
+            "Failed to query for doc change system id update: " + err
           );
           res.sendStatus(500);
           return;
@@ -299,8 +378,13 @@ router.put("/close/:id", (req, res) => {
       CLOSED = ?, CLOSED_DATE = ?, DECISION = ?, DECISION_DATE = ?, MODIFIED_BY = ?, MODIFIED_DATE = ?
       WHERE REQUEST_ID = ?`;
       const values = [
-        req.body.CLOSED, req.body.CLOSED_DATE, req.body.DECISION, 
-        req.body.DECISION_DATE, req.body.MODIFIED_BY, req.body.MODIFIED_DATE, req.params.id
+        req.body.CLOSED,
+        req.body.CLOSED_DATE,
+        req.body.DECISION,
+        req.body.DECISION_DATE,
+        req.body.MODIFIED_BY,
+        req.body.MODIFIED_DATE,
+        req.params.id,
       ];
       connection.query(query, values, (err, rows, fields) => {
         if (err) {
@@ -312,7 +396,11 @@ router.put("/close/:id", (req, res) => {
       });
       //   update document revision and date
       const query2 = `UPDATE DOCUMENTS SET REVISION_LEVEL = ?, ISSUE_DATE = ? WHERE DOCUMENT_ID = ?`;
-      const values2 = [req.body.REVISION_LEVEL, req.body.REVISION_DATE, req.body.DOCUMENT_ID];
+      const values2 = [
+        req.body.REVISION_LEVEL,
+        req.body.REVISION_DATE,
+        req.body.DOCUMENT_ID,
+      ];
       connection.query(query2, values2, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for doc change revision level: " + err);

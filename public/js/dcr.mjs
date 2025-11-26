@@ -370,7 +370,7 @@ fetch(url, { method: "GET" })
     const btnEditRequest = document.querySelector("#btnEditRequest");
     btnEditRequest.addEventListener("click", async (event) => {
       event.preventDefault();
-      console.log("btnEditRequest @256 button clicked");
+      console.log("btnEditRequest @373 button clicked");
       const requestDialog = document.querySelector("#requestDialog");
       requestDialog.showModal();
 
