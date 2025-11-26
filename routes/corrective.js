@@ -307,6 +307,13 @@ router.post("/", (req, res) => {
         // Create Corrective Action folder after successful database insert
         createCorrectiveFolder(req.body.CORRECTIVE_ID);
 
+        // Create project for the corrective action
+        createCAProject(
+          req.body.CORRECTIVE_ID,
+          req.body.TITLE,
+          req.body.ASSIGNED_TO
+        );
+
         // Send email notification after successful creation
         sendCorrectiveEmail(req.body);
       });
@@ -390,6 +397,263 @@ async function sendCorrectiveEmail(correctiveData) {
     });
   } catch (error) {
     console.error("Error in sendCorrectiveEmail:", error);
+  }
+}
+
+// ==================================================
+// Create project for corrective action
+function createCAProject(correctiveId, title, assignedTo) {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error(
+          "Error connecting to DB for project creation:",
+          err.stack
+        );
+        return;
+      }
+
+      const projectId = "CAR" + correctiveId;
+      const createDate = new Date()
+        .toISOString()
+        .slice(0, 19)
+        .replace("T", " ");
+
+      const query = `INSERT INTO PROJECT (PROJECT_ID, PROJECT_TYPE, NAME, LEADER, CREATE_BY, CREATE_DATE, CLOSED) 
+                     VALUES (?, 'CAR', ?, ?, 'CIQMS', ?, 'N')`;
+      const values = [projectId, title, assignedTo, createDate];
+
+      connection.query(query, values, (err, result) => {
+        if (err) {
+          console.error("Failed to create project for corrective action:", err);
+          connection.end();
+          return;
+        }
+
+        console.log(
+          `Project ${projectId} created for corrective action ${correctiveId}`
+        );
+
+        // Update CORRECTIVE table with project reference
+        const updateQuery = `UPDATE CORRECTIVE SET PROJECT_ID = ? WHERE CORRECTIVE_ID = ?`;
+        connection.query(updateQuery, [projectId, correctiveId], (err) => {
+          if (err) {
+            console.error("Failed to update corrective with project_id:", err);
+          }
+          connection.end();
+        });
+
+        // Create RCA and ICA inputs after project is created
+        createRCAInput(projectId, assignedTo);
+        createICAInput(projectId, assignedTo);
+      });
+    });
+  } catch (error) {
+    console.error("Error in createCAProject:", error);
+  }
+}
+
+// ==================================================
+// Create Root Cause Analysis input
+function createRCAInput(projectId, assignedTo) {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error(
+          "Error connecting to DB for RCA input creation:",
+          err.stack
+        );
+        return;
+      }
+
+      // Check if RCA input already exists
+      const checkQuery = `SELECT INPUT_ID FROM PEOPLE_INPUT WHERE PROJECT_ID = ? AND SUBJECT = 'RCA'`;
+      connection.query(checkQuery, [projectId], (err, rows) => {
+        if (err || (rows && rows.length > 0)) {
+          connection.end();
+          return;
+        }
+
+        // Get next input ID
+        const getIdQuery = `SELECT CURRENT_ID FROM SYSTEM_IDS WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
+        connection.query(getIdQuery, (err, idRows) => {
+          if (err || !idRows || idRows.length === 0) {
+            console.error("Failed to get next input ID:", err);
+            connection.end();
+            return;
+          }
+
+          const nextId = (parseInt(idRows[0].CURRENT_ID) + 1)
+            .toString()
+            .padStart(7, "0");
+          const createDate = new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace("T", " ");
+          const dueDate = new Date();
+          dueDate.setDate(dueDate.getDate() + 30);
+          const dueDateStr = dueDate.toISOString().slice(0, 10);
+
+          const text =
+            "Please provide root cause analysis. Use 5-why methodology for determining root cause. Root cause cannot be a restatement of the finding.";
+
+          const insertQuery = `INSERT INTO PEOPLE_INPUT (INPUT_ID, INPUT_DATE, PEOPLE_ID, ASSIGNED_TO, DUE_DATE, INPUT_TYPE, SUBJECT, PROJECT_ID, CLOSED, CREATE_DATE, CREATE_BY) 
+                               VALUES (?, ?, 'TKENT', ?, ?, 'A', 'RCA', ?, 'N', ?, 'CIQMS')`;
+          const values = [
+            nextId,
+            createDate,
+            assignedTo,
+            dueDateStr,
+            projectId,
+            createDate,
+          ];
+
+          connection.query(insertQuery, values, (err) => {
+            if (err) {
+              console.error("Failed to create RCA input:", err);
+              connection.end();
+              return;
+            }
+
+            // Insert input text
+            const textQuery = `INSERT INTO PPL_INPT_TEXT (INPUT_ID, INPUT_TEXT) VALUES (?, ?)`;
+            connection.query(textQuery, [nextId, text], (err) => {
+              if (err) {
+                console.error("Failed to insert RCA input text:", err);
+              }
+
+              // Update system ID
+              const updateIdQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = ? WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
+              connection.query(updateIdQuery, [nextId], (err) => {
+                if (err) {
+                  console.error("Failed to update input system ID:", err);
+                }
+                console.log(
+                  `RCA input ${nextId} created for project ${projectId}`
+                );
+                connection.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  } catch (error) {
+    console.error("Error in createRCAInput:", error);
+  }
+}
+
+// ==================================================
+// Create Immediate Corrective Action input
+function createICAInput(projectId, assignedTo) {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error(
+          "Error connecting to DB for ICA input creation:",
+          err.stack
+        );
+        return;
+      }
+
+      // Check if ICA input already exists
+      const checkQuery = `SELECT INPUT_ID FROM PEOPLE_INPUT WHERE PROJECT_ID = ? AND SUBJECT = 'ICA'`;
+      connection.query(checkQuery, [projectId], (err, rows) => {
+        if (err || (rows && rows.length > 0)) {
+          connection.end();
+          return;
+        }
+
+        // Get next input ID
+        const getIdQuery = `SELECT CURRENT_ID FROM SYSTEM_IDS WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
+        connection.query(getIdQuery, (err, idRows) => {
+          if (err || !idRows || idRows.length === 0) {
+            console.error("Failed to get next input ID:", err);
+            connection.end();
+            return;
+          }
+
+          const nextId = (parseInt(idRows[0].CURRENT_ID) + 1)
+            .toString()
+            .padStart(7, "0");
+          const createDate = new Date()
+            .toISOString()
+            .slice(0, 19)
+            .replace("T", " ");
+          const dueDate = new Date();
+          dueDate.setDate(dueDate.getDate() + 30);
+          const dueDateStr = dueDate.toISOString().slice(0, 10);
+
+          const text =
+            "Please take immediate action to correct the issue. Document the action taken and the results of the action including dates.";
+
+          const insertQuery = `INSERT INTO PEOPLE_INPUT (INPUT_ID, INPUT_DATE, PEOPLE_ID, ASSIGNED_TO, DUE_DATE, INPUT_TYPE, SUBJECT, PROJECT_ID, CLOSED, CREATE_DATE, CREATE_BY) 
+                               VALUES (?, ?, 'TKENT', ?, ?, 'A', 'ICA', ?, 'N', ?, 'CIQMS')`;
+          const values = [
+            nextId,
+            createDate,
+            assignedTo,
+            dueDateStr,
+            projectId,
+            createDate,
+          ];
+
+          connection.query(insertQuery, values, (err) => {
+            if (err) {
+              console.error("Failed to create ICA input:", err);
+              connection.end();
+              return;
+            }
+
+            // Insert input text
+            const textQuery = `INSERT INTO PPL_INPT_TEXT (INPUT_ID, INPUT_TEXT) VALUES (?, ?)`;
+            connection.query(textQuery, [nextId, text], (err) => {
+              if (err) {
+                console.error("Failed to insert ICA input text:", err);
+              }
+
+              // Update system ID
+              const updateIdQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = ? WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
+              connection.query(updateIdQuery, [nextId], (err) => {
+                if (err) {
+                  console.error("Failed to update input system ID:", err);
+                }
+                console.log(
+                  `ICA input ${nextId} created for project ${projectId}`
+                );
+                connection.end();
+              });
+            });
+          });
+        });
+      });
+    });
+  } catch (error) {
+    console.error("Error in createICAInput:", error);
   }
 }
 
