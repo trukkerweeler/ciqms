@@ -12,6 +12,8 @@ const multer = require("multer");
 const path = require("path");
 const fs = require("fs");
 const { exec } = require("child_process");
+const mysql = require("mysql2");
+const nodemailer = require("nodemailer");
 const router = express.Router();
 
 // Configure multer for file uploads
@@ -156,6 +158,126 @@ router.get("/list", (req, res) => {
 
     res.json({ documents });
   });
+});
+
+// ==================================================
+// Document Release Notifications
+router.post("/release-notifications", async (req, res) => {
+  try {
+    const now = new Date();
+    const weekday = now.getDay();
+    const hour = now.getHours();
+
+    // Check if within business hours (Monday-Friday, 7am-5pm)
+    if (weekday === 0 || weekday === 6 || hour < 7 || hour >= 17) {
+      return res.json({
+        message: "Outside business hours - skipping notifications",
+        processed: 0,
+      });
+    }
+
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      const query = `SELECT d.DOCUMENT_ID, d.REVISION_LEVEL, d.NAME, d.STATUS 
+                     FROM DOCUMENTS d 
+                     LEFT JOIN DOCUMENTS_NOTIFY dn ON d.DOCUMENT_ID = dn.DOCUMENT_ID 
+                       AND d.REVISION_LEVEL = dn.REVISION_LEVEL 
+                     WHERE dn.NOTIFIED_DATE IS NULL`;
+
+      connection.query(query, async (err, documents) => {
+        if (err) {
+          console.log("Failed to query for document notifications: " + err);
+          connection.end();
+          res.status(500).json({ error: "Query failed" });
+          return;
+        }
+
+        let processedCount = 0;
+
+        for (const doc of documents) {
+          const { DOCUMENT_ID, REVISION_LEVEL, NAME, STATUS } = doc;
+
+          let notification = "";
+          let subject = "";
+
+          if (STATUS === "C") {
+            notification = `The following document has been issued/revised. Please review and take appropriate action.\n\nDocument id: ${DOCUMENT_ID}, revision: ${REVISION_LEVEL}`;
+            subject = `Document Release Notification: ${DOCUMENT_ID} - ${NAME}`;
+          } else if (STATUS === "O") {
+            notification = `The following document is obsolete. Please review and take appropriate action.\n\nDocument id: ${DOCUMENT_ID}, revision: ${REVISION_LEVEL}`;
+            subject = `Document Obsolescence Notification: ${DOCUMENT_ID} - ${NAME}`;
+          } else {
+            continue;
+          }
+
+          // Send email
+          try {
+            const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: Number(process.env.SMTP_PORT),
+              secure: true,
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            });
+
+            const mailOptions = {
+              to: [process.env.EMAIL_GM, process.env.EMAIL_QM],
+              from: process.env.SMTP_FROM,
+              subject: subject,
+              text: notification,
+              bcc: "<tim.kent@ci-aviation.com>",
+            };
+
+            await transporter.sendMail(mailOptions);
+
+            // Update DOCUMENTS_NOTIFY table
+            const insertQuery = `INSERT INTO DOCUMENTS_NOTIFY (DOCUMENT_ID, REVISION_LEVEL, ACTION, NOTIFIED_DATE) 
+                                VALUES (?, ?, ?, NOW())`;
+            const insertValues = [DOCUMENT_ID, REVISION_LEVEL, STATUS];
+
+            connection.query(insertQuery, insertValues, (err) => {
+              if (err) {
+                console.log(
+                  `Failed to update DOCUMENTS_NOTIFY for ${DOCUMENT_ID}: ${err}`
+                );
+              }
+            });
+
+            processedCount++;
+          } catch (emailError) {
+            console.log(
+              `Failed to send notification for ${DOCUMENT_ID}: ${emailError}`
+            );
+          }
+        }
+
+        connection.end();
+        res.json({
+          message: "Document notifications processed",
+          processed: processedCount,
+          total: documents.length,
+        });
+      });
+    });
+  } catch (err) {
+    console.log("Error in release-notifications: " + err);
+    res.status(500).json({ error: "Processing failed" });
+  }
 });
 
 module.exports = router;

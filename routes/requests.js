@@ -33,12 +33,12 @@ router.put("/response/:id", (req, res) => {
         if (err) {
           console.log("Failed to query for doc change response text: " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
         res.json(rows);
+        connection.end();
       });
-
-      connection.end();
     });
   } catch (err) {
     console.log("Error connecting to Db 42");
@@ -358,7 +358,7 @@ router.get("/:id", (req, res) => {
 
 // ==================================================
 // put closed status
-router.put("/close/:id", (req, res) => {
+router.put("/close/:id", async (req, res) => {
   // let modifiedDate = new Date().toISOString().slice(0, 19).replace("T", " ");
   try {
     const connection = mysql.createConnection({
@@ -390,6 +390,7 @@ router.put("/close/:id", (req, res) => {
         if (err) {
           console.log("Failed to query for doc change closed status: " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
         // res.json(rows);
@@ -401,16 +402,46 @@ router.put("/close/:id", (req, res) => {
         req.body.REVISION_DATE,
         req.body.DOCUMENT_ID,
       ];
-      connection.query(query2, values2, (err, rows, fields) => {
+      connection.query(query2, values2, async (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for doc change revision level: " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
+
+        // Send email if decision is Approved (A)
+        if (req.body.DECISION === "A") {
+          try {
+            const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: Number(process.env.SMTP_PORT),
+              secure: true,
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            });
+
+            const mailOptions = {
+              to: process.env.EMAIL_GM,
+              cc: process.env.EMAIL_QM,
+              from: process.env.SMTP_FROM,
+              subject: `DCR Approved: ${req.params.id} - ${req.body.DOCUMENT_ID}`,
+              text: `Document Change Request ${req.params.id} has been approved.\n\nDocument: ${req.body.DOCUMENT_ID}\nNew Revision: ${req.body.REVISION_LEVEL}\nRevision Date: ${req.body.REVISION_DATE}\nApproved By: ${req.body.MODIFIED_BY}\n\nPlease log in to the QMS system to view the details.`,
+              bcc: "<tim.kent@ci-aviation.com>",
+            };
+
+            await transporter.sendMail(mailOptions);
+            console.log("Approval email sent to GM and QM");
+          } catch (emailError) {
+            console.log("Error sending approval email:", emailError);
+          }
+        }
+
+        connection.end();
         res.sendStatus(200);
       });
-
-      connection.end();
     });
   } catch (err) {
     console.log("Error connecting to Db 328");

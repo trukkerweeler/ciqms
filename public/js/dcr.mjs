@@ -267,6 +267,20 @@ fetch(url, { method: "GET" })
             body: JSON.stringify(data),
           };
           const response = await fetch(closeUrl, options);
+
+          // Call document release notifications
+          try {
+            const notifyUrl = `http://localhost:${port}/documents/release-notifications`;
+            await fetch(notifyUrl, {
+              method: "POST",
+              headers: {
+                "Content-Type": "application/json",
+              },
+            });
+          } catch (error) {
+            console.log("Error calling release notifications:", error);
+          }
+
           closeDialog.close();
           // refresh the page
           window.location.reload();
