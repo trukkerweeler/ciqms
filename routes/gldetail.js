@@ -32,6 +32,9 @@ router.post("/", async (req, res) => {
     console.log("POST /gldetail - Insert GL_DETAIL_MANUAL record", req.body);
   }
 
+  // Format INVC_DATE to YYYYMMDD (remove dashes)
+  const formattedInvcDate = INVC_DATE ? INVC_DATE.replace(/-/g, "") : null;
+
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -80,7 +83,7 @@ router.post("/", async (req, res) => {
       TRAN_TYPE,
       VENDOR,
       AR_CODE,
-      INVC_DATE,
+      formattedInvcDate,
     ];
 
     connection.execute(query, values, (err, result) => {

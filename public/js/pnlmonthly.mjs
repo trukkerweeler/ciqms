@@ -418,6 +418,14 @@ window.addEventListener("DOMContentLoaded", () => {
     document.getElementById("drillDownDialog").close();
   });
 
+  // Close drill-down dialog on outside click
+  const drillDownDialog = document.getElementById("drillDownDialog");
+  drillDownDialog.addEventListener("click", (e) => {
+    if (e.target === drillDownDialog) {
+      drillDownDialog.close();
+    }
+  });
+
   // Handle form submission
   manualGLForm.addEventListener("submit", async (e) => {
     e.preventDefault();

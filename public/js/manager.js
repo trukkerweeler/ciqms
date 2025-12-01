@@ -125,7 +125,18 @@ fetch(url, { method: "GET" })
     sectionChecklist.classList.add("checklist");
     const h3 = document.createElement("h3");
     h3.textContent = "Checklist";
+    h3.style.display = "inline-block";
     sectionChecklist.appendChild(h3);
+
+    // Summary span for question counts (inline with h3)
+    const summarySpan = document.createElement("span");
+    summarySpan.id = "checklistSummary";
+    summarySpan.style.fontSize = "0.9em";
+    summarySpan.style.color = "#666";
+    summarySpan.style.marginLeft = "1em";
+    summarySpan.style.fontWeight = "normal";
+    sectionChecklist.appendChild(summarySpan);
+
     main.appendChild(sectionChecklist);
 
     // Checklist button
@@ -147,6 +158,16 @@ fetch(url, { method: "GET" })
           "OBSERVATION",
           "REFERENCE",
         ];
+
+        // Count questions and answered questions
+        const totalQuestions = records.length;
+        const answeredQuestions = records.filter(
+          (r) => r.OBSERVATION && r.OBSERVATION.trim() !== ""
+        ).length;
+        const unansweredQuestions = totalQuestions - answeredQuestions;
+
+        // Update summary
+        summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
 
         for (const row in records) {
           // console.log(records[row]);

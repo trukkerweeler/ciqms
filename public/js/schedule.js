@@ -23,6 +23,20 @@ function getRecords() {
     .then((response) => response.json())
     .then((records) => {
       // console.log(records);
+
+      // Count completed audits
+      const totalAudits = records.length;
+      const completedAudits = records.filter(
+        (r) => r.COMPLETION_DATE && r.COMPLETION_DATE.trim() !== ""
+      ).length;
+      const incompleteAudits = totalAudits - completedAudits;
+
+      // Update summary
+      const summarySpan = document.getElementById("scheduleSummary");
+      if (summarySpan) {
+        summarySpan.textContent = `Total: ${totalAudits} | Completed: ${completedAudits} | In Progress: ${incompleteAudits}`;
+      }
+
       const tableContainer = document.createElement("div");
       tableContainer.classList.add("table-container");
 

@@ -9,6 +9,7 @@ const url = `http://localhost:${port}/suppliers`;
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let config; // Will be set in initialization
+let allSuppliers = []; // Store all suppliers for filtering
 
 document.addEventListener("DOMContentLoaded", async function () {
   user = await getUserValue();
@@ -46,6 +47,12 @@ function setupEventListeners() {
         addSupplierDialog.close();
       }
     });
+  }
+
+  // Status filter
+  const statusFilter = document.getElementById("statusFilter");
+  if (statusFilter) {
+    statusFilter.addEventListener("change", filterSuppliers);
   }
 }
 
@@ -148,12 +155,27 @@ async function loadSupplierData() {
     }
 
     const data = await response.json();
-    displaySupplierTable(data);
+    allSuppliers = data; // Store all suppliers
+    filterSuppliers(); // Apply current filter
   } catch (error) {
     console.error("Error loading supplier data:", error);
     document.getElementById("supplierTableContainer").innerHTML =
       '<p class="error">Failed to load supplier data. Please refresh the page.</p>';
   }
+}
+
+function filterSuppliers() {
+  const statusFilter = document.getElementById("statusFilter");
+  const filterValue = statusFilter ? statusFilter.value : "active";
+
+  let filteredData;
+  if (filterValue === "active") {
+    filteredData = allSuppliers.filter((supplier) => supplier.STATUS === "A");
+  } else {
+    filteredData = allSuppliers;
+  }
+
+  displaySupplierTable(filteredData);
 }
 
 function displaySupplierTable(data) {
