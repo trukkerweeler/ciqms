@@ -4,11 +4,27 @@ async function loadTrainingData() {
     const response = await fetch(url);
     if (!response.ok) throw new Error("Failed to fetch training records");
     const data = await response.json();
+    allTrainingData = data; // Store all data for filtering
     displayTrainingTable(data);
   } catch (error) {
     console.error("Error loading training data:", error);
     document.getElementById("trainingTableContainer").innerHTML =
       '<p class="error">Failed to load training data. Please refresh the page.</p>';
+  }
+}
+
+// Filter training data by employee ID
+function filterTrainingData(employeeId) {
+  if (!employeeId || employeeId.trim() === "") {
+    // Show all data if filter is empty
+    displayTrainingTable(allTrainingData);
+  } else {
+    // Filter data by PEOPLE_ID
+    const filteredData = allTrainingData.filter(
+      (item) =>
+        item.PEOPLE_ID && item.PEOPLE_ID.toUpperCase().includes(employeeId)
+    );
+    displayTrainingTable(filteredData);
   }
 }
 import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
@@ -20,6 +36,7 @@ loadHeaderFooter();
 const port = myport() || 3003;
 const url = `http://localhost:${port}/attendance`;
 let sortOrder = "asc";
+let allTrainingData = []; // Store all data for filtering
 
 document.addEventListener("DOMContentLoaded", async function () {
   setupEventListeners();
@@ -53,6 +70,26 @@ function setupEventListeners() {
     addTrainingDialog.addEventListener("click", (e) => {
       if (e.target === addTrainingDialog) {
         addTrainingDialog.close();
+      }
+    });
+  }
+
+  // Employee ID filter
+  const employeeIdFilter = document.getElementById("employeeIdFilter");
+  if (employeeIdFilter) {
+    employeeIdFilter.addEventListener("input", (e) => {
+      filterTrainingData(e.target.value.toUpperCase());
+    });
+  }
+
+  // Clear filter button
+  const clearFilterBtn = document.getElementById("clearFilterBtn");
+  if (clearFilterBtn) {
+    clearFilterBtn.addEventListener("click", () => {
+      const filterInput = document.getElementById("employeeIdFilter");
+      if (filterInput) {
+        filterInput.value = "";
+        filterTrainingData("");
       }
     });
   }

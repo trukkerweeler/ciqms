@@ -791,10 +791,10 @@ router.put("/details/:id", (req, res) => {
         MODIFIED_BY = '${req.body.MODIFIED_BY || ""}'
         WHERE NCM_ID = '${req.params.id}'`;
 
-      console.log("Generated SQL Query:");
-      console.log(query);
-      console.log("Query length:", query.length);
-      console.log("Params ID:", req.params.id);
+      // console.log("Generated SQL Query:");
+      // console.log(query);
+      // console.log("Query length:", query.length);
+      // console.log("Params ID:", req.params.id);
 
       connection.query(query, (err, rows, fields) => {
         if (err) {
