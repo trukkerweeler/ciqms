@@ -361,6 +361,9 @@ router.post("/", (req, res) => {
         closedValue = "Y";
       } else if (closedValue === "No") {
         closedValue = "N";
+      } else if (!closedValue || closedValue === "undefined") {
+        // Default to 'N' if not provided or undefined
+        closedValue = "N";
       }
 
       const query = `insert into NONCONFORMANCE (NCM_ID

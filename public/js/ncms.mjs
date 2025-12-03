@@ -128,6 +128,7 @@ async function saveNcm(event) {
       CREATE_DATE: myRequestDate,
       CREATE_BY: user || "TKENT",
       STATUS: "OPEN",
+      CLOSED: "N", // Default to 'N' (No) for new records
     };
 
     // Add form data with proper case handling
