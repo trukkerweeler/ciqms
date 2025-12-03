@@ -47,6 +47,14 @@ function setupEventListeners() {
     saveNcmBtn.addEventListener("click", saveNcm);
   }
 
+  // Close button for RET reminder dialog
+  const closeRetReminderBtn = document.getElementById("closeRetReminderBtn");
+  if (closeRetReminderBtn) {
+    closeRetReminderBtn.addEventListener("click", () => {
+      document.getElementById("retReminderDialog").close();
+    });
+  }
+
   // Close dialog on outside click for add NCM dialog
   const addNcmDialog = document.getElementById("addNcmDialog");
   if (addNcmDialog) {
@@ -105,6 +113,40 @@ async function openAddNcmDialog() {
   }
 }
 
+// Check if user needs to see RET reminder today
+async function checkAndShowRetReminder() {
+  try {
+    const checkResponse = await fetch(`${url}/check-ret-reminder`, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ user: user || "TKENT", ncmCode: "RET" }),
+    });
+
+    const result = await checkResponse.json();
+
+    if (result.showReminder) {
+      // Show the reminder dialog
+      const retReminderDialog = document.getElementById("retReminderDialog");
+      if (retReminderDialog) {
+        retReminderDialog.showModal();
+
+        // Log that reminder was shown
+        await fetch(`${url}/log-ret-reminder`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({ user: user || "TKENT", ncmCode: "RET" }),
+        });
+      }
+    }
+  } catch (error) {
+    console.error("Error checking RET reminder:", error);
+    // Don't block the workflow if reminder check fails
+  }
+}
 async function saveNcm(event) {
   event.preventDefault();
   const form = document.getElementById("addNcmForm");
@@ -160,6 +202,11 @@ async function saveNcm(event) {
     if (response.ok) {
       document.getElementById("addNcmDialog").close();
       await loadNcmData(); // Reload the data
+
+      // Check if NCM_TYPE is RET and show reminder if needed
+      if (dataJson.NCM_TYPE === "RET") {
+        await checkAndShowRetReminder();
+      }
     } else {
       const errorText = await response.text();
       alert(`Failed to save NCM: ${errorText}`);

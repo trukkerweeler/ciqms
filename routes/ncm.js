@@ -265,6 +265,95 @@ router.get("/nextId", (req, res) => {
 });
 
 // ==================================================
+// Check if user needs to see NCM reminder today
+router.post("/check-ret-reminder", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      const user = req.body.user;
+      const ncmCode = req.body.ncmCode || "RET";
+      const today = new Date().toISOString().slice(0, 10);
+
+      // Check if user has already seen reminder today for this NCM code
+      const query = `SELECT * FROM NCM_REMINDER 
+                     WHERE USER_ID = ? AND NCM_CODE = ? AND DATE(REMINDER_DATE) = ?`;
+
+      connection.query(query, [user, ncmCode, today], (err, rows) => {
+        if (err) {
+          console.log("Failed to check NCM reminder: " + err);
+          connection.end();
+          res.status(500).json({ error: "Query failed" });
+          return;
+        }
+
+        // If no rows found, user hasn't seen reminder today
+        const showReminder = rows.length === 0;
+        res.json({ showReminder: showReminder });
+        connection.end();
+      });
+    });
+  } catch (err) {
+    console.log("Error checking NCM reminder:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ==================================================
+// Log NCM reminder shown to user
+router.post("/log-ret-reminder", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      const user = req.body.user;
+      const ncmCode = req.body.ncmCode || "RET";
+      const query = `INSERT INTO NCM_REMINDER (USER_ID, NCM_CODE, REMINDER_DATE) 
+                     VALUES (?, ?, NOW())`;
+
+      connection.query(query, [user, ncmCode], (err) => {
+        if (err) {
+          console.log("Failed to log NCM reminder: " + err);
+          connection.end();
+          res.status(500).json({ error: "Failed to log reminder" });
+          return;
+        }
+
+        res.json({ success: true });
+        connection.end();
+      });
+    });
+  } catch (err) {
+    console.log("Error logging NCM reminder:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ==================================================
 // Send email using nodemailer
 router.post("/email", async (req, res) => {
   try {
