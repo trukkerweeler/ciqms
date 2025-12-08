@@ -673,6 +673,13 @@ dialog .form {
   background-position: right 0.75rem center;
   background-repeat: no-repeat;
   background-size: 1.5em 1.5em;
+}
+
+/* Shorten Subject and Cause fields - these are code fields, not text */
+#SUBJECT,
+#CAUSE {
+  max-width: 200px;
+  width: 200px;
   padding-right: 2.5rem;
   appearance: none;
 }

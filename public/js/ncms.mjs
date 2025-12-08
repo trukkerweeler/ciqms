@@ -24,6 +24,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   }
   await loadNcmData();
   await loadSubjects(); // Load subjects for the dropdown
+  await loadCauses(); // Load causes for the dropdown
 });
 
 function setupEventListeners() {
@@ -613,5 +614,64 @@ function getHardcodedSubjects() {
     "Documentation error",
     "Manufacturing defect",
     "Supplier quality issue",
+  ];
+}
+
+// Function to fetch causes from the server for the dropdown
+async function loadCauses() {
+  try {
+    const causesUrl = `http://localhost:${port}/causemaint/`;
+    const response = await fetch(causesUrl, { method: "GET" });
+
+    if (!response.ok) {
+      console.error("Response not ok:", response.status, response.statusText);
+      populateCauseDropdown(getHardcodedCauses());
+      return;
+    }
+
+    const causes = await response.json();
+
+    if (causes.length === 0) {
+      populateCauseDropdown(getHardcodedCauses());
+      return;
+    }
+
+    populateCauseDropdown(causes);
+  } catch (error) {
+    console.error("Error fetching causes:", error);
+    populateCauseDropdown(getHardcodedCauses());
+  }
+}
+
+function populateCauseDropdown(causes) {
+  const dropdown = document.getElementById("CAUSE");
+  if (!dropdown) return;
+
+  // Clear existing options except the first one
+  while (dropdown.children.length > 1) {
+    dropdown.removeChild(dropdown.lastChild);
+  }
+
+  // Add cause options
+  causes.forEach((cause) => {
+    const option = document.createElement("option");
+    option.value = cause.CAUSE || cause;
+    option.textContent = cause.CAUSE
+      ? `${cause.CAUSE} - ${cause.DESCRIPTION}`
+      : cause;
+    dropdown.appendChild(option);
+  });
+}
+
+function getHardcodedCauses() {
+  return [
+    "Material defect",
+    "Process error",
+    "Equipment malfunction",
+    "Operator error",
+    "Design issue",
+    "Supplier quality",
+    "Handling damage",
+    "Documentation error",
   ];
 }
