@@ -484,6 +484,24 @@ h1 {
   position: relative;
 }
 
+.observations .obs-label {
+  font-weight: 600;
+  color: #000;
+}
+
+.observations .obs-content {
+  font-weight: normal;
+}
+
+.observations .obs-empty {
+  color: #dc3545;
+  font-style: italic;
+}
+
+.observations .obs-empty::after {
+  content: "(No observation entered)";
+}
+
 .observations .btnEditObs {
   position: absolute;
   top: 5px;
