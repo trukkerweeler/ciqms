@@ -239,9 +239,7 @@ fetch(url, { method: "GET" })
           } else {
             decisioncode = "P";
           }
-          //   get the new revison from the dialog
-          const newRevision = document.querySelector("#docnewrev").value;
-          const newRevDate = document.querySelector("#docnewrevdate").value;
+
           const decisionDate = document.querySelector("#decisiondate").value;
 
           let data = {
@@ -251,11 +249,17 @@ fetch(url, { method: "GET" })
             DECISION_DATE: decisionDate,
             CLOSED: "Y",
             CLOSED_DATE: getDateTime(),
-            REVISION_LEVEL: newRevision,
-            REVISION_DATE: newRevDate,
             MODIFIED_BY: user,
             MODIFIED_DATE: getDateTime(),
           };
+
+          // Only update revision fields if decision is approved
+          if (decisioncode === "A") {
+            const newRevision = document.querySelector("#docnewrev").value;
+            const newRevDate = document.querySelector("#docnewrevdate").value;
+            data.REVISION_LEVEL = newRevision;
+            data.REVISION_DATE = newRevDate;
+          }
           if (test) {
             console.log(data);
           }
