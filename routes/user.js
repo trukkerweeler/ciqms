@@ -71,8 +71,8 @@ router.post("/login", async (req, res) => {
         } else {
           dbuser = rows[0].USER_ID;
           dbpass = rows[0].USER_PWD;
-          console.log(dbuser);
-          console.log(dbpass);
+          // console.log(dbuser);
+          // console.log(dbpass);
           // res.json(rows);
           try {
             const passwordMatch = await bcrypt.compare(

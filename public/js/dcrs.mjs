@@ -17,9 +17,8 @@ const DATE_FIELDS = [
 ];
 
 // Helper functions
-const formatDate = (dateString) => {
-  return dateString && dateString !== "" ? dateString.slice(0, 10) : "";
-};
+const formatDate = (dateString) =>
+  dateString && dateString !== "" ? dateString.slice(0, 10) : "";
 
 const getTodayISO = () => new Date().toISOString().split("T")[0];
 
@@ -30,89 +29,75 @@ const getDueDateISO = (daysFromNow = 30) => {
 };
 
 const validateRequiredFields = (data) => {
-  for (const field of REQUIRED_FIELDS) {
-    if (!data[field] || data[field].trim() === "") {
-      throw new Error(
-        `Please fill in the required field: ${field.replace(/_/g, " ")}`
-      );
-    }
+  const missingField = REQUIRED_FIELDS.find(
+    (field) => !data[field] || data[field].trim() === ""
+  );
+  if (missingField) {
+    throw new Error(
+      `Please fill in the required field: ${missingField.replace(/_/g, " ")}`
+    );
   }
 };
 
 // Dialog management
+const getDialog = (dialogId) => document.getElementById(dialogId);
+
 const openDialog = (dialogId) => {
-  const dialog = document.getElementById(dialogId);
-  if (dialog) {
-    dialog.showModal();
-  }
+  const dialog = getDialog(dialogId);
+  dialog?.showModal();
 };
 
 const closeDialog = (dialogId) => {
-  const dialog = document.getElementById(dialogId);
-  if (dialog) {
-    dialog.close();
-  }
+  const dialog = getDialog(dialogId);
+  dialog?.close();
 };
 
 const setupDialogEventListeners = (dialog) => {
-  // Close dialog on outside click
-  dialog.addEventListener("click", (e) => {
+  const handleOutsideClick = (e) => {
     if (e.target === dialog) {
       dialog.close();
     }
-  });
+  };
 
-  // Handle ESC key
-  dialog.addEventListener("keydown", (e) => {
+  const handleEscapeKey = (e) => {
     if (e.key === "Escape") {
       dialog.close();
     }
-  });
+  };
+
+  dialog.addEventListener("click", handleOutsideClick);
+  dialog.addEventListener("keydown", handleEscapeKey);
 };
 
 // API functions
-const getNextRequestId = async () => {
-  const response = await fetch(`${BASE_URL}/nextId`);
+const checkResponse = async (response) => {
   if (!response.ok) {
-    throw new Error("Failed to get next request ID");
+    throw new Error(`HTTP Error: ${response.status}`);
   }
   return response.json();
 };
 
-const createRequest = async (requestData) => {
-  const response = await fetch(BASE_URL, {
+const getNextRequestId = () => fetch(`${BASE_URL}/nextId`).then(checkResponse);
+
+const createRequest = (requestData) =>
+  fetch(BASE_URL, {
     method: "POST",
-    headers: {
-      "Content-Type": "application/json",
-    },
+    headers: { "Content-Type": "application/json" },
     body: JSON.stringify(requestData),
-  });
+  }).then(checkResponse);
 
-  if (!response.ok) {
-    throw new Error("Failed to create request");
-  }
-  return response.json();
-};
-
-const fetchRecords = async () => {
-  const response = await fetch(BASE_URL, { method: "GET" });
-  if (!response.ok) {
-    throw new Error("Failed to fetch records");
-  }
-  return response.json();
-};
+const fetchRecords = () =>
+  fetch(BASE_URL, { method: "GET" }).then(checkResponse);
 
 // Table rendering functions
 const createTableHeader = (record) => {
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
-
   Object.keys(record).forEach((key) => {
     const th = document.createElement("th");
     th.textContent = key;
     headerRow.appendChild(th);
   });
-
   thead.appendChild(headerRow);
   return thead;
 };
@@ -131,46 +116,105 @@ const createTableCell = (key, value) => {
   return td;
 };
 
-const createTableBody = (records) => {
-  const tbody = document.createElement("tbody");
-
-  records.forEach((record) => {
-    const tr = document.createElement("tr");
-    Object.entries(record).forEach(([key, value]) => {
-      tr.appendChild(createTableCell(key, value));
-    });
-    tbody.appendChild(tr);
+const createTableRow = (record) => {
+  const tr = document.createElement("tr");
+  Object.entries(record).forEach(([key, value]) => {
+    tr.appendChild(createTableCell(key, value));
   });
-
-  return tbody;
+  return tr;
 };
 
-const renderTable = (records) => {
-  const main = document.querySelector("main");
-  main.innerHTML = "";
+const createFilterInput = () => {
+  const filterInput = document.createElement("input");
+  Object.assign(filterInput, {
+    id: "dcrFilter",
+    type: "text",
+    placeholder: "Filter records...",
+  });
+  Object.assign(filterInput.style, {
+    width: "300px",
+    padding: "8px",
+    fontSize: "14px",
+    borderRadius: "4px",
+    border: "1px solid #ccc",
+  });
+  return filterInput;
+};
 
-  if (!records || records.length === 0) {
+const attachFilterListener = (filterInput, tableBody, records) => {
+  filterInput.addEventListener("input", (e) => {
+    const filterValue = e.target.value.toLowerCase();
+    const filteredData = records.filter((record) =>
+      Object.values(record).some((value) =>
+        (value ?? "").toString().toLowerCase().includes(filterValue)
+      )
+    );
+
+    tableBody.innerHTML = "";
+    filteredData.forEach((record) => {
+      tableBody.appendChild(createTableRow(record));
+    });
+  });
+};
+
+const renderTable = (records, allRecords = null) => {
+  const main = document.querySelector("main");
+
+  if (!records?.length) {
     main.innerHTML = "<p>No records found.</p>";
     return;
   }
 
-  const tableWrapper = document.createElement("div");
-  tableWrapper.style.height = "75vh";
-  tableWrapper.style.overflowY = "auto";
-  tableWrapper.style.border = "1px solid #ddd";
+  // Create filter container
+  let filterContainer = getDialog("filterContainer");
+  if (!filterContainer) {
+    filterContainer = document.createElement("div");
+    filterContainer.id = "filterContainer";
+    Object.assign(filterContainer.style, {
+      padding: "10px",
+      borderBottom: "1px solid #ddd",
+    });
 
+    const filterInput = createFilterInput();
+    filterContainer.appendChild(filterInput);
+    main.appendChild(filterContainer);
+  }
+
+  // Create table wrapper
+  const tableWrapper = document.createElement("div");
+  Object.assign(tableWrapper.style, {
+    height: "calc(75vh - 60px)",
+    overflowY: "auto",
+    overflowX: "auto",
+    border: "1px solid #ddd",
+  });
+
+  // Create table
   const table = document.createElement("table");
+  table.id = "dcrTable";
   table.appendChild(createTableHeader(records[0]));
-  table.appendChild(createTableBody(records));
+
+  const tbody = document.createElement("tbody");
+  tbody.id = "dcrTableBody";
+  records.forEach((record) => {
+    tbody.appendChild(createTableRow(record));
+  });
+  table.appendChild(tbody);
 
   tableWrapper.appendChild(table);
   main.appendChild(tableWrapper);
+
+  // Attach filter
+  const filterInput = document.getElementById("dcrFilter");
+  const dataToFilter = allRecords || records;
+  attachFilterListener(filterInput, tbody, dataToFilter);
 };
 
 const getRecords = async () => {
   try {
     const records = await fetchRecords();
-    renderTable(records);
+    document.querySelector("main").innerHTML = "";
+    renderTable(records, records);
   } catch (error) {
     console.error("Error fetching records:", error);
     document.querySelector("main").innerHTML =
@@ -189,14 +233,17 @@ const handleFormSubmit = async (e) => {
   try {
     validateRequiredFields(requestData);
 
-    const nextId = await getNextRequestId();
-    const user = await getUserValue();
+    const [nextId, user] = await Promise.all([
+      getNextRequestId(),
+      getUserValue(),
+    ]);
 
     Object.assign(requestData, {
       REQUEST_ID: nextId,
       CREATE_DATE: getTodayISO(),
       REQUEST_DATE: getTodayISO(),
       DUE_DATE: getDueDateISO(30),
+      CREATE_BY: user,
     });
 
     await createRequest(requestData);
@@ -211,28 +258,19 @@ const handleFormSubmit = async (e) => {
 
 // Event listeners setup
 const setupEventListeners = () => {
-  const addRequestBtn = document.getElementById("addrequestlink");
-  const cancelBtn = document.getElementById("cancelRequestDialog");
-  const docRequestForm = document.getElementById("docRequestForm");
-  const dialog = document.getElementById("docRequestDialog");
+  const addRequestBtn = getDialog("addrequestlink");
+  const cancelBtn = getDialog("cancelRequestDialog");
+  const docRequestForm = getDialog("docRequestForm");
+  const dialog = getDialog("docRequestDialog");
 
-  if (addRequestBtn) {
-    addRequestBtn.addEventListener("click", (e) => {
-      e.preventDefault();
-      openDialog("docRequestDialog");
-      if (dialog) {
-        setupDialogEventListeners(dialog);
-      }
-    });
-  }
+  addRequestBtn?.addEventListener("click", (e) => {
+    e.preventDefault();
+    openDialog("docRequestDialog");
+    dialog && setupDialogEventListeners(dialog);
+  });
 
-  if (cancelBtn) {
-    cancelBtn.addEventListener("click", () => closeDialog("docRequestDialog"));
-  }
-
-  if (docRequestForm) {
-    docRequestForm.addEventListener("submit", handleFormSubmit);
-  }
+  cancelBtn?.addEventListener("click", () => closeDialog("docRequestDialog"));
+  docRequestForm?.addEventListener("submit", handleFormSubmit);
 };
 
 // Initialize the application
