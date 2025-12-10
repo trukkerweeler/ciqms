@@ -4,176 +4,153 @@ import {
   getUserValue,
   getDateTime,
   myport,
+  createElement,
+  formatDate,
+  getUrlParam,
+  extractText,
+  timestampText,
 } from "./utils.mjs";
 import userEmails from "./users.mjs";
+
 loadHeaderFooter();
 
 const port = myport();
-let user = await getUserValue();
+const user = await getUserValue();
+const iid = getUrlParam("id");
 
-// Get the project id from the url params
-let queryString = window.location.search;
-let urlParams = new URLSearchParams(queryString);
-let iid = urlParams.get("id");
+// Build API URLs
+const apiUrls = {
+  input: `http://localhost:${port}/input/`,
+  csr: `http://localhost:${port}/csr/`,
+  ssr: `http://localhost:${port}/ssr/`,
+};
 
-const url = `http://localhost:${port}/input/${iid}`;
-const inputUrl = `http://localhost:${port}/input/`;
-const csrUrl = `http://localhost:${port}/csr/`;
-const ssrUrl = `http://localhost:${port}/ssr/`;
-
+const url = `${apiUrls.input}${iid}`;
 const main = document.querySelector("main");
-// Delete the child nodes of the main element
+
+// Clear main element
 while (main.firstChild) {
-  // if (main.firstChild.nodeName === 'section') {
   main.removeChild(main.firstChild);
-  // section.remove();
-  // }
 }
 
 fetch(url, { method: "GET" })
   .then((response) => response.json())
   .then((record) => {
-    // console.log(record);
     for (const key in record) {
-      const detailSection = document.createElement("section");
-      detailSection.setAttribute("class", "section");
-      detailSection.setAttribute("id", "detailSection");
-      const elemRpt = document.createElement("h1");
-      const elemId = document.createElement("h2");
+      const rec = record[key];
 
-      // detail title (Two buttons: Edit and Close)
-      const detailTitle = document.createElement("h3");
-      detailTitle.classList.add("span-2");
-      detailTitle.textContent = "Detail";
+      // Create detail section
+      const detailSection = createElement("section", {
+        className: "section",
+        id: "detailSection",
+      });
 
-      // detail buttons div
-      const detailButtons = document.createElement("div");
-      detailButtons.setAttribute("class", "detailButtons");
-      detailButtons.setAttribute("id", "detailButtons");
-      const btnEditDetail = document.createElement("button");
-      btnEditDetail.setAttribute("class", "btn");
-      btnEditDetail.setAttribute("class", "btnEdit");
-      btnEditDetail.setAttribute("id", "btnEditDetail");
-      btnEditDetail.textContent = "Edit";
+      // Header elements
+      const elemRpt = createElement("h1", {
+        className: "header",
+        text: "Action Item Detail",
+      });
+      const elemId = createElement("h2", {
+        className: "header2",
+        text: `Action Id: ${rec["INPUT_ID"]}`,
+      });
 
-      // Create the follow-up button
-      const btnFollowUp = document.createElement("button");
-      btnFollowUp.setAttribute("class", "btn");
-      btnFollowUp.setAttribute("class", "btnEdit");
-      btnFollowUp.setAttribute("id", "btnFollowUp");
-      btnFollowUp.textContent = "Email";
+      // Detail title
+      const detailTitle = createElement("h3", {
+        className: "span-2",
+        text: "Detail",
+      });
+
+      // Detail buttons
+      const detailButtons = createElement("div", {
+        className: "detailButtons",
+        id: "detailButtons",
+      });
+      detailButtons.style.display = "flex";
+      detailButtons.style.gap = "0.5rem";
+      const btnEditDetail = createElement("button", {
+        className: "btn btnEdit",
+        id: "btnEditDetail",
+        text: "Edit",
+        type: "submit",
+      });
+      btnEditDetail.style.textTransform = "capitalize";
+      btnEditDetail.style.borderRadius = "0.25rem";
+      btnEditDetail.style.display = "flex";
+      btnEditDetail.style.alignItems = "center";
+      btnEditDetail.style.justifyContent = "center";
+      const btnFollowUp = createElement("button", {
+        className: "btn btnEdit",
+        id: "btnFollowUp",
+        text: "Email",
+        type: "submit",
+      });
+      btnFollowUp.style.textTransform = "capitalize";
+      btnFollowUp.style.borderRadius = "0.25rem";
+      btnFollowUp.style.display = "flex";
+      btnFollowUp.style.alignItems = "center";
+      btnFollowUp.style.justifyContent = "center";
 
       detailButtons.appendChild(btnFollowUp);
       detailButtons.appendChild(btnEditDetail);
 
-      const elemFUP = document.createElement("p");
-      elemFUP.setAttribute("id", "followup");
-      const elemResponse = document.createElement("p");
-      elemResponse.setAttribute("id", "response");
+      // Detail information elements
+      const aiDate = createElement("p", {
+        className: "tbl",
+        text: `Request Date: ${formatDate(rec["INPUT_DATE"])}`,
+      });
 
-      // create detail p element for the input/request date
-      const aiDate = document.createElement("p");
-      aiDate.textContent =
-        "Request Date:" + " " + record[key]["INPUT_DATE"].substring(0, 10);
-      aiDate.setAttribute("class", "tbl");
+      const projId = createElement("p", {
+        className: "tbl",
+        id: "project",
+        text: `Project: ${rec["PROJECT_ID"]} - ${rec["NAME"]}`,
+      });
 
-      // create detail p element for the project id
-      const projId = document.createElement("p");
-      projId.textContent =
-        "Project:" +
-        " " +
-        record[key]["PROJECT_ID"] +
-        " - " +
-        record[key]["NAME"];
-      projId.setAttribute("class", "tbl");
-      projId.setAttribute("id", "project");
+      const aiClosedDate = createElement("p", {
+        className: "tbl",
+        id: "closed",
+        text: `Closed Date: ${formatDate(rec["CLOSED_DATE"])}`,
+      });
 
-      // create detail p element for the closed date
-      const aiClosedDate = document.createElement("p");
-      aiClosedDate.setAttribute("id", "closed");
-      if (
-        record[key]["CLOSED_DATE"] === null ||
-        record[key]["CLOSED_DATE"] === "" ||
-        record[key]["CLOSED_DATE"].length === 0
-      ) {
-        aiClosedDate.textContent = "Closed Date:" + " " + "";
-        // console.log('closed date is null');
-      } else {
-        aiClosedDate.textContent =
-          "Closed Date:" + " " + record[key]["CLOSED_DATE"].substring(0, 10);
-      }
-      aiClosedDate.setAttribute("class", "tbl");
-      aiClosedDate.setAttribute("id", "closeddate");
+      const aiAssTo = createElement("p", {
+        className: "tbl",
+        id: "assignedto",
+        text: `Assigned To: ${rec["ASSIGNED_TO"]}`,
+      });
 
-      // create detail p element for the assigned to
-      const aiAssTo = document.createElement("p");
-      aiAssTo.textContent = "Assigned To:" + " " + record[key]["ASSIGNED_TO"];
-      aiAssTo.setAttribute("class", "tbl");
-      aiAssTo.setAttribute("id", "assignedto");
+      const reqBy = createElement("p", {
+        className: "tbl",
+        id: "requestby",
+        text: `Request By: ${rec["PEOPLE_ID"]}`,
+      });
 
-      // create detail p element for the request by
-      const reqBy = document.createElement("p");
-      reqBy.textContent = "Request By:" + " " + record[key]["PEOPLE_ID"];
-      reqBy.setAttribute("class", "tbl");
-      reqBy.setAttribute("id", "requestby");
+      const due_date = createElement("p", {
+        className: "tbl",
+        id: "duedate",
+        text: `Due date: ${formatDate(rec["DUE_DATE"])}`,
+      });
 
-      // create detail p element for the due date
-      const due_date = document.createElement("p");
-      if (record[key]["DUE_DATE"] === null) {
-        due_date.textContent = "Due date:" + " " + "";
-      } else
-        due_date.textContent =
-          "Due date:" + " " + record[key]["DUE_DATE"].substring(0, 10);
-      due_date.setAttribute("class", "tbl");
-      due_date.setAttribute("id", "duedate");
+      const elemSubject = createElement("p", {
+        className: "tbl",
+        id: "subject",
+        text: `Subject: ${rec["SUBJECT"]}`,
+      });
 
-      // create detail p element for the response date
-      const responseDate = document.createElement("p");
-      // if the key of RESPONSE_DATE is a date, sipaly substring of it
-      if (
-        record[key]["RESPONSE_DATE"] === null ||
-        record[key]["RESPONSE_DATE"] === "" ||
-        record[key]["RESPONSE_DATE"].length === 0
-      ) {
-        responseDate.textContent = "Response Date:" + " " + "";
-      } else {
-        responseDate.textContent =
-          "Response Date:" +
-          " " +
-          record[key]["RESPONSE_DATE"].substring(0, 10);
-      }
-      responseDate.setAttribute("class", "tbl");
-      responseDate.setAttribute("id", "responseDate");
-      // make it invisible
-      // responseDate.style.display = "none";
-
-      // Create p element for the subject
-      const elemSubject = document.createElement("p");
-      elemSubject.textContent = "Subject: " + record[key]["SUBJECT"];
-      elemSubject.setAttribute("class", "tbl");
-      elemSubject.setAttribute("id", "subject");
-
-      elemRpt.textContent = "Action Item Detail";
-      elemRpt.setAttribute("class", "header");
-      elemId.textContent = "Action Id: " + record[key]["INPUT_ID"];
-      elemId.setAttribute("class", "header2");
-
-      // make a div for the subtitle and add the subtitle to the div and a button
-      const divSubTitle = document.createElement("div");
-      divSubTitle.setAttribute("class", "subtitlewithbutton");
-
-      // Add title to the div
+      // Subtitle div with close button
+      const divSubTitle = createElement("div", {
+        className: "subtitlewithbutton",
+      });
       divSubTitle.appendChild(elemId);
 
-      // Add close button to the div
-      const btnClose = document.createElement("button");
-      btnClose.setAttribute("class", "closebutton");
-      btnClose.textContent = "Close Action";
-      btnClose.setAttribute("id", "btnClose");
-      btnClose.setAttribute("type", "submit");
-
+      const btnClose = createElement("button", {
+        className: "closebutton",
+        id: "btnClose",
+        text: "Close Action",
+        type: "submit",
+      });
       divSubTitle.appendChild(btnClose);
 
+      // Assemble detail section
       detailSection.appendChild(detailTitle);
       detailSection.appendChild(detailButtons);
       detailSection.appendChild(aiDate);
@@ -183,753 +160,369 @@ fetch(url, { method: "GET" })
       detailSection.appendChild(reqBy);
       detailSection.appendChild(due_date);
       detailSection.appendChild(elemSubject);
-      detailSection.appendChild(responseDate);
 
+      // Add to main
       main.appendChild(elemRpt);
       main.appendChild(divSubTitle);
-
       main.appendChild(detailSection);
-      // main.appendChild(notesSection);
 
-      createNotesSection("INPUT_TEXT", record[key]["INPUT_TEXT"]);
-      createNotesSection("FOLLOWUP_TEXT", record[key]["FOLLOWUP_TEXT"]);
-      createNotesSection("RESPONSE_TEXT", record[key]["RESPONSE_TEXT"]);
+      // Create notes sections
+      createNotesSection("INPUT_TEXT", rec["INPUT_TEXT"]);
+      createNotesSection(
+        "FOLLOWUP_TEXT",
+        rec["FOLLOWUP_TEXT"],
+        null,
+        rec["FOLLOWUP_DATE"],
+        rec["FOLLOWUP_BY"]
+      );
+      createNotesSection(
+        "RESPONSE_TEXT",
+        rec["RESPONSE_TEXT"],
+        null,
+        rec["RESPONSE_DATE"],
+        rec["RESPONSE_BY"]
+      );
     }
-    // Response=======================================================================================================
-    // Edit and Save response
-    // listen for the Response button click
+
+    // ===== Response Handler =====
     const btnEditResp = document.getElementById("editResponse");
     if (btnEditResp) {
       btnEditResp.addEventListener("click", async (event) => {
-        // prevent default action
         event.preventDefault();
-        // get the action item id
-        let queryString = window.location.search;
-        let urlParams = new URLSearchParams(queryString);
-        let iid = urlParams.get("id");
-        // alert('Edit Response button clicked');
         const responseDialog = document.querySelector("#respDialog");
-        const storedResponseDate =
-          document.querySelector("#responseDate").value;
-        // console.log(storedResponseDate);
-        if (storedResponseDate === "") {
-          const d = new Date();
-          const date = d.toISOString().substring(0, 10);
-          const time = d.toLocaleTimeString();
-          const mydate = date + " " + time;
-          document.querySelector("#responseDate").value = mydate;
-        } else {
-          const newResponseDate = document.querySelector("#newResponseDate");
-          const d = new Date();
-          newResponseDate.value = d.toISOString().substring(0, 10);
-          // console.log(responseDate);
+        const newResponseDateInput = document.querySelector("#newResponseDate");
+
+        // Set response date if not already set
+        if (!newResponseDateInput.value) {
+          newResponseDateInput.value = formatDate(new Date().toISOString());
         }
 
         responseDialog.showModal();
 
-        // listen for the cancel button click
-        const btnCancelResp = document.querySelector("#cancelResp");
-        btnCancelResp.addEventListener("click", async (event) => {
-          // alert('Cancel Response button clicked');
+        // Cancel handler
+        document.querySelector("#cancelResp").addEventListener("click", () => {
           responseDialog.close();
         });
 
-        // listen for the save response button click
-        const btnSaveResp = document.querySelector("#saveResp");
-        btnSaveResp.addEventListener("click", async (event) => {
-          // prevent default action
-          event.preventDefault();
-          // alert('Save Response button clicked');
+        // Save handler
+        document
+          .querySelector("#saveResp")
+          .addEventListener("click", async (event) => {
+            event.preventDefault();
 
-          // get the response text
-          const oldResponseText =
-            document.querySelector("#responseNote").innerHTML;
-          const newResponseText = document.querySelector("#newTextResp").value;
-          let responseText = newResponseText + "\n" + oldResponseText;
-          const d = new Date();
-          const date = d.toISOString().substring(0, 10);
-          const time = d.toLocaleTimeString();
-          const mydate = date + " " + time;
-          // prepend response text with user name and date
-          responseText =
-            user +
-            " - " +
-            mydate +
-            "\n" +
-            newResponseText +
-            "\n\n" +
-            oldResponseText;
-          // responseText = responseText.replace(/\n/g, "<br>");
-          // fix the apostrophe issue
-          // responseText = responseText.replace(/'/g, "''");
+            const oldResponseText =
+              document.querySelector("#responseNote").innerHTML;
+            const newResponseText =
+              document.querySelector("#newTextResp").value;
+            const responseText = timestampText(
+              user,
+              newResponseText,
+              oldResponseText
+            );
 
-          let data = {
-            INPUT_ID: iid,
-            INPUT_USER: user,
-            RESPONSE_TEXT: responseText,
-            RESPONSE_DATE: document.querySelector("#newResponseDate").value,
-            MODIFIED_BY: user,
-            MODIFIED_DATE: getDateTime(),
-          };
-          // console.log(data);
+            const data = {
+              INPUT_ID: iid,
+              INPUT_USER: user,
+              RESPONSE_TEXT: responseText,
+              RESPONSE_DATE: newResponseDateInput.value,
+              RESPONSE_BY: user,
+              MODIFIED_BY: user,
+              MODIFIED_DATE: getDateTime(),
+            };
 
-          // update the response text
-          const url = `http://localhost:${port}/input/${iid}`;
-          const response = await fetch(url, {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ data }),
+            await fetch(`${apiUrls.input}${iid}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ data }),
+            });
+
+            responseDialog.close();
+            location.reload();
           });
-          // close the dialog
-          responseDialog.close();
-          // reload the page
-          location.reload();
-        });
       });
     }
 
-    // Action=======================================================================================================
-    // listen for the Edit Action button click
+    // ===== Action Handler =====
     const btnEditAction = document.querySelector("#editAction");
-    btnEditAction.addEventListener("click", async (event) => {
-      // prevent default action
-      event.preventDefault();
-      // get the action item id
-      let queryString = window.location.search;
-      let urlParams = new URLSearchParams(queryString);
-      let iid = urlParams.get("id");
-      // alert('Action button clicked');
-      const actionDialog = document.querySelector("#actionDialog");
-      actionDialog.showModal();
-
-      // listen for the cancel button click
-      const btnCancelAction = document.querySelector("#cancelAction");
-      btnCancelAction.addEventListener("click", async (event) => {
-        actionDialog.close();
-      });
-
-      // listen for the save action button click
-      const btnSaveAction = document.querySelector("#saveAction");
-      btnSaveAction.addEventListener("click", async (event) => {
-        // prevent default action
+    if (btnEditAction) {
+      btnEditAction.addEventListener("click", async (event) => {
         event.preventDefault();
-        // alert('Save Action button clicked');
-        // get the action text
-        const oldActionText = document.querySelector("#actionNote").innerHTML;
-        const newActionText = document.querySelector("#newTextAction").value;
-        // warn and break if the action text is empty
-        if (newActionText.length === 0) {
-          alert("Action text cannot be empty");
+        const actionDialog = document.querySelector("#actionDialog");
+        actionDialog.showModal();
+
+        document
+          .querySelector("#cancelAction")
+          .addEventListener("click", () => {
+            actionDialog.close();
+          });
+
+        document
+          .querySelector("#saveAction")
+          .addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const newActionText =
+              document.querySelector("#newTextAction").value;
+            if (!newActionText.trim()) {
+              alert("Action text cannot be empty");
+              return;
+            }
+
+            const oldActionText =
+              document.querySelector("#actionNote").innerHTML;
+            const actionText = timestampText(
+              user,
+              newActionText,
+              oldActionText
+            ).replace(/\n/g, "<br>");
+
+            const data = {
+              INPUT_ID: iid,
+              INPUT_USER: user,
+              INPUT_TEXT: actionText,
+            };
+
+            await fetch(`${apiUrls.input}${iid}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ data }),
+            });
+
+            actionDialog.close();
+            location.reload();
+          });
+      });
+    }
+
+    // ===== Follow Up Handler =====
+    const btnEditFlup = document.querySelector("#editFollowUp");
+    if (btnEditFlup) {
+      btnEditFlup.addEventListener("click", async (event) => {
+        event.preventDefault();
+        const followUpDialog = document.querySelector("#followupDialog");
+        const newFollowUpDateInput = document.querySelector("#newFollowUpDate");
+
+        // Set followup date if not already set
+        if (!newFollowUpDateInput.value) {
+          newFollowUpDateInput.value = formatDate(new Date().toISOString());
+        }
+
+        followUpDialog.showModal();
+
+        document
+          .querySelector("#cancelFollowUp")
+          .addEventListener("click", () => {
+            followUpDialog.close();
+          });
+
+        document
+          .querySelector("#saveFlup")
+          .addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const newFollowUpText =
+              document.querySelector("#newTextFollowup").value;
+            const oldFollowUpText =
+              document.querySelector("#followUpNote").innerHTML;
+            const followUpText = timestampText(
+              user,
+              newFollowUpText,
+              oldFollowUpText
+            );
+
+            const data = {
+              INPUT_ID: iid,
+              INPUT_USER: user,
+              FOLLOWUP_TEXT: followUpText,
+              FOLLOWUP_DATE: newFollowUpDateInput.value,
+              FOLLOWUP_BY: user,
+              MODIFIED_BY: user,
+              MODIFIED_DATE: getDateTime(),
+            };
+
+            await fetch(`${apiUrls.input}${iid}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ data }),
+            });
+
+            followUpDialog.close();
+            location.reload();
+          });
+      });
+    }
+    // ===== Close Action Handler =====
+    const btnClose = document.querySelector("#btnClose");
+    if (btnClose) {
+      btnClose.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        const closedElem = document.querySelector("#closeddate");
+        if (closedElem.textContent.length > 15) {
+          alert("This action item is already closed");
           return;
         }
-        let actionText = newActionText + "\n" + oldActionText;
-        const d = new Date();
-        const date = d.toISOString().substring(0, 10);
-        const time = d.toLocaleTimeString();
-        const mydate = date + " " + time;
-        // prepend action text with user name and date
-        actionText =
-          user + " - " + mydate + "\n" + newActionText + "\n\n" + oldActionText;
-        actionText = actionText.replace(/\n/g, "<br>");
-        // fix the apostrophe issue
-        // actionText = actionText.replace(/'/g, "''");
 
-        let data = {
-          INPUT_ID: iid,
-          INPUT_USER: user,
-          INPUT_TEXT: actionText,
+        let paddedId = String(iid).padStart(7, "0");
+        const data = {
+          INPUT_ID: paddedId,
+          CLOSED: "Y",
+          CLOSED_DATE: getDateTime(),
         };
-        // console.log(data);
 
-        // update the action text
-        const url = `http://localhost:${port}/input/${iid}`;
-        const response = await fetch(url, {
+        await fetch(`${apiUrls.input}close/${paddedId}`, {
           method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data }),
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(data),
         });
-        // close the dialog
-        actionDialog.close();
-        // reload the page
+
         location.reload();
       });
-    });
+    }
 
-    // Follow Up=======================================================================================================
-    // listen for the Follow Up button click
-    const btnEditFlup = document.querySelector("#editFollowUp");
-    btnEditFlup.addEventListener("click", async (event) => {
-      // prevent default action
-      event.preventDefault();
-      // get the action item id
-      let queryString = window.location.search;
-      let urlParams = new URLSearchParams(queryString);
-      let iid = urlParams.get("id");
-      // alert('Follow Up button clicked');
-      const followUpDialog = document.querySelector("#followupDialog");
-      followUpDialog.showModal();
-
-      // listen for the followup cancel button click
-      const btnCancelFlup = document.querySelector("#cancelFollowUp");
-      btnCancelFlup.addEventListener("click", async (event) => {
-        followUpDialog.close();
-      });
-
-      // listen for the save follow up button click
-      const btnSaveFlup = document.querySelector("#saveFlup");
-      btnSaveFlup.addEventListener("click", async (event) => {
-        // prevent default action
-        event.preventDefault();
-        // alert('Save Follow Up button clicked');
-        // get the follow up text
-        const oldFollowUpText =
-          document.querySelector("#followUpNote").innerHTML;
-        const newFollowUpText =
-          document.querySelector("#newTextFollowup").value;
-        let followUpText = newFollowUpText + "\n" + oldFollowUpText;
-        const d = new Date();
-        const date = d.toISOString().substring(0, 10);
-        const time = d.toLocaleTimeString();
-        const mydate = date + " " + time;
-        // prepend follow up text with user name and date
-        followUpText =
-          user +
-          " - " +
-          mydate +
-          "\n" +
-          newFollowUpText +
-          "\n\n" +
-          oldFollowUpText;
-        // followUpText = followUpText.replace(/\n/g, "<br>");
-        // fix the apostrophe issue
-        followUpText = followUpText.replace(/'/g, "''");
-
-        let data = {
-          INPUT_ID: iid,
-          INPUT_USER: user,
-          FOLLOWUP_TEXT: followUpText,
-        };
-        // console.log(data);
-
-        // update the follow up text
-        const url = `http://localhost:${port}/input/${iid}`;
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data }),
-        });
-        // close the dialog
-        followUpDialog.close();
-        // reload the page
-        location.reload();
-      });
-    });
-
-    // Collect Data=======================================================================================================
-    // listen for the Collect Data button click
-    const btnCollData = document.querySelector("#btnCollData");
-    btnCollData.addEventListener("click", async (event) => {
-      event.preventDefault();
-      // if the subject is SC then show the supplier collect data dialog
-      const subject = document.querySelector("#subject").textContent;
-      const actionText = document.querySelector("#actionNote").innerHTML;
-
-      // console.log(subject);
-      if (subject.includes("SC")) {
-        // show the supplier collect data dialog
-        const collectDataDialog = document.querySelector("#collectDataDialog2");
-        collectDataDialog.showModal();
-
-        // listen for the cancel button click
-        const btnCancelCollData = document.querySelector("#cancelCollData2");
-        btnCancelCollData.addEventListener("click", async (event) => {
-          collectDataDialog.close();
-        });
-
-        // listen for the save button click
-        const btnSaveCollData = document.querySelector("#saveCollData2");
-        btnSaveCollData.addEventListener("click", async (event) => {
-          // prevent default action
-          event.preventDefault();
-          // get the nextId for the collect data
-          // console.log( ssrUrl + 'nextSSRId')
-          const nextId = await fetch(ssrUrl + "nextSSRId", { method: "GET" })
-            .then((response) => response.json())
-            .then((data) => {
-              JSON.stringify(data);
-              return data;
-            });
-          // get the form data
-          const collectForm = document.querySelector("#collectForm2");
-          let data = new FormData(collectForm);
-          // append data with the nextId
-          // data.append('INPUT_ID', iid);
-          // data.append('INPUT_USER', user);
-
-          const dataJson = {
-            VENDPERF_ID: nextId,
-            PEOPLE_ID: user,
-          };
-
-          // console log the form data
-          for (let field of data.keys()) {
-            if (field in ["SUPPLIER_ID", "UNIT", "PEOPLE_ID"]) {
-              dataJson[field] = data.get(field).toUpperCase();
-            } else {
-              console.log(field + ": " + data.get(field));
-              dataJson[field] = data.get(field);
-            }
-          }
-          console.log(dataJson);
-
-          // post the collect data text
-          const ssrUrl2 = `http://localhost:${port}/ssr/${iid}`;
-          // console.log(ssrUrl2);
-          try {
-            await fetch(ssrUrl2, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ dataJson }),
-            });
-          } catch (err) {
-            console.log("Error:", err);
-          }
-          // close the dialog
-          collectDataDialog.close();
-          // clear the form fields
-          collectForm.reset();
-          // reload the page
-          location.reload();
-        });
-      } else if (actionText.includes("Parker-Meggitt")) {
-        // alert("Parker-Meggitt action item");
-        const collectDataDialog = document.querySelector("#collectDataDialog");
-        // Remove all child nodes from the dialog
-        while (collectDataDialog.firstChild) {
-          collectDataDialog.removeChild(collectDataDialog.firstChild);
-        }
-        let customer_measures = ["OTIF", "PPM", "ESCAPES"];
-        customer_measures.forEach((measure) => {
-          const label = document.createElement("label");
-          label.textContent = measure + ": ";
-          label.setAttribute("for", measure.toLowerCase());
-          const input = document.createElement("input");
-          input.type = "text";
-          input.id = measure.toLowerCase();
-          input.name = measure.toLowerCase();
-          collectDataDialog.appendChild(label);
-          collectDataDialog.appendChild(input);
-        });
-
-        // Date picker
-        const dateLabel = document.createElement("label");
-        dateLabel.textContent = "Date: ";
-        dateLabel.setAttribute("for", "collectDate");
-        const dateInput = document.createElement("input");
-        dateInput.type = "date";
-        dateInput.id = "collectDate";
-        dateInput.name = "collectDate";
-        collectDataDialog.appendChild(dateLabel);
-        collectDataDialog.appendChild(dateInput);
-
-        // Customer code field
-        const codeLabel = document.createElement("label");
-        codeLabel.textContent = "Customer Code: ";
-        codeLabel.setAttribute("for", "customerCode");
-        const codeInput = document.createElement("input");
-        codeInput.type = "text";
-        codeInput.id = "customerCode";
-        codeInput.name = "customerCode";
-        collectDataDialog.appendChild(codeLabel);
-        collectDataDialog.appendChild(codeInput);
-        collectDataDialog.showModal();
-
-        // listen for the cancel button click
-        const btnCancelCollData = document.createElement("button");
-        btnCancelCollData.id = "cancelCollData";
-        btnCancelCollData.textContent = "Cancel";
-        collectDataDialog.appendChild(btnCancelCollData);
-        btnCancelCollData.addEventListener("click", async (event) => {
-          collectDataDialog.close();
-        });
-
-        // listen for the save button click
-        const btnSaveCollData = document.createElement("button");
-        btnSaveCollData.id = "saveCollData";
-        btnSaveCollData.textContent = "Save";
-        collectDataDialog.appendChild(btnSaveCollData);
-        btnSaveCollData.addEventListener("click", async (event) => {
-          event.preventDefault();
-          // get the nextId for the collect data
-          const nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
-            .then((response) => response.json())
-            .then((data) => {
-              JSON.stringify(data);
-              return data;
-            });
-
-          // collect the values from the dynamically created fields
-          const dataJson = {
-            COLLECT_ID: nextId,
-            INPUT_USER: user,
-            OTIF: document.getElementById("otif").value,
-            PPM: document.getElementById("ppm").value,
-            ESCAPES: document.getElementById("escapes").value,
-            SAMPLE_DATE: document.getElementById("collectDate").value,
-            CUSTOMER_ID: document.getElementById("customerCode").value,
-          };
-          // console.log(dataJson);
-
-          // For each customer measure, create a separate record and POST it
-          const measures = [
-            { key: "OTIF", unit: "PERCENT" },
-            { key: "PPM", unit: "PPM" },
-            { key: "ESCAPES", unit: "COUNT" },
-          ];
-          const csrUrl2 = `http://localhost:${port}/csr/${iid}`;
-          try {
-            for (const measure of measures) {
-              let nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
-                .then((response) => response.json())
-                .then((data) => data);
-              const value = document.getElementById(
-                measure.key.toLowerCase()
-              ).value;
-              if (value !== "") {
-                await fetch(csrUrl + "/incrementId", { method: "PUT" });
-                const record = {
-                  COLLECT_ID: nextId,
-                  INPUT_USER: user,
-                  CUSTOMER_ID: document.getElementById("customerCode").value,
-                  SAMPLE_DATE: document.getElementById("collectDate").value,
-                  UNIT: measure.key,
-                  VALUE: value,
-                };
-                console.log(record);
-                await fetch(csrUrl2, {
-                  method: "POST",
-                  headers: {
-                    "Content-Type": "application/json",
-                  },
-                  body: JSON.stringify({ dataJson: record }),
-                });
-              }
-            }
-          } catch (err) {
-            console.log("Error:", err);
-          }
-          // close the dialog
-          collectDataDialog.close();
-          // reload the page
-          location.reload();
-        });
-      } else {
-        // show the customer collect data dialog
-        const collectDataDialog = document.querySelector("#collectDataDialog");
-        collectDataDialog.showModal();
-
-        // listen for the cancel button click
-        const btnCancelCollData = document.querySelector("#cancelCollData");
-        btnCancelCollData.addEventListener("click", async (event) => {
-          collectDataDialog.close();
-        });
-
-        // listen for the save button click
-        const btnSaveCollData = document.querySelector("#saveCollData");
-        btnSaveCollData.addEventListener("click", async (event) => {
-          // prevent default action
-          event.preventDefault();
-          // get the nextId for the collect data
-          // console.log( csrUrl + 'nextCSRId')
-          const nextId = await fetch(csrUrl + "nextCSRId", { method: "GET" })
-            .then((response) => response.json())
-            .then((data) => {
-              JSON.stringify(data);
-              return data;
-            });
-          // get the form data
-          const collectForm = document.querySelector("#collectForm");
-          let data = new FormData(collectForm);
-          // append data with the nextId
-          // data.append('INPUT_ID', iid);
-          // data.append('INPUT_USER', user);
-
-          const dataJson = {
-            COLLECT_ID: nextId,
-            INPUT_USER: user,
-          };
-
-          // console log the form data
-          for (let field of data.keys()) {
-            if (field in ["CUSTOMER_ID", "UNIT"]) {
-              dataJson[field] = data.get(field).toUpperCase();
-            } else {
-              console.log(field + ": " + data.get(field));
-              dataJson[field] = data.get(field);
-            }
-          }
-          // console.log(dataJson);
-
-          // post the collect data text
-          const csrUrl2 = `http://localhost:${port}/csr/${iid}`;
-          // console.log(csrUrl2);
-          try {
-            await fetch(csrUrl2, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ dataJson }),
-            });
-          } catch (err) {
-            console.log("Error:", err);
-          }
-          // close the dialog
-          collectDataDialog.close();
-          // clear the form fields
-          collectForm.reset();
-          // reload the page
-          location.reload();
-        });
-      }
-    });
-
-    // listen for the close button click
-    const closebutton = document.querySelector("#btnClose");
-    closebutton.addEventListener("click", async (event) => {
-      event.preventDefault();
-      // console.log('closing the action item');
-
-      // if the action item is already closed, do not close it again
-      const closed = document.querySelector("#closeddate");
-      // if the 10 rightmost characters are a date, the action item is closed
-      if (closed.textContent.length > 15) {
-        alert("This action item is already closed");
-        return;
-      }
-      console.log(iid);
-      let aidValue = iid;
-      if (aidValue.length === 0) {
-        alert("Please enter the Input ID");
-      } else {
-        // console.log(aidValue);
-        // console.log(aidValue.length);
-        while (aidValue.length < 7) {
-          aidValue = "0" + aidValue;
-        }
-      }
-
-      const url = inputUrl + "close/" + aidValue;
-      // console.log(url);
-
-      let data = {
-        INPUT_ID: aidValue,
-        CLOSED: "Y",
-        CLOSED_DATE: getDateTime(),
-      };
-
-      console.log(data);
-
-      const options = {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      };
-
-      const response = await fetch(url, options);
-      const json = await response.json();
-
-      // const formappendai = document.querySelector('#formappendai');
-      // // clear the form fields
-      // formappendai.innerHTML = '';
-
-      // reload the page
-      location.reload();
-    });
-
-    // listen for the edit detail button click, populate the edit dialog fields, show the dialog
+    // ===== Edit Detail Handler =====
     const btnEditDetail = document.querySelector("#btnEditDetail");
-    btnEditDetail.addEventListener("click", async (event) => {
-      // prevent default action
-      event.preventDefault();
-      // get the action item id
-      let queryString = window.location.search;
-      let urlParams = new URLSearchParams(queryString);
-      let iid = urlParams.get("id");
-      const detailDialog = document.querySelector("#inputDialog");
-      detailDialog.showModal();
-      // populate the dialog fields
-      let assignedto = document.querySelector("#assignedto").textContent;
-      assignedto = assignedto.substring(13);
-      let duedate = document.querySelector("#duedate").textContent;
-      duedate = duedate.substring(10);
-      let project = document.querySelector("#project").textContent;
-      project = project.substring(9);
-      project = project.split(" ")[0];
-      let requestby = document.querySelector("#requestby").textContent;
-      requestby = requestby.substring(11);
-      let subject = document.querySelector("#subject").textContent;
-      subject = subject.substring(9);
-      // console.log(assignedto, duedate, project, requestby, subject);
-      // populate the dialog fields
-      document.querySelector("#ASSIGNED_TO").value = assignedto.trim();
-      document.querySelector("#DUE_DATE").value = duedate.trim();
-      document.querySelector("#PROJECT_ID").value = project.trim();
-      document.querySelector("#REQUESTED_BY").value = requestby.trim();
-      document.querySelector("#SUBJECT").value = subject.trim();
-
-      // listen for the cancel button click
-      const btnCancelDetail = document.querySelector("#cancelEdit");
-      btnCancelDetail.addEventListener("click", async (event) => {
-        detailDialog.close();
-      });
-
-      // listen for the save detail button click
-      const btnSaveDetail = document.querySelector("#saveDetail");
-      btnSaveDetail.addEventListener("click", async (event) => {
-        // prevent default action
+    if (btnEditDetail) {
+      btnEditDetail.addEventListener("click", async (event) => {
         event.preventDefault();
+        const detailDialog = document.querySelector("#inputDialog");
+        detailDialog.showModal();
 
-        let data = {
-          INPUT_ID: iid,
-          ASSIGNED_TO: document.querySelector("#ASSIGNED_TO").value,
-          DUE_DATE: document.querySelector("#DUE_DATE").value,
-          PROJECT_ID: document.querySelector("#PROJECT_ID").value,
-          REQUESTED_BY: document.querySelector("#REQUESTED_BY").value,
-          SUBJECT: document.querySelector("#SUBJECT").value,
-          MODIFIED_DATE: getDateTime(),
-          MODIFIED_BY: user,
-        };
+        // Populate fields
+        const assignedToElem = document.querySelector("#assignedto");
+        const dueDateElem = document.querySelector("#duedate");
+        const projectElem = document.querySelector("#project");
+        const requestByElem = document.querySelector("#requestby");
+        const subjectElem = document.querySelector("#subject");
 
-        // console.log(data);
+        document.querySelector("#ASSIGNED_TO").value = extractText(
+          assignedToElem.textContent,
+          13
+        );
+        document.querySelector("#DUE_DATE").value = extractText(
+          dueDateElem.textContent,
+          10
+        );
+        document.querySelector("#PROJECT_ID").value = extractText(
+          projectElem.textContent,
+          9
+        ).split(" ")[0];
+        document.querySelector("#REQUESTED_BY").value = extractText(
+          requestByElem.textContent,
+          11
+        );
+        document.querySelector("#SUBJECT").value = extractText(
+          subjectElem.textContent,
+          9
+        );
 
-        // update the action text
-        const url = `http://localhost:${port}/input/detail/${iid}`;
-        const response = await fetch(url, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data }),
+        document.querySelector("#cancelEdit").addEventListener("click", () => {
+          detailDialog.close();
         });
-        // close the dialog
-        detailDialog.close();
-        // reload the page
-        location.reload();
-      });
-    });
-    // Add listener for the email button
-    const btnFollowUp = document.querySelector("#btnFollowUp");
-    btnFollowUp.addEventListener("click", async (event) => {
-      event.preventDefault();
-      // get the action item id
-      let queryString = window.location.search;
-      let urlParams = new URLSearchParams(queryString);
-      let iid = urlParams.get("id");
-      // alert('Email button clicked');
-      const emailDialog = document.querySelector("#emailDialog");
-      emailDialog.showModal();
-      // populate the email dialog fields
-      const emailCommentText = document.querySelector("#emailCommentText");
-      emailCommentText.value = ""; // clear the textarea
-      // listen for the cancel button click
-      const btnCancelEmail = document.querySelector("#cancelEmailComment");
-      btnCancelEmail.addEventListener("click", async (event) => {
-        emailDialog.close();
-      });
 
-      // listen for the save email button click
-      const btnSaveEmail = document.querySelector("#saveEmailComment");
-      btnSaveEmail.addEventListener("click", async (event) => {
-        // prevent default action
-        event.preventDefault();
-        let e_assignedto = document.querySelector("#assignedto").textContent;
-        e_assignedto = e_assignedto.substring(13);
-        // need to get email for sendto from the page
-        let userEmail = userEmails[e_assignedto] || userEmails["DEFAULT"];
-        // console.log("Sending email to: " + userEmail);
+        document
+          .querySelector("#saveDetail")
+          .addEventListener("click", async (event) => {
+            event.preventDefault();
 
-        let actionNoteElem = document.querySelector("#actionNote");
-        let followUpNoteElem = document.querySelector("#followUpNote");
-        let actionNoteText = actionNoteElem ? actionNoteElem.innerText : "";
-        let followUpNoteText = followUpNoteElem
-          ? followUpNoteElem.innerText
-          : "";
-        let project_id = document.querySelector("#project").textContent;
-        project_id = project_id.substring(9);
-        project_id = project_id.split(" ")[0];
+            const data = {
+              INPUT_ID: iid,
+              ASSIGNED_TO: document.querySelector("#ASSIGNED_TO").value,
+              DUE_DATE: document.querySelector("#DUE_DATE").value,
+              PROJECT_ID: document.querySelector("#PROJECT_ID").value,
+              REQUESTED_BY: document.querySelector("#REQUESTED_BY").value,
+              SUBJECT: document.querySelector("#SUBJECT").value,
+              MODIFIED_DATE: getDateTime(),
+              MODIFIED_BY: user,
+            };
 
-        let data = {
-          INPUT_ID: urlParams.get("id"),
-          from: "quality@ci-aviation.com",
-          to: userEmail,
-          subject: "Action Item Updated: " + iid,
-          text:
-            "Project: " +
-            project_id +
-            "\n\n" +
-            "Action: " +
-            "\n\n" +
-            actionNoteText +
-            "\n\n" +
-            "Follow-up: " +
-            "\n\n" +
-            followUpNoteText +
-            "\n\n" +
-            ("Email comment: " +
-              (document.querySelector("#emailCommentText").value || "")),
-        };
+            await fetch(`${apiUrls.input}detail/${iid}`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ data }),
+            });
 
-        // update the action text in the background
-        const url = `http://localhost:${port}/input/email/${iid}`;
-        // This can be async (fire-and-forget) since you don't need to wait for the result before closing the dialog or reloading.
-        fetch(url, {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({ data }),
-        }).catch((err) => {
-          console.error("Error sending email:", err);
-        });
-        // update the inputs_notify table
-        const notifyUrl = `http://localhost:${port}/input/inputs_notify`;
-        let assignedto = document
-          .querySelector("#assignedto")
-          .textContent.replace(/^Assigned To:\s*/, "")
-          .trim();
-
-        let notifyData = {
-          INPUT_ID: urlParams.get("id"),
-          ASSIGNED_TO: assignedto,
-          ACTION: "R",
-        };
-
-        try {
-          await fetch(notifyUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({ data: notifyData }),
+            detailDialog.close();
+            location.reload();
           });
-        } catch (err) {
-          console.error("Error updating inputs_notify:", err);
-        }
-        // close the dialog
-        emailDialog.close();
-        // reload the page
-        location.reload();
       });
-    });
+    }
+
+    // ===== Email Handler =====
+    const btnFollowUp = document.querySelector("#btnFollowUp");
+    if (btnFollowUp) {
+      btnFollowUp.addEventListener("click", async (event) => {
+        event.preventDefault();
+        const emailDialog = document.querySelector("#emailDialog");
+        document.querySelector("#emailCommentText").value = "";
+        emailDialog.showModal();
+
+        document
+          .querySelector("#cancelEmailComment")
+          .addEventListener("click", () => {
+            emailDialog.close();
+          });
+
+        document
+          .querySelector("#saveEmailComment")
+          .addEventListener("click", async (event) => {
+            event.preventDefault();
+
+            const assignedToText = extractText(
+              document.querySelector("#assignedto").textContent,
+              13
+            );
+            const userEmail =
+              userEmails[assignedToText] ?? userEmails["DEFAULT"];
+
+            const actionNoteElem = document.querySelector("#actionNote");
+            const followUpNoteElem = document.querySelector("#followUpNote");
+            const projectText = extractText(
+              document.querySelector("#project").textContent,
+              9
+            ).split(" ")[0];
+
+            const emailData = {
+              INPUT_ID: iid,
+              from: "quality@ci-aviation.com",
+              to: userEmail,
+              subject: `Action Item Updated: ${iid}`,
+              text: `Project: ${projectText}\n\nAction: \n\n${
+                actionNoteElem?.innerText ?? ""
+              }\n\nFollow-up: \n\n${
+                followUpNoteElem?.innerText ?? ""
+              }\n\nEmail comment: ${
+                document.querySelector("#emailCommentText").value || ""
+              }`,
+            };
+
+            // Send email (fire-and-forget)
+            fetch(`${apiUrls.input}email/${iid}`, {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ data: emailData }),
+            }).catch((err) => console.error("Error sending email:", err));
+
+            // Update notification table
+            const notifyData = {
+              INPUT_ID: iid,
+              ASSIGNED_TO: assignedToText,
+              ACTION: "R",
+            };
+
+            try {
+              await fetch(`${apiUrls.input}inputs_notify`, {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ data: notifyData }),
+              });
+            } catch (err) {
+              console.error("Error updating inputs_notify:", err);
+            }
+
+            emailDialog.close();
+            location.reload();
+          });
+      });
+    }
   });

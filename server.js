@@ -210,6 +210,11 @@ const inputFilesPath =
   "\\\\fs1\\Common\\Quality\\00000_Work Instructions";
 app.use("/input-files", express.static(inputFilesPath));
 
+// Use environment variable for document files path
+const documentFilesPath =
+  process.env.DOCUMENT_FILES_PATH || "\\\\fs1\\Common\\Quality";
+app.use("/document-files", express.static(documentFilesPath));
+
 // Use environment variable for device images path
 const os = require("os");
 const hostname = os.hostname();

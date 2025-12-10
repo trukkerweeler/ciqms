@@ -395,6 +395,9 @@ router.get("/:id", (req, res) => {
         , pi.CLOSED_DATE
         , pit.INPUT_TEXT
         , pi.RESPONSE_DATE
+        , pi.RESPONSE_BY
+        , pi.FOLLOWUP_DATE
+        , pi.FOLLOWUP_BY
         , pir.RESPONSE_TEXT
         , pif.FOLLOWUP_TEXT 
         , p.NAME
@@ -489,34 +492,59 @@ router.put("/:id", (req, res) => {
         if (err) {
           console.log("Failed to query for input : " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
         res.json(rows);
+
+        if (myfield === "RESPONSE_TEXT") {
+          const updateQuery = `
+              UPDATE PEOPLE_INPUT 
+              SET RESPONSE_DATE = ?, 
+                  RESPONSE_BY = ?,
+                  MODIFIED_BY = ?, 
+                  MODIFIED_DATE = ? 
+              WHERE INPUT_ID = ?`;
+          const updateValues = [
+            mydata.RESPONSE_DATE,
+            mydata.RESPONSE_BY,
+            mydata.MODIFIED_BY,
+            mydata.MODIFIED_DATE,
+            req.params.id,
+          ];
+          connection.query(updateQuery, updateValues, (err) => {
+            if (err) {
+              console.log("Failed to query for response date update: " + err);
+              res.sendStatus(500);
+            }
+            connection.end();
+          });
+        } else if (myfield === "FOLLOWUP_TEXT") {
+          const updateQuery = `
+              UPDATE PEOPLE_INPUT 
+              SET FOLLOWUP_DATE = ?, 
+                  FOLLOWUP_BY = ?,
+                  MODIFIED_BY = ?, 
+                  MODIFIED_DATE = ? 
+              WHERE INPUT_ID = ?`;
+          const updateValues = [
+            mydata.FOLLOWUP_DATE,
+            mydata.FOLLOWUP_BY,
+            mydata.MODIFIED_BY,
+            mydata.MODIFIED_DATE,
+            req.params.id,
+          ];
+          connection.query(updateQuery, updateValues, (err) => {
+            if (err) {
+              console.log("Failed to query for followup date update: " + err);
+              res.sendStatus(500);
+            }
+            connection.end();
+          });
+        } else {
+          connection.end();
+        }
       });
-
-      if (myfield === "RESPONSE_TEXT") {
-        const updateQuery = `
-            UPDATE PEOPLE_INPUT 
-            SET RESPONSE_DATE = ?, 
-                MODIFIED_BY = ?, 
-                MODIFIED_DATE = ? 
-            WHERE INPUT_ID = ?`;
-        const updateValues = [
-          mydata.RESPONSE_DATE,
-          mydata.MODIFIED_BY,
-          mydata.MODIFIED_DATE,
-          req.params.id,
-        ];
-        connection.query(updateQuery, updateValues, (err) => {
-          if (err) {
-            console.log("Failed to query for response date update: " + err);
-            res.sendStatus(500);
-            return;
-          }
-        });
-      }
-
-      connection.end();
     });
   } catch (err) {
     console.log("Error connecting to Db 312");

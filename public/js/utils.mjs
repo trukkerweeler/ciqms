@@ -212,9 +212,35 @@ export function getFormFields(myform) {
   return data;
 }
 
-export async function createNotesSection(title, notes) {
+export async function createNotesSection(
+  title,
+  notes,
+  sectionId = null,
+  dateValue = null,
+  byValue = null
+) {
   let notesSection = document.createElement("section");
   notesSection.classList.add("notesSection");
+
+  // Auto-generate ID based on title if not provided
+  let generatedId = "";
+  switch (title) {
+    case "INPUT_TEXT":
+      generatedId = "actionSection";
+      break;
+    case "FOLLOWUP_TEXT":
+      generatedId = "followUpSection";
+      break;
+    case "RESPONSE_TEXT":
+      generatedId = "responseSection";
+      break;
+    default:
+      generatedId = "notesSection";
+  }
+
+  // Set unique ID (use provided sectionId or generated ID)
+  notesSection.id = sectionId || generatedId;
+
   let notesTitle = document.createElement("h3");
   let buttonid = "";
   let buttonText = "Edit";
@@ -293,8 +319,43 @@ export async function createNotesSection(title, notes) {
     createButton(headerContainer, buttonText, buttonid, "editNoteButton");
   }
 
-  // Append header container and note to section
+  // Append header container to section
   notesSection.appendChild(headerContainer);
+
+  // Add date/by information if this is RESPONSE or FOLLOWUP section and date is provided
+  if ((title === "RESPONSE_TEXT" || title === "FOLLOWUP_TEXT") && dateValue) {
+    const dateP = document.createElement("p");
+    dateP.classList.add("date-info");
+    dateP.style.gridColumn = "1 / -1";
+    dateP.style.fontWeight = "600";
+    dateP.style.marginTop = "0.5rem";
+    dateP.style.marginBottom = "0.5rem";
+
+    // Format the date
+    let formattedDate = "";
+    if (dateValue && dateValue.length > 0) {
+      formattedDate = dateValue.substring(0, 10);
+    }
+
+    // Build text with date and by fields
+    let dateText = "";
+    if (title === "RESPONSE_TEXT") {
+      dateText = `Response Date: ${formattedDate}`;
+    } else if (title === "FOLLOWUP_TEXT") {
+      dateText = `Follow Up Date: ${formattedDate}`;
+    }
+
+    if (byValue) {
+      dateText += ` | ${
+        title === "RESPONSE_TEXT" ? "Response" : "Follow Up"
+      } By: ${byValue}`;
+    }
+
+    dateP.textContent = dateText;
+    notesSection.appendChild(dateP);
+  }
+
+  // Append note to section
   notesSection.appendChild(note);
 
   // // insert notes adjacent to #detailSection
@@ -749,3 +810,70 @@ export async function getcodedesc(code) {
   }
 }
 
+// =================================================
+// ES6+ Helper Utilities
+// =================================================
+
+/**
+ * Create DOM element with attributes in one call
+ * @param {string} tag - HTML tag name
+ * @param {Object} options - Element configuration
+ * @returns {HTMLElement}
+ */
+export function createElement(
+  tag,
+  { className = "", id = "", text = "", type = "", ...attrs } = {}
+) {
+  const el = document.createElement(tag);
+  if (className) el.className = className;
+  if (id) el.id = id;
+  if (text) el.textContent = text;
+  if (type) el.type = type;
+  Object.assign(el, attrs);
+  return el;
+}
+
+/**
+ * Safe date formatting to YYYY-MM-DD
+ * @param {string} dateStr - Date string
+ * @returns {string} Formatted date or empty string
+ */
+export function formatDate(dateStr) {
+  return dateStr?.substring(0, 10) ?? "";
+}
+
+/**
+ * Get URL parameter by key
+ * @param {string} key - Parameter name
+ * @returns {string|null} Parameter value
+ */
+export function getUrlParam(key) {
+  return new URLSearchParams(window.location.search).get(key);
+}
+
+/**
+ * Extract text content with substring offset (with safety)
+ * @param {string} text - Source text
+ * @param {number} offset - Starting position
+ * @returns {string} Extracted text
+ */
+export function extractText(text, offset = 0) {
+  return text?.substring(offset).trim() ?? "";
+}
+
+/**
+ * Build text with timestamp and user
+ * @param {string} user - User name
+ * @param {string} newText - New text to prepend
+ * @param {string} oldText - Existing text
+ * @returns {string} Combined text with timestamp
+ */
+export function timestampText(user, newText, oldText = "") {
+  const d = new Date();
+  const date = d.toISOString().substring(0, 10);
+  const time = d.toLocaleTimeString();
+  const timestamp = `${user} - ${date} ${time}`;
+  return oldText
+    ? `${timestamp}\n${newText}\n\n${oldText}`
+    : `${timestamp}\n${newText}`;
+}
