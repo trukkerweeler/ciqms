@@ -146,25 +146,22 @@ async function handleFormSubmission() {
     const requestDate = new Date();
     const createDate = requestDate.toISOString().slice(0, 19).replace("T", " ");
 
-    // Build data object
+    // Build data object with required fields
+    const docId = formData.get("document_id");
     const dataJson = {
-      CREATE_DATE: createDate,
-      CREATE_BY: user,
-      AUDIT_RESPONSIBLE: "I",
+      document_id: docId,
+      document_name: formData.get("document_name"),
+      DOCUMENT_TYPE: getDocType(docId),
+      subject: formData.get("subject") || formData.get("document_name"),
+      reference: formData.get("reference") || "",
+      status: formData.get("status") || "C",
+      doc_rev: formData.get("doc_rev") || "0",
+      issue_date: formData.get("issue_date"),
       CHECKED_OUT: "N",
+      AUDIT_RESPONSIBLE: "I",
+      CREATE_BY: user,
+      CREATE_DATE: createDate,
     };
-
-    // Add form fields to data object
-    for (const field of formData.keys()) {
-      console.log(field);
-      if (field === "document_id") {
-        const docId = formData.get(field);
-        dataJson[field] = docId;
-        dataJson["DOCUMENT_TYPE"] = getDocType(docId);
-      } else {
-        dataJson[field] = formData.get(field);
-      }
-    }
 
     console.log("Submitting document data:", dataJson);
 

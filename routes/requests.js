@@ -423,9 +423,17 @@ router.put("/close/:id", async (req, res) => {
               },
             });
 
+            // Compose recipients with fallbacks so 'To' is never blank in the sent message
+            const toRcpts = [process.env.EMAIL_GM].filter(Boolean);
+            const ccRcpts = [process.env.EMAIL_QM].filter(Boolean);
+            const toHeader = toRcpts.length
+              ? toRcpts.join(", ")
+              : process.env.SMTP_FROM || "";
+            const ccHeader = ccRcpts.length ? ccRcpts.join(", ") : undefined;
+
             const mailOptions = {
-              to: process.env.EMAIL_GM,
-              cc: process.env.EMAIL_QM,
+              to: toHeader,
+              cc: ccHeader,
               from: process.env.SMTP_FROM,
               subject: `DCR Approved: ${req.params.id} - ${req.body.DOCUMENT_ID}`,
               text: `Document Change Request ${req.params.id} has been approved.\n\nDocument: ${req.body.DOCUMENT_ID}\nNew Revision: ${req.body.REVISION_LEVEL}\nRevision Date: ${req.body.REVISION_DATE}\nApproved By: ${req.body.MODIFIED_BY}\n\nPlease log in to the QMS system to view the details.`,

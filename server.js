@@ -91,6 +91,9 @@ app.use("/corrective", correctiveRoutes);
 const sysdocRoutes = require("./routes/sysdocs");
 app.use("/sysdocs", sysdocRoutes);
 
+const documentsRoutes = require("./routes/documents");
+app.use("/", documentsRoutes);
+
 const dcrRoutes = require("./routes/requests");
 app.use("/requests", dcrRoutes);
 

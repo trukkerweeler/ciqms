@@ -1,12 +1,3 @@
-// Basic /docsavail endpoint to prevent 404 and allow frontend integration
-router.post("/docsavail", (req, res) => {
-  console.log("/docsavail called with:", req.body);
-  // Echo back received data for now
-  res.json({ status: "ok", received: req.body });
-});
-// Document Upload and Conversion Route for CIQMS
-// Add this to your routes/ directory
-
 const express = require("express");
 const multer = require("multer");
 const path = require("path");
@@ -15,6 +6,13 @@ const { exec } = require("child_process");
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 const router = express.Router();
+
+// Basic /docsavail endpoint to prevent 404 and allow frontend integration
+router.post("/docsavail", (req, res) => {
+  console.log("/docsavail called with:", req.body);
+  // Echo back received data for now
+  res.json({ status: "ok", received: req.body });
+});
 
 // Configure multer for file uploads
 const storage = multer.diskStorage({
@@ -235,8 +233,17 @@ router.post("/release-notifications", async (req, res) => {
               },
             });
 
+            // Build recipient header with fallbacks
+            const toRecipients = [
+              process.env.EMAIL_GM,
+              process.env.EMAIL_QM,
+            ].filter(Boolean);
+            const toHeader = toRecipients.length
+              ? toRecipients.join(", ")
+              : process.env.SMTP_FROM || "";
+
             const mailOptions = {
-              to: [process.env.EMAIL_GM, process.env.EMAIL_QM],
+              to: toHeader,
               from: process.env.SMTP_FROM,
               subject: subject,
               text: notification,
