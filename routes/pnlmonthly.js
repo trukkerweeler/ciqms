@@ -43,6 +43,10 @@ router.post("/account-details", (req, res) => {
         WHERE YEAR(gd.POST_DATE) = ?
         AND MONTH(gd.POST_DATE) = ?
         AND gd.GL_ACCOUNT >= 400
+        AND (
+          (gd.GL_ACCOUNT BETWEEN 400 AND 499 AND gd.DB_CR_FLAG = 'C')
+          OR (gd.GL_ACCOUNT BETWEEN 500 AND 999 AND gd.DB_CR_FLAG = 'D')
+        )
         GROUP BY gd.GL_ACCOUNT, gm.DESCR, Category
         ORDER BY Category, gd.GL_ACCOUNT
       `;
@@ -151,11 +155,13 @@ router.post("/account-transactions", (req, res) => {
           gd.VENDOR,
           gd.APPL_TYPE,
           gd.TRAN_TYPE,
-          gd.INVOICE_NO
+          gd.INVOICE_NO,
+          gd.DB_CR_FLAG
         FROM global.GL_DETAIL gd
         WHERE YEAR(gd.POST_DATE) = ?
         AND MONTH(gd.POST_DATE) = ?
         AND gd.GL_ACCOUNT = ?
+        AND gd.DB_CR_FLAG = 'D'
         ORDER BY gd.POST_DATE, gd.BATCH_NUM, gd.BATCH_LINE
       `;
       connection.query(query, [year, month, glAccount], (err, rows, fields) => {

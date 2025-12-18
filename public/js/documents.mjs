@@ -16,6 +16,7 @@ let sortOrder = "asc";
 
 // Global variables - will be initialized on DOMContentLoaded
 let dialog, addButton, cancelButton, form, user;
+let documentsData = []; // Store original data for filtering
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -68,6 +69,7 @@ async function loadDocumentData() {
     // console.log("Document data received:", data);
 
     if (data && data.length > 0) {
+      documentsData = data; // Store for filtering
       createTable(data);
     } else {
       console.log("No document data found");
@@ -227,11 +229,67 @@ function createTable(data) {
     return;
   }
 
+  const main = document.querySelector("main");
+  main.innerHTML = "";
+
+  // Create filter container
+  const filterContainer = document.createElement("div");
+  filterContainer.style.marginBottom = "15px";
+  filterContainer.style.display = "flex";
+  filterContainer.style.alignItems = "center";
+  filterContainer.style.gap = "10px";
+
+  const filterLabel = document.createElement("label");
+  filterLabel.textContent = "Filter by Document Name:";
+  filterLabel.style.whiteSpace = "nowrap";
+
+  const filterInput = document.createElement("input");
+  filterInput.type = "text";
+  filterInput.id = "documentNameFilter";
+  filterInput.placeholder = "Search documents...";
+  filterInput.style.padding = "0.4rem 0.6rem";
+  filterInput.style.border = "1px solid #ccc";
+  filterInput.style.borderRadius = "4px";
+  filterInput.style.fontSize = "0.9em";
+  filterInput.style.minWidth = "250px";
+
+  filterContainer.appendChild(filterLabel);
+  filterContainer.appendChild(filterInput);
+  main.appendChild(filterContainer);
+
+  // Add filter event listener
+  filterInput.addEventListener("input", () => {
+    const filterValue = filterInput.value.toLowerCase();
+    const filteredData = documentsData.filter((doc) => {
+      return Object.values(doc).some((value) =>
+        (value ?? "").toString().toLowerCase().includes(filterValue)
+      );
+    });
+    renderDocumentTable(filteredData);
+  });
+
+  // Render initial table
+  renderDocumentTable(data);
+}
+
+/**
+ * Render document table with the provided data
+ * @param {Array} data - Array of document records to display
+ */
+function renderDocumentTable(data) {
+  const main = document.querySelector("main");
+  let tableContainer = main.querySelector(".table-container");
+
+  // Remove existing table if present
+  if (tableContainer) {
+    tableContainer.remove();
+  }
+
   const table = document.createElement("table");
   table.className = "table table-striped table-bordered table-hover";
   table.style.marginBottom = "0";
 
-  const headers = Object.keys(data[0]);
+  const headers = Object.keys(data[0] || {});
 
   // Create sticky header
   const thead = createTableHeader(headers, table);
@@ -242,12 +300,10 @@ function createTable(data) {
   table.appendChild(tbody);
 
   // Create scrollable container
-  const tableContainer = createTableContainer();
+  tableContainer = createTableContainer();
   tableContainer.appendChild(table);
 
-  // Replace main content with the new table
-  const main = document.querySelector("main");
-  main.innerHTML = "";
+  // Append table to main
   main.appendChild(tableContainer);
 }
 

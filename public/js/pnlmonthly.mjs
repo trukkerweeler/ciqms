@@ -13,6 +13,10 @@ window.addEventListener("DOMContentLoaded", () => {
   const manualGLDialog = document.getElementById("manualGLDialog");
   const manualGLForm = document.getElementById("manualGLForm");
   const cancelGLBtn = document.getElementById("cancelGLBtn");
+  const glEntriesBody = document.getElementById("glEntriesBody");
+  const addRowBtn = document.getElementById("addRowBtn");
+
+  let glEntries = []; // Store entries in memory
 
   fetchBtn.addEventListener("click", async () => {
     const year = yearPicker.value;
@@ -242,7 +246,18 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (!transactions || !transactions.length) {
       drillDownTable.innerHTML =
-        '<tr><td colspan="8">No transactions found</td></tr>';
+        '<tr><td colspan="8">No accrual transactions found</td></tr>';
+      return;
+    }
+
+    // Filter to only show accruals (DB_CR_FLAG = 'D')
+    const filteredTransactions = transactions.filter(
+      (txn) => txn.DB_CR_FLAG === "D"
+    );
+
+    if (!filteredTransactions.length) {
+      drillDownTable.innerHTML =
+        '<tr><td colspan="8">No accrual transactions found (DB_CR_FLAG = D)</td></tr>';
       return;
     }
 
@@ -258,7 +273,7 @@ window.addEventListener("DOMContentLoaded", () => {
     </tr>`;
 
     let total = 0;
-    for (const txn of transactions) {
+    for (const txn of filteredTransactions) {
       const formattedDate = new Date(txn.POST_DATE).toLocaleDateString();
       const amount = Number(txn.AMOUNT);
       total += amount;
@@ -280,7 +295,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Add total row
     html += `<tr style="background:#eef;font-weight:bold">
-      <td colspan="7" style="text-align:right">Total:</td>
+      <td colspan="7" style="text-align:right">Total Accruals:</td>
       <td>${total.toLocaleString("en-US", {
         style: "currency",
         currency: "USD",
@@ -349,9 +364,9 @@ window.addEventListener("DOMContentLoaded", () => {
     adjustmentsContainer.innerHTML = html;
   }
 
-  // Function to calculate period fields from POST_DATE
+  // Helper function to calculate period fields from POST_DATE
   function updatePeriodFields() {
-    const postDateField = document.getElementById("post_date");
+    const postDateField = document.getElementById("post_date_global");
     if (!postDateField) return;
 
     const postDateVal = postDateField.value;
@@ -360,57 +375,241 @@ window.addEventListener("DOMContentLoaded", () => {
     const tDate = new Date(postDateVal);
     if (isNaN(tDate.getTime())) return;
 
-    // Calculate PERIOD as 2-digit month (MM)
-    const month = String(tDate.getMonth() + 1).padStart(2, "0");
-    const periodField = document.getElementById("period");
-    if (periodField) {
-      periodField.value = month;
-    }
-
-    // Calculate PERIOD_BEG_DATE (first day of the month) in YYYY-MM-DD format for date input
+    // Calculate PERIOD_BEG_DATE (first day of the month) in YYYYMMDD format
     const firstDay = new Date(tDate.getFullYear(), tDate.getMonth(), 1);
-    const periodBegDate = firstDay.toISOString().split("T")[0];
-    const periodBegField = document.getElementById("period_beg_date");
-    if (periodBegField) {
-      periodBegField.value = periodBegDate;
-    }
+    const periodBegDate = firstDay
+      .toISOString()
+      .split("T")[0]
+      .replace(/-/g, "");
 
-    // Calculate PERIOD_END_DATE (last day of the month) in YYYY-MM-DD format for date input
+    // Calculate PERIOD_END_DATE (last day of the month) in YYYYMMDD format
     const lastDay = new Date(tDate.getFullYear(), tDate.getMonth() + 1, 0);
-    const periodEndDate = lastDay.toISOString().split("T")[0];
-    const periodEndField = document.getElementById("period_end_date");
-    if (periodEndField) {
-      periodEndField.value = periodEndDate;
-    }
+    const periodEndDate = lastDay.toISOString().split("T")[0].replace(/-/g, "");
+
+    // Store these for later use when submitting entries
+    manualGLDialog.dataset.periodBegDate = periodBegDate;
+    manualGLDialog.dataset.periodEndDate = periodEndDate;
   }
+
+  // Create a new GL entry row
+  function createGLEntryRow(index, data = {}) {
+    const today = new Date().toISOString().split("T")[0];
+    const postDate = data.POST_DATE ? data.POST_DATE.split("T")[0] : today;
+    const tDate = data.T_DATE ? data.T_DATE.split("T")[0] : today;
+
+    return `
+      <tr data-row-index="${index}" style="border-bottom: 1px solid #eee">
+        <td style="padding: 5px; text-align: center; background: #f9f9f9">${
+          index + 1
+        }</td>
+        <td style="padding: 5px">
+          <input type="text" class="gl-account" value="${
+            data.GL_ACCOUNT || "560"
+          }" style="width: 100%; padding: 2px" maxlength="5" />
+        </td>
+        <td style="padding: 5px">
+          <input type="date" class="post-date" value="${postDate}" style="width: 100%; padding: 2px" />
+        </td>
+        <td style="padding: 5px">
+          <input type="date" class="t-date" value="${tDate}" style="width: 100%; padding: 2px" />
+        </td>
+        <td style="padding: 5px">
+          <input type="text" class="reference" value="${
+            data.REFERENCE || ""
+          }" style="width: 100%; padding: 2px" />
+        </td>
+        <td style="padding: 5px">
+          <input type="number" class="amount" value="${
+            data.AMOUNT || ""
+          }" step="0.01" style="width: 100%; padding: 2px; text-align: right" />
+        </td>
+        <td style="padding: 5px">
+          <input type="text" class="descr" value="${
+            data.DESCR || ""
+          }" style="width: 100%; padding: 2px" />
+        </td>
+        <td style="padding: 5px">
+          <input type="text" class="vendor" value="${
+            data.VENDOR || ""
+          }" style="width: 100%; padding: 2px" />
+        </td>
+        <td style="padding: 5px">
+          <div style="display: flex; gap: 2px">
+            <input type="text" class="appl-type" value="${
+              data.APPL_TYPE || ""
+            }" style="width: 48%; padding: 2px; font-size: 0.85em" maxlength="6" placeholder="App" title="Application Type" />
+            <input type="text" class="tran-type" value="${
+              data.TRAN_TYPE || ""
+            }" style="width: 48%; padding: 2px; font-size: 0.85em" maxlength="6" placeholder="Tran" title="Transaction Type" />
+          </div>
+        </td>
+        <td style="padding: 5px">
+          <div style="display: flex; gap: 2px">
+            <input type="text" class="ar-code" value="${
+              data.AR_CODE || "I"
+            }" style="width: 48%; padding: 2px; font-size: 0.85em" maxlength="1" placeholder="AR" title="AR Code" />
+            <input type="date" class="invc-date" value="${
+              data.INVC_DATE ? data.INVC_DATE.split("T")[0] : ""
+            }" style="width: 48%; padding: 2px; font-size: 0.85em" />
+          </div>
+        </td>
+        <td style="padding: 5px; text-align: center">
+          <button type="button" class="delete-row btn-danger" style="padding: 2px 6px; font-size: 0.8em">✕</button>
+        </td>
+      </tr>
+    `;
+  }
+
+  // Render all GL entry rows
+  function renderGLEntryRows() {
+    glEntriesBody.innerHTML = glEntries
+      .map((entry, index) => createGLEntryRow(index, entry))
+      .join("");
+
+    // Attach delete handlers
+    document.querySelectorAll(".delete-row").forEach((btn) => {
+      btn.addEventListener("click", (e) => {
+        e.preventDefault();
+        const rowIndex = parseInt(e.target.closest("tr").dataset.rowIndex);
+        glEntries.splice(rowIndex, 1);
+        renderGLEntryRows();
+      });
+    });
+  }
+
+  // Add new empty row
+  addRowBtn.addEventListener("click", (e) => {
+    e.preventDefault();
+    glEntries.push({});
+    renderGLEntryRows();
+  });
 
   // Open manual GL entry dialog
   addManualGLBtn.addEventListener("click", () => {
+    glEntries = [{}]; // Start with one empty row
     manualGLForm.reset();
+
     // Set default dates to today
     const today = new Date().toISOString().split("T")[0];
-    document.getElementById("post_date").value = today;
-    document.getElementById("t_date").value = today;
+    document.getElementById("post_date_global").value = today;
+    document.getElementById("t_date_global").value = today;
+    document.getElementById("batch_num").value = "TK";
 
     // Calculate period fields from POST_DATE
     updatePeriodFields();
 
-    // Clear edit mode
-    delete manualGLDialog.dataset.editMode;
-    delete manualGLDialog.dataset.batchNum;
-    delete manualGLDialog.dataset.batchLine;
+    // Render initial empty row
+    renderGLEntryRows();
 
     manualGLDialog.showModal();
   });
 
   // Update period fields when POST_DATE changes
   document
-    .getElementById("post_date")
+    .getElementById("post_date_global")
     .addEventListener("change", updatePeriodFields);
 
   // Close dialog on cancel
   cancelGLBtn.addEventListener("click", () => {
     manualGLDialog.close();
+  });
+
+  // Handle form submission - save all entries
+  manualGLForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const batchNum = document.getElementById("batch_num").value;
+    const postDateGlobal = document.getElementById("post_date_global").value;
+    const tDateGlobal = document.getElementById("t_date_global").value;
+    const periodBegDate = manualGLDialog.dataset.periodBegDate;
+    const periodEndDate = manualGLDialog.dataset.periodEndDate;
+
+    if (!batchNum || !postDateGlobal || !tDateGlobal) {
+      alert("Please fill in Batch Number and default dates");
+      return;
+    }
+
+    // Collect all entries from the table
+    const entries = [];
+    let batchLine = 1;
+
+    document.querySelectorAll("#glEntriesBody tr").forEach((row) => {
+      const glAccount = row.querySelector(".gl-account").value.trim();
+      const postDate = row.querySelector(".post-date").value || postDateGlobal;
+      const tDate = row.querySelector(".t-date").value || tDateGlobal;
+      const reference = row.querySelector(".reference").value.trim();
+      const amount = row.querySelector(".amount").value.trim();
+      const descr = row.querySelector(".descr").value.trim();
+      const vendor = row.querySelector(".vendor").value.trim();
+      const applType = row.querySelector(".appl-type").value.trim();
+      const tranType = row.querySelector(".tran-type").value.trim();
+      const arCode = row.querySelector(".ar-code").value.trim() || "I";
+      const invcDate = row.querySelector(".invc-date").value;
+
+      // Skip empty rows
+      if (!glAccount && !amount && !descr) return;
+
+      // Validate required fields
+      if (!glAccount || !amount || !descr) {
+        alert("Each entry must have: GL Account, Amount, and Description");
+        throw new Error("Validation failed");
+      }
+
+      entries.push({
+        GL_ACCOUNT: glAccount,
+        POST_DATE: postDate,
+        BATCH_NUM: batchNum,
+        BATCH_LINE: batchLine,
+        T_DATE: tDate,
+        PERIOD: String(new Date(postDate).getMonth() + 1).padStart(2, "0"),
+        PERIOD_BEG_DATE: periodBegDate,
+        PERIOD_END_DATE: periodEndDate,
+        REFERENCE: reference,
+        AMOUNT: parseFloat(amount),
+        DB_CR_FLAG: "D",
+        DESCR: descr,
+        APPL_TYPE: applType,
+        TRAN_TYPE: tranType,
+        VENDOR: vendor,
+        AR_CODE: arCode,
+        INVC_DATE: invcDate,
+      });
+
+      batchLine++;
+    });
+
+    if (entries.length === 0) {
+      alert("Please add at least one entry");
+      return;
+    }
+
+    try {
+      // Submit all entries
+      const response = await fetch(`http://localhost:${port}/gldetail/batch`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ entries }),
+      });
+
+      if (response.ok) {
+        alert(
+          `${entries.length} GL Entr${
+            entries.length === 1 ? "y" : "ies"
+          } saved successfully!`
+        );
+        manualGLDialog.close();
+        // Refresh the P&L table
+        fetchBtn.click();
+      } else {
+        const error = await response.json();
+        alert(`Failed to save GL entries: ${error.details || error.error}`);
+      }
+    } catch (error) {
+      console.error("Error submitting GL entries:", error);
+      alert("An error occurred while submitting GL entries.");
+    }
   });
 
   // Close drill-down dialog
@@ -426,77 +625,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   });
 
-  // Handle form submission
-  manualGLForm.addEventListener("submit", async (e) => {
-    e.preventDefault();
-
-    // Helper function to convert YYYY-MM-DD to YYYYMMDD
-    const formatDateToYYYYMMDD = (dateStr) => {
-      if (!dateStr) return "";
-      return dateStr.replace(/-/g, "");
-    };
-
-    const formData = {
-      GL_ACCOUNT: document.getElementById("gl_account").value,
-      POST_DATE: document.getElementById("post_date").value,
-      BATCH_NUM: document.getElementById("batch_num").value,
-      BATCH_LINE: parseInt(document.getElementById("batch_line").value),
-      T_DATE: document.getElementById("t_date").value,
-      PERIOD: document.getElementById("period").value,
-      PERIOD_BEG_DATE: formatDateToYYYYMMDD(
-        document.getElementById("period_beg_date").value
-      ),
-      PERIOD_END_DATE: formatDateToYYYYMMDD(
-        document.getElementById("period_end_date").value
-      ),
-      REFERENCE: document.getElementById("reference").value,
-      AMOUNT: parseFloat(document.getElementById("amount").value),
-      DB_CR_FLAG: "D",
-      DESCR: document.getElementById("descr").value,
-      APPL_TYPE: document.getElementById("appl_type").value,
-      TRAN_TYPE: document.getElementById("tran_type").value,
-      VENDOR: document.getElementById("vendor").value,
-      AR_CODE: document.getElementById("ar_code").value,
-      INVC_DATE: document.getElementById("invc_date").value,
-    };
-
-    try {
-      // Check if we're in edit mode
-      const isEditMode = manualGLDialog.dataset.editMode === "true";
-
-      const response = await fetch(`http://localhost:${port}/gldetail`, {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(formData),
-      });
-
-      if (response.ok) {
-        const result = await response.json();
-        alert(
-          isEditMode
-            ? "GL Entry updated successfully!"
-            : "GL Entry added successfully!"
-        );
-        manualGLDialog.close();
-        // Refresh the P&L table
-        fetchBtn.click();
-      } else {
-        const error = await response.json();
-        alert(
-          `Failed to ${isEditMode ? "update" : "add"} GL Entry: ${
-            error.details || error.error
-          }`
-        );
-      }
-    } catch (error) {
-      console.error("Error submitting GL entry:", error);
-      alert("An error occurred while submitting the GL entry.");
-    }
-  });
-
-  // Global functions for edit and delete (attached to window)
+  // Global function to edit an adjustment
   window.editAdjustment = async function (batchNum, batchLine) {
     try {
       const response = await fetch(
@@ -509,29 +638,23 @@ window.addEventListener("DOMContentLoaded", () => {
 
       const adjustment = await response.json();
 
-      // Populate form with existing data
-      document.getElementById("gl_account").value = adjustment.GL_ACCOUNT;
-      document.getElementById("post_date").value = adjustment.POST_DATE
-        ? adjustment.POST_DATE.split("T")[0]
-        : "";
+      // Load the adjustment into glEntries and open dialog in edit mode
+      glEntries = [adjustment];
+
+      // Populate global fields
       document.getElementById("batch_num").value = adjustment.BATCH_NUM;
-      document.getElementById("batch_line").value = adjustment.BATCH_LINE;
-      document.getElementById("t_date").value = adjustment.T_DATE
+      document.getElementById("post_date_global").value = adjustment.POST_DATE
+        ? adjustment.POST_DATE.split("T")[0]
+        : new Date().toISOString().split("T")[0];
+      document.getElementById("t_date_global").value = adjustment.T_DATE
         ? adjustment.T_DATE.split("T")[0]
-        : "";
-      document.getElementById("reference").value = adjustment.REFERENCE || "";
-      document.getElementById("amount").value = adjustment.AMOUNT;
-      document.getElementById("descr").value = adjustment.DESCR || "";
-      document.getElementById("appl_type").value = adjustment.APPL_TYPE || "";
-      document.getElementById("tran_type").value = adjustment.TRAN_TYPE || "";
-      document.getElementById("vendor").value = adjustment.VENDOR || "";
-      document.getElementById("ar_code").value = adjustment.AR_CODE || "I";
-      document.getElementById("invc_date").value = adjustment.INVC_DATE
-        ? adjustment.INVC_DATE.split("T")[0]
-        : "";
+        : new Date().toISOString().split("T")[0];
 
       // Update period fields
       updatePeriodFields();
+
+      // Render the row
+      renderGLEntryRows();
 
       // Open dialog in edit mode
       manualGLDialog.dataset.editMode = "true";
@@ -544,6 +667,7 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // Restore drill-down dialog handlers that were at the end
   window.deleteAdjustment = async function (batchNum, batchLine) {
     if (!confirm("Are you sure you want to delete this manual adjustment?")) {
       return;

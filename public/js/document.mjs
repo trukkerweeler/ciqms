@@ -104,17 +104,38 @@ const renderDocumentDetail = (record, user) => {
     id: "docsSection",
   });
 
-  // Create header container with inline heading and button
+  // Create header container with filter and button
   const headerContainer = createElement("div", {
     style:
-      "display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem;",
+      "display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; gap: 1rem;",
   });
 
   const detailHeading = createElement(
     "h3",
-    { id: "detailTitle", style: "margin: 0;" },
+    { id: "detailTitle", style: "margin: 0; flex: 1;" },
     "Document Detail"
   );
+
+  // Add filter input
+  const filterContainer = createElement("div", {
+    style: "display: flex; align-items: center; gap: 0.5rem;",
+  });
+
+  const filterLabel = createElement(
+    "label",
+    { htmlFor: "documentFilter", style: "margin: 0; white-space: nowrap;" },
+    "Filter:"
+  );
+  const filterInput = createElement("input", {
+    type: "text",
+    id: "documentFilter",
+    placeholder: "Search fields...",
+    style:
+      "padding: 0.4rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;",
+  });
+
+  filterContainer.appendChild(filterLabel);
+  filterContainer.appendChild(filterInput);
 
   const btnEditDoc = createElement(
     "button",
@@ -128,13 +149,17 @@ const renderDocumentDetail = (record, user) => {
   );
 
   headerContainer.appendChild(detailHeading);
+  headerContainer.appendChild(filterContainer);
   headerContainer.appendChild(btnEditDoc);
   detailSection.appendChild(headerContainer);
+
+  // Create container for detail fields with filter capability
+  const detailContent = createElement("div", { id: "detailContent" });
 
   // Render document fields
   Object.entries(record[0]).forEach(([key, value]) => {
     if (FIELD_LIST.includes(key)) {
-      const p = createElement("p", { className: "docdata" });
+      const p = createElement("p", { className: "docdata", "data-field": key });
 
       // Create clickable link for DIST_DOC (available to all users)
       if (key === "DIST_DOC" && value && value.trim() !== "") {
@@ -177,8 +202,25 @@ const renderDocumentDetail = (record, user) => {
         p.textContent = formatFieldValue(key, value);
       }
 
-      detailSection.appendChild(p);
+      detailContent.appendChild(p);
     }
+  });
+
+  detailSection.appendChild(detailContent);
+
+  // Add filter functionality
+  filterInput.addEventListener("input", () => {
+    const filterValue = filterInput.value.toLowerCase();
+    const fields = detailContent.querySelectorAll(".docdata");
+
+    fields.forEach((field) => {
+      const text = field.textContent.toLowerCase();
+      if (text.includes(filterValue)) {
+        field.style.display = "block";
+      } else {
+        field.style.display = "none";
+      }
+    });
   });
 
   return detailSection;
