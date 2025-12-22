@@ -1,7 +1,7 @@
 import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
 
 // Constants
-const DEBUG = true;
+const DEBUG = false;
 const FIELD_LIST = [
   "DOCUMENT_ID",
   "NAME",
@@ -94,7 +94,12 @@ const updateDocument = async (url, data) => {
   if (!response.ok) {
     throw new Error("Failed to update document");
   }
-  return response.json();
+  const contentType = response.headers.get("content-type");
+  if (contentType && contentType.includes("application/json")) {
+    return response.json();
+  } else {
+    return response.text();
+  }
 };
 
 // UI rendering functions
@@ -116,27 +121,6 @@ const renderDocumentDetail = (record, user) => {
     "Document Detail"
   );
 
-  // Add filter input
-  const filterContainer = createElement("div", {
-    style: "display: flex; align-items: center; gap: 0.5rem;",
-  });
-
-  const filterLabel = createElement(
-    "label",
-    { htmlFor: "documentFilter", style: "margin: 0; white-space: nowrap;" },
-    "Filter:"
-  );
-  const filterInput = createElement("input", {
-    type: "text",
-    id: "documentFilter",
-    placeholder: "Search fields...",
-    style:
-      "padding: 0.4rem 0.6rem; border: 1px solid #ccc; border-radius: 4px; font-size: 0.9em;",
-  });
-
-  filterContainer.appendChild(filterLabel);
-  filterContainer.appendChild(filterInput);
-
   const btnEditDoc = createElement(
     "button",
     {
@@ -149,7 +133,6 @@ const renderDocumentDetail = (record, user) => {
   );
 
   headerContainer.appendChild(detailHeading);
-  headerContainer.appendChild(filterContainer);
   headerContainer.appendChild(btnEditDoc);
   detailSection.appendChild(headerContainer);
 
@@ -207,21 +190,6 @@ const renderDocumentDetail = (record, user) => {
   });
 
   detailSection.appendChild(detailContent);
-
-  // Add filter functionality
-  filterInput.addEventListener("input", () => {
-    const filterValue = filterInput.value.toLowerCase();
-    const fields = detailContent.querySelectorAll(".docdata");
-
-    fields.forEach((field) => {
-      const text = field.textContent.toLowerCase();
-      if (text.includes(filterValue)) {
-        field.style.display = "block";
-      } else {
-        field.style.display = "none";
-      }
-    });
-  });
 
   return detailSection;
 };

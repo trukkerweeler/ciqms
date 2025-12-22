@@ -357,8 +357,8 @@ fetch(url, { method: "GET" })
       btnClose.addEventListener("click", async (event) => {
         event.preventDefault();
 
-        const closedElem = document.querySelector("#closeddate");
-        if (closedElem.textContent.length > 15) {
+        const closedElem = document.querySelector("#closed");
+        if (closedElem && closedElem.textContent.length > 15) {
           alert("This action item is already closed");
           return;
         }
