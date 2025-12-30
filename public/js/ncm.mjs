@@ -461,10 +461,53 @@ fetch(url, { method: "GET" })
     // Listen for the btnEditDesc button click
     const btnEditDesc = document.querySelector("#btnEditDesc");
     btnEditDesc.addEventListener("click", async (event) => {
-      // prvent the default action
+      // prevent the default action
       event.preventDefault();
-      // show the trend dialog
+      // show the trend dialog for description editing
       const trendDialog = document.querySelector("#trendDialog");
+
+      // Clear the dialog and setup for description editing
+      const trendForm = document.querySelector("#edittrendform");
+      if (trendForm) {
+        trendForm.innerHTML = "";
+      }
+
+      // Create textarea for new description
+      const label = document.createElement("label");
+      label.htmlFor = "newtextTrend";
+      label.textContent = "Add Description:";
+      label.style.display = "block";
+      label.style.marginBottom = "10px";
+
+      const textarea = document.createElement("textarea");
+      textarea.id = "newtextTrend";
+      textarea.name = "newtextTrend";
+      textarea.rows = "6";
+      textarea.cols = "50";
+      textarea.placeholder =
+        "Enter new description text here. It will be prepended to the existing description.";
+      textarea.style.width = "100%";
+      textarea.style.marginBottom = "10px";
+
+      const saveBtn = document.createElement("button");
+      saveBtn.type = "button";
+      saveBtn.id = "savetrend";
+      saveBtn.className = "btn dialogSaveBtn";
+      saveBtn.textContent = "Save";
+      saveBtn.style.marginRight = "10px";
+
+      const cancelBtn = document.createElement("button");
+      cancelBtn.type = "button";
+      cancelBtn.className = "btn closedialog";
+      cancelBtn.textContent = "Cancel";
+
+      if (trendForm) {
+        trendForm.appendChild(label);
+        trendForm.appendChild(textarea);
+        trendForm.appendChild(saveBtn);
+        trendForm.appendChild(cancelBtn);
+      }
+
       trendDialog.showModal();
     });
 

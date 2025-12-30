@@ -422,6 +422,14 @@ h1 {
   display: block;
 }
 
+.checklist-items {
+  max-height: 400px;
+  overflow-y: auto;
+  border: 1px solid #ddd;
+  padding: 10px;
+  margin: 10px 0;
+}
+
 .checklist h3 {
   grid-column: span 5;
   text-align: center;

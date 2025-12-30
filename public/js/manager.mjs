@@ -140,6 +140,10 @@ async function initManager() {
       summarySpan.style.fontWeight = "normal";
       sectionChecklist.appendChild(summarySpan);
 
+      // Container for scrollable checklist items
+      const checklistItemsContainer = document.createElement("div");
+      checklistItemsContainer.classList.add("checklist-items");
+
       main.appendChild(sectionChecklist);
 
       // Checklist button
@@ -149,6 +153,8 @@ async function initManager() {
       btnChecklist.classList.add("btn-primary");
       btnChecklist.id = "btnAddQust";
       sectionChecklist.appendChild(btnChecklist);
+
+      sectionChecklist.appendChild(checklistItemsContainer);
 
       fetch(checklistUrl + id, { method: "GET" })
         .then((response) => response.json())
@@ -269,7 +275,7 @@ async function initManager() {
                 // divChecklistRow.appendChild(divcklst);
               }
             }
-            sectionChecklist.appendChild(rowdiv);
+            checklistItemsContainer.appendChild(rowdiv);
           }
         });
       main.appendChild(sectionChecklist);

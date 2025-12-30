@@ -192,6 +192,17 @@ async function saveNcm(event) {
       }
     }
 
+    // Subject length validation
+    if (dataJson.SUBJECT && dataJson.SUBJECT.length > 6) {
+      alert(
+        "Subject must be 6 characters or less. Please see the help file for valid codes."
+      );
+      window.open("/ncmhelp.html", "_blank");
+      const subjectField = document.querySelector("#SUBJECT");
+      if (subjectField) subjectField.focus();
+      return;
+    }
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
