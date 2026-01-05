@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Annual P&L Trend Analysis" />
+    <meta name="author" content="This page authored by timokent" />
+    <link rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>PNL Annual (Unofficial)</title>
+    <style>
+      #adjustmentsTable td,
+      #adjustmentsTable th {
+        padding: 2px 6px !important;
+        line-height: 1.1 !important;
+      }
+      #adjustmentsTable {
+        line-height: 1.1 !important;
+      }
+      .nav-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+      .nav-tabs a {
+        padding: 10px 20px;
+        text-decoration: none;
+        color: #666;
+        border-bottom: 3px solid transparent;
+      }
+      .nav-tabs a.active {
+        color: #0066cc;
+        border-bottom-color: #0066cc;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <h1>Profit & Loss Annual Trend</h1>
+
+      <!-- Navigation tabs -->
+      <div class="nav-tabs">
+        <a href="/pnlmonthly.html" class="nav-link">Monthly Detail</a>
+        <a href="/pnlannual.html" class="nav-link active">Annual Trend</a>
+      </div>
+
+      <!-- Annual Trend Chart -->
+      <div
+        style="
+          margin-top: 40px;
+          padding: 20px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        "
+      >
+        <h2>Year-over-Year Trend</h2>
+        <div style="position: relative; height: 400px; margin-top: 20px">
+          <canvas id="annualTrendChart"></canvas>
+        </div>
+        <p style="font-size: 0.9em; color: #666; margin-top: 10px">
+          <em
+            >Click on a year in the chart to load detailed account breakdown
+            below</em
+          >
+        </p>
+      </div>
+
+      <h2 style="margin-top: 30px">
+        Account Details for <span id="selectedYearDisplay">2026</span>
+      </h2>
+      <table
+        id="pnlTable"
+        class="data-table"
+        style="margin-top: 20px; width: 100%; line-height: 0.9"
+      >
+        <tr>
+          <th>GL Account</th>
+          <th>Category</th>
+          <th>Total</th>
+          <th>Transactions</th>
+        </tr>
+      </table>
+
+      <h2 style="margin-top: 40px">Manual Adjustments</h2>
+      <table
+        id="adjustmentsTable"
+        class="data-table"
+        style="margin-top: 20px; width: 100%"
+      >
+        <tr>
+          <th>GL Account</th>
+          <th>Post Date</th>
+          <th>Reference</th>
+          <th>Description</th>
+          <th>Vendor</th>
+          <th>Amount</th>
+          <th>Actions</th>
+        </tr>
+      </table>
+    </main>
+
+    <!-- Drill-Down Dialog -->
+    <dialog
+      id="drillDownDialog"
+      style="
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        min-width: 800px;
+        max-width: 90%;
+      "
+    >
+      <h2 id="drillDownTitle">Account Transactions</h2>
+      <table
+        id="drillDownTable"
+        class="data-table"
+        style="margin-top: 20px; width: 100%"
+      >
+        <tr>
+          <th>Date</th>
+          <th>Batch</th>
+          <th>Line</th>
+          <th>Reference</th>
+          <th>Description</th>
+          <th>Vendor</th>
+          <th>Amount</th>
+        </tr>
+      </table>
+      <div style="margin-top: 20px">
+        <button type="button" id="closeDrillDownBtn" class="btn">Close</button>
+      </div>
+    </dialog>
+
+    <footer id="footer"></footer>
+  </body>
+
+  <script type="module" src="/js/pnlannual.mjs"></script>
+</html>

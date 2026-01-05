@@ -3,12 +3,28 @@ import { loadHeaderFooter, myport } from "./utils.mjs";
 loadHeaderFooter();
 const port = myport();
 
+let trendChartInstance = null; // Global chart instance
+
+// Month labels for chart
+const monthLabels = [
+  "Jan",
+  "Feb",
+  "Mar",
+  "Apr",
+  "May",
+  "Jun",
+  "Jul",
+  "Aug",
+  "Sep",
+  "Oct",
+  "Nov",
+  "Dec",
+];
+
 // Handles P&L account details fetch and UI rendering
 window.addEventListener("DOMContentLoaded", () => {
-  const monthPicker = document.getElementById("monthPicker");
   const yearPicker = document.getElementById("yearPicker");
   const pnlTable = document.getElementById("pnlTable");
-  const fetchBtn = document.getElementById("fetchPnlBtn");
   const addManualGLBtn = document.getElementById("addManualGLBtn");
   const manualGLDialog = document.getElementById("manualGLDialog");
   const manualGLForm = document.getElementById("manualGLForm");
@@ -17,10 +33,17 @@ window.addEventListener("DOMContentLoaded", () => {
   const addRowBtn = document.getElementById("addRowBtn");
 
   let glEntries = []; // Store entries in memory
+  let currentMonth = new Date().getMonth() + 1; // Track selected month
 
-  fetchBtn.addEventListener("click", async () => {
+  // Load trend chart when year changes
+  yearPicker.addEventListener("change", async () => {
     const year = yearPicker.value;
-    const month = monthPicker.value;
+    if (!year) return;
+    await loadAndRenderTrendChart(year);
+  });
+
+  // Fetch detail data for a given month/year
+  async function fetchPnLDetails(year, month) {
     if (!year || !month) return;
 
     // Fetch account details
@@ -50,7 +73,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const adjustmentsData = await adjustmentsResponse.json();
 
     renderAccountDetails(detailsData, adjustmentsData);
-  });
+  }
 
   function renderAccountDetails(data, adjustments) {
     if (!data || !data.length) {
@@ -209,7 +232,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // Function to show drill-down dialog for a GL account
   async function showAccountDrillDown(glAccount) {
     const year = yearPicker.value;
-    const month = monthPicker.value;
+    const month = currentMonth;
 
     const drillDownDialog = document.getElementById("drillDownDialog");
     const drillDownTable = document.getElementById("drillDownTable");
@@ -246,18 +269,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     if (!transactions || !transactions.length) {
       drillDownTable.innerHTML =
-        '<tr><td colspan="8">No accrual transactions found</td></tr>';
-      return;
-    }
-
-    // Filter to only show accruals (DB_CR_FLAG = 'D')
-    const filteredTransactions = transactions.filter(
-      (txn) => txn.DB_CR_FLAG === "D"
-    );
-
-    if (!filteredTransactions.length) {
-      drillDownTable.innerHTML =
-        '<tr><td colspan="8">No accrual transactions found (DB_CR_FLAG = D)</td></tr>';
+        '<tr><td colspan="8">No transactions found</td></tr>';
       return;
     }
 
@@ -273,7 +285,7 @@ window.addEventListener("DOMContentLoaded", () => {
     </tr>`;
 
     let total = 0;
-    for (const txn of filteredTransactions) {
+    for (const txn of transactions) {
       const formattedDate = new Date(txn.POST_DATE).toLocaleDateString();
       const amount = Number(txn.AMOUNT);
       total += amount;
@@ -683,7 +695,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
       if (response.ok) {
         alert("Manual adjustment deleted successfully!");
-        fetchBtn.click(); // Refresh the tables
+        fetchPnLDetails(yearPicker.value, currentMonth); // Refresh the tables
       } else {
         const error = await response.json();
         alert(`Failed to delete adjustment: ${error.error || "Unknown error"}`);
@@ -694,9 +706,222 @@ window.addEventListener("DOMContentLoaded", () => {
     }
   };
 
+  // Load and render yearly trend chart
+  async function loadAndRenderTrendChart(year) {
+    try {
+      const response = await fetch("/pnlmonthly/yearly-trend", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ year }),
+      });
+
+      if (!response.ok) {
+        console.error("Error loading yearly trend data");
+        return;
+      }
+
+      const trendData = await response.json();
+      renderTrendChart(trendData);
+    } catch (error) {
+      console.error("Error fetching yearly trend data:", error);
+    }
+  }
+
+  // Render Chart.js trend chart
+  function renderTrendChart(data) {
+    const chartCanvas = document.getElementById("trendChart");
+    if (!chartCanvas) return;
+
+    // Extract data for each metric
+    const revenueData = data.map((m) => m.revenue);
+    const cogsData = data.map((m) => m.cogs);
+    const sgaData = data.map((m) => m.sga);
+    const netIncomeData = data.map((m) => m.netIncome);
+    const grossMarginPercentData = data.map((m) =>
+      parseFloat(m.grossMarginPercent)
+    );
+
+    // Destroy existing chart if it exists
+    if (trendChartInstance) {
+      trendChartInstance.destroy();
+    }
+
+    // Create new chart
+    const ctx = chartCanvas.getContext("2d");
+    trendChartInstance = new Chart(ctx, {
+      type: "line",
+      data: {
+        labels: monthLabels,
+        datasets: [
+          {
+            label: "Revenue",
+            data: revenueData,
+            borderColor: "rgb(75, 192, 75)",
+            backgroundColor: "rgba(75, 192, 75, 0.1)",
+            borderWidth: 2,
+            yAxisID: "y",
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+          },
+          {
+            label: "COGS",
+            data: cogsData,
+            borderColor: "rgb(255, 99, 132)",
+            backgroundColor: "rgba(255, 99, 132, 0.1)",
+            borderWidth: 2,
+            yAxisID: "y",
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+          },
+          {
+            label: "SG&A",
+            data: sgaData,
+            borderColor: "rgb(255, 193, 7)",
+            backgroundColor: "rgba(255, 193, 7, 0.1)",
+            borderWidth: 2,
+            yAxisID: "y",
+            pointRadius: 4,
+            pointHoverRadius: 6,
+            tension: 0.3,
+          },
+          {
+            label: "Net Income",
+            data: netIncomeData,
+            borderColor: "rgb(54, 108, 255)",
+            backgroundColor: "rgba(54, 108, 255, 0.1)",
+            borderWidth: 3,
+            yAxisID: "y",
+            pointRadius: 5,
+            pointHoverRadius: 7,
+            tension: 0.3,
+          },
+          {
+            label: "Gross Margin %",
+            data: grossMarginPercentData,
+            borderColor: "rgb(153, 102, 255)",
+            backgroundColor: "rgba(153, 102, 255, 0.1)",
+            borderWidth: 2,
+            yAxisID: "y1",
+            pointRadius: 3,
+            pointHoverRadius: 5,
+            tension: 0.3,
+            borderDash: [5, 5],
+          },
+        ],
+      },
+      options: {
+        responsive: true,
+        maintainAspectRatio: false,
+        interaction: {
+          mode: "index",
+          intersect: false,
+        },
+        onClick: (event, elements) => {
+          if (elements.length > 0) {
+            const monthIndex = elements[0].index;
+            const selectedMonth = monthIndex + 1;
+            currentMonth = selectedMonth;
+            const year = yearPicker.value;
+            fetchPnLDetails(year, selectedMonth);
+            // Scroll to detail section
+            setTimeout(() => {
+              document
+                .querySelector("h2")
+                .scrollIntoView({ behavior: "smooth" });
+            }, 100);
+          }
+        },
+        plugins: {
+          legend: {
+            position: "top",
+            labels: {
+              usePointStyle: true,
+              padding: 15,
+              font: {
+                size: 12,
+              },
+            },
+          },
+          tooltip: {
+            backgroundColor: "rgba(0,0,0,0.8)",
+            padding: 12,
+            titleFont: { size: 14 },
+            bodyFont: { size: 13 },
+            callbacks: {
+              label: function (context) {
+                let label = context.dataset.label || "";
+                if (label) {
+                  label += ": ";
+                }
+                if (context.parsed.y !== null) {
+                  if (context.dataset.yAxisID === "y1") {
+                    label += context.parsed.y.toFixed(1) + "%";
+                  } else {
+                    label += "$" + context.parsed.y.toLocaleString();
+                  }
+                }
+                return label;
+              },
+            },
+          },
+        },
+        scales: {
+          y: {
+            type: "linear",
+            display: true,
+            position: "left",
+            title: {
+              display: true,
+              text: "Amount ($)",
+            },
+            ticks: {
+              callback: function (value) {
+                return "$" + (value / 1000).toFixed(0) + "K";
+              },
+            },
+            grid: {
+              color: function (context) {
+                if (context.tick.value === 0) {
+                  return "rgba(0, 0, 0, 0.8)";
+                }
+                return "rgba(0, 0, 0, 0.1)";
+              },
+              lineWidth: function (context) {
+                if (context.tick.value === 0) {
+                  return 3;
+                }
+                return 1;
+              },
+            },
+          },
+          y1: {
+            type: "linear",
+            display: true,
+            position: "right",
+            title: {
+              display: true,
+              text: "Gross Margin %",
+            },
+            ticks: {
+              callback: function (value) {
+                return value.toFixed(0) + "%";
+              },
+            },
+            grid: {
+              drawOnChartArea: false,
+            },
+          },
+        },
+      },
+    });
+  }
+
   // Initial load for current month and year
   const today = new Date();
-  monthPicker.value = today.getMonth() + 1;
+  currentMonth = today.getMonth() + 1;
   yearPicker.value = today.getFullYear();
-  fetchBtn.click();
+  loadAndRenderTrendChart(today.getFullYear()).catch(console.error);
+  fetchPnLDetails(today.getFullYear(), currentMonth);
 });
