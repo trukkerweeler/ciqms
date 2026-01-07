@@ -5,6 +5,9 @@ const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 let test = false;
+
+// Debug flag - enable with DEBUG_NCM=true
+const DEBUG_NCM = process.env.DEBUG_NCM === "false";
 // ...existing code...
 // ==================================================
 // Get all closed records
@@ -755,10 +758,10 @@ router.put("/:id", (req, res) => {
 // Update details
 router.put("/details/:id", (req, res) => {
   const timestamp = new Date().toISOString();
-  console.log(`=== NCM DETAILS UPDATE ${timestamp} ===`);
-  console.log("Request body:", req.body);
-  console.log("CAUSE value:", req.body.CAUSE);
-  console.log("CAUSE type:", typeof req.body.CAUSE);
+  if (DEBUG_NCM) console.log(`=== NCM DETAILS UPDATE ${timestamp} ===`);
+  if (DEBUG_NCM) console.log("Request body:", req.body);
+  if (DEBUG_NCM) console.log("CAUSE value:", req.body.CAUSE);
+  if (DEBUG_NCM) console.log("CAUSE type:", typeof req.body.CAUSE);
 
   try {
     const connection = mysql.createConnection({
@@ -806,16 +809,17 @@ router.put("/details/:id", (req, res) => {
           res.sendStatus(500);
           return;
         }
-        console.log("NCM update successful!");
+        if (DEBUG_NCM) console.log("NCM update successful!");
 
         // Verify the update by reading back the CAUSE field
         const verifyQuery = `SELECT CAUSE FROM NONCONFORMANCE WHERE NCM_ID = '${req.params.id}'`;
         connection.query(verifyQuery, (verifyErr, verifyRows) => {
           if (!verifyErr && verifyRows.length > 0) {
-            console.log(
-              "Verification - CAUSE field in DB:",
-              verifyRows[0].CAUSE
-            );
+            if (DEBUG_NCM)
+              console.log(
+                "Verification - CAUSE field in DB:",
+                verifyRows[0].CAUSE
+              );
           }
         });
 

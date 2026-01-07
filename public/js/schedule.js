@@ -16,10 +16,13 @@ const skippers = [
 
 const url = `http://localhost:${port}/schedule`;
 
-function getRecords() {
+function getRecords(year) {
   const main = document.querySelector("main");
 
-  fetch(url, { method: "GET" })
+  // Clear previous content
+  main.innerHTML = "";
+
+  fetch(`${url}?year=${year}`, { method: "GET" })
     .then((response) => response.json())
     .then((records) => {
       // console.log(records);
@@ -96,4 +99,12 @@ function getRecords() {
     });
 }
 
-getRecords();
+// Initialize with current year (2025 since we're in 2026 and there's no 2026 data)
+const yearPicker = document.getElementById("yearPicker");
+if (yearPicker) {
+  yearPicker.value = new Date().getFullYear() - 1; // Default to last year
+  yearPicker.addEventListener("change", (e) => {
+    getRecords(e.target.value);
+  });
+}
+getRecords(yearPicker ? yearPicker.value : new Date().getFullYear() - 1);

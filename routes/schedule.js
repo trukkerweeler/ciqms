@@ -24,9 +24,10 @@ router.get("/", (req, res) => {
       }
       // console.log('Connected to DB');
 
-      const query = `SELECT * FROM AUDIT_MANAGER WHERE YEAR(SCHEDULED_DATE) = YEAR(CURDATE()) ORDER BY AUDIT_MANAGER_ID DESC`;
+      const year = req.query.year || new Date().getFullYear();
+      const query = `SELECT * FROM AUDIT_MANAGER WHERE YEAR(SCHEDULED_DATE) = ? ORDER BY AUDIT_MANAGER_ID DESC`;
 
-      connection.query(query, (err, rows, fields) => {
+      connection.query(query, [parseInt(year)], (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for corrective actions: " + err);
           res.sendStatus(500);

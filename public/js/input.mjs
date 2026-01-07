@@ -148,6 +148,9 @@ fetch(url, { method: "GET" })
         text: "Close Action",
         type: "submit",
       });
+      // Store record data on button for later access
+      btnClose.dataset.closed = rec["CLOSED"] || "";
+      btnClose.dataset.closedDate = rec["CLOSED_DATE"] || "";
       divSubTitle.appendChild(btnClose);
 
       // Assemble detail section
@@ -354,11 +357,28 @@ fetch(url, { method: "GET" })
     // ===== Close Action Handler =====
     const btnClose = document.querySelector("#btnClose");
     if (btnClose) {
+      // Disable button if record is already closed
+      if (
+        btnClose.dataset.closed === "Y" ||
+        (btnClose.dataset.closedDate &&
+          btnClose.dataset.closedDate.trim() !== "")
+      ) {
+        btnClose.disabled = true;
+        btnClose.style.opacity = "0.5";
+        btnClose.style.cursor = "not-allowed";
+        btnClose.style.backgroundColor = "#e0e0e0";
+        btnClose.title = "This action item is already closed";
+      }
+
       btnClose.addEventListener("click", async (event) => {
         event.preventDefault();
 
-        const closedElem = document.querySelector("#closed");
-        if (closedElem && closedElem.textContent.length > 15) {
+        // Check if already closed
+        if (
+          btnClose.dataset.closed === "Y" ||
+          (btnClose.dataset.closedDate &&
+            btnClose.dataset.closedDate.trim() !== "")
+        ) {
           alert("This action item is already closed");
           return;
         }
