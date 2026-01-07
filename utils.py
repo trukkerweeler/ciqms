@@ -120,7 +120,7 @@ def main():
     copyfiles(r"C:\Users\TimK\Documents\CIQMS1\public\partials", r"\\fs1\Common\Applications\CIQMS\partials")
     # print(">>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>>partials may need manual copy.")
     copypackage()
-    copyserverjs()
+    # copyserverjs()
 
 if __name__ == "__main__":
     main()

@@ -181,6 +181,9 @@ app.use("/pnl", pnlRoutes);
 const pnlmonthlyRoutes = require("./routes/pnlmonthly");
 app.use("/pnlmonthly", pnlmonthlyRoutes);
 
+const bookingmonthlyRoutes = require("./routes/bookingmonthly");
+app.use("/bookingmonthly", bookingmonthlyRoutes);
+
 const auditRoutes = require("./routes/audit");
 app.use("/audit", auditRoutes);
 

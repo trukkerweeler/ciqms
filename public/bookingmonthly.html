@@ -4,20 +4,20 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Annual P&L Trend Analysis" />
+    <meta name="description" content="Order Booking Monthly Detail" />
     <meta name="author" content="This page authored by timokent" />
     <link rel="stylesheet" />
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="images/ci-logo.png" />
     <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
-    <title>PNL Annual (Unofficial)</title>
+    <title>Order Booking Monthly Detail</title>
     <style>
-      #adjustmentsTable td,
-      #adjustmentsTable th {
+      #bookingDetailsTable td,
+      #bookingDetailsTable th {
         padding: 2px 6px !important;
         line-height: 1.1 !important;
       }
-      #adjustmentsTable {
+      #bookingDetailsTable {
         line-height: 1.1 !important;
       }
       .nav-tabs {
@@ -43,16 +43,29 @@
   <body>
     <header id="header"></header>
     <main id="main">
-      <h1>Profit & Loss Annual Trend</h1>
+      <h1>Order Booking Monthly Detail</h1>
 
       <!-- Navigation tabs -->
       <div class="nav-tabs">
-        <a href="/pnlmonthly.html" class="nav-link">Monthly Detail</a>
-        <a href="/pnlannual.html" class="nav-link active">Annual Trend</a>
-        <a href="/bookingmonthly.html" class="nav-link">Order Booking</a>
+        <a href="/bookingmonthly.html" class="nav-link active"
+          >Monthly Detail</a
+        >
+        <a href="/pnlannual.html" class="nav-link">Annual Trend</a>
       </div>
 
-      <!-- Annual Trend Chart -->
+      <div>
+        <label for="yearPicker">Year:</label>
+        <select id="yearPicker">
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+        </select>
+      </div>
+
+      <!-- Yearly Trend Chart -->
       <div
         style="
           margin-top: 40px;
@@ -62,48 +75,29 @@
           border: 1px solid #e0e0e0;
         "
       >
-        <h2>Year-over-Year Trend</h2>
+        <h2>Year Trend Overview</h2>
         <div style="position: relative; height: 400px; margin-top: 20px">
-          <canvas id="annualTrendChart"></canvas>
+          <canvas id="trendChart"></canvas>
         </div>
         <p style="font-size: 0.9em; color: #666; margin-top: 10px">
           <em
-            >Click on a year in the chart to load detailed account breakdown
+            >Click on a month in the chart to load detailed booking breakdown
             below</em
           >
         </p>
       </div>
 
-      <h2 style="margin-top: 30px">
-        Account Details for <span id="selectedYearDisplay">2026</span>
-      </h2>
+      <h2 style="margin-top: 30px">Booking Details by Category</h2>
       <table
-        id="pnlTable"
+        id="bookingDetailsTable"
         class="data-table"
         style="margin-top: 20px; width: 100%; line-height: 0.9"
       >
         <tr>
-          <th>GL Account</th>
           <th>Category</th>
-          <th>Total</th>
-          <th>Transactions</th>
-        </tr>
-      </table>
-
-      <h2 style="margin-top: 40px">Manual Adjustments</h2>
-      <table
-        id="adjustmentsTable"
-        class="data-table"
-        style="margin-top: 20px; width: 100%"
-      >
-        <tr>
-          <th>GL Account</th>
-          <th>Post Date</th>
-          <th>Reference</th>
-          <th>Description</th>
-          <th>Vendor</th>
-          <th>Amount</th>
-          <th>Actions</th>
+          <th>Value</th>
+          <th>Orders</th>
+          <th>Avg Order Value</th>
         </tr>
       </table>
     </main>
@@ -119,20 +113,18 @@
         max-width: 90%;
       "
     >
-      <h2 id="drillDownTitle">Account Transactions</h2>
+      <h2 id="drillDownTitle">Category Orders</h2>
       <table
         id="drillDownTable"
         class="data-table"
         style="margin-top: 20px; width: 100%"
       >
         <tr>
+          <th>Order Number</th>
           <th>Date</th>
-          <th>Batch</th>
-          <th>Line</th>
-          <th>Reference</th>
+          <th>Customer</th>
           <th>Description</th>
-          <th>Vendor</th>
-          <th>Amount</th>
+          <th>Order Value</th>
         </tr>
       </table>
       <div style="margin-top: 20px">
@@ -143,5 +135,5 @@
     <footer id="footer"></footer>
   </body>
 
-  <script type="module" src="/js/pnlannual.mjs"></script>
+  <script type="module" src="/js/bookingmonthly.mjs"></script>
 </html>
