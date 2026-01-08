@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Year-over-Year Order Booking Comparison"
+    />
+    <meta name="author" content="This page authored by timokent" />
+    <link rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>Order Booking YoY</title>
+    <style>
+      #yoyTable td,
+      #yoyTable th {
+        padding: 8px 6px !important;
+        text-align: right;
+      }
+      #yoyTable th:first-child,
+      #yoyTable td:first-child {
+        text-align: left;
+        font-weight: bold;
+      }
+      #yoyTable {
+        line-height: 1.2 !important;
+      }
+      .nav-tabs {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        border-bottom: 2px solid #e0e0e0;
+      }
+      .nav-tabs a {
+        padding: 10px 20px;
+        text-decoration: none;
+        color: #666;
+        border-bottom: 3px solid transparent;
+      }
+      .nav-tabs a.active {
+        color: #0066cc;
+        border-bottom-color: #0066cc;
+        font-weight: bold;
+      }
+      .growth-positive {
+        color: green;
+        font-weight: bold;
+      }
+      .growth-negative {
+        color: red;
+        font-weight: bold;
+      }
+      .year-selector {
+        margin-bottom: 20px;
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+      .year-selector label {
+        font-weight: bold;
+      }
+      .year-selector select {
+        padding: 0.5em;
+        font-size: 1em;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <h1>Order Booking Year-over-Year Comparison</h1>
+
+      <!-- Navigation tabs -->
+      <div class="nav-tabs">
+        <a href="/bookingmonthly.html" class="nav-link">Monthly Detail</a>
+        <a href="/pnlannual.html" class="nav-link">Annual Trend</a>
+        <a href="/bookingyoy.html" class="nav-link active">YoY Booking</a>
+      </div>
+
+      <!-- Year Range Selector -->
+      <div class="year-selector">
+        <label for="startYear">Compare Years:</label>
+        <select id="startYear">
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025" selected>2025</option>
+        </select>
+        <span>to</span>
+        <select id="endYear">
+          <option value="2020">2020</option>
+          <option value="2021">2021</option>
+          <option value="2022">2022</option>
+          <option value="2023">2023</option>
+          <option value="2024">2024</option>
+          <option value="2025">2025</option>
+          <option value="2026" selected>2026</option>
+        </select>
+      </div>
+
+      <!-- YoY Comparison Chart -->
+      <div
+        style="
+          margin-top: 40px;
+          padding: 20px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        "
+      >
+        <h2>Monthly Booking Comparison</h2>
+        <div style="position: relative; height: 400px; margin-top: 20px">
+          <canvas id="yoyChart"></canvas>
+        </div>
+      </div>
+
+      <h2 style="margin-top: 30px">Monthly Booking Values</h2>
+      <div id="summaryStats" style="margin-bottom: 20px"></div>
+      <table
+        id="yoyTable"
+        class="data-table"
+        style="margin-top: 20px; width: 100%"
+      >
+        <thead>
+          <tr>
+            <th>Month</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </main>
+
+    <footer id="footer"></footer>
+  </body>
+
+  <script type="module" src="/js/bookingyoy.mjs"></script>
+</html>

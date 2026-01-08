@@ -185,4 +185,87 @@ router.post("/yearly-trend", (req, res) => {
   }
 });
 
+// YoY comparison data route
+router.post("/yoy-data", (req, res) => {
+  const { startYear, endYear } = req.body;
+  if (
+    !startYear ||
+    !endYear ||
+    isNaN(startYear) ||
+    isNaN(endYear) ||
+    startYear > endYear
+  ) {
+    return res.status(400).json({
+      error: "Missing or invalid startYear/endYear in request body",
+    });
+  }
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "global",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return res.sendStatus(500);
+      }
+
+      const query = `
+        SELECT 
+          YEAR(DATE_ORDER) AS year,
+          MONTH(DATE_ORDER) AS month,
+          SUM(TOTAL_DOLLARS) AS total
+        FROM ORDER_BOOKING
+        WHERE YEAR(DATE_ORDER) >= ?
+        AND YEAR(DATE_ORDER) <= ?
+        AND TOTAL_DOLLARS > 0
+        GROUP BY YEAR(DATE_ORDER), MONTH(DATE_ORDER)
+        ORDER BY YEAR(DATE_ORDER), MONTH(DATE_ORDER)
+      `;
+
+      connection.query(
+        query,
+        [parseInt(startYear), parseInt(endYear)],
+        (err, rows, fields) => {
+          if (err) {
+            console.log("Failed to query for YoY booking data: " + err);
+            res.sendStatus(500);
+            return;
+          }
+
+          // Ensure all years and months are present
+          const yoyData = [];
+          for (
+            let year = parseInt(startYear);
+            year <= parseInt(endYear);
+            year++
+          ) {
+            for (let month = 1; month <= 12; month++) {
+              const record = rows.find(
+                (row) =>
+                  Number(row.year) === year && Number(row.month) === month
+              );
+              yoyData.push({
+                year: year,
+                month: month,
+                total: record ? Number(record.total) : 0,
+              });
+            }
+          }
+
+          res.json(yoyData);
+        }
+      );
+
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error connecting to Db for YoY booking data");
+    return res.sendStatus(500);
+  }
+});
+
 module.exports = router;

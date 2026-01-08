@@ -214,6 +214,77 @@ window.addEventListener("DOMContentLoaded", async () => {
     drillDownTable.innerHTML = html;
   }
 
+  // Render year summary cards
+  function renderYearSummaries(data) {
+    const summaryDiv = document.getElementById("yearSummary");
+    if (!summaryDiv) return;
+
+    let html =
+      '<div style="display: flex; gap: 20px; flex-wrap: wrap; font-size: 0.95em;">';
+
+    for (const year of data) {
+      const revenue = Number(year.revenue);
+      const cogs = Number(year.cogs);
+      const sga = Number(year.sga);
+      const netIncome = Number(year.netIncome);
+      const grossMargin = parseFloat(year.grossMarginPercent);
+
+      html += `
+        <div style="background: white; padding: 12px; border: 1px solid #ddd; border-radius: 6px; min-width: 200px;">
+          <strong style="font-size: 1.1em;">${year.year}</strong><br/>
+          <div style="margin-top: 6px;">
+            Revenue: <span style="color: green; font-weight: bold;">
+              ${revenue.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          </div>
+          <div>
+            COGS: <span style="color: red; font-weight: bold;">
+              ${cogs.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          </div>
+          <div>
+            SG&A: <span style="color: orange; font-weight: bold;">
+              ${sga.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          </div>
+          <div style="border-top: 1px solid #ddd; margin-top: 6px; padding-top: 6px;">
+            Net Income: <span style="color: #0066cc; font-weight: bold;">
+              ${netIncome.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+                minimumFractionDigits: 0,
+                maximumFractionDigits: 0,
+              })}
+            </span>
+          </div>
+          <div>
+            Gross Margin: <span style="color: #9900cc; font-weight: bold;">
+              ${grossMargin.toFixed(1)}%
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
+    html += "</div>";
+    summaryDiv.innerHTML = html;
+  }
+
   // Load and render annual trend chart
   async function loadAndRenderAnnualTrendChart() {
     try {
@@ -253,6 +324,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     const grossMarginPercentData = data.map((d) =>
       parseFloat(d.grossMarginPercent)
     );
+
+    // Render year summaries
+    renderYearSummaries(data);
 
     // Destroy existing chart if it exists
     if (trendChartInstance) {

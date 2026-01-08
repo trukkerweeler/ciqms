@@ -242,6 +242,40 @@ window.addEventListener("DOMContentLoaded", () => {
     const bookingValueData = data.map((m) => m.bookingValue);
     const orderCountData = data.map((m) => m.orderCount);
 
+    // Calculate yearly total and monthly average
+    const yearlyTotal = bookingValueData.reduce(
+      (sum, val) => sum + (val || 0),
+      0
+    );
+    const monthlyAverage = yearlyTotal / 12; // Average across all 12 months
+
+    // Update summary display
+    const summaryDiv = document.getElementById("yearSummary");
+    if (summaryDiv) {
+      summaryDiv.innerHTML = `
+        <div style="display: flex; gap: 40px; font-size: 1.1em;">
+          <div>
+            <strong>Year Total:</strong>
+            <span style="color: green; font-size: 1.2em; font-weight: bold;">
+              ${yearlyTotal.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+              })}
+            </span>
+          </div>
+          <div>
+            <strong>Monthly Average:</strong>
+            <span style="color: #0066cc; font-size: 1.2em; font-weight: bold;">
+              ${monthlyAverage.toLocaleString("en-US", {
+                style: "currency",
+                currency: "USD",
+              })}
+            </span>
+          </div>
+        </div>
+      `;
+    }
+
     // Destroy existing chart if it exists
     if (trendChartInstance) {
       trendChartInstance.destroy();

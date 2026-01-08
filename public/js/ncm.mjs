@@ -496,10 +496,67 @@ fetch(url, { method: "GET" })
       saveBtn.textContent = "Save";
       saveBtn.style.marginRight = "10px";
 
+      // Attach event listener directly to this button
+      saveBtn.addEventListener("click", async (event) => {
+        event.preventDefault();
+
+        const nidValue = iid;
+        const fieldname = "savetrend";
+
+        let data = {
+          NCM_ID: nidValue,
+          INPUT_USER: getUserValue(),
+        };
+
+        let compositetext = "";
+        const d = new Date();
+        const date = d.toISOString().substring(0, 10);
+        const time = d.toLocaleTimeString();
+        const mydate = date + " " + time;
+
+        let previoustext =
+          document.querySelector("#inputtext")?.innerHTML || "";
+        let newtextTrend = document.querySelector("#newtextTrend").value;
+
+        if (newtextTrend.length === 0) {
+          alert("Not saving, no trend text.");
+          return;
+        }
+
+        let compositetext2 =
+          user +
+          " - " +
+          mydate +
+          "<br>" +
+          newtextTrend +
+          "<br><br>" +
+          previoustext;
+        data = { ...data, DESCRIPTION: compositetext2 };
+        data = { ...data, MY_TABLE: "NCM_DESCRIPTION" };
+
+        const options = {
+          method: "PUT",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
+        };
+
+        const response = await fetch(url, options);
+        const json = await response.json();
+
+        trendDialog.close();
+        window.location.reload();
+      });
+
       const cancelBtn = document.createElement("button");
       cancelBtn.type = "button";
-      cancelBtn.className = "btn closedialog";
+      cancelBtn.className = "btn";
       cancelBtn.textContent = "Cancel";
+      cancelBtn.addEventListener("click", (e) => {
+        e.preventDefault();
+        trendDialog.close();
+      });
 
       if (trendForm) {
         trendForm.appendChild(label);

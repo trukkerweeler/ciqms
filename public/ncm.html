@@ -45,7 +45,6 @@
           Save
         </button>
       </form>
-      <button id="btnCloseEditDisp" class="closedialog">Close</button>
     </dialog>
 
     <dialog id="verfDialog" class="editDialog">
@@ -70,7 +69,6 @@
           Save
         </button>
       </form>
-      <button id="btnCloseEditVerf" class="closedialog">Close</button>
     </dialog>
 
     <dialog id="noteDialog" class="editDialog">
@@ -95,11 +93,10 @@
           Save
         </button>
       </form>
-      <button id="btnCloseEditNote" class="closedialog">Close</button>
     </dialog>
 
     <dialog id="trendDialog" class="editDialog">
-      <div class="dialogTitle">Edit Trend</div>
+      <div class="dialogTitle">Edit Trend Description</div>
       <form class="edittrend" id="edittrendform">
         <label for="CUSTOMER_ID">Customer ID:</label>
         <input type="text" id="CUSTOMER_ID" name="CUSTOMER_ID" />
@@ -128,12 +125,18 @@
         <label for="CORRECTIVE_ID">Corrective ID:</label>
         <input type="text" id="CORRECTIVE_ID" name="CORRECTIVE_ID" />
 
-        <button class="btnDialog" id="cancelTrend" type="button">Cancel</button>
-        <button class="btnDialog dialogSaveBtn" id="saveTrend" type="button">
+        <button
+          class="btnDialog"
+          id="cancelTrend"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button class="btnDialog dialogSaveBtn" id="saveTrend" type="submit">
           Save
         </button>
       </form>
-      <button id="btnCloseEditTrend" class="closedialog">Close</button>
     </dialog>
 
     <main id="main"></main>
