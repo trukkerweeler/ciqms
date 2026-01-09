@@ -45,6 +45,40 @@ window.addEventListener("DOMContentLoaded", () => {
     await loadAndRenderTrendChart(year);
   });
 
+  // Get GL toggle selector and listen for changes
+  const glToggle = document.getElementById("glToggle");
+  let currentTrendYear = defaultYear;
+
+  // Set up accordion toggles for Account Details and Adjustments
+  const accountDetailsHeader = document.getElementById("accountDetailsHeader");
+  const accountDetailsToggle = document.getElementById("accountDetailsToggle");
+  const pnlTableElement = document.getElementById("pnlTable");
+
+  const adjustmentsHeader = document.getElementById("adjustmentsHeader");
+  const adjustmentsToggle = document.getElementById("adjustmentsToggle");
+  const adjustmentsTableElement = document.getElementById("adjustmentsTable");
+
+  // Account Details toggle
+  if (accountDetailsHeader) {
+    accountDetailsHeader.addEventListener("click", () => {
+      const isHidden = pnlTableElement.style.display === "none";
+      pnlTableElement.style.display = isHidden ? "table" : "none";
+      accountDetailsToggle.textContent = isHidden ? "▼" : "▶";
+    });
+  }
+
+  // Adjustments toggle
+  if (adjustmentsHeader) {
+    adjustmentsHeader.addEventListener("click", () => {
+      const isHidden = adjustmentsTableElement.style.display === "none";
+      adjustmentsTableElement.style.display = isHidden ? "table" : "none";
+      adjustmentsToggle.textContent = isHidden ? "▼" : "▶";
+    });
+  }
+  glToggle.addEventListener("change", async () => {
+    await loadAndRenderTrendChart(currentTrendYear);
+  });
+
   // Fetch detail data for a given month/year
   async function fetchPnLDetails(year, month) {
     if (!year || !month) return;
@@ -272,12 +306,31 @@ window.addEventListener("DOMContentLoaded", () => {
       if (correctionsResponse.ok) {
         const allCorrections = await correctionsResponse.json();
         // Filter corrections for this GL account in CORR batch (our corrections)
-        corrections = allCorrections.filter(
-          (c) =>
-            c.GL_ACCOUNT == glAccount &&
-            c.BATCH_NUM &&
-            c.BATCH_NUM.startsWith("X")
-        );
+        // AND only those that reference transactions from THIS month/year
+        const batchNums = new Set(transactions.map((t) => t.BATCH_NUM));
+        corrections = allCorrections.filter((c) => {
+          if (
+            !(
+              c.GL_ACCOUNT == glAccount &&
+              c.BATCH_NUM &&
+              c.BATCH_NUM.startsWith("X")
+            )
+          ) {
+            return false;
+          }
+          // Only include if it's a reversal/correction related to a transaction in this period
+          // Check if REFERENCE contains "orig BATCH_NUM:BATCH_LINE" pattern matching one of our transactions
+          for (const txn of transactions) {
+            const batchPattern = `orig ${txn.BATCH_NUM}:${txn.BATCH_LINE}`;
+            if (
+              (c.REFERENCE && c.REFERENCE.includes(batchPattern)) ||
+              (c.DESCR && c.DESCR.includes(batchPattern))
+            ) {
+              return true;
+            }
+          }
+          return false;
+        });
       }
 
       renderDrillDownTable(transactions, corrections, glAccount);
@@ -1079,6 +1132,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
   // Load and render yearly trend chart
   async function loadAndRenderTrendChart(year) {
+    currentTrendYear = year;
     try {
       const response = await fetch("/pnlmonthly/yearly-trend", {
         method: "POST",
@@ -1092,6 +1146,97 @@ window.addEventListener("DOMContentLoaded", () => {
       }
 
       const trendData = await response.json();
+      console.log("Original GL trend data for year", year, ":", trendData);
+
+      // If adjusted GL is selected, fetch adjustments and apply them
+      const glView = glToggle.value;
+      console.log("GL View selected:", glView);
+
+      if (glView === "adjusted") {
+        // Fetch all adjustments for this year
+        const adjustmentsResponse = await fetch(
+          "/pnlmonthly/yearly-adjustments",
+          {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ year }),
+          }
+        );
+
+        console.log("Adjustments response status:", adjustmentsResponse.status);
+
+        if (adjustmentsResponse.ok) {
+          const adjustmentsByMonth = await adjustmentsResponse.json();
+          console.log("Adjustments by month:", adjustmentsByMonth);
+
+          // Apply adjustments to trend data
+          trendData.forEach((monthData, index) => {
+            const month = index + 1; // 1-12
+            const adjustments = adjustmentsByMonth[month] || {};
+
+            console.log(`Month ${month} adjustments object:`, adjustments);
+            console.log(
+              `Month ${month} before: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}`
+            );
+
+            // Apply individual adjustments
+            // Note: For revenue accounts, add adjustments; for expense accounts, SUBTRACT adjustments
+            const adjustedRevenue =
+              (Number(monthData.revenue) || 0) +
+              (Number(adjustments.revenue) || 0);
+            const adjustedCOGS =
+              (Number(monthData.cogs) || 0) - (Number(adjustments.cogs) || 0);
+            const adjustedSGA =
+              (Number(monthData.sga) || 0) - (Number(adjustments.sga) || 0);
+            const adjustedOtherExpense =
+              (Number(monthData.otherExpense) || 0) +
+              (Number(adjustments.otherExpense) || 0);
+            const adjustedTaxes =
+              (Number(monthData.taxes) || 0) - (Number(adjustments.taxes) || 0);
+
+            // Update month data with adjusted values
+            monthData.revenue = adjustedRevenue;
+            monthData.cogs = adjustedCOGS;
+            monthData.sga = adjustedSGA;
+            monthData.otherExpense = adjustedOtherExpense;
+            monthData.taxes = adjustedTaxes;
+
+            // Recalculate all derived metrics
+            const grossProfit = adjustedRevenue - adjustedCOGS;
+            const operatingIncome = grossProfit - adjustedSGA;
+            const preIncomeExpense = operatingIncome + adjustedOtherExpense;
+            const netIncome = preIncomeExpense - adjustedTaxes;
+
+            monthData.grossProfit = grossProfit;
+            monthData.grossMarginPercent =
+              adjustedRevenue !== 0
+                ? ((grossProfit / adjustedRevenue) * 100).toFixed(2)
+                : "0.00";
+            monthData.operatingIncome = operatingIncome;
+            monthData.operatingMarginPercent =
+              adjustedRevenue !== 0
+                ? ((operatingIncome / adjustedRevenue) * 100).toFixed(2)
+                : "0.00";
+            monthData.netIncome = netIncome;
+            monthData.netMarginPercent =
+              adjustedRevenue !== 0
+                ? ((netIncome / adjustedRevenue) * 100).toFixed(2)
+                : "0.00";
+
+            console.log(
+              `Month ${month} after: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}, ni=${monthData.netIncome}`
+            );
+          });
+
+          console.log("Applied adjustments. April data:", trendData[3]);
+        } else {
+          console.error(
+            "Failed to fetch adjustments, status:",
+            adjustmentsResponse.status
+          );
+        }
+      }
+
       renderTrendChart(trendData);
     } catch (error) {
       console.error("Error fetching yearly trend data:", error);
@@ -1112,13 +1257,24 @@ window.addEventListener("DOMContentLoaded", () => {
       parseFloat(m.grossMarginPercent)
     );
 
+    console.log("Rendering chart with revenue data:", revenueData);
+    console.log(
+      "April (index 3) revenue:",
+      revenueData[3],
+      "COGS:",
+      cogsData[3]
+    );
+
     // Destroy existing chart if it exists
     if (trendChartInstance) {
+      console.log("Destroying existing chart instance");
       trendChartInstance.destroy();
+      trendChartInstance = null;
     }
 
     // Create new chart
     const ctx = chartCanvas.getContext("2d");
+    console.log("Creating new chart with April COGS:", cogsData[3]);
     trendChartInstance = new Chart(ctx, {
       type: "line",
       data: {

@@ -67,14 +67,38 @@
       <!-- Yearly Trend Chart -->
       <div
         style="
-          margin-top: 40px;
+          margin-top: 0px;
           padding: 20px;
           background: #f9f9f9;
           border-radius: 8px;
           border: 1px solid #e0e0e0;
         "
       >
-        <h2>Year Trend Overview</h2>
+        <div
+          style="
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+          "
+        >
+          <h2 style="margin: 0">Year Trend Overview</h2>
+          <div style="display: flex; gap: 10px; align-items: center">
+            <label for="glToggle" style="margin: 0; font-weight: bold"
+              >GL View:</label
+            >
+            <select
+              id="glToggle"
+              style="
+                padding: 5px 10px;
+                border: 1px solid #ccc;
+                border-radius: 4px;
+              "
+            >
+              <option value="original">Original GL</option>
+              <option value="adjusted">Adjusted GL</option>
+            </select>
+          </div>
+        </div>
         <div style="position: relative; height: 400px; margin-top: 20px">
           <canvas id="trendChart"></canvas>
         </div>
@@ -86,11 +110,26 @@
         </p>
       </div>
 
-      <h2 style="margin-top: 30px">Account Details</h2>
+      <h2
+        style="
+          margin-top: 30px;
+          display: flex;
+          align-items: center;
+          cursor: pointer;
+        "
+        id="accountDetailsHeader"
+      >
+        <span
+          id="accountDetailsToggle"
+          style="margin-right: 10px; font-size: 1.2em"
+          >▶</span
+        >
+        Account Details
+      </h2>
       <table
         id="pnlTable"
         class="data-table"
-        style="margin-top: 20px; width: 100%; line-height: 0.9"
+        style="margin-top: 20px; width: 100%; line-height: 0.9; display: none"
       >
         <tr>
           <th>GL Account</th>
@@ -101,19 +140,31 @@
       </table>
 
       <div style="display: flex; align-items: center; margin-top: 40px">
-        <h2 style="margin: 0">Manual Adjustments</h2>
-        <button
-          id="addManualGLBtn"
-          class="btn btn-primary"
-          style="margin-left: 20px"
+        <h2
+          style="
+            margin: 0;
+            display: flex;
+            align-items: center;
+            flex-grow: 1;
+            cursor: pointer;
+          "
+          id="adjustmentsHeader"
         >
+          <span
+            id="adjustmentsToggle"
+            style="margin-right: 10px; font-size: 1.2em"
+            >▶</span
+          >
+          Manual Adjustments
+        </h2>
+        <button id="addManualGLBtn" class="btn btn-primary">
           Add Manual GL Entry
         </button>
       </div>
       <table
         id="adjustmentsTable"
         class="data-table"
-        style="margin-top: 20px; width: 100%"
+        style="margin-top: 20px; width: 100%; display: none"
       >
         <tr>
           <th>GL Account</th>

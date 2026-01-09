@@ -369,6 +369,112 @@ router.post("/yearly-trend", (req, res) => {
   }
 });
 
+// Route to get yearly adjustments from GL_DETAIL_MANUAL (for Adjusted GL view)
+router.post("/yearly-adjustments", (req, res) => {
+  const { year } = req.body;
+  if (!year || isNaN(year)) {
+    return res
+      .status(400)
+      .json({ error: "Missing or invalid year in request body" });
+  }
+
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "global",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return res.sendStatus(500);
+      }
+
+      // Query to get monthly adjustments from GL_DETAIL_MANUAL
+      const query = `
+        SELECT 
+          MONTH(gdm.POST_DATE) AS Month,
+          CASE 
+            WHEN gdm.GL_ACCOUNT BETWEEN 400 AND 499 THEN 'Revenue'
+            WHEN gdm.GL_ACCOUNT BETWEEN 500 AND 599 THEN 'COGS'
+            WHEN gdm.GL_ACCOUNT BETWEEN 600 AND 799 THEN 'SG&A'
+            WHEN (gdm.GL_ACCOUNT BETWEEN 445 AND 447 OR gdm.GL_ACCOUNT BETWEEN 707 AND 750) THEN 'Other Income/Expense'
+            WHEN gdm.GL_ACCOUNT BETWEEN 900 AND 999 THEN 'Taxes'
+            ELSE NULL
+          END AS Category,
+          SUM(CASE
+            WHEN gdm.GL_ACCOUNT BETWEEN 400 AND 499 THEN
+              ABS(gdm.AMOUNT)
+            WHEN (gdm.GL_ACCOUNT BETWEEN 445 AND 447 OR gdm.GL_ACCOUNT BETWEEN 707 AND 750) THEN
+              CASE WHEN gdm.DB_CR_FLAG = 'C' THEN ABS(gdm.AMOUNT) ELSE -ABS(gdm.AMOUNT) END
+            ELSE
+              CASE WHEN gdm.DB_CR_FLAG = 'C' THEN -ABS(gdm.AMOUNT) ELSE ABS(gdm.AMOUNT) END
+          END) AS Total
+        FROM global.GL_DETAIL_MANUAL gdm
+        WHERE YEAR(gdm.POST_DATE) = ?
+        AND gdm.GL_ACCOUNT >= 400
+        GROUP BY MONTH(gdm.POST_DATE), Category
+        ORDER BY Month, Category
+      `;
+
+      connection.query(query, [year], (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for yearly adjustments: " + err);
+          connection.end();
+          res.sendStatus(500);
+          return;
+        }
+
+        // Transform raw data into monthly summaries
+        const monthlyAdjustments = {};
+        for (let month = 1; month <= 12; month++) {
+          monthlyAdjustments[month] = {
+            revenue: 0,
+            cogs: 0,
+            sga: 0,
+            otherExpense: 0,
+            taxes: 0,
+          };
+        }
+
+        // Populate with actual adjustment data
+        for (const row of rows) {
+          if (!row.Month || !row.Category) continue;
+          const month = row.Month;
+          const amount = Number(row.Total) || 0;
+
+          switch (row.Category) {
+            case "Revenue":
+              monthlyAdjustments[month].revenue += amount;
+              break;
+            case "COGS":
+              monthlyAdjustments[month].cogs += amount;
+              break;
+            case "SG&A":
+              monthlyAdjustments[month].sga += amount;
+              break;
+            case "Other Income/Expense":
+              monthlyAdjustments[month].otherExpense += amount;
+              break;
+            case "Taxes":
+              monthlyAdjustments[month].taxes += amount;
+              break;
+          }
+        }
+
+        connection.end();
+        res.json(monthlyAdjustments);
+      });
+    });
+  } catch (err) {
+    console.log("Error connecting to Db for yearly adjustments");
+    return res.sendStatus(500);
+  }
+});
+
 // GET route for annual P&L trend data (all years)
 router.post("/annual-trend", (req, res) => {
   try {
