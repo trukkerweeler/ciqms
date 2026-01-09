@@ -96,7 +96,7 @@
     </dialog>
 
     <dialog id="trendDialog" class="editDialog">
-      <div class="dialogTitle">Edit Trend Description</div>
+      <div class="dialogTitle">Edit Trend Details</div>
       <form class="edittrend" id="edittrendform">
         <label for="CUSTOMER_ID">Customer ID:</label>
         <input type="text" id="CUSTOMER_ID" name="CUSTOMER_ID" />
@@ -133,7 +133,40 @@
         >
           Cancel
         </button>
-        <button class="btnDialog dialogSaveBtn" id="saveTrend" type="submit">
+        <button
+          class="btnDialog dialogSaveBtn"
+          id="saveTrendDetail"
+          type="submit"
+        >
+          Save
+        </button>
+      </form>
+    </dialog>
+
+    <dialog id="trendDescriptionDialog" class="editDialog">
+      <div class="dialogTitle">Edit Trend Description</div>
+      <form class="edittrend" id="edittrenddescform">
+        <label for="newtextTrendDesc">Add Description:</label>
+        <textarea
+          id="newtextTrendDesc"
+          class="notestext"
+          rows="6"
+          cols="50"
+          placeholder="Enter new description text here. It will be prepended to the existing description."
+        ></textarea>
+        <button
+          class="btnDialog"
+          id="cancelTrendDesc"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button
+          class="btnDialog dialogSaveBtn"
+          id="saveTrendDesc"
+          type="submit"
+        >
           Save
         </button>
       </form>

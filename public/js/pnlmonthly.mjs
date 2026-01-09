@@ -34,6 +34,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
   let glEntries = []; // Store entries in memory
   let currentMonth = new Date().getMonth() + 1; // Track selected month
+  const today = new Date();
+  const defaultYear =
+    today.getMonth() === 0 ? today.getFullYear() - 1 : today.getFullYear();
 
   // Load trend chart when year changes
   yearPicker.addEventListener("change", async () => {
@@ -237,9 +240,8 @@ window.addEventListener("DOMContentLoaded", () => {
     const drillDownDialog = document.getElementById("drillDownDialog");
     const drillDownTable = document.getElementById("drillDownTable");
     const drillDownTitle = document.getElementById("drillDownTitle");
-
     drillDownTitle.textContent = `Transactions for GL Account ${glAccount}`;
-    drillDownTable.innerHTML = '<tr><td colspan="8">Loading...</td></tr>';
+    drillDownTable.innerHTML = '<tr><td colspan="9">Loading...</td></tr>';
     drillDownDialog.showModal();
 
     try {
@@ -251,28 +253,54 @@ window.addEventListener("DOMContentLoaded", () => {
 
       if (!response.ok) {
         drillDownTable.innerHTML =
-          '<tr><td colspan="8">Error loading transactions</td></tr>';
+          '<tr><td colspan="9">Error loading transactions</td></tr>';
         return;
       }
 
       const transactions = await response.json();
-      renderDrillDownTable(transactions);
+
+      // Also fetch corrections for this GL account (across all periods)
+      const correctionsResponse = await fetch(
+        "/gldetail?gl_account=" + glAccount,
+        {
+          method: "GET",
+          headers: { "Content-Type": "application/json" },
+        }
+      );
+
+      let corrections = [];
+      if (correctionsResponse.ok) {
+        const allCorrections = await correctionsResponse.json();
+        // Filter corrections for this GL account in CORR batch (our corrections)
+        corrections = allCorrections.filter(
+          (c) =>
+            c.GL_ACCOUNT == glAccount &&
+            c.BATCH_NUM &&
+            c.BATCH_NUM.startsWith("X")
+        );
+      }
+
+      renderDrillDownTable(transactions, corrections, glAccount);
     } catch (error) {
       console.error("Error fetching account transactions:", error);
       drillDownTable.innerHTML =
-        '<tr><td colspan="8">Error loading transactions</td></tr>';
+        '<tr><td colspan="9">Error loading transactions</td></tr>';
     }
   }
 
-  function renderDrillDownTable(transactions) {
+  function renderDrillDownTable(
+    transactions,
+    corrections = [],
+    glAccount = null
+  ) {
     const drillDownTable = document.getElementById("drillDownTable");
+    const drillDownDialog = document.getElementById("drillDownDialog");
 
     if (!transactions || !transactions.length) {
       drillDownTable.innerHTML =
         '<tr><td colspan="8">No transactions found</td></tr>';
       return;
     }
-
     let html = `<tr>
       <th>Date</th>
       <th>Invoice</th>
@@ -282,6 +310,8 @@ window.addEventListener("DOMContentLoaded", () => {
       <th>Description</th>
       <th>Vendor</th>
       <th>Amount</th>
+      <th>Status</th>
+      <th>Actions</th>
     </tr>`;
 
     let total = 0;
@@ -290,7 +320,41 @@ window.addEventListener("DOMContentLoaded", () => {
       const amount = Number(txn.AMOUNT);
       total += amount;
 
-      html += `<tr>
+      // Check if this transaction has been corrected
+      // Look for a REVERSAL correction entry that specifically matches this transaction
+      // Match by: original BATCH_NUM and BATCH_LINE must be in reversal reference or description AND amount must be negated
+      const reversalExists = corrections.some((c) => {
+        if (!c.REFERENCE || !c.REFERENCE.includes("REVERSAL")) return false;
+        // Check if reversal references the exact same transaction by batch info
+        // Look for the pattern like "A5321:00004" in REFERENCE or DESCR
+        const batchPattern = `orig ${txn.BATCH_NUM}:${txn.BATCH_LINE}`;
+        const reversalHasBatchInfo =
+          (c.REFERENCE && c.REFERENCE.includes(batchPattern)) ||
+          (c.DESCR && c.DESCR.includes(batchPattern));
+        const reversalAmountMatches =
+          Math.abs(Number(c.AMOUNT)) === Math.abs(Number(txn.AMOUNT));
+
+        // Debug
+        if (c.REFERENCE.includes("REVERSAL")) {
+          console.log("Checking reversal:", {
+            batchPattern,
+            reversalRef: c.REFERENCE,
+            reversalDesc: c.DESCR,
+            hasBatchInfo: reversalHasBatchInfo,
+            amountMatches: reversalAmountMatches,
+            txnBatch: `${txn.BATCH_NUM}:${txn.BATCH_LINE}`,
+          });
+        }
+
+        return reversalHasBatchInfo && reversalAmountMatches;
+      });
+
+      const isCorrected = reversalExists;
+      const statusBadge = isCorrected
+        ? '<span style="background:#90EE90;color:#000;padding:2px 6px;border-radius:3px;font-size:0.8em;font-weight:bold">✓ CORRECTED</span>'
+        : '<span style="background:#f0f0f0;color:#666;padding:2px 6px;border-radius:3px;font-size:0.8em">Original</span>';
+
+      html += `<tr ${isCorrected ? 'style="background:#f0fdf4"' : ""}>
         <td>${formattedDate}</td>
         <td>${txn.INVOICE_NO || ""}</td>
         <td>${txn.BATCH_NUM || ""}</td>
@@ -302,12 +366,22 @@ window.addEventListener("DOMContentLoaded", () => {
           style: "currency",
           currency: "USD",
         })}</td>
+        <td>${statusBadge}</td>
+        <td>
+          <button class="btn-small" style="padding: 2px 6px; font-size: 0.85em" onclick="correctGLTransaction('${
+            txn.GL_ACCOUNT
+          }', '${txn.POST_DATE}', '${txn.REFERENCE || ""}', '${
+        txn.DESCR || ""
+      }', ${txn.AMOUNT}, '${txn.VENDOR || ""}', '${txn.BATCH_NUM || ""}', '${
+        txn.BATCH_LINE || ""
+      }')">Correct</button>
+        </td>
       </tr>`;
     }
 
     // Add total row
     html += `<tr style="background:#eef;font-weight:bold">
-      <td colspan="7" style="text-align:right">Total Accruals:</td>
+      <td colspan="9" style="text-align:right">Total Accruals:</td>
       <td>${total.toLocaleString("en-US", {
         style: "currency",
         currency: "USD",
@@ -315,6 +389,72 @@ window.addEventListener("DOMContentLoaded", () => {
     </tr>`;
 
     drillDownTable.innerHTML = html;
+
+    // Remove any existing corrections section from previous drill-down opens
+    const existingCorrectionsSection = drillDownTable.nextElementSibling;
+    if (
+      existingCorrectionsSection &&
+      existingCorrectionsSection.style.marginTop === "30px"
+    ) {
+      existingCorrectionsSection.remove();
+    }
+
+    // Add corrections section if there are any
+    if (corrections && corrections.length > 0) {
+      const correctionsSectionHtml = createCorrectionsSection(corrections);
+      drillDownTable.insertAdjacentHTML("afterend", correctionsSectionHtml);
+    }
+  }
+
+  function createCorrectionsSection(corrections) {
+    if (!corrections || corrections.length === 0) return "";
+
+    let html = `<div style="margin-top: 30px; padding: 15px; background: #f9f5ff; border-left: 4px solid #9333ea; border-radius: 4px;">
+      <h3 style="margin-top: 0; color: #7e22ce">Applied Corrections</h3>
+      <p style="font-size: 0.9em; color: #666; margin: 0 0 10px 0">
+        The following correction entries have been applied to adjust the accrual period:
+      </p>
+      <table style="width: 100%; border-collapse: collapse; font-size: 0.9em">
+        <tr style="background: #ede9fe; border-bottom: 2px solid #9333ea">
+          <th style="padding: 8px; text-align: left; border-bottom: 2px solid #9333ea">Type</th>
+          <th style="padding: 8px; text-align: left; border-bottom: 2px solid #9333ea">Post Date</th>
+          <th style="padding: 8px; text-align: left; border-bottom: 2px solid #9333ea">Reference</th>
+          <th style="padding: 8px; text-align: left; border-bottom: 2px solid #9333ea">Description</th>
+          <th style="padding: 8px; text-align: right; border-bottom: 2px solid #9333ea">Amount</th>
+        </tr>`;
+
+    for (const corr of corrections) {
+      const formattedDate = new Date(corr.POST_DATE).toLocaleDateString();
+      const amount = Number(corr.AMOUNT);
+      const isReversal = corr.REFERENCE && corr.REFERENCE.includes("REVERSAL");
+      const typeLabel = isReversal ? "Reversal" : "Correction";
+      const typeColor = isReversal ? "#ef4444" : "#22c55e";
+
+      html += `<tr style="border-bottom: 1px solid #e9d5ff">
+        <td style="padding: 8px">
+          <span style="background: ${typeColor}; color: white; padding: 3px 8px; border-radius: 3px; font-size: 0.85em; font-weight: bold">
+            ${typeLabel}
+          </span>
+        </td>
+        <td style="padding: 8px">${formattedDate}</td>
+        <td style="padding: 8px"><code style="background: #f3e8ff; padding: 2px 4px; border-radius: 2px; font-size: 0.85em">${
+          corr.REFERENCE
+        }</code></td>
+        <td style="padding: 8px">${corr.DESCR}</td>
+        <td style="padding: 8px; text-align: right; font-weight: bold; color: ${
+          amount < 0 ? "#ef4444" : "#22c55e"
+        }">
+          ${amount.toLocaleString("en-US", {
+            style: "currency",
+            currency: "USD",
+          })}
+        </td>
+      </tr>`;
+    }
+    html += `</table>
+    </div>`;
+
+    return html;
   }
 
   function renderAdjustmentsTable(adjustments) {
@@ -513,6 +653,10 @@ window.addEventListener("DOMContentLoaded", () => {
     // Render initial empty row
     renderGLEntryRows();
 
+    // Hide correction button for new entries
+    document.getElementById("createCorrectionBtn").style.display = "none";
+    manualGLDialog.dataset.editMode = "false";
+
     manualGLDialog.showModal();
   });
 
@@ -672,12 +816,182 @@ window.addEventListener("DOMContentLoaded", () => {
       manualGLDialog.dataset.editMode = "true";
       manualGLDialog.dataset.batchNum = batchNum;
       manualGLDialog.dataset.batchLine = batchLine;
+      document.getElementById("createCorrectionBtn").style.display = "block";
       manualGLDialog.showModal();
     } catch (error) {
       console.error("Error loading adjustment:", error);
       alert("An error occurred while loading the adjustment.");
     }
   };
+
+  // Correction dialog handlers
+  const correctionDialog = document.getElementById("correctionDialog");
+  const correctionForm = document.getElementById("correctionForm");
+  const cancelCorrectionBtn = document.getElementById("cancelCorrectionBtn");
+  const createCorrectionBtn = document.getElementById("createCorrectionBtn");
+
+  cancelCorrectionBtn.addEventListener("click", () => {
+    correctionDialog.close();
+  });
+
+  createCorrectionBtn.addEventListener("click", () => {
+    // Show correction dialog
+    correctionDialog.showModal();
+  });
+
+  correctionForm.addEventListener("submit", async (e) => {
+    e.preventDefault();
+
+    const correctPostDate = document.getElementById(
+      "correction_post_date"
+    ).value;
+
+    if (!correctPostDate) {
+      alert("Please enter a correct post date");
+      return;
+    }
+
+    // Calculate period info for correct date
+    const correctDate = new Date(correctPostDate + "T00:00:00");
+    const correctMonth = String(correctDate.getMonth() + 1).padStart(2, "0");
+    const correctYear = correctDate.getFullYear();
+    const correctPeriod = correctMonth;
+
+    // Calculate period dates
+    const periodBegDate = new Date(correctYear, correctDate.getMonth(), 1);
+    const periodEndDate = new Date(correctYear, correctDate.getMonth() + 1, 0);
+
+    const periodBegDateStr = periodBegDate.toISOString().split("T")[0];
+    const periodEndDateStr = periodEndDate.toISOString().split("T")[0];
+
+    let entry;
+
+    // Check if correcting a GL transaction or manual entry
+    if (correctionDialog.dataset.glAccount) {
+      // Correcting a GL transaction from drill-down
+      console.log("Creating correction entry from GL transaction:", {
+        glAccount: correctionDialog.dataset.glAccount,
+        postDate: correctionDialog.dataset.postDate,
+      });
+
+      entry = {
+        GL_ACCOUNT: correctionDialog.dataset.glAccount,
+        POST_DATE: correctionDialog.dataset.postDate,
+        BATCH_NUM: "CORR", // Use CORR batch for corrections
+        T_DATE: correctionDialog.dataset.postDate,
+        PERIOD: String(
+          new Date(correctionDialog.dataset.postDate).getMonth() + 1
+        ).padStart(2, "0"),
+        PERIOD_BEG_DATE: new Date(
+          new Date(correctionDialog.dataset.postDate).getFullYear(),
+          new Date(correctionDialog.dataset.postDate).getMonth(),
+          1
+        )
+          .toISOString()
+          .split("T")[0],
+        PERIOD_END_DATE: new Date(
+          new Date(correctionDialog.dataset.postDate).getFullYear(),
+          new Date(correctionDialog.dataset.postDate).getMonth() + 1,
+          0
+        )
+          .toISOString()
+          .split("T")[0],
+        REFERENCE: correctionDialog.dataset.reference,
+        AMOUNT: parseFloat(correctionDialog.dataset.amount),
+        DB_CR_FLAG: "D",
+        DESCR: correctionDialog.dataset.description,
+        APPL_TYPE: "",
+        TRAN_TYPE: "",
+        VENDOR: correctionDialog.dataset.vendor,
+        AR_CODE: "",
+        INVC_DATE: "",
+      };
+
+      console.log("Entry object created with GL_ACCOUNT:", entry.GL_ACCOUNT);
+
+      // Clear the GL transaction fields after use
+      correctionDialog.dataset.glAccount = "";
+    } else {
+      // Correcting a manual entry
+      if (glEntries.length === 0 || !glEntries[0].BATCH_NUM) {
+        alert("No entry selected");
+        return;
+      }
+      entry = glEntries[0];
+    }
+
+    try {
+      // Debug: Build the request body separately to log it
+      const requestBody = {
+        GL_ACCOUNT: entry.GL_ACCOUNT,
+        POST_DATE: entry.POST_DATE,
+        BATCH_NUM: entry.BATCH_NUM,
+        T_DATE: entry.T_DATE,
+        PERIOD: entry.PERIOD,
+        PERIOD_BEG_DATE: entry.PERIOD_BEG_DATE,
+        PERIOD_END_DATE: entry.PERIOD_END_DATE,
+        REFERENCE: entry.REFERENCE || "",
+        AMOUNT: entry.AMOUNT,
+        DB_CR_FLAG: entry.DB_CR_FLAG,
+        DESCR: entry.DESCR || "",
+        APPL_TYPE: entry.APPL_TYPE || "",
+        TRAN_TYPE: entry.TRAN_TYPE || "",
+        VENDOR: entry.VENDOR || "",
+        AR_CODE: entry.AR_CODE || "",
+        INVC_DATE: entry.INVC_DATE || "",
+        CORRECT_POST_DATE: correctPostDate,
+        CORRECT_PERIOD: correctPeriod,
+        CORRECT_PERIOD_BEG_DATE: periodBegDateStr,
+        CORRECT_PERIOD_END_DATE: periodEndDateStr,
+        ORIG_BATCH_NUM: correctionDialog.dataset.batchNum,
+        ORIG_BATCH_LINE: correctionDialog.dataset.batchLine,
+      };
+
+      console.log(
+        "About to send correction request with GL_ACCOUNT:",
+        requestBody.GL_ACCOUNT
+      );
+      console.log("Full request body:", requestBody);
+
+      const response = await fetch(
+        `http://localhost:${port}/gldetail/createCorrection`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(requestBody),
+        }
+      );
+
+      // Debug: Log what was sent
+      console.log("Correction request GL_ACCOUNT:", entry.GL_ACCOUNT);
+      console.log("Full correction entry:", entry);
+
+      if (response.ok) {
+        const result = await response.json();
+        console.log(
+          `Correction entries created - Reversal: BL ${result.reversalBatchLine}, Correction: BL ${result.correctionBatchLine}`
+        );
+        correctionDialog.close();
+        manualGLDialog.close();
+        // Refresh the P&L details to reload adjustments
+        fetchPnLDetails(today.getFullYear(), currentMonth);
+      } else {
+        const error = await response.json();
+        alert(`Failed to create correction: ${error.error}`);
+      }
+    } catch (error) {
+      console.error("Error creating correction:", error);
+      alert("An error occurred while creating the correction entries.");
+    }
+  });
+
+  // Show/hide correction button based on edit mode
+  window.addEventListener("editModeChanged", () => {
+    const isEditMode = manualGLDialog.dataset.editMode === "true";
+    createCorrectionBtn.style.display = isEditMode ? "block" : "none";
+  });
 
   // Restore drill-down dialog handlers that were at the end
   window.deleteAdjustment = async function (batchNum, batchLine) {
@@ -704,6 +1018,63 @@ window.addEventListener("DOMContentLoaded", () => {
       console.error("Error deleting adjustment:", error);
       alert("An error occurred while deleting the adjustment.");
     }
+  };
+
+  // Global function to correct a GL transaction
+  window.correctGLTransaction = function (
+    glAccount,
+    postDate,
+    reference,
+    description,
+    amount,
+    vendor,
+    batchNum,
+    batchLine
+  ) {
+    // Debug: Log incoming parameters
+    console.log("correctGLTransaction called with:", {
+      glAccount,
+      postDate,
+      reference,
+      description,
+      amount,
+      vendor,
+      batchNum,
+      batchLine,
+    });
+
+    // Store transaction info in the dialog for use in the correction handler
+    correctionDialog.dataset.glAccount = glAccount;
+    correctionDialog.dataset.postDate = postDate;
+    correctionDialog.dataset.reference = reference;
+    correctionDialog.dataset.description = description;
+    correctionDialog.dataset.amount = amount;
+    correctionDialog.dataset.vendor = vendor;
+    correctionDialog.dataset.batchNum = batchNum;
+    correctionDialog.dataset.batchLine = batchLine;
+
+    // Debug: Verify dataset was set correctly
+    console.log("Dataset after assignment:", {
+      glAccount: correctionDialog.dataset.glAccount,
+      postDate: correctionDialog.dataset.postDate,
+      reference: correctionDialog.dataset.reference,
+      description: correctionDialog.dataset.description,
+      amount: correctionDialog.dataset.amount,
+      vendor: correctionDialog.dataset.vendor,
+      batchNum: correctionDialog.dataset.batchNum,
+      batchLine: correctionDialog.dataset.batchLine,
+    });
+
+    // Set the title to show what transaction is being corrected
+    const txnDate = new Date(postDate).toLocaleDateString();
+    document.getElementById(
+      "correctionTitle"
+    ).textContent = `Create Correction for GL ${glAccount} (${txnDate})`;
+
+    // Clear the correction date field
+    document.getElementById("correction_post_date").value = "";
+
+    correctionDialog.showModal();
   };
 
   // Load and render yearly trend chart
@@ -919,9 +1290,8 @@ window.addEventListener("DOMContentLoaded", () => {
   }
 
   // Initial load for current month and year
-  const today = new Date();
   currentMonth = today.getMonth() + 1;
-  yearPicker.value = today.getFullYear();
-  loadAndRenderTrendChart(today.getFullYear()).catch(console.error);
-  fetchPnLDetails(today.getFullYear(), currentMonth);
+  yearPicker.value = defaultYear;
+  loadAndRenderTrendChart(defaultYear).catch(console.error);
+  fetchPnLDetails(defaultYear, currentMonth);
 });

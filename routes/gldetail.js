@@ -62,8 +62,9 @@ router.post("/", async (req, res) => {
         TRAN_TYPE,
         VENDOR,
         AR_CODE,
-        INVC_DATE
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+        INVC_DATE,
+        LAST_CHG_BY
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
     `;
 
     const values = [
@@ -84,6 +85,7 @@ router.post("/", async (req, res) => {
       VENDOR,
       AR_CODE,
       formattedInvcDate,
+      "TKENT",
     ];
 
     connection.execute(query, values, (err, result) => {
@@ -195,6 +197,249 @@ router.get("/:batch_num/:batch_line", async (req, res) => {
   } catch (err) {
     console.error("Error connecting to DB: ", err);
     res.status(500).json({ error: "Error connecting to DB" });
+  }
+});
+
+// POST route to create a correction entry (reversal + corrected entry)
+router.post("/createCorrection", async (req, res) => {
+  const {
+    GL_ACCOUNT,
+    POST_DATE,
+    BATCH_NUM,
+    T_DATE,
+    PERIOD,
+    PERIOD_BEG_DATE,
+    PERIOD_END_DATE,
+    REFERENCE,
+    AMOUNT,
+    DB_CR_FLAG,
+    DESCR,
+    APPL_TYPE,
+    TRAN_TYPE,
+    VENDOR,
+    AR_CODE,
+    INVC_DATE,
+    CORRECT_POST_DATE,
+    CORRECT_PERIOD,
+    CORRECT_PERIOD_BEG_DATE,
+    CORRECT_PERIOD_END_DATE,
+    ORIG_BATCH_NUM,
+    ORIG_BATCH_LINE,
+  } = req.body;
+
+  // Debug logging
+  console.log("=== POST /gldetail/createCorrection ===");
+  console.log("Received GL_ACCOUNT:", GL_ACCOUNT);
+  console.log("Received ORIG_BATCH_NUM:", ORIG_BATCH_NUM);
+  console.log("Received ORIG_BATCH_LINE:", ORIG_BATCH_LINE);
+  console.log("Full request body:", req.body);
+
+  if (DEBUG_MODE) {
+    console.log(
+      "POST /gldetail/createCorrection - Create reversal + correction",
+      req.body
+    );
+  }
+
+  const formattedInvcDate = INVC_DATE ? INVC_DATE.replace(/-/g, "") : null;
+
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "global",
+    });
+
+    // Get the next available correction batch number (X1, X2, X3, etc.)
+    const getMaxCorrectionBatchQuery = `
+      SELECT MAX(CAST(SUBSTRING(BATCH_NUM, 2) AS UNSIGNED)) as maxNum 
+      FROM GL_DETAIL_MANUAL 
+      WHERE BATCH_NUM LIKE 'X%'
+    `;
+
+    connection.execute(getMaxCorrectionBatchQuery, [], (err, result) => {
+      if (err) {
+        console.error("Failed to get max correction batch: " + err);
+        connection.end();
+        return res.status(500).json({ error: "Failed to get batch number" });
+      }
+
+      // Generate next correction batch number (X1, X2, X3, etc.)
+      const nextCorrectionNum = (result[0].maxNum || 0) + 1;
+      const correctionBatchNum = "X" + nextCorrectionNum;
+
+      // Get the next BATCH_LINE for this correction batch
+      const getMaxBatchLineQuery = `
+        SELECT MAX(BATCH_LINE) as maxLine FROM GL_DETAIL_MANUAL 
+        WHERE BATCH_NUM = ?
+      `;
+
+      connection.execute(
+        getMaxBatchLineQuery,
+        [correctionBatchNum],
+        (err, result) => {
+          if (err) {
+            console.error("Failed to get max batch line: " + err);
+            connection.end();
+            return res.status(500).json({ error: "Failed to get batch line" });
+          }
+
+          let reversalBatchLine = (parseInt(result[0].maxLine) || 0) + 1;
+          let correctionBatchLine = reversalBatchLine + 1;
+
+          // Insert REVERSAL entry (negated amount, original date)
+          const reversalQuery = `
+            INSERT INTO GL_DETAIL_MANUAL (
+              GL_ACCOUNT, POST_DATE, BATCH_NUM, BATCH_LINE, T_DATE, PERIOD,
+              PERIOD_BEG_DATE, PERIOD_END_DATE, REFERENCE, AMOUNT, DB_CR_FLAG,
+              DESCR, APPL_TYPE, TRAN_TYPE, VENDOR, AR_CODE, INVC_DATE, LAST_CHG_BY, LAST_CHG_DATE
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          const reversalValues = [
+            GL_ACCOUNT,
+            POST_DATE,
+            correctionBatchNum,
+            reversalBatchLine,
+            T_DATE,
+            PERIOD,
+            PERIOD_BEG_DATE,
+            PERIOD_END_DATE,
+            REFERENCE +
+              ` [REVERSAL of orig ${ORIG_BATCH_NUM}:${ORIG_BATCH_LINE}]`,
+            -AMOUNT, // Negate the amount
+            DB_CR_FLAG,
+            DESCR + ` [REVERSAL of orig ${ORIG_BATCH_NUM}:${ORIG_BATCH_LINE}]`,
+            APPL_TYPE,
+            TRAN_TYPE,
+            VENDOR,
+            AR_CODE,
+            formattedInvcDate,
+            "TKENT",
+            new Date().toISOString().split("T")[0],
+          ];
+
+          console.log(
+            "About to insert REVERSAL entry with GL_ACCOUNT:",
+            GL_ACCOUNT
+          );
+          console.log("REVERSAL insert values:", reversalValues);
+          console.log(
+            "REVERSAL REFERENCE value:",
+            reversalValues[8],
+            "(ORIG_BATCH: " + ORIG_BATCH_NUM + ":" + ORIG_BATCH_LINE + ")"
+          );
+
+          // Insert reversal with retry on duplicate key
+          const insertReversalWithRetry = (batchLine, retryCount = 0) => {
+            const currentReversalValues = [...reversalValues];
+            currentReversalValues[3] = batchLine; // Update BATCH_LINE
+
+            connection.execute(reversalQuery, currentReversalValues, (err) => {
+              if (err) {
+                if (err.code === "ER_DUP_ENTRY" && retryCount < 5) {
+                  // Duplicate key error - retry with next batch line
+                  console.log(
+                    `Duplicate key for BATCH_LINE ${batchLine}, retrying with ${
+                      batchLine + 1
+                    }`
+                  );
+                  insertReversalWithRetry(batchLine + 1, retryCount + 1);
+                } else {
+                  console.error("Failed to insert reversal entry: " + err);
+                  connection.end();
+                  return res
+                    .status(500)
+                    .json({ error: "Failed to create reversal" });
+                }
+              } else {
+                // Reversal inserted successfully, now insert correction
+                const correctionBatchLine = batchLine + 1;
+                insertCorrectionWithRetry(correctionBatchLine);
+              }
+            });
+          };
+
+          // Insert correction query definition and retry function
+          const correctionQuery = `
+            INSERT INTO GL_DETAIL_MANUAL (
+              GL_ACCOUNT, POST_DATE, BATCH_NUM, BATCH_LINE, T_DATE, PERIOD,
+              PERIOD_BEG_DATE, PERIOD_END_DATE, REFERENCE, AMOUNT, DB_CR_FLAG,
+              DESCR, APPL_TYPE, TRAN_TYPE, VENDOR, AR_CODE, INVC_DATE, LAST_CHG_BY, LAST_CHG_DATE
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
+          `;
+
+          const correctionValues = [
+            GL_ACCOUNT,
+            CORRECT_POST_DATE,
+            correctionBatchNum,
+            correctionBatchLine,
+            CORRECT_POST_DATE,
+            CORRECT_PERIOD,
+            CORRECT_PERIOD_BEG_DATE,
+            CORRECT_PERIOD_END_DATE,
+            REFERENCE +
+              ` [CORRECTION of orig ${ORIG_BATCH_NUM}:${ORIG_BATCH_LINE}]`,
+            AMOUNT,
+            DB_CR_FLAG,
+            DESCR +
+              ` [CORRECTION of orig ${ORIG_BATCH_NUM}:${ORIG_BATCH_LINE}]`,
+            APPL_TYPE,
+            TRAN_TYPE,
+            VENDOR,
+            AR_CODE,
+            formattedInvcDate,
+            "TKENT",
+            new Date().toISOString().split("T")[0],
+          ];
+
+          const insertCorrectionWithRetry = (batchLine, retryCount = 0) => {
+            const currentCorrectionValues = [...correctionValues];
+            currentCorrectionValues[3] = batchLine; // Update BATCH_LINE
+
+            connection.execute(
+              correctionQuery,
+              currentCorrectionValues,
+              (err) => {
+                if (err) {
+                  if (err.code === "ER_DUP_ENTRY" && retryCount < 5) {
+                    // Duplicate key error - retry with next batch line
+                    console.log(
+                      `Duplicate key for BATCH_LINE ${batchLine}, retrying with ${
+                        batchLine + 1
+                      }`
+                    );
+                    insertCorrectionWithRetry(batchLine + 1, retryCount + 1);
+                  } else {
+                    console.error("Failed to insert correction entry: " + err);
+                    connection.end();
+                    return res
+                      .status(500)
+                      .json({ error: "Failed to create correction" });
+                  }
+                } else {
+                  // Both entries inserted successfully
+                  res.json({
+                    message: "Correction entries created successfully",
+                    reversalBatchLine,
+                    correctionBatchLine: batchLine,
+                  });
+                  connection.end();
+                }
+              }
+            );
+          };
+
+          // Start the insert process
+          insertReversalWithRetry(reversalBatchLine);
+        }
+      );
+    });
+  } catch (err) {
+    console.error("Error in createCorrection route: " + err);
+    res.status(500).json({ error: "Error creating correction" });
   }
 });
 

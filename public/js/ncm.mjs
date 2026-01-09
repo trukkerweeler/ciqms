@@ -463,109 +463,11 @@ fetch(url, { method: "GET" })
     btnEditDesc.addEventListener("click", async (event) => {
       // prevent the default action
       event.preventDefault();
-      // show the trend dialog for description editing
-      const trendDialog = document.querySelector("#trendDialog");
-
-      // Clear the dialog and setup for description editing
-      const trendForm = document.querySelector("#edittrendform");
-      if (trendForm) {
-        trendForm.innerHTML = "";
-      }
-
-      // Create textarea for new description
-      const label = document.createElement("label");
-      label.htmlFor = "newtextTrend";
-      label.textContent = "Add Description:";
-      label.style.display = "block";
-      label.style.marginBottom = "10px";
-
-      const textarea = document.createElement("textarea");
-      textarea.id = "newtextTrend";
-      textarea.name = "newtextTrend";
-      textarea.rows = "6";
-      textarea.cols = "50";
-      textarea.placeholder =
-        "Enter new description text here. It will be prepended to the existing description.";
-      textarea.style.width = "100%";
-      textarea.style.marginBottom = "10px";
-
-      const saveBtn = document.createElement("button");
-      saveBtn.type = "button";
-      saveBtn.id = "savetrend";
-      saveBtn.className = "btn dialogSaveBtn";
-      saveBtn.textContent = "Save";
-      saveBtn.style.marginRight = "10px";
-
-      // Attach event listener directly to this button
-      saveBtn.addEventListener("click", async (event) => {
-        event.preventDefault();
-
-        const nidValue = iid;
-        const fieldname = "savetrend";
-
-        let data = {
-          NCM_ID: nidValue,
-          INPUT_USER: getUserValue(),
-        };
-
-        let compositetext = "";
-        const d = new Date();
-        const date = d.toISOString().substring(0, 10);
-        const time = d.toLocaleTimeString();
-        const mydate = date + " " + time;
-
-        let previoustext =
-          document.querySelector("#inputtext")?.innerHTML || "";
-        let newtextTrend = document.querySelector("#newtextTrend").value;
-
-        if (newtextTrend.length === 0) {
-          alert("Not saving, no trend text.");
-          return;
-        }
-
-        let compositetext2 =
-          user +
-          " - " +
-          mydate +
-          "<br>" +
-          newtextTrend +
-          "<br><br>" +
-          previoustext;
-        data = { ...data, DESCRIPTION: compositetext2 };
-        data = { ...data, MY_TABLE: "NCM_DESCRIPTION" };
-
-        const options = {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        };
-
-        const response = await fetch(url, options);
-        const json = await response.json();
-
-        trendDialog.close();
-        window.location.reload();
-      });
-
-      const cancelBtn = document.createElement("button");
-      cancelBtn.type = "button";
-      cancelBtn.className = "btn";
-      cancelBtn.textContent = "Cancel";
-      cancelBtn.addEventListener("click", (e) => {
-        e.preventDefault();
-        trendDialog.close();
-      });
-
-      if (trendForm) {
-        trendForm.appendChild(label);
-        trendForm.appendChild(textarea);
-        trendForm.appendChild(saveBtn);
-        trendForm.appendChild(cancelBtn);
-      }
-
-      trendDialog.showModal();
+      // show the trend description dialog
+      const trendDescriptionDialog = document.querySelector(
+        "#trendDescriptionDialog"
+      );
+      trendDescriptionDialog.showModal();
     });
 
     // Listen for the btnEditDisposition button click
@@ -617,6 +519,7 @@ fetch(url, { method: "GET" })
     btnTrend.addEventListener("click", async (event) => {
       event.preventDefault();
       const trendDialog = document.querySelector("#trendDialog");
+
       const trendUrl = `http://localhost:${port}/trend/${iid}`;
       try {
         const response = await fetch(trendUrl);
@@ -686,12 +589,13 @@ fetch(url, { method: "GET" })
         const mydate = date + " " + time;
 
         switch (fieldname) {
-          case "savetrend":
+          case "saveTrendDesc":
             // console.log('input text');
             let previoustext = document.querySelector("#inputtext").innerHTML;
-            let newtextTrend = document.querySelector("#newtextTrend").value;
-            // if lenght of newtextTrend is 0, do not save
-            if (newtextTrend.length === 0) {
+            let newtextTrendDesc =
+              document.querySelector("#newtextTrendDesc").value;
+            // if lenght of newtextTrendDesc is 0, do not save
+            if (newtextTrendDesc.length === 0) {
               alert("Not saving, no trend text.");
               break;
             } else {
@@ -700,7 +604,7 @@ fetch(url, { method: "GET" })
                 " - " +
                 mydate +
                 "<br>" +
-                document.querySelector("#newtextTrend").value +
+                document.querySelector("#newtextTrendDesc").value +
                 "<br><br>" +
                 previoustext;
               data = { ...data, DESCRIPTION: compositetext };
@@ -769,7 +673,7 @@ fetch(url, { method: "GET" })
             }
             break;
 
-          case "saveTrend":
+          case "saveTrendDetail":
             const formData = new FormData(
               document.getElementById("edittrendform")
             );
@@ -786,7 +690,7 @@ fetch(url, { method: "GET" })
         }
 
         let fetchUrl = url;
-        if (fieldname === "saveTrend") {
+        if (fieldname === "saveTrendDetail") {
           fetchUrl = `http://localhost:${port}/trend/${iid}`;
         }
 
@@ -803,8 +707,10 @@ fetch(url, { method: "GET" })
 
         let dialogToClose;
         switch (fieldname) {
-          case "savetrend":
-          case "saveTrend":
+          case "saveTrendDesc":
+            dialogToClose = document.querySelector("#trendDescriptionDialog");
+            break;
+          case "saveTrendDetail":
             dialogToClose = document.querySelector("#trendDialog");
             break;
           case "saveDisp":

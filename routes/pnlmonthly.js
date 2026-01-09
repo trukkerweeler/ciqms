@@ -146,6 +146,7 @@ router.post("/account-transactions", (req, res) => {
       }
       const query = `
         SELECT 
+          gd.GL_ACCOUNT,
           gd.POST_DATE,
           gd.BATCH_NUM,
           gd.BATCH_LINE,

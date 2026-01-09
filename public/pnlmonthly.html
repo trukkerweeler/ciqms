@@ -241,7 +241,55 @@
           <button type="submit" class="btn btn-primary">
             Save All Entries
           </button>
+          <button
+            type="button"
+            id="createCorrectionBtn"
+            class="btn"
+            style="display: none"
+          >
+            Create Correction Entry
+          </button>
           <button type="button" id="cancelGLBtn" class="btn">Cancel</button>
+        </div>
+      </form>
+    </dialog>
+
+    <!-- Correction Entry Dialog -->
+    <dialog
+      id="correctionDialog"
+      style="
+        padding: 20px;
+        border-radius: 8px;
+        border: 1px solid #ccc;
+        max-width: 400px;
+      "
+    >
+      <h2 id="correctionTitle">Create Correction Entry</h2>
+      <form
+        id="correctionForm"
+        style="display: flex; flex-direction: column; gap: 10px"
+      >
+        <div>
+          <label for="correction_post_date">Correct Post Date *:</label>
+          <input
+            type="date"
+            id="correction_post_date"
+            name="correction_post_date"
+            required
+          />
+        </div>
+        <p style="font-size: 0.9em; color: #666">
+          This will create:
+          <br />1. Reversal entry on original date (negated amount) <br />2.
+          Correction entry on the correct date (original amount)
+        </p>
+        <div style="display: flex; gap: 10px; justify-content: flex-end">
+          <button type="button" id="cancelCorrectionBtn" class="btn">
+            Cancel
+          </button>
+          <button type="submit" class="btn btn-primary">
+            Create Correction
+          </button>
         </div>
       </form>
     </dialog>
