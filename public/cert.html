@@ -15,13 +15,22 @@
         <p class="d-none">Go to <a href="index.html">HOME</a></p>
       </div>
       <div id="logoContainer">
-      <img id="logoImage" src="../images/ci-logo.png" alt="CI logo" title="" />
-      <h2 id="textTitle">CERTIFICATE OF PROCESSING</h2>
+        <img
+          id="logoImage"
+          src="../images/ci-logo.png"
+          alt="CI logo"
+          title=""
+        />
+        <h2 id="textTitle">CERTIFICATE OF PROCESSING</h2>
       </div>
       <div id="searchForm">
         <label for="woNo">WO No:</label>
         <input type="text" id="woNo" name="woNo" value="121921" />
         <button type="submit" id="btnSearch">Search</button>
+      </div>
+      <div id="loadingIndicator" class="loading-spinner" style="display: none">
+        <div class="spinner"></div>
+        <p>Loading certificate data...</p>
       </div>
       <div id="trace"></div>
       <div id="chem"></div>
@@ -32,7 +41,117 @@
       <div id="cert-trace"></div>
     </main>
     <div id="stmt"></div>
-    <footer></footer>
+
+    <!-- Edit Dialog -->
+    <dialog id="editDialog" class="revision-dialog">
+      <div class="dialog-header">
+        <h2>Edit Certificate Row</h2>
+        <button class="close-btn" aria-label="Close">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <form id="editForm">
+          <div class="form-group">
+            <label for="editSection">Section:</label>
+            <input
+              type="text"
+              id="editSection"
+              readonly
+              style="background-color: #f0f0f0"
+            />
+          </div>
+          <div class="form-group">
+            <label for="editRowData">Row Data:</label>
+            <textarea
+              id="editRowData"
+              readonly
+              style="background-color: #f0f0f0; height: 80px"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="editNotes"
+              >Reason for Change <span style="color: red">*</span>:</label
+            >
+            <textarea
+              id="editNotes"
+              required
+              placeholder="Explain why this change is being made"
+              style="height: 100px"
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Save Changes</button>
+            <button type="button" class="btn-secondary" id="editCancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Delete Dialog -->
+    <dialog id="deleteDialog" class="revision-dialog">
+      <div class="dialog-header">
+        <h2>Delete Certificate Row</h2>
+        <button class="close-btn" aria-label="Close">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <form id="deleteForm">
+          <div class="form-group">
+            <label for="deleteSection">Section:</label>
+            <input
+              type="text"
+              id="deleteSection"
+              readonly
+              style="background-color: #f0f0f0"
+            />
+          </div>
+          <div class="form-group">
+            <label for="deleteRowData">Row Data:</label>
+            <textarea
+              id="deleteRowData"
+              readonly
+              style="background-color: #f0f0f0; height: 80px"
+            ></textarea>
+          </div>
+          <div class="form-group">
+            <label for="deleteNotes"
+              >Reason for Deletion <span style="color: red">*</span>:</label
+            >
+            <textarea
+              id="deleteNotes"
+              required
+              placeholder="Explain why this row is being deleted"
+              style="height: 100px"
+            ></textarea>
+          </div>
+          <div class="form-actions">
+            <button type="submit" class="btn-danger">Delete Row</button>
+            <button type="button" class="btn-secondary" id="deleteCancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
+
+    <!-- Add Row Dialog -->
+    <dialog id="addDialog" class="revision-dialog">
+      <div class="dialog-header">
+        <h2>Add New <span id="addSectionName"></span> Row</h2>
+        <button class="close-btn" aria-label="Close">&times;</button>
+      </div>
+      <div class="dialog-body">
+        <form id="addForm">
+          <div id="addFormFields"></div>
+          <div class="form-actions">
+            <button type="submit" class="btn-primary">Add Row</button>
+            <button type="button" class="btn-secondary" id="addCancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </div>
+    </dialog>
   </body>
-  <script type="module" src="/js/cert2.mjs"></script>
+  <script type="module" src="/js/cert.mjs"></script>
 </html>

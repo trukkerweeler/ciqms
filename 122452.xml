@@ -1,0 +1,63 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<CrystalReport xmlns="urn:crystal-reports:schemas:report-detail"  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:schemaLocation="urn:crystal-reports:schemas:report-detail http://www.businessobjects.com/products/xml/CR2008Schema.xsd">
+<ReportHeader>
+<Section SectionNumber="0">
+<Field Name="PrintDate1" FieldName="PrintDate"><FormattedValue>1/12/2026</FormattedValue><Value>2026-01-12</Value></Field>
+<Field Name="PART2" FieldName="{@PART}"><FormattedValue>900-5226-101     NC</FormattedValue><Value>900-5226-101     NC</Value></Field>
+</Section>
+</ReportHeader>
+<Details Level="1">
+<Section SectionNumber="0">
+<Field Name="JOB1" FieldName="{V_ITEM_HISTORY.JOB}"><FormattedValue>122452</FormattedValue><Value>122452</Value></Field>
+<Field Name="SUFFIX1" FieldName="{V_ITEM_HISTORY.SUFFIX}"><FormattedValue>002</FormattedValue><Value>002</Value></Field>
+<Field Name="PART3" FieldName="{V_ITEM_HISTORY.PART}"><FormattedValue>5226-2           NC</FormattedValue><Value>5226-2           NC</Value></Field>
+<Field Name="SERIALNUMBER1" FieldName="{V_ITEM_HISTORY.SERIAL_NUMBER}"><FormattedValue>122362-003</FormattedValue><Value>122362-003</Value></Field>
+<Field Name="PART1" FieldName="{@PART}"><FormattedValue>900-5226-101     NC</FormattedValue><Value>900-5226-101     NC</Value></Field>
+<Field Name="QUANTITY1" FieldName="{V_ITEM_HISTORY.QUANTITY}"><FormattedValue>-1.00</FormattedValue><Value>-1.00</Value></Field>
+</Section>
+</Details>
+<Details Level="1">
+<Section SectionNumber="0">
+<Field Name="JOB1" FieldName="{V_ITEM_HISTORY.JOB}"><FormattedValue>122452</FormattedValue><Value>122452</Value></Field>
+<Field Name="SUFFIX1" FieldName="{V_ITEM_HISTORY.SUFFIX}"><FormattedValue>002</FormattedValue><Value>002</Value></Field>
+<Field Name="PART3" FieldName="{V_ITEM_HISTORY.PART}"><FormattedValue>5226-3           NC</FormattedValue><Value>5226-3           NC</Value></Field>
+<Field Name="SERIALNUMBER1" FieldName="{V_ITEM_HISTORY.SERIAL_NUMBER}"><FormattedValue>122362-006</FormattedValue><Value>122362-006</Value></Field>
+<Field Name="PART1" FieldName="{@PART}"><FormattedValue>900-5226-101     NC</FormattedValue><Value>900-5226-101     NC</Value></Field>
+<Field Name="QUANTITY1" FieldName="{V_ITEM_HISTORY.QUANTITY}"><FormattedValue>-1.00</FormattedValue><Value>-1.00</Value></Field>
+</Section>
+</Details>
+<Details Level="1">
+<Section SectionNumber="0">
+<Field Name="JOB1" FieldName="{V_ITEM_HISTORY.JOB}"><FormattedValue>122452</FormattedValue><Value>122452</Value></Field>
+<Field Name="SUFFIX1" FieldName="{V_ITEM_HISTORY.SUFFIX}"><FormattedValue>002</FormattedValue><Value>002</Value></Field>
+<Field Name="PART3" FieldName="{V_ITEM_HISTORY.PART}"><FormattedValue>MS21083N06</FormattedValue><Value>MS21083N06</Value></Field>
+<Field Name="SERIALNUMBER1" FieldName="{V_ITEM_HISTORY.SERIAL_NUMBER}"><FormattedValue>PO: 0041990</FormattedValue><Value>PO: 0041990</Value></Field>
+<Field Name="PART1" FieldName="{@PART}"><FormattedValue>900-5226-101     NC</FormattedValue><Value>900-5226-101     NC</Value></Field>
+<Field Name="QUANTITY1" FieldName="{V_ITEM_HISTORY.QUANTITY}"><FormattedValue>-4.00</FormattedValue><Value>-4.00</Value></Field>
+</Section>
+</Details>
+<Details Level="1">
+<Section SectionNumber="0">
+<Field Name="JOB1" FieldName="{V_ITEM_HISTORY.JOB}"><FormattedValue>122452</FormattedValue><Value>122452</Value></Field>
+<Field Name="SUFFIX1" FieldName="{V_ITEM_HISTORY.SUFFIX}"><FormattedValue>002</FormattedValue><Value>002</Value></Field>
+<Field Name="PART3" FieldName="{V_ITEM_HISTORY.PART}"><FormattedValue>MS24693-C25</FormattedValue><Value>MS24693-C25</Value></Field>
+<Field Name="SERIALNUMBER1" FieldName="{V_ITEM_HISTORY.SERIAL_NUMBER}"><FormattedValue>PO: 0041987</FormattedValue><Value>PO: 0041987</Value></Field>
+<Field Name="PART1" FieldName="{@PART}"><FormattedValue>900-5226-101     NC</FormattedValue><Value>900-5226-101     NC</Value></Field>
+<Field Name="QUANTITY1" FieldName="{V_ITEM_HISTORY.QUANTITY}"><FormattedValue>-4.00</FormattedValue><Value>-4.00</Value></Field>
+</Section>
+</Details>
+<Details Level="1">
+<Section SectionNumber="0">
+<Field Name="JOB1" FieldName="{V_ITEM_HISTORY.JOB}"><FormattedValue>122452</FormattedValue><Value>122452</Value></Field>
+<Field Name="SUFFIX1" FieldName="{V_ITEM_HISTORY.SUFFIX}"><FormattedValue>001</FormattedValue><Value>001</Value></Field>
+<Field Name="PART3" FieldName="{V_ITEM_HISTORY.PART}"><FormattedValue>MS24693-C25</FormattedValue><Value>MS24693-C25</Value></Field>
+<Field Name="SERIALNUMBER1" FieldName="{V_ITEM_HISTORY.SERIAL_NUMBER}"><FormattedValue>PO: 0041987</FormattedValue><Value>PO: 0041987</Value></Field>
+<Field Name="PART1" FieldName="{@PART}"><FormattedValue>5226-101         NC</FormattedValue><Value>5226-101         NC</Value></Field>
+<Field Name="QUANTITY1" FieldName="{V_ITEM_HISTORY.QUANTITY}"><FormattedValue>-2.00</FormattedValue><Value>-2.00</Value></Field>
+</Section>
+</Details>
+<ReportFooter>
+<Section SectionNumber="0">
+</Section>
+</ReportFooter>
+</CrystalReport>

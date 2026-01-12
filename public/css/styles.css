@@ -2491,3 +2491,250 @@ body:has(script[src*="devices.mjs"]) #deviceFilter {
 #main-content p {
   margin: 0.25rem 0;
 }
+/* Revision Dialog Styles */
+.revision-dialog {
+  position: fixed;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  padding: 0;
+  border: 2px solid var(--background-color);
+  border-radius: 8px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+  max-width: 500px;
+  width: 90%;
+  z-index: 1000;
+  background-color: white;
+}
+
+.revision-dialog::backdrop {
+  background-color: rgba(0, 0, 0, 0.5);
+}
+
+.dialog-header {
+  background-color: var(--background-color);
+  color: white;
+  padding: 1rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  border-bottom: 1px solid var(--border-color);
+}
+
+.dialog-header h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.close-btn {
+  background: none;
+  border: none;
+  color: white;
+  font-size: 1.5rem;
+  cursor: pointer;
+  padding: 0;
+  width: 30px;
+  height: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.close-btn:hover {
+  background-color: rgba(255, 255, 255, 0.2);
+  border-radius: 4px;
+}
+
+.dialog-body {
+  padding: 1.5rem;
+  max-height: 70vh;
+  overflow-y: auto;
+}
+
+.form-group {
+  margin-bottom: 1rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  font-weight: 500;
+  color: var(--text-color);
+}
+
+.form-group input,
+.form-group textarea {
+  width: 100%;
+  padding: 0.5rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-family: inherit;
+  font-size: 0.95rem;
+}
+
+.form-group textarea {
+  resize: vertical;
+  min-height: 80px;
+}
+
+.form-group input:focus,
+.form-group textarea:focus {
+  outline: none;
+  border-color: var(--background-color);
+  box-shadow: 0 0 0 3px rgba(169, 23, 48, 0.1);
+}
+
+.form-actions {
+  display: flex;
+  gap: 0.75rem;
+  justify-content: flex-end;
+  margin-top: 1.5rem;
+  padding-top: 1rem;
+  border-top: 1px solid var(--border-color);
+}
+
+.btn-primary,
+.btn-secondary,
+.btn-danger {
+  padding: 0.5rem 1.25rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.95rem;
+  transition: all 0.3s ease;
+  font-weight: 500;
+}
+
+.btn-primary {
+  background-color: #4caf50;
+  color: white;
+}
+
+.btn-primary:hover {
+  background-color: #45a049;
+}
+
+.btn-secondary {
+  background-color: var(--border-color);
+  color: var(--text-color);
+}
+
+.btn-secondary:hover {
+  background-color: #bbb;
+}
+
+.btn-danger {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-danger:hover {
+  background-color: #da190b;
+}
+
+/* Action buttons in table */
+.revision-actions {
+  display: flex;
+  gap: 0.25rem;
+  justify-content: center;
+}
+
+.btn-edit,
+.btn-delete {
+  padding: 0.25rem 0.75rem;
+  border: none;
+  border-radius: 3px;
+  cursor: pointer;
+  font-size: 0.85rem;
+  transition: all 0.2s ease;
+  font-weight: 500;
+}
+
+.btn-edit {
+  background-color: #2196f3;
+  color: white;
+}
+
+.btn-edit:hover {
+  background-color: #0b7dda;
+}
+
+.btn-delete {
+  background-color: #f44336;
+  color: white;
+}
+
+.btn-delete:hover {
+  background-color: #da190b;
+}
+/* Loading Spinner */
+.loading-spinner {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1rem;
+  background-color: #f9f9f9;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.spinner {
+  width: 50px;
+  height: 50px;
+  border: 4px solid #f3f3f3;
+  border-top: 4px solid var(--background-color);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin-bottom: 1rem;
+}
+
+@keyframes spin {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
+}
+
+.loading-spinner p {
+  font-size: 1rem;
+  color: var(--text-color);
+  margin: 0;
+}
+/* Print styles - hide empty sections with Add buttons */
+@media print {
+  /* Hide empty section divs with add buttons */
+  /* Hide empty section divs with add buttons AND their preceding h3 headings */
+  #trace > h3:has(+ div > button),
+  #chem > h3:has(+ div > button),
+  #spot > h3:has(+ div > button),
+  #fusion > h3:has(+ div > button),
+  #heat > h3:has(+ div > button),
+  #paint > h3:has(+ div > button),
+  #trace > div:has(> button),
+  #chem > div:has(> button),
+  #spot > div:has(> button),
+  #fusion > div:has(> button),
+  #heat > div:has(> button),
+  #paint > div:has(> button) {
+    display: none !important;
+  }
+
+  /* Hide action column in print */
+  .revision-actions {
+    display: none !important;
+  }
+
+  /* Hide action column header in print */
+  table th:last-child {
+    display: none !important;
+  }
+
+  /* Hide action cells in print */
+  table td.revision-actions {
+    display: none !important;
+  }
+}

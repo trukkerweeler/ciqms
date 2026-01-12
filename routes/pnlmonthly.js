@@ -255,6 +255,7 @@ router.post("/yearly-trend", (req, res) => {
       }
 
       // Query to get monthly P&L summary for all 12 months
+      // Combines GL_DETAIL + AR_OPEN_ITEMS (revenue) + AP_OPEN_ITEMS (expenses)
       const query = `
         SELECT 
           MONTH(gd.POST_DATE) AS Month,
@@ -266,27 +267,71 @@ router.post("/yearly-trend", (req, res) => {
             WHEN gd.GL_ACCOUNT BETWEEN 900 AND 999 THEN 'Taxes'
             ELSE NULL
           END AS Category,
-          SUM(CASE
-            WHEN gd.GL_ACCOUNT BETWEEN 400 AND 499 THEN
-              ABS(gd.AMOUNT)
-            WHEN (gd.GL_ACCOUNT BETWEEN 445 AND 447 OR gd.GL_ACCOUNT BETWEEN 707 AND 750) THEN
-              CASE WHEN gd.DB_CR_FLAG = 'C' THEN ABS(gd.AMOUNT) ELSE -ABS(gd.AMOUNT) END
-            ELSE
-              CASE WHEN gd.DB_CR_FLAG = 'C' THEN -ABS(gd.AMOUNT) ELSE ABS(gd.AMOUNT) END
-          END) AS Total
+          SUM(ABS(gd.AMOUNT)) AS Total
         FROM global.GL_DETAIL gd
         WHERE YEAR(gd.POST_DATE) = ?
         AND gd.GL_ACCOUNT >= 400
+        AND (
+          (gd.GL_ACCOUNT BETWEEN 400 AND 499 AND gd.DB_CR_FLAG = 'C')
+          OR (gd.GL_ACCOUNT BETWEEN 500 AND 999 AND gd.DB_CR_FLAG = 'D')
+        )
         GROUP BY MONTH(gd.POST_DATE), Category
+        
+        UNION ALL
+        
+        -- Add unposted invoices from AR as revenue
+        SELECT
+          MONTH(aoi.DATE_INVOICE) AS Month,
+          'Revenue' AS Category,
+          SUM(aoi.AMT_INVOICE) AS Total
+        FROM global.AR_OPEN_ITEMS aoi
+        WHERE YEAR(aoi.DATE_INVOICE) = ?
+        AND NOT EXISTS (
+          SELECT 1 FROM global.GL_DETAIL gd2
+          WHERE gd2.GL_ACCOUNT BETWEEN 400 AND 499
+          AND gd2.DB_CR_FLAG = 'C'
+          AND gd2.INVOICE_NO = aoi.INVOICE
+        )
+        GROUP BY MONTH(aoi.DATE_INVOICE)
+        
+        UNION ALL
+        
+        -- Add unposted expenses from AP_OPEN_ITEMS using VENDOR_MASTER.NORMAL_GL_ACCOUNT
+        SELECT
+          MONTH(apo.DATE_INVOICE) AS Month,
+          CASE
+            WHEN vm.NORMAL_GL_ACCOUNT BETWEEN 500 AND 599 THEN 'COGS'
+            WHEN vm.NORMAL_GL_ACCOUNT BETWEEN 600 AND 799 THEN 'SG&A'
+            WHEN vm.NORMAL_GL_ACCOUNT BETWEEN 445 AND 447 OR vm.NORMAL_GL_ACCOUNT BETWEEN 707 AND 750 THEN 'Other Income/Expense'
+            WHEN vm.NORMAL_GL_ACCOUNT BETWEEN 900 AND 999 THEN 'Taxes'
+            ELSE NULL
+          END AS Category,
+          SUM(apo.AMT_INVOICE) AS Total
+        FROM global.AP_OPEN_ITEMS apo
+        LEFT JOIN global.VENDOR_MASTER vm ON apo.VENDOR = vm.VENDOR AND vm.REC = '1'
+        WHERE YEAR(apo.DATE_INVOICE) = ?
+        AND vm.NORMAL_GL_ACCOUNT IS NOT NULL
+        AND vm.NORMAL_GL_ACCOUNT BETWEEN 400 AND 999
+        AND NOT EXISTS (
+          SELECT 1 FROM global.GL_DETAIL gd3
+          WHERE gd3.DB_CR_FLAG = 'D'
+          AND gd3.INVOICE_NO = apo.INVOICE
+        )
+        GROUP BY MONTH(apo.DATE_INVOICE), Category
         ORDER BY Month, Category
       `;
 
-      connection.query(query, [year], (err, rows, fields) => {
+      connection.query(query, [year, year, year], (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for yearly P&L trend: " + err);
           connection.end();
           res.sendStatus(500);
           return;
+        }
+
+        // Debug: Log the raw query results (development only)
+        if (process.env.NODE_ENV !== "production") {
+          console.log("Raw P&L query results for year", year, ":", rows);
         }
 
         // Transform raw data into monthly summaries
@@ -307,6 +352,10 @@ router.post("/yearly-trend", (req, res) => {
           if (!row.Month || !row.Category) continue;
           const month = row.Month;
           const amount = Number(row.Total) || 0;
+
+          if (process.env.NODE_ENV !== "production") {
+            console.log(`Month ${month} - ${row.Category}: ${amount}`);
+          }
 
           switch (row.Category) {
             case "Revenue":

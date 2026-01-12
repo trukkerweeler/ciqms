@@ -43,6 +43,13 @@ async function initManager() {
       btnClose.classList.add("btn-primary");
       btnClose.id = "btnClose";
 
+      // Shade/disable the close button if audit is already closed
+      if (record[0].CLOSED === "Yes") {
+        btnClose.disabled = true;
+        btnClose.style.opacity = "0.5";
+        btnClose.style.cursor = "not-allowed";
+      }
+
       const divMainTitle = document.createElement("div");
       divMainTitle.classList.add("main-title");
       divMainTitle.appendChild(h1);
