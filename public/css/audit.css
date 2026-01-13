@@ -510,6 +510,12 @@ h1 {
   content: "(No observation entered)";
 }
 
+@media print {
+  .observations .obs-empty::after {
+    content: "";
+  }
+}
+
 .observations .btnEditObs {
   position: absolute;
   top: 5px;

@@ -370,7 +370,11 @@ router.post("/add", (req, res) => {
           console.error("Error inserting CERT_ADD record:", err);
           return res.status(500).json({ error: "Failed to save new row" });
         }
-        res.json({ success: true, certAddId: results.insertId });
+        res.json({
+          success: true,
+          certAddId: results.insertId,
+          source: "mysql",
+        });
       }
     );
   });

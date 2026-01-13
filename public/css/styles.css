@@ -51,9 +51,10 @@ table thead tr {
 }
 table th,
 table td {
-  padding: 0.5rem;
+  padding: 0.25rem 0.5rem;
   text-align: center;
   border: 1px solid var(--border-color);
+  font-size: 1.3rem;
 }
 table tbody tr:nth-child(even) {
   background-color: var(--tertiary-color);
@@ -2706,20 +2707,13 @@ body:has(script[src*="devices.mjs"]) #deviceFilter {
 }
 /* Print styles - hide empty sections with Add buttons */
 @media print {
-  /* Hide empty section divs with add buttons */
-  /* Hide empty section divs with add buttons AND their preceding h3 headings */
-  #trace > h3:has(+ div > button),
-  #chem > h3:has(+ div > button),
-  #spot > h3:has(+ div > button),
-  #fusion > h3:has(+ div > button),
-  #heat > h3:has(+ div > button),
-  #paint > h3:has(+ div > button),
-  #trace > div:has(> button),
-  #chem > div:has(> button),
-  #spot > div:has(> button),
-  #fusion > div:has(> button),
-  #heat > div:has(> button),
-  #paint > div:has(> button) {
+  /* Hide empty section title containers and "no data" messages */
+  .no-data-section {
+    display: none !important;
+  }
+
+  /* Hide section title containers when they have an adjacent no-data-section */
+  div:has(+ .no-data-section) {
     display: none !important;
   }
 

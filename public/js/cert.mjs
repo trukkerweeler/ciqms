@@ -81,6 +81,31 @@ async function saveRevision(type, notes) {
 
 let currentAddSection = "";
 
+// Helper function to format part numbers
+function formatPartNumber(part) {
+  if (!part) return "";
+  const trimmed = part.trim();
+  const lastSpaceIndex = trimmed.lastIndexOf(" ");
+
+  if (lastSpaceIndex === -1) return trimmed; // No space
+
+  const lastCharIndex = trimmed.length - 1;
+  // If last space is at 2nd or 3rd to last character position
+  if (
+    lastSpaceIndex === lastCharIndex - 1 ||
+    lastSpaceIndex === lastCharIndex - 2
+  ) {
+    return trimmed.substring(0, lastSpaceIndex);
+  }
+
+  // If there are multiple spaces total, return everything before the last space
+  if (trimmed.indexOf(" ") !== lastSpaceIndex) {
+    return trimmed.substring(0, lastSpaceIndex);
+  }
+
+  return trimmed;
+}
+
 // Define form fields for each section
 const sectionFormFields = {
   RM: [
@@ -107,6 +132,18 @@ const sectionFormFields = {
     { name: "serialNumber", label: "Trace ID", type: "text", required: false },
   ],
   HEAT: [
+    { name: "job", label: "Item", type: "text", required: true },
+    { name: "part", label: "Part Number", type: "text", required: true },
+    { name: "operation", label: "Specification", type: "text", required: true },
+    { name: "serialNumber", label: "Trace ID", type: "text", required: false },
+  ],
+  PASS: [
+    { name: "job", label: "Item", type: "text", required: true },
+    { name: "part", label: "Part Number", type: "text", required: true },
+    { name: "operation", label: "Specification", type: "text", required: true },
+    { name: "serialNumber", label: "Trace ID", type: "text", required: false },
+  ],
+  PAINT: [
     { name: "job", label: "Item", type: "text", required: true },
     { name: "part", label: "Part Number", type: "text", required: true },
     { name: "operation", label: "Specification", type: "text", required: true },
@@ -285,6 +322,7 @@ btnSearch.addEventListener("click", async function (event) {
     "spot",
     "fusion",
     "heat",
+    "pass",
     "paint",
     "cert-trace",
   ];
@@ -317,7 +355,7 @@ btnSearch.addEventListener("click", async function (event) {
     // Only push RM items from the main data here, ensuring uniqueness
     const rmSet = new Set();
     data.forEach((item) => {
-      let prodLine = item["PRODUCT_LINE"].trim();
+      let prodLine = item["PRODUCT_LINE"] ? item["PRODUCT_LINE"].trim() : "";
       if (prodLine === "RM") {
         const job =
           (item["JOB"] ? item["JOB"].trim() : "") +
@@ -334,7 +372,7 @@ btnSearch.addEventListener("click", async function (event) {
         const key = [job, part, part2, serialNumber].join("|");
         if (!rmSet.has(key)) {
           rmSet.add(key);
-          RM.push({ job, part, part2, serialNumber });
+          RM.push({ job, part, part2, serialNumber, source: "vbs" });
         }
       }
     });
@@ -380,6 +418,7 @@ btnSearch.addEventListener("click", async function (event) {
                         part,
                         part2,
                         serialNumber: ddSerialNumber,
+                        source: "vbs",
                       });
                     }
                   }
@@ -397,12 +436,38 @@ btnSearch.addEventListener("click", async function (event) {
     if (RM.length > 0) {
       const table = document.createElement("table");
       table.style.width = "100%";
+      table.style.borderCollapse = "collapse";
+      table.style.border = "2px solid #333";
       table.border = "1";
 
-      // Create and append table title
+      // Create title container with + button
+      const titleContainer = document.createElement("div");
+      titleContainer.style.display = "flex";
+      titleContainer.style.alignItems = "center";
+      titleContainer.style.gap = "1rem";
+      titleContainer.style.marginBottom = "1rem";
+
       const title = document.createElement("h3");
       title.textContent = "RAW MATERIALS";
-      trace.appendChild(title);
+      title.style.margin = "0";
+      titleContainer.appendChild(title);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("RM");
+      titleContainer.appendChild(btnAdd);
+
+      trace.appendChild(titleContainer);
 
       // Create table header
       const thead = document.createElement("thead");
@@ -430,15 +495,19 @@ btnSearch.addEventListener("click", async function (event) {
 
       // Create table body
       const tbody = document.createElement("tbody");
+      let itemNumber = 1;
       RM.forEach((item) => {
         const row = document.createElement("tr");
 
         const tdJob = document.createElement("td");
-        tdJob.textContent = item.job;
+        tdJob.textContent = itemNumber.toString();
+        tdJob.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdJob);
+        itemNumber++;
 
         const tdPart2 = document.createElement("td");
-        tdPart2.textContent = item.part2;
+        tdPart2.textContent = formatPartNumber(item.part2);
+        tdPart2.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdPart2);
 
         let serialNumber = item.serialNumber || "";
@@ -447,7 +516,9 @@ btnSearch.addEventListener("click", async function (event) {
           serialNumber = serialNumber.replace(/^PO: 00/, "");
         }
         const tdSerial = document.createElement("td");
-        tdSerial.textContent = serialNumber;
+        tdSerial.textContent =
+          serialNumber + (item.job ? ` (${item.job})` : "");
+        tdSerial.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSerial);
 
         // Add Actions column
@@ -460,32 +531,50 @@ btnSearch.addEventListener("click", async function (event) {
 
       trace.appendChild(table);
     } else {
+      const titleContainer = document.createElement("div");
+      titleContainer.style.display = "flex";
+      titleContainer.style.alignItems = "center";
+      titleContainer.style.gap = "1rem";
+      titleContainer.style.marginBottom = "1rem";
+
       const title = document.createElement("h3");
       title.textContent = "RAW MATERIALS";
-      trace.appendChild(title);
-
-      const noDataDiv = document.createElement("div");
-      noDataDiv.style.padding = "1rem";
-      noDataDiv.style.textAlign = "center";
-      noDataDiv.innerHTML = "<p>No RM items found.</p>";
+      title.style.margin = "0";
+      titleContainer.appendChild(title);
 
       const btnAdd = document.createElement("button");
       btnAdd.type = "button";
       btnAdd.className = "btn-primary";
-      btnAdd.textContent = "+ Add RM Row";
-      btnAdd.style.marginTop = "0.5rem";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
       btnAdd.onclick = () => openAddDialog("RM");
-      noDataDiv.appendChild(btnAdd);
+      titleContainer.appendChild(btnAdd);
 
+      trace.appendChild(titleContainer);
+
+      const noDataDiv = document.createElement("div");
+      noDataDiv.className = "no-data-section";
+      noDataDiv.style.padding = "1rem";
+      noDataDiv.style.textAlign = "center";
+      noDataDiv.innerHTML = "<p>No RM items found.</p>";
       trace.appendChild(noDataDiv);
     }
     // }
 
-    // --- Collect CHEM, FWLD, SWLD, HEAT arrays ---
+    // --- Collect CHEM, FWLD, SWLD, HEAT, PASS, PAINT arrays ---
     let CHEM = [];
     let FWLD = [];
     let SWLD = [];
     let HEAT = [];
+    let PASS = [];
+    let PAINT = [];
 
     const serialNumbers = data
       .map((item) => item["SERIAL_NUMBER"] && item["SERIAL_NUMBER"].trim())
@@ -511,6 +600,7 @@ btnSearch.addEventListener("click", async function (event) {
         const procData = await procResponse.json();
         if (procData && procData.length > 0) {
           procData.forEach((proc) => {
+            proc.source = "vbs"; // Mark as VBScript source
             const op =
               proc.OPERATION && typeof proc.OPERATION.trim === "function"
                 ? proc.OPERATION.trim()
@@ -532,6 +622,10 @@ btnSearch.addEventListener("click", async function (event) {
               FWLD.push(proc);
             } else if (op === "SPOTW") {
               SWLD.push(proc);
+            } else if (op === "PASSM2" || op === "PASST6") {
+              PASS.push(proc);
+            } else if (op === "BACPRM") {
+              PAINT.push(proc);
             } else if (
               op.includes("HT") ||
               op.includes("6061") ||
@@ -612,11 +706,37 @@ btnSearch.addEventListener("click", async function (event) {
     if (CHEM.length > 0) {
       const chemTable = document.createElement("table");
       chemTable.style.width = "100%";
+      chemTable.style.borderCollapse = "collapse";
+      chemTable.style.border = "2px solid #333";
       chemTable.border = "1";
+
+      const chemTitleContainer = document.createElement("div");
+      chemTitleContainer.style.display = "flex";
+      chemTitleContainer.style.alignItems = "center";
+      chemTitleContainer.style.gap = "1rem";
+      chemTitleContainer.style.marginBottom = "1rem";
 
       const chemTitle = document.createElement("h3");
       chemTitle.textContent = "CHEMICAL TREATMENT";
-      trace.appendChild(chemTitle);
+      chemTitle.style.margin = "0";
+      chemTitleContainer.appendChild(chemTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("CHEM");
+      chemTitleContainer.appendChild(btnAdd);
+
+      trace.appendChild(chemTitleContainer);
 
       const chemThead = document.createElement("thead");
       const chemHeaderRow = document.createElement("tr");
@@ -632,42 +752,18 @@ btnSearch.addEventListener("click", async function (event) {
       chemTable.appendChild(chemThead);
 
       const chemTbody = document.createElement("tbody");
+      let chemItemNumber = 1;
       for (const item of CHEM) {
         const row = document.createElement("tr");
 
         const tdJob = document.createElement("td");
-        tdJob.textContent =
-          (item.JOB ? item.JOB.trim() : "") +
-          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        tdJob.textContent = chemItemNumber.toString();
+        tdJob.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdJob);
+        chemItemNumber++;
 
         const tdPart2 = document.createElement("td");
-        tdPart2.textContent = item.PART ? item.PART.trim() : "";
-        row.appendChild(tdPart2);
-
-        // Specification column
-        const tdSpec = document.createElement("td");
-        let spec = "";
-        if (item.OPERATION) {
-          switch (item.OPERATION) {
-            case "FT1C1A":
-              spec = "MIL-DTL-5541 Type I Class 1A";
-              break;
-            case "FT1C3":
-              spec = "MIL-DTL-5541 Type I Class 3";
-              break;
-            case "FT1C3A":
-              spec = "MIL-DTL-5541 Type I Class 3A";
-              break;
-            case "FT2C1A":
-              spec = "MIL-DTL-5541 Type II Class 1A";
-              break;
-            case "FT2C3":
-              spec = "MIL-DTL-5541 Type II Class 3";
-              break;
-          }
-        }
-        tdSpec.textContent = spec;
+        tdPart2.textContent = formatPartNumber(item.PART);
         row.appendChild(tdSpec);
 
         const tdSerial = document.createElement("td");
@@ -706,6 +802,15 @@ btnSearch.addEventListener("click", async function (event) {
             tdSerial.textContent = tdSerial.textContent.substring(1);
           }
         }
+        const jobInfo =
+          (item.JOB ? item.JOB.trim() : "") +
+          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        if (jobInfo) {
+          tdSerial.textContent =
+            tdSerial.textContent +
+            (tdSerial.textContent ? ` (${jobInfo})` : jobInfo);
+        }
+        tdSerial.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSerial);
 
         // Add Actions column
@@ -726,23 +831,39 @@ btnSearch.addEventListener("click", async function (event) {
       chemTable.appendChild(chemTbody);
       trace.appendChild(chemTable);
     } else {
+      const chemTitleContainer = document.createElement("div");
+      chemTitleContainer.style.display = "flex";
+      chemTitleContainer.style.alignItems = "center";
+      chemTitleContainer.style.gap = "1rem";
+      chemTitleContainer.style.marginBottom = "1rem";
+
       const chemTitle = document.createElement("h3");
       chemTitle.textContent = "CHEMICAL TREATMENT";
-      trace.appendChild(chemTitle);
-
-      const noDataDiv = document.createElement("div");
-      noDataDiv.style.padding = "1rem";
-      noDataDiv.style.textAlign = "center";
-      noDataDiv.innerHTML = "<p>No chemical treatment items found.</p>";
+      chemTitle.style.margin = "0";
+      chemTitleContainer.appendChild(chemTitle);
 
       const btnAdd = document.createElement("button");
       btnAdd.type = "button";
       btnAdd.className = "btn-primary";
-      btnAdd.textContent = "+ Add CHEM Row";
-      btnAdd.style.marginTop = "0.5rem";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
       btnAdd.onclick = () => openAddDialog("CHEM");
-      noDataDiv.appendChild(btnAdd);
+      chemTitleContainer.appendChild(btnAdd);
 
+      trace.appendChild(chemTitleContainer);
+
+      const noDataDiv = document.createElement("div");
+      noDataDiv.className = "no-data-section";
+      noDataDiv.style.padding = "1rem";
+      noDataDiv.style.textAlign = "center";
+      noDataDiv.innerHTML = "<p>No chemical treatment items found.</p>";
       trace.appendChild(noDataDiv);
     }
 
@@ -750,11 +871,37 @@ btnSearch.addEventListener("click", async function (event) {
     if (FWLD.length > 0) {
       const fwldTable = document.createElement("table");
       fwldTable.style.width = "100%";
+      fwldTable.style.borderCollapse = "collapse";
+      fwldTable.style.border = "2px solid #333";
       fwldTable.border = "1";
+
+      const fwldTitleContainer = document.createElement("div");
+      fwldTitleContainer.style.display = "flex";
+      fwldTitleContainer.style.alignItems = "center";
+      fwldTitleContainer.style.gap = "1rem";
+      fwldTitleContainer.style.marginBottom = "1rem";
 
       const fwldTitle = document.createElement("h3");
       fwldTitle.textContent = "FUSION WELDING";
-      trace.appendChild(fwldTitle);
+      fwldTitle.style.margin = "0";
+      fwldTitleContainer.appendChild(fwldTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("FUSION");
+      fwldTitleContainer.appendChild(btnAdd);
+
+      trace.appendChild(fwldTitleContainer);
 
       const fwldThead = document.createElement("thead");
       const fwldHeaderRow = document.createElement("tr");
@@ -770,17 +917,19 @@ btnSearch.addEventListener("click", async function (event) {
       fwldTable.appendChild(fwldThead);
 
       const fwldTbody = document.createElement("tbody");
+      let fwldItemNumber = 1;
       for (const item of FWLD) {
         const row = document.createElement("tr");
 
         const tdJob = document.createElement("td");
-        tdJob.textContent =
-          (item.JOB ? item.JOB.trim() : "") +
-          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        tdJob.textContent = fwldItemNumber.toString();
+        tdJob.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdJob);
+        fwldItemNumber++;
 
         const tdPart2 = document.createElement("td");
         tdPart2.textContent = item.PART ? item.PART.trim() : "";
+        tdPart2.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdPart2);
 
         // Specification column
@@ -794,6 +943,8 @@ btnSearch.addEventListener("click", async function (event) {
           spec = "MIL-W-8604";
         }
         tdSpec.textContent = spec;
+        tdSpec.title = item.OPERATION ? item.OPERATION.trim() : "";
+        tdSpec.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSpec);
 
         const tdSerial = document.createElement("td");
@@ -824,6 +975,15 @@ btnSearch.addEventListener("click", async function (event) {
           }
         }
         tdSerial.textContent = serial;
+        const fwldJobInfo =
+          (item.JOB ? item.JOB.trim() : "") +
+          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        if (fwldJobInfo) {
+          tdSerial.textContent =
+            tdSerial.textContent +
+            (tdSerial.textContent ? ` (${fwldJobInfo})` : fwldJobInfo);
+        }
+        tdSerial.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSerial);
 
         // Add Actions column
@@ -844,23 +1004,39 @@ btnSearch.addEventListener("click", async function (event) {
       fwldTable.appendChild(fwldTbody);
       trace.appendChild(fwldTable);
     } else {
+      const fwldTitleContainer = document.createElement("div");
+      fwldTitleContainer.style.display = "flex";
+      fwldTitleContainer.style.alignItems = "center";
+      fwldTitleContainer.style.gap = "1rem";
+      fwldTitleContainer.style.marginBottom = "1rem";
+
       const fwldTitle = document.createElement("h3");
       fwldTitle.textContent = "FUSION WELDING";
-      trace.appendChild(fwldTitle);
-
-      const noDataDiv = document.createElement("div");
-      noDataDiv.style.padding = "1rem";
-      noDataDiv.style.textAlign = "center";
-      noDataDiv.innerHTML = "<p>No fusion welding items found.</p>";
+      fwldTitle.style.margin = "0";
+      fwldTitleContainer.appendChild(fwldTitle);
 
       const btnAdd = document.createElement("button");
       btnAdd.type = "button";
       btnAdd.className = "btn-primary";
-      btnAdd.textContent = "+ Add FUSION Row";
-      btnAdd.style.marginTop = "0.5rem";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
       btnAdd.onclick = () => openAddDialog("FUSION");
-      noDataDiv.appendChild(btnAdd);
+      fwldTitleContainer.appendChild(btnAdd);
 
+      trace.appendChild(fwldTitleContainer);
+
+      const noDataDiv = document.createElement("div");
+      noDataDiv.className = "no-data-section";
+      noDataDiv.style.padding = "1rem";
+      noDataDiv.style.textAlign = "center";
+      noDataDiv.innerHTML = "<p>No fusion welding items found.</p>";
       trace.appendChild(noDataDiv);
     }
 
@@ -868,11 +1044,37 @@ btnSearch.addEventListener("click", async function (event) {
     if (SWLD.length > 0) {
       const swldTable = document.createElement("table");
       swldTable.style.width = "100%";
+      swldTable.style.borderCollapse = "collapse";
+      swldTable.style.border = "2px solid #333";
       swldTable.border = "1";
+
+      const swldTitleContainer = document.createElement("div");
+      swldTitleContainer.style.display = "flex";
+      swldTitleContainer.style.alignItems = "center";
+      swldTitleContainer.style.gap = "1rem";
+      swldTitleContainer.style.marginBottom = "1rem";
 
       const swldTitle = document.createElement("h3");
       swldTitle.textContent = "SPOT WELDING";
-      trace.appendChild(swldTitle);
+      swldTitle.style.margin = "0";
+      swldTitleContainer.appendChild(swldTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("SPOT");
+      swldTitleContainer.appendChild(btnAdd);
+
+      trace.appendChild(swldTitleContainer);
 
       const swldThead = document.createElement("thead");
       const swldHeaderRow = document.createElement("tr");
@@ -888,17 +1090,19 @@ btnSearch.addEventListener("click", async function (event) {
       swldTable.appendChild(swldThead);
 
       const swldTbody = document.createElement("tbody");
+      let swldItemNumber = 1;
       for (const item of SWLD) {
         const row = document.createElement("tr");
 
         const tdJob = document.createElement("td");
-        tdJob.textContent =
-          (item.JOB ? item.JOB.trim() : "") +
-          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        tdJob.textContent = swldItemNumber.toString();
+        tdJob.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdJob);
+        swldItemNumber++;
 
         const tdPart2 = document.createElement("td");
-        tdPart2.textContent = item.PART ? item.PART.trim() : "";
+        tdPart2.textContent = formatPartNumber(item.PART);
+        tdPart2.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdPart2);
 
         // Specification column
@@ -912,6 +1116,8 @@ btnSearch.addEventListener("click", async function (event) {
           spec = "MIL-W-8604";
         }
         tdSpec.textContent = spec;
+        tdSpec.title = item.OPERATION ? item.OPERATION.trim() : "";
+        tdSpec.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSpec);
 
         const tdSerial = document.createElement("td");
@@ -948,6 +1154,15 @@ btnSearch.addEventListener("click", async function (event) {
           }
         }
         tdSerial.textContent = serial;
+        const swldJobInfo =
+          (item.JOB ? item.JOB.trim() : "") +
+          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        if (swldJobInfo) {
+          tdSerial.textContent =
+            tdSerial.textContent +
+            (tdSerial.textContent ? ` (${swldJobInfo})` : swldJobInfo);
+        }
+        tdSerial.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSerial);
 
         // Add Actions column
@@ -968,23 +1183,39 @@ btnSearch.addEventListener("click", async function (event) {
       swldTable.appendChild(swldTbody);
       trace.appendChild(swldTable);
     } else {
+      const swldTitleContainer = document.createElement("div");
+      swldTitleContainer.style.display = "flex";
+      swldTitleContainer.style.alignItems = "center";
+      swldTitleContainer.style.gap = "1rem";
+      swldTitleContainer.style.marginBottom = "1rem";
+
       const swldTitle = document.createElement("h3");
       swldTitle.textContent = "SPOT WELDING";
-      trace.appendChild(swldTitle);
-
-      const noDataDiv = document.createElement("div");
-      noDataDiv.style.padding = "1rem";
-      noDataDiv.style.textAlign = "center";
-      noDataDiv.innerHTML = "<p>No spot welding items found.</p>";
+      swldTitle.style.margin = "0";
+      swldTitleContainer.appendChild(swldTitle);
 
       const btnAdd = document.createElement("button");
       btnAdd.type = "button";
       btnAdd.className = "btn-primary";
-      btnAdd.textContent = "+ Add SPOT Row";
-      btnAdd.style.marginTop = "0.5rem";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
       btnAdd.onclick = () => openAddDialog("SPOT");
-      noDataDiv.appendChild(btnAdd);
+      swldTitleContainer.appendChild(btnAdd);
 
+      trace.appendChild(swldTitleContainer);
+
+      const noDataDiv = document.createElement("div");
+      noDataDiv.className = "no-data-section";
+      noDataDiv.style.padding = "1rem";
+      noDataDiv.style.textAlign = "center";
+      noDataDiv.innerHTML = "<p>No spot welding items found.</p>";
       trace.appendChild(noDataDiv);
     }
 
@@ -1007,11 +1238,37 @@ btnSearch.addEventListener("click", async function (event) {
       }
       const heatTable = document.createElement("table");
       heatTable.style.width = "100%";
+      heatTable.style.borderCollapse = "collapse";
+      heatTable.style.border = "2px solid #333";
       heatTable.border = "1";
+
+      const heatTitleContainer = document.createElement("div");
+      heatTitleContainer.style.display = "flex";
+      heatTitleContainer.style.alignItems = "center";
+      heatTitleContainer.style.gap = "1rem";
+      heatTitleContainer.style.marginBottom = "1rem";
 
       const heatTitle = document.createElement("h3");
       heatTitle.textContent = "HEAT TREATING";
-      trace.appendChild(heatTitle);
+      heatTitle.style.margin = "0";
+      heatTitleContainer.appendChild(heatTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("HEAT");
+      heatTitleContainer.appendChild(btnAdd);
+
+      trace.appendChild(heatTitleContainer);
 
       const heatThead = document.createElement("thead");
       const heatHeaderRow = document.createElement("tr");
@@ -1027,17 +1284,19 @@ btnSearch.addEventListener("click", async function (event) {
       heatTable.appendChild(heatThead);
 
       const heatTbody = document.createElement("tbody");
+      let heatItemNumber = 1;
       for (const item of uniqueHEAT) {
         const row = document.createElement("tr");
 
         const tdJob = document.createElement("td");
-        tdJob.textContent =
-          (item.JOB ? item.JOB.trim() : "") +
-          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        tdJob.textContent = heatItemNumber.toString();
+        tdJob.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdJob);
+        heatItemNumber++;
 
         const tdPart2 = document.createElement("td");
-        tdPart2.textContent = item.PART ? item.PART.trim() : "";
+        tdPart2.textContent = formatPartNumber(item.PART);
+        tdPart2.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdPart2);
 
         // Specification column
@@ -1080,11 +1339,70 @@ btnSearch.addEventListener("click", async function (event) {
           }
         }
         tdSpec.textContent = spec;
+        tdSpec.title = item.OPERATION ? item.OPERATION.trim() : "";
+        tdSpec.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSpec);
 
         const tdSerial = document.createElement("td");
         let serial = item.SERIAL_NUMBER ? item.SERIAL_NUMBER.trim() : "";
-        if (!serial) {
+
+        // Check if serial number is a JOB reference (format: XXXXXX-XXX)
+        const jobRefPattern = /^\d{6}-\d{3}$/;
+        if (serial && jobRefPattern.test(serial)) {
+          try {
+            const baseJob = serial.split("-")[0];
+            const jobResponse = await fetch(
+              `http://${
+                window.location.hostname
+              }:${port}/cert/heat/${encodeURIComponent(baseJob)}`
+            );
+            if (jobResponse.ok) {
+              const jobData = await jobResponse.json();
+              if (jobData && jobData[0]) {
+                let childSerial = jobData[0][0].SERIAL_NUMBER;
+                if (childSerial) {
+                  childSerial = childSerial.trim();
+                  // If the child serial is also a job reference, fetch that too
+                  if (jobRefPattern.test(childSerial)) {
+                    try {
+                      const childBaseJob = childSerial.split("-")[0];
+                      const childResponse = await fetch(
+                        `http://${
+                          window.location.hostname
+                        }:${port}/cert/heat/${encodeURIComponent(childBaseJob)}`
+                      );
+                      if (childResponse.ok) {
+                        const childData = await childResponse.json();
+                        if (
+                          childData &&
+                          childData[0] &&
+                          childData[0][0].SERIAL_NUMBER
+                        ) {
+                          serial = childData[0][0].SERIAL_NUMBER.trim();
+                        } else {
+                          serial = childSerial;
+                        }
+                      } else {
+                        serial = childSerial;
+                      }
+                    } catch (childErr) {
+                      console.error(
+                        "Error fetching child WO",
+                        childSerial,
+                        childErr
+                      );
+                      serial = childSerial;
+                    }
+                  } else {
+                    serial = childSerial;
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching heat data for", serial, err);
+          }
+        } else if (!serial) {
           try {
             const job = item.JOB ? item.JOB.trim() : "";
             const suffix = item.SUFFIX ? item.SUFFIX.trim() : "";
@@ -1120,6 +1438,15 @@ btnSearch.addEventListener("click", async function (event) {
           }
         }
         tdSerial.textContent = serial;
+        const heatJobInfo =
+          (item.JOB ? item.JOB.trim() : "") +
+          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        if (heatJobInfo) {
+          tdSerial.textContent =
+            tdSerial.textContent +
+            (tdSerial.textContent ? ` (${heatJobInfo})` : heatJobInfo);
+        }
+        tdSerial.style.color = item.source === "mysql" ? "#00008B" : "#000000";
         row.appendChild(tdSerial);
 
         // Add Actions column
@@ -1140,24 +1467,491 @@ btnSearch.addEventListener("click", async function (event) {
       heatTable.appendChild(heatTbody);
       trace.appendChild(heatTable);
     } else {
+      const heatTitleContainer = document.createElement("div");
+      heatTitleContainer.style.display = "flex";
+      heatTitleContainer.style.alignItems = "center";
+      heatTitleContainer.style.gap = "1rem";
+      heatTitleContainer.style.marginBottom = "1rem";
+
       const heatTitle = document.createElement("h3");
       heatTitle.textContent = "HEAT TREATING";
-      trace.appendChild(heatTitle);
-
-      const noDataDiv = document.createElement("div");
-      noDataDiv.style.padding = "1rem";
-      noDataDiv.style.textAlign = "center";
-      noDataDiv.innerHTML = "<p>No heat treating items found.</p>";
+      heatTitle.style.margin = "0";
+      heatTitleContainer.appendChild(heatTitle);
 
       const btnAdd = document.createElement("button");
       btnAdd.type = "button";
       btnAdd.className = "btn-primary";
-      btnAdd.textContent = "+ Add HEAT Row";
-      btnAdd.style.marginTop = "0.5rem";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
       btnAdd.onclick = () => openAddDialog("HEAT");
-      noDataDiv.appendChild(btnAdd);
+      heatTitleContainer.appendChild(btnAdd);
 
+      trace.appendChild(heatTitleContainer);
+
+      const noDataDiv = document.createElement("div");
+      noDataDiv.className = "no-data-section";
+      noDataDiv.style.padding = "1rem";
+      noDataDiv.style.textAlign = "center";
+      noDataDiv.innerHTML = "<p>No heat treating items found.</p>";
       trace.appendChild(noDataDiv);
+    }
+
+    // --- Render PASSIVATION table ---
+    const pass = document.getElementById("pass");
+    if (PASS.length > 0) {
+      // Remove duplicates from PASS based on JOB, SUFFIX, PART, SERIAL_NUMBER
+      const seen = new Set();
+      const uniquePASS = [];
+      for (const item of PASS) {
+        const key = [
+          item.JOB ? item.JOB.trim() : "",
+          item.SUFFIX ? item.SUFFIX.trim() : "",
+          item.PART ? item.PART.trim() : "",
+          item.SERIAL_NUMBER ? item.SERIAL_NUMBER.trim() : "",
+        ].join("|");
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniquePASS.push(item);
+        }
+      }
+      const passTable = document.createElement("table");
+      passTable.style.width = "100%";
+      passTable.style.borderCollapse = "collapse";
+      passTable.style.border = "2px solid #333";
+      passTable.border = "1";
+
+      const passTitleContainer = document.createElement("div");
+      passTitleContainer.style.display = "flex";
+      passTitleContainer.style.alignItems = "center";
+      passTitleContainer.style.gap = "1rem";
+      passTitleContainer.style.marginBottom = "1rem";
+
+      const passTitle = document.createElement("h3");
+      passTitle.textContent = "PASSIVATION";
+      passTitle.style.margin = "0";
+      passTitleContainer.appendChild(passTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("PASS");
+      passTitleContainer.appendChild(btnAdd);
+
+      pass.appendChild(passTitleContainer);
+
+      const passThead = document.createElement("thead");
+      const passHeaderRow = document.createElement("tr");
+      const headers = ["Item", "Part", "Spec", "Serial Number", "Actions"];
+      headers.forEach((header) => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        th.style.border = "1px solid black";
+        th.style.padding = "0.5rem";
+        passHeaderRow.appendChild(th);
+      });
+      passThead.appendChild(passHeaderRow);
+      passTable.appendChild(passThead);
+
+      const passTbody = document.createElement("tbody");
+      let passItemNumber = 1;
+
+      for (const item of uniquePASS) {
+        const row = document.createElement("tr");
+
+        const tdJob = document.createElement("td");
+        tdJob.textContent = passItemNumber.toString();
+        tdJob.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdJob);
+        passItemNumber++;
+
+        const tdPart2 = document.createElement("td");
+        tdPart2.textContent = formatPartNumber(item.PART);
+        tdPart2.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdPart2);
+
+        // Specification column
+        const tdSpec = document.createElement("td");
+        let spec = "";
+        if (item.OPERATION) {
+          const op = item.OPERATION.trim();
+          if (op === "PASSM2") {
+            spec = "AMS2700, Method 2";
+          } else if (op === "PASST6") {
+            spec = "AMS2600";
+          }
+        }
+        tdSpec.textContent = spec;
+        tdSpec.title = item.OPERATION ? item.OPERATION.trim() : "";
+        tdSpec.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdSpec);
+
+        const tdSerial = document.createElement("td");
+        let serial = item.SERIAL_NUMBER ? item.SERIAL_NUMBER.trim() : "";
+
+        // Check if serial number is a JOB reference (format: XXXXXX-XXX)
+        const jobRefPattern = /^\d{6}-\d{3}$/;
+        if (serial && jobRefPattern.test(serial)) {
+          try {
+            const baseJob = serial.split("-")[0];
+            const jobResponse = await fetch(
+              `http://${
+                window.location.hostname
+              }:${port}/cert/heat/${encodeURIComponent(baseJob)}`
+            );
+            if (jobResponse.ok) {
+              const jobData = await jobResponse.json();
+              if (jobData && jobData[0]) {
+                let childSerial = jobData[0][0].SERIAL_NUMBER;
+                if (childSerial) {
+                  childSerial = childSerial.trim();
+                  // If the child serial is also a job reference, fetch that too
+                  if (jobRefPattern.test(childSerial)) {
+                    try {
+                      const childBaseJob = childSerial.split("-")[0];
+                      const childResponse = await fetch(
+                        `http://${
+                          window.location.hostname
+                        }:${port}/cert/heat/${encodeURIComponent(childBaseJob)}`
+                      );
+                      if (childResponse.ok) {
+                        const childData = await childResponse.json();
+                        if (
+                          childData &&
+                          childData[0] &&
+                          childData[0][0].SERIAL_NUMBER
+                        ) {
+                          serial = childData[0][0].SERIAL_NUMBER.trim();
+                        } else {
+                          serial = childSerial;
+                        }
+                      } else {
+                        serial = childSerial;
+                      }
+                    } catch (childErr) {
+                      console.error(
+                        "Error fetching child WO",
+                        childSerial,
+                        childErr
+                      );
+                      serial = childSerial;
+                    }
+                  } else {
+                    serial = childSerial;
+                  }
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching item history for", serial, err);
+          }
+        } else if (!serial) {
+          try {
+            const job = item.JOB ? item.JOB.trim() : "";
+            const suffix = item.SUFFIX ? item.SUFFIX.trim() : "";
+            const lineRouter = item.LINE_ROUTER ? item.LINE_ROUTER.trim() : "";
+            let jobString = job;
+            if (suffix) jobString += `-${suffix}`;
+            if (lineRouter) jobString += `-${lineRouter}`;
+            const poResponse = await fetch(
+              `http://${
+                window.location.hostname
+              }:${port}/cert/heat/${encodeURIComponent(jobString)}`
+            );
+            if (poResponse.ok) {
+              const poData = await poResponse.json();
+              if (poData && poData[0]) {
+                if (poData[0][0].PURCHASE_ORDER) {
+                  serial = poData[0][0].PURCHASE_ORDER.trim();
+                } else if (poData[0][0].DATE_COMPLETED) {
+                  serial = poData[0][0].DATE_COMPLETED.trim();
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching PASS data for", item.JOB, err);
+          }
+        }
+        if (serial) {
+          while (serial.charAt(0) === "0") {
+            serial = serial.substring(1);
+          }
+        }
+        tdSerial.textContent = serial;
+        const passJobInfo =
+          (item.JOB ? item.JOB.trim() : "") +
+          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        if (passJobInfo) {
+          tdSerial.textContent =
+            tdSerial.textContent +
+            (tdSerial.textContent ? ` (${passJobInfo})` : passJobInfo);
+        }
+        tdSerial.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdSerial);
+
+        // Add Actions column
+        const actionCell = createActionCell(
+          "PASS",
+          item.SERIAL_NUMBER?.trim(),
+          {
+            job: item.JOB?.trim(),
+            part: item.PART?.trim(),
+            operation: item.OPERATION?.trim(),
+            serialNumber: item.SERIAL_NUMBER?.trim(),
+          }
+        );
+        row.appendChild(actionCell);
+
+        passTbody.appendChild(row);
+      }
+      passTable.appendChild(passTbody);
+      pass.appendChild(passTable);
+    } else {
+      const passTitleContainer = document.createElement("div");
+      passTitleContainer.style.display = "flex";
+      passTitleContainer.style.alignItems = "center";
+      passTitleContainer.style.gap = "1rem";
+      passTitleContainer.style.marginBottom = "1rem";
+
+      const passTitle = document.createElement("h3");
+      passTitle.textContent = "PASSIVATION";
+      passTitle.style.margin = "0";
+      passTitleContainer.appendChild(passTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("PASS");
+      passTitleContainer.appendChild(btnAdd);
+
+      pass.appendChild(passTitleContainer);
+
+      const noDataDiv = document.createElement("div");
+      noDataDiv.className = "no-data-section";
+      noDataDiv.style.padding = "1rem";
+      noDataDiv.style.textAlign = "center";
+      noDataDiv.innerHTML = "<p>No passivation items found.</p>";
+      pass.appendChild(noDataDiv);
+    }
+
+    // --- Render PAINT table ---
+    const paint = document.getElementById("paint");
+    if (PAINT.length > 0) {
+      // Remove duplicates from PAINT based on JOB, SUFFIX, PART, SERIAL_NUMBER
+      const seen = new Set();
+      const uniquePAINT = [];
+      for (const item of PAINT) {
+        const key = [
+          item.JOB ? item.JOB.trim() : "",
+          item.SUFFIX ? item.SUFFIX.trim() : "",
+          item.PART ? item.PART.trim() : "",
+          item.SERIAL_NUMBER ? item.SERIAL_NUMBER.trim() : "",
+        ].join("|");
+        if (!seen.has(key)) {
+          seen.add(key);
+          uniquePAINT.push(item);
+        }
+      }
+      const paintTable = document.createElement("table");
+      paintTable.style.width = "100%";
+      paintTable.style.borderCollapse = "collapse";
+      paintTable.style.border = "2px solid #333";
+      paintTable.border = "1";
+
+      const paintTitleContainer = document.createElement("div");
+      paintTitleContainer.style.display = "flex";
+      paintTitleContainer.style.alignItems = "center";
+      paintTitleContainer.style.gap = "1rem";
+      paintTitleContainer.style.marginBottom = "1rem";
+
+      const paintTitle = document.createElement("h3");
+      paintTitle.textContent = "PAINT";
+      paintTitle.style.margin = "0";
+      paintTitleContainer.appendChild(paintTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("PAINT");
+      paintTitleContainer.appendChild(btnAdd);
+
+      paint.appendChild(paintTitleContainer);
+
+      const paintThead = document.createElement("thead");
+      const paintHeaderRow = document.createElement("tr");
+      const headers = ["Item", "Part", "Spec", "Serial Number", "Actions"];
+      headers.forEach((header) => {
+        const th = document.createElement("th");
+        th.textContent = header;
+        th.style.border = "1px solid black";
+        th.style.padding = "0.5rem";
+        paintHeaderRow.appendChild(th);
+      });
+      paintThead.appendChild(paintHeaderRow);
+      paintTable.appendChild(paintThead);
+
+      const paintTbody = document.createElement("tbody");
+      let paintItemNumber = 1;
+
+      for (const item of uniquePAINT) {
+        const row = document.createElement("tr");
+
+        const tdJob = document.createElement("td");
+        tdJob.textContent = paintItemNumber.toString();
+        tdJob.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdJob);
+        paintItemNumber++;
+
+        const tdPart2 = document.createElement("td");
+        tdPart2.textContent = formatPartNumber(item.PART);
+        tdPart2.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdPart2);
+
+        // Specification column
+        const tdSpec = document.createElement("td");
+        let spec = "";
+        if (item.OPERATION) {
+          const op = item.OPERATION.trim();
+          if (op === "BACPRM") {
+            spec = "BMS10-11, Ty. 1, Cl. A, Grade E";
+          }
+        }
+        tdSpec.textContent = spec;
+        tdSpec.title = item.OPERATION ? item.OPERATION.trim() : "";
+        tdSpec.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdSpec);
+
+        const tdSerial = document.createElement("td");
+        let serial = item.SERIAL_NUMBER ? item.SERIAL_NUMBER.trim() : "";
+        if (!serial) {
+          try {
+            const job = item.JOB ? item.JOB.trim() : "";
+            const suffix = item.SUFFIX ? item.SUFFIX.trim() : "";
+            const lineRouter = item.LINE_ROUTER ? item.LINE_ROUTER.trim() : "";
+            let jobString = job;
+            if (suffix) jobString += `-${suffix}`;
+            if (lineRouter) jobString += `-${lineRouter}`;
+            const poResponse = await fetch(
+              `http://${
+                window.location.hostname
+              }:${port}/cert/heat/${encodeURIComponent(jobString)}`
+            );
+            if (poResponse.ok) {
+              const poData = await poResponse.json();
+              if (poData && poData[0]) {
+                if (poData[0][0].PURCHASE_ORDER) {
+                  serial = poData[0][0].PURCHASE_ORDER.trim();
+                } else if (poData[0][0].DATE_COMPLETED) {
+                  serial = poData[0][0].DATE_COMPLETED.trim();
+                }
+              }
+            }
+          } catch (err) {
+            console.error("Error fetching PAINT data for", item.JOB, err);
+          }
+        }
+        if (serial) {
+          while (serial.charAt(0) === "0") {
+            serial = serial.substring(1);
+          }
+        }
+        tdSerial.textContent = serial;
+        const paintJobInfo =
+          (item.JOB ? item.JOB.trim() : "") +
+          (item.SUFFIX ? `-${item.SUFFIX.trim()}` : "");
+        if (paintJobInfo) {
+          tdSerial.textContent =
+            tdSerial.textContent +
+            (tdSerial.textContent ? ` (${paintJobInfo})` : paintJobInfo);
+        }
+        tdSerial.style.color = item.source === "mysql" ? "#00008B" : "#000000";
+        row.appendChild(tdSerial);
+
+        // Add Actions column
+        const actionCell = createActionCell(
+          "PAINT",
+          item.SERIAL_NUMBER?.trim(),
+          {
+            job: item.JOB?.trim(),
+            part: item.PART?.trim(),
+            operation: item.OPERATION?.trim(),
+            serialNumber: item.SERIAL_NUMBER?.trim(),
+          }
+        );
+        row.appendChild(actionCell);
+
+        paintTbody.appendChild(row);
+      }
+      paintTable.appendChild(paintTbody);
+      paint.appendChild(paintTable);
+    } else {
+      const paintTitleContainer = document.createElement("div");
+      paintTitleContainer.style.display = "flex";
+      paintTitleContainer.style.alignItems = "center";
+      paintTitleContainer.style.gap = "1rem";
+      paintTitleContainer.style.marginBottom = "1rem";
+
+      const paintTitle = document.createElement("h3");
+      paintTitle.textContent = "PAINT";
+      paintTitle.style.margin = "0";
+      paintTitleContainer.appendChild(paintTitle);
+
+      const btnAdd = document.createElement("button");
+      btnAdd.type = "button";
+      btnAdd.className = "btn-primary";
+      btnAdd.textContent = "+";
+      btnAdd.style.width = "2rem";
+      btnAdd.style.height = "2rem";
+      btnAdd.style.padding = "0";
+      btnAdd.style.fontSize = "1.2rem";
+      btnAdd.style.display = "flex";
+      btnAdd.style.alignItems = "center";
+      btnAdd.style.justifyContent = "center";
+      btnAdd.style.cursor = "pointer";
+      btnAdd.onclick = () => openAddDialog("PAINT");
+      paintTitleContainer.appendChild(btnAdd);
+
+      paint.appendChild(paintTitleContainer);
+
+      const noDataDiv = document.createElement("div");
+      noDataDiv.className = "no-data-section";
+      noDataDiv.style.padding = "1rem";
+      noDataDiv.style.textAlign = "center";
+      noDataDiv.innerHTML = "<p>No paint items found.</p>";
+      paint.appendChild(noDataDiv);
     }
   } catch (error) {
     console.error("Error fetching CERT data:", error);
@@ -1205,6 +1999,7 @@ window.addEventListener("DOMContentLoaded", () => {
   // Add a certification statement section at the end of main
   const certStatement = document.createElement("div");
   certStatement.id = "cert-statement";
+  certStatement.style.fontSize = "1.3rem";
   certStatement.innerHTML = `
     <h2 id="csHeader">Certification Statement</h2>
     <p>This is to certify that the above listed items have been processed according to the specified requirements and standards.</p>
