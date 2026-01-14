@@ -508,13 +508,45 @@ async function initManager() {
             .then((response) => response.json())
             .then((data) => {
               // console.log(data);
+              // Find and update the observation in the DOM
+              const obsButtons = document.querySelectorAll(".btnEditObs");
+              obsButtons.forEach((btn) => {
+                if (btn.getAttribute("data-checklist-id") === checklistId) {
+                  // Find the observation content span and update it
+                  const obsContent =
+                    btn.parentElement.querySelector(".obs-content");
+                  if (obsContent) {
+                    obsContent.textContent = newObservation;
+                    obsContent.classList.remove("obs-empty");
+                  }
+                }
+              });
+
+              // Update the checklistSummary counts
+              const allRows = document.querySelectorAll(".rowdiv");
+              let totalQuestions = 0;
+              let answeredQuestions = 0;
+
+              allRows.forEach((row) => {
+                totalQuestions++;
+                const obsContent = row.querySelector(".obs-content");
+                if (obsContent && obsContent.textContent.trim() !== "") {
+                  answeredQuestions++;
+                }
+              });
+
+              const unansweredQuestions = totalQuestions - answeredQuestions;
+              const summarySpan = document.getElementById("checklistSummary");
+              if (summarySpan) {
+                summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
+              }
+
               // clear the form
               document.getElementById("obsid").textContent = "";
               document.getElementById("newobservation").value = "";
               // close the dialog
               addObsDialog.close();
-              // reload the page
-              window.location.reload();
+              // NO PAGE RELOAD - maintains scroll position
             });
         });
       });

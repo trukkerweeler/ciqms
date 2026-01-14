@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Account Details" />
+    <meta name="author" content="This page authored by timokent" />
+    <link rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Account Details</title>
+    <style>
+      .filters {
+        display: flex;
+        gap: 20px;
+        margin-bottom: 30px;
+        align-items: center;
+        flex-wrap: wrap;
+      }
+
+      .filter-group {
+        display: flex;
+        gap: 10px;
+        align-items: center;
+      }
+
+      .filter-group label {
+        font-weight: bold;
+        min-width: 80px;
+      }
+
+      .filter-group select {
+        padding: 8px 12px;
+        font-size: 1em;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        min-width: 150px;
+      }
+
+      #accountDetailsTable {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 20px;
+      }
+
+      #accountDetailsTable th,
+      #accountDetailsTable td {
+        padding: 8px;
+        text-align: left;
+        border-bottom: 1px solid #ddd;
+      }
+
+      #accountDetailsTable th {
+        background-color: #0066cc;
+        color: white;
+        font-weight: bold;
+        text-align: center;
+      }
+
+      #accountDetailsTable tbody tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      #accountDetailsTable tbody tr:hover {
+        background-color: #f0f0f0;
+      }
+
+      .amount {
+        text-align: right;
+        font-family: monospace;
+      }
+
+      .account-header {
+        margin-top: 20px;
+        padding: 15px;
+        background-color: #e8f4f8;
+        border-left: 4px solid #0066cc;
+        border-radius: 4px;
+      }
+
+      .account-header h2 {
+        margin: 0 0 10px 0;
+      }
+
+      .account-info {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 15px;
+        font-size: 0.95em;
+      }
+
+      .info-item {
+        display: flex;
+        gap: 10px;
+      }
+
+      .info-label {
+        font-weight: bold;
+        min-width: 100px;
+      }
+
+      .loading {
+        text-align: center;
+        padding: 20px;
+        color: #666;
+      }
+
+      .error {
+        background-color: #fee;
+        color: #c00;
+        padding: 15px;
+        border-radius: 4px;
+        margin: 20px 0;
+      }
+
+      .no-data {
+        text-align: center;
+        padding: 30px;
+        color: #999;
+        font-style: italic;
+      }
+
+      .summary-row {
+        background-color: #e8f4f8;
+        font-weight: bold;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <h1>Account Details</h1>
+
+      <!-- Navigation tabs -->
+      <div class="nav-tabs">
+        <a href="/pnlmonthly.html" class="nav-link">PNL Monthly</a>
+        <a href="/pnlannual.html" class="nav-link">PNL Annual</a>
+        <a href="/bookingmonthly.html" class="nav-link">Order Booking</a>
+        <a href="/accountdetails.html" class="nav-link active"
+          >Account Details</a
+        >
+      </div>
+
+      <!-- Filters -->
+      <div class="filters">
+        <div class="filter-group">
+          <label for="yearPicker">Year:</label>
+          <select id="yearPicker">
+            <option value="">Select Year</option>
+          </select>
+        </div>
+
+        <div class="filter-group">
+          <label for="accountPicker">Account:</label>
+          <select id="accountPicker">
+            <option value="">Select Account</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- Account Info Display -->
+      <div id="accountInfo" style="display: none">
+        <div class="account-header">
+          <h2 id="accountTitle"></h2>
+          <div class="account-info">
+            <div class="info-item">
+              <span class="info-label">Account:</span>
+              <span id="accountNumber"></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Description:</span>
+              <span id="accountDescription"></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Total Amount:</span>
+              <span id="totalAmount" class="amount"></span>
+            </div>
+            <div class="info-item">
+              <span class="info-label">Record Count:</span>
+              <span id="recordCount"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Error message -->
+      <div id="errorMessage" style="display: none" class="error"></div>
+
+      <!-- Loading indicator -->
+      <div id="loading" style="display: none" class="loading">
+        Loading account details...
+      </div>
+
+      <!-- Results table -->
+      <div id="tableContainer" style="display: none">
+        <table id="accountDetailsTable">
+          <thead>
+            <tr>
+              <th>Posted Date</th>
+              <th>Batch</th>
+              <th>Batch Line</th>
+              <th>Transaction Date</th>
+              <th>Period</th>
+              <th>Reference</th>
+              <th>Description</th>
+              <th class="amount">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="accountDetailsTableBody"></tbody>
+        </table>
+      </div>
+
+      <!-- No data message -->
+      <div id="noData" style="display: none" class="no-data">
+        Select a year and account to view details
+      </div>
+    </main>
+
+    <footer id="footer"></footer>
+    <script type="module" src="/js/accountdetails.mjs"></script>
+  </body>
+</html>

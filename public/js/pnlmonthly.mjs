@@ -3,6 +3,9 @@ import { loadHeaderFooter, myport } from "./utils.mjs";
 loadHeaderFooter();
 const port = myport();
 
+// Test mode flag for logging
+const TEST_MODE = false;
+
 let trendChartInstance = null; // Global chart instance
 
 // Month labels for chart
@@ -389,14 +392,16 @@ window.addEventListener("DOMContentLoaded", () => {
 
         // Debug
         if (c.REFERENCE.includes("REVERSAL")) {
-          console.log("Checking reversal:", {
-            batchPattern,
-            reversalRef: c.REFERENCE,
-            reversalDesc: c.DESCR,
-            hasBatchInfo: reversalHasBatchInfo,
-            amountMatches: reversalAmountMatches,
-            txnBatch: `${txn.BATCH_NUM}:${txn.BATCH_LINE}`,
-          });
+          if (TEST_MODE) {
+            console.log("Checking reversal:", {
+              batchPattern,
+              reversalRef: c.REFERENCE,
+              reversalDesc: c.DESCR,
+              hasBatchInfo: reversalHasBatchInfo,
+              amountMatches: reversalAmountMatches,
+              txnBatch: `${txn.BATCH_NUM}:${txn.BATCH_LINE}`,
+            });
+          }
         }
 
         return reversalHasBatchInfo && reversalAmountMatches;
@@ -922,10 +927,12 @@ window.addEventListener("DOMContentLoaded", () => {
     // Check if correcting a GL transaction or manual entry
     if (correctionDialog.dataset.glAccount) {
       // Correcting a GL transaction from drill-down
-      console.log("Creating correction entry from GL transaction:", {
-        glAccount: correctionDialog.dataset.glAccount,
-        postDate: correctionDialog.dataset.postDate,
-      });
+      if (TEST_MODE) {
+        console.log("Creating correction entry from GL transaction:", {
+          glAccount: correctionDialog.dataset.glAccount,
+          postDate: correctionDialog.dataset.postDate,
+        });
+      }
 
       entry = {
         GL_ACCOUNT: correctionDialog.dataset.glAccount,
@@ -960,7 +967,9 @@ window.addEventListener("DOMContentLoaded", () => {
         INVC_DATE: "",
       };
 
-      console.log("Entry object created with GL_ACCOUNT:", entry.GL_ACCOUNT);
+      if (TEST_MODE) {
+        console.log("Entry object created with GL_ACCOUNT:", entry.GL_ACCOUNT);
+      }
 
       // Clear the GL transaction fields after use
       correctionDialog.dataset.glAccount = "";
@@ -1000,11 +1009,13 @@ window.addEventListener("DOMContentLoaded", () => {
         ORIG_BATCH_LINE: correctionDialog.dataset.batchLine,
       };
 
-      console.log(
-        "About to send correction request with GL_ACCOUNT:",
-        requestBody.GL_ACCOUNT
-      );
-      console.log("Full request body:", requestBody);
+      if (TEST_MODE) {
+        console.log(
+          "About to send correction request with GL_ACCOUNT:",
+          requestBody.GL_ACCOUNT
+        );
+        console.log("Full request body:", requestBody);
+      }
 
       const response = await fetch(
         `http://localhost:${port}/gldetail/createCorrection`,
@@ -1016,8 +1027,10 @@ window.addEventListener("DOMContentLoaded", () => {
           body: JSON.stringify(requestBody),
         }
       );
-
-      // Debug: Log what was sent
+      if (TEST_MODE) {
+        console.log("Correction request GL_ACCOUNT:", entry.GL_ACCOUNT);
+        console.log("Full correction entry:", entry);
+      }
       console.log("Correction request GL_ACCOUNT:", entry.GL_ACCOUNT);
       console.log("Full correction entry:", entry);
 
@@ -1085,16 +1098,18 @@ window.addEventListener("DOMContentLoaded", () => {
     batchLine
   ) {
     // Debug: Log incoming parameters
-    console.log("correctGLTransaction called with:", {
-      glAccount,
-      postDate,
-      reference,
-      description,
-      amount,
-      vendor,
-      batchNum,
-      batchLine,
-    });
+    if (TEST_MODE) {
+      console.log("correctGLTransaction called with:", {
+        glAccount,
+        postDate,
+        reference,
+        description,
+        amount,
+        vendor,
+        batchNum,
+        batchLine,
+      });
+    }
 
     // Store transaction info in the dialog for use in the correction handler
     correctionDialog.dataset.glAccount = glAccount;
@@ -1107,16 +1122,18 @@ window.addEventListener("DOMContentLoaded", () => {
     correctionDialog.dataset.batchLine = batchLine;
 
     // Debug: Verify dataset was set correctly
-    console.log("Dataset after assignment:", {
-      glAccount: correctionDialog.dataset.glAccount,
-      postDate: correctionDialog.dataset.postDate,
-      reference: correctionDialog.dataset.reference,
-      description: correctionDialog.dataset.description,
-      amount: correctionDialog.dataset.amount,
-      vendor: correctionDialog.dataset.vendor,
-      batchNum: correctionDialog.dataset.batchNum,
-      batchLine: correctionDialog.dataset.batchLine,
-    });
+    if (TEST_MODE) {
+      console.log("Dataset after assignment:", {
+        glAccount: correctionDialog.dataset.glAccount,
+        postDate: correctionDialog.dataset.postDate,
+        reference: correctionDialog.dataset.reference,
+        description: correctionDialog.dataset.description,
+        amount: correctionDialog.dataset.amount,
+        vendor: correctionDialog.dataset.vendor,
+        batchNum: correctionDialog.dataset.batchNum,
+        batchLine: correctionDialog.dataset.batchLine,
+      });
+    }
 
     // Set the title to show what transaction is being corrected
     const txnDate = new Date(postDate).toLocaleDateString();
@@ -1150,7 +1167,9 @@ window.addEventListener("DOMContentLoaded", () => {
 
       // If adjusted GL is selected, fetch adjustments and apply them
       const glView = glToggle.value;
-      console.log("GL View selected:", glView);
+      if (TEST_MODE) {
+        console.log("GL View selected:", glView);
+      }
 
       if (glView === "adjusted") {
         // Fetch all adjustments for this year
@@ -1163,21 +1182,30 @@ window.addEventListener("DOMContentLoaded", () => {
           }
         );
 
-        console.log("Adjustments response status:", adjustmentsResponse.status);
+        if (TEST_MODE) {
+          console.log(
+            "Adjustments response status:",
+            adjustmentsResponse.status
+          );
+        }
 
         if (adjustmentsResponse.ok) {
           const adjustmentsByMonth = await adjustmentsResponse.json();
-          console.log("Adjustments by month:", adjustmentsByMonth);
+          if (TEST_MODE) {
+            console.log("Adjustments by month:", adjustmentsByMonth);
+          }
 
           // Apply adjustments to trend data
           trendData.forEach((monthData, index) => {
             const month = index + 1; // 1-12
             const adjustments = adjustmentsByMonth[month] || {};
 
-            console.log(`Month ${month} adjustments object:`, adjustments);
-            console.log(
-              `Month ${month} before: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}`
-            );
+            if (TEST_MODE) {
+              console.log(`Month ${month} adjustments object:`, adjustments);
+              console.log(
+                `Month ${month} before: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}`
+              );
+            }
 
             // Apply individual adjustments
             // Note: For revenue accounts, add adjustments; for expense accounts, SUBTRACT adjustments
@@ -1223,12 +1251,16 @@ window.addEventListener("DOMContentLoaded", () => {
                 ? ((netIncome / adjustedRevenue) * 100).toFixed(2)
                 : "0.00";
 
-            console.log(
-              `Month ${month} after: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}, ni=${monthData.netIncome}`
-            );
+            if (TEST_MODE) {
+              console.log(
+                `Month ${month} after: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}, ni=${monthData.netIncome}`
+              );
+            }
           });
 
-          console.log("Applied adjustments. April data:", trendData[3]);
+          if (TEST_MODE) {
+            console.log("Applied adjustments. April data:", trendData[3]);
+          }
         } else {
           console.error(
             "Failed to fetch adjustments, status:",
@@ -1257,24 +1289,30 @@ window.addEventListener("DOMContentLoaded", () => {
       parseFloat(m.grossMarginPercent)
     );
 
-    console.log("Rendering chart with revenue data:", revenueData);
-    console.log(
-      "April (index 3) revenue:",
-      revenueData[3],
-      "COGS:",
-      cogsData[3]
-    );
+    if (TEST_MODE) {
+      console.log("Rendering chart with revenue data:", revenueData);
+      console.log(
+        "April (index 3) revenue:",
+        revenueData[3],
+        "COGS:",
+        cogsData[3]
+      );
+    }
 
     // Destroy existing chart if it exists
     if (trendChartInstance) {
-      console.log("Destroying existing chart instance");
+      if (TEST_MODE) {
+        console.log("Destroying existing chart instance");
+      }
       trendChartInstance.destroy();
       trendChartInstance = null;
     }
 
     // Create new chart
     const ctx = chartCanvas.getContext("2d");
-    console.log("Creating new chart with April COGS:", cogsData[3]);
+    if (TEST_MODE) {
+      console.log("Creating new chart with April COGS:", cogsData[3]);
+    }
     trendChartInstance = new Chart(ctx, {
       type: "line",
       data: {

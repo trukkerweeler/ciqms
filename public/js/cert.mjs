@@ -106,6 +106,184 @@ function formatPartNumber(part) {
   return trimmed;
 }
 
+// ========== CUSTOMER ADDRESS HELPERS ==========
+async function fetchCustomerAddresses(customerCode) {
+  try {
+    const response = await fetch(
+      `http://${
+        window.location.hostname
+      }:${port}/cert/customer-addresses/${encodeURIComponent(customerCode)}`
+    );
+    if (!response.ok) {
+      console.error("Failed to fetch customer addresses");
+      return [];
+    }
+    return await response.json();
+  } catch (error) {
+    console.error("Error fetching customer addresses:", error);
+    return [];
+  }
+}
+
+async function displayCustomerAddresses(
+  customerCode,
+  container,
+  part2,
+  customerPO
+) {
+  const addresses = await fetchCustomerAddresses(customerCode);
+
+  if (!addresses || addresses.length === 0) {
+    const noAddressDiv = document.createElement("div");
+    noAddressDiv.style.padding = "1rem";
+    noAddressDiv.style.backgroundColor = "#fff3cd";
+    noAddressDiv.style.border = "1px solid #ffc107";
+    noAddressDiv.style.borderRadius = "4px";
+    noAddressDiv.textContent =
+      "No valid customer addresses found for this customer code.";
+    container.appendChild(noAddressDiv);
+    return;
+  }
+
+  const addressContainer = document.createElement("div");
+  addressContainer.style.padding = "1rem";
+  addressContainer.style.backgroundColor = "#f8f9fa";
+  addressContainer.style.border = "1px solid #dee2e6";
+  addressContainer.style.borderRadius = "4px";
+  addressContainer.style.marginBottom = "1rem";
+
+  const addressTitle = document.createElement("h3");
+  addressTitle.textContent = "Customer";
+  addressTitle.style.marginTop = "0";
+  addressContainer.appendChild(addressTitle);
+
+  // Create a flex container for address and part info side by side
+  const contentWrapper = document.createElement("div");
+  contentWrapper.style.display = "flex";
+  contentWrapper.style.gap = "2rem";
+  contentWrapper.style.justifyContent = "space-between";
+
+  // Create address display section
+  const addressSection = document.createElement("div");
+  addressSection.style.flex = "1";
+
+  if (addresses.length === 1) {
+    // Single address - just display it
+    const address = addresses[0];
+    const addressDisplay = document.createElement("div");
+    addressDisplay.style.fontFamily = "monospace";
+    addressDisplay.style.whiteSpace = "pre-wrap";
+    addressDisplay.style.fontSize = "1.3rem";
+    const addressText = `${address.NAME_CUSTOMER || ""}
+${address.ADDRESS1 || ""}${address.ADDRESS2 ? "\n" + address.ADDRESS2 : ""}
+${address.CITY || ""}, ${address.STATE || ""} ${address.ZIP || ""}`;
+    addressDisplay.textContent = addressText;
+    addressSection.appendChild(addressDisplay);
+  } else {
+    // Multiple addresses - create a dropdown/selection
+    const label = document.createElement("label");
+    label.htmlFor = "addressSelect";
+    label.textContent = "Select Address: ";
+    label.style.fontWeight = "bold";
+    label.style.marginRight = "0.5rem";
+    label.style.fontSize = "1.3rem";
+    addressSection.appendChild(label);
+
+    const select = document.createElement("select");
+    select.id = "addressSelect";
+    select.style.padding = "0.5rem";
+    select.style.borderRadius = "4px";
+    select.style.border = "1px solid #ccc";
+    select.style.marginRight = "1rem";
+    select.style.fontSize = "1.3rem";
+
+    const defaultOption = document.createElement("option");
+    defaultOption.value = "";
+    defaultOption.textContent = "-- Choose an address --";
+    select.appendChild(defaultOption);
+
+    addresses.forEach((addr, index) => {
+      const option = document.createElement("option");
+      option.value = index;
+      option.textContent = `${addr.CITY}, ${addr.STATE} - Rec #${addr.REC}`;
+      select.appendChild(option);
+    });
+
+    const addressDisplay = document.createElement("div");
+    addressDisplay.id = "selectedAddressDisplay";
+    addressDisplay.style.marginTop = "1rem";
+    addressDisplay.style.fontFamily = "monospace";
+    addressDisplay.style.whiteSpace = "pre-wrap";
+    addressDisplay.style.padding = "0.5rem";
+    addressDisplay.style.backgroundColor = "white";
+    addressDisplay.style.border = "1px solid #ddd";
+    addressDisplay.style.borderRadius = "4px";
+    addressDisplay.style.fontSize = "1.3rem";
+
+    select.addEventListener("change", (e) => {
+      if (e.target.value === "") {
+        addressDisplay.textContent = "";
+      } else {
+        const selectedAddress = addresses[parseInt(e.target.value)];
+        const addressText = `${selectedAddress.NAME_CUSTOMER || ""}
+${selectedAddress.ADDRESS1 || ""}${
+          selectedAddress.ADDRESS2 ? "\n" + selectedAddress.ADDRESS2 : ""
+        }
+${selectedAddress.CITY || ""}, ${selectedAddress.STATE || ""} ${
+          selectedAddress.ZIP || ""
+        }`;
+        addressDisplay.textContent = addressText;
+      }
+    });
+
+    addressSection.appendChild(select);
+    addressSection.appendChild(addressDisplay);
+  }
+
+  contentWrapper.appendChild(addressSection);
+
+  // Create part info section on the right
+  const partInfoSection = document.createElement("div");
+  partInfoSection.style.flex = "0 0 auto";
+  partInfoSection.style.minWidth = "200px";
+
+  if (part2 || customerPO) {
+    if (part2) {
+      const partDiv = document.createElement("div");
+      partDiv.style.marginBottom = "0.5rem";
+      partDiv.style.fontSize = "1.3rem";
+      partDiv.style.fontFamily = "monospace";
+      const partText = document.createElement("span");
+      partText.style.fontWeight = "bold";
+      partText.textContent = "PART: ";
+      partDiv.appendChild(partText);
+      const partValue = document.createElement("span");
+      partValue.textContent = part2;
+      partDiv.appendChild(partValue);
+      partInfoSection.appendChild(partDiv);
+    }
+
+    if (customerPO) {
+      const poDiv = document.createElement("div");
+      poDiv.style.fontSize = "1.3rem";
+      poDiv.style.fontFamily = "monospace";
+      const poText = document.createElement("span");
+      poText.style.fontWeight = "bold";
+      poText.textContent = "CUSTOMER PO: ";
+      poDiv.appendChild(poText);
+      const poValue = document.createElement("span");
+      poValue.textContent = customerPO;
+      poDiv.appendChild(poValue);
+      partInfoSection.appendChild(poDiv);
+    }
+  }
+
+  contentWrapper.appendChild(partInfoSection);
+  addressContainer.appendChild(contentWrapper);
+
+  container.appendChild(addressContainer);
+}
+
 // Define form fields for each section
 const sectionFormFields = {
   RM: [
@@ -351,6 +529,21 @@ btnSearch.addEventListener("click", async function (event) {
     const enteredWo = document.createElement("h2");
     enteredWo.textContent = `Work Order No: ${woNumber}`;
     trace.appendChild(enteredWo);
+
+    // Fetch and display customer address if available
+    const customerCode =
+      data.length > 0 && data[0]["CUSTOMER"]
+        ? data[0]["CUSTOMER"].trim()
+        : null;
+    const part2 =
+      data.length > 0 && data[0]["PART2"] ? data[0]["PART2"].trim() : null;
+    const customerPO =
+      data.length > 0 && data[0]["CUSTOMER_PO"]
+        ? data[0]["CUSTOMER_PO"].trim()
+        : null;
+    if (customerCode) {
+      await displayCustomerAddresses(customerCode, trace, part2, customerPO);
+    }
 
     // Only push RM items from the main data here, ensuring uniqueness
     const rmSet = new Set();

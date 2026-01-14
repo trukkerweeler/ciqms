@@ -380,4 +380,99 @@ router.post("/add", (req, res) => {
   });
 });
 
+// ==================================================
+// Get customer addresses by customer code
+router.get("/customer-addresses/:customerCode", (req, res) => {
+  const customerCode = req.params.customerCode.trim();
+
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "global",
+  });
+
+  const query = `
+    SELECT CUSTOMER, REC, NAME_CUSTOMER, ADDRESS1, ADDRESS2, CITY, STATE, ZIP, COUNTRY
+    FROM CUSTOMER_MASTER
+    WHERE CUSTOMER = ?
+    ORDER BY REC ASC
+  `;
+
+  connection.query(query, [customerCode], (err, results) => {
+    connection.end();
+
+    if (err) {
+      console.error("Error fetching customer addresses:", err);
+      return res
+        .status(500)
+        .json({ error: "Failed to fetch customer addresses" });
+    }
+
+    // Filter for records with valid US states
+    const validUSStates = [
+      "AL",
+      "AK",
+      "AZ",
+      "AR",
+      "CA",
+      "CO",
+      "CT",
+      "DE",
+      "FL",
+      "GA",
+      "HI",
+      "ID",
+      "IL",
+      "IN",
+      "IA",
+      "KS",
+      "KY",
+      "LA",
+      "ME",
+      "MD",
+      "MA",
+      "MI",
+      "MN",
+      "MS",
+      "MO",
+      "MT",
+      "NE",
+      "NV",
+      "NH",
+      "NJ",
+      "NM",
+      "NY",
+      "NC",
+      "ND",
+      "OH",
+      "OK",
+      "OR",
+      "PA",
+      "RI",
+      "SC",
+      "SD",
+      "TN",
+      "TX",
+      "UT",
+      "VT",
+      "VA",
+      "WA",
+      "WV",
+      "WI",
+      "WY",
+    ];
+
+    const filteredResults = results.filter((record) => {
+      const state = record.STATE ? record.STATE.trim().toUpperCase() : "";
+      const hasAddress = record.ADDRESS1 && record.ADDRESS1.trim();
+      const hasValidState = validUSStates.includes(state);
+      return hasAddress && hasValidState;
+    });
+
+    res.json(filteredResults);
+  });
+});
+
 module.exports = router;

@@ -38,7 +38,7 @@ h1 {
 table {
   border-collapse: collapse;
   border-spacing: 0;
-  border: 1px solid var(--border-color);
+  border: 2px solid var(--border-color-dark);
   margin-bottom: 1rem;
   background-color: var(--secondary-color);
   border-radius: var(--border-radius);
@@ -53,7 +53,6 @@ table th,
 table td {
   padding: 0.25rem 0.5rem;
   text-align: center;
-  border: 1px solid var(--border-color);
   font-size: 1.3rem;
 }
 table tbody tr:nth-child(even) {
@@ -1638,7 +1637,8 @@ footer div p {
 #textTitle {
   letter-spacing: 0.5em;
   margin-top: 2rem;
-  margin-left: 3rem;
+  margin-left: 0;
+  text-align: center;
   font-family: Arial, Helvetica, sans-serif;
 }
 .textSubTitle {
@@ -1678,7 +1678,7 @@ footer div p {
     font-family: Arial, Helvetica, sans-serif;
 } */
 #logoImage {
-  width: 200px;
+  width: 250px;
   height: auto;
   /* display: none; */
 }
@@ -1705,6 +1705,33 @@ footer div p {
 #logoContainer {
   display: none;
   margin-bottom: 20px;
+  margin-top: 2rem;
+}
+
+#logoAndContact {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  margin-bottom: 1rem;
+  gap: 2rem;
+}
+
+#logoSection {
+  flex-shrink: 0;
+}
+
+#contactSection {
+  flex-shrink: 0;
+  text-align: left;
+}
+
+#contactInfo {
+  margin: 0;
+  padding: 0;
+  font-family: Arial, Helvetica, sans-serif;
+  font-size: 1.25rem;
+  line-height: 1.6;
+  color: var(--text-color);
 }
 .w-32 {
   width: 8rem;
@@ -1938,6 +1965,9 @@ footer div p {
   }
   #searchForm {
     display: none;
+  }
+  #logoContainer {
+    display: block;
   }
   h3,
   th,
