@@ -44,16 +44,118 @@
         <p>Loading certificate data...</p>
       </div>
       <h2 id="textTitle">CERTIFICATE OF PROCESSING</h2>
-      <div id="trace"></div>
-      <div id="chem"></div>
-      <div id="spot"></div>
-      <div id="fusion"></div>
-      <div id="heat"></div>
-      <div id="pass"></div>
-      <div id="paint"></div>
-      <div id="cert-trace"></div>
+
+      <!-- Search Results Table -->
+      <div id="searchResultsContainer" style="display: none; margin-top: 30px">
+        <h3>Search Results</h3>
+        <table
+          id="searchResultsTable"
+          style="
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+          "
+        >
+          <thead style="background-color: #4caf50; color: white">
+            <tr>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PART
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                JOB
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SUFFIX
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SEQUENCE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SERIAL_NUMBER
+              </th>
+            </tr>
+          </thead>
+          <tbody id="searchResultsBody">
+            <!-- Results will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Item History Table Sections -->
+      <div id="item-history-container" style="margin-top: 30px">
+        <!-- Raw Materials Section -->
+        <div id="trace" class="section-container"></div>
+
+        <!-- Chemical Processing Section -->
+        <div id="chem" class="section-container"></div>
+
+        <!-- Spot Welding Section -->
+        <div id="spot" class="section-container"></div>
+
+        <!-- Fusion Welding Section -->
+        <div id="fusion" class="section-container"></div>
+
+        <!-- Heat Treatment Section -->
+        <div id="heat" class="section-container"></div>
+
+        <!-- Passivation Section -->
+        <div id="pass" class="section-container"></div>
+
+        <!-- Paint/Coating Section -->
+        <div id="paint" class="section-container"></div>
+
+        <!-- Certificate Trace Section -->
+        <div id="cert-trace" class="section-container"></div>
+      </div>
     </main>
     <div id="stmt"></div>
+
+    <!-- Item History Table Template -->
+    <template id="itemHistoryTableTemplate">
+      <table
+        class="item-history-table"
+        style="
+          width: 100%;
+          border-collapse: collapse;
+          margin: 20px 0;
+          font-family: Arial, sans-serif;
+        "
+      >
+        <thead style="background-color: #4caf50; color: white">
+          <tr>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left">
+              PART
+            </th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left">
+              JOB
+            </th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left">
+              SUFFIX
+            </th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left">
+              SEQUENCE
+            </th>
+            <th style="border: 1px solid #ddd; padding: 12px; text-align: left">
+              SERIAL_NUMBER
+            </th>
+          </tr>
+        </thead>
+        <tbody>
+          <!-- Rows will be inserted here -->
+        </tbody>
+      </table>
+    </template>
 
     <!-- Edit Dialog -->
     <dialog id="editDialog" class="revision-dialog">

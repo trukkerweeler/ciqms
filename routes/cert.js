@@ -30,16 +30,19 @@ function parseVBScriptOutput(stdout, routeName = "VBScript") {
 }
 
 router.get("/detail/:id", (req, res) => {
-  // console.log("Received request 43 for WO No:", req.params.id);
+  console.log("[DETAIL REQUEST] Received request for ID:", req.params.id);
   const longWO = req.params.id;
   // return res.status(501).send("Not implemented yet.");
   const vbsFilePath = path.join(__dirname, "certdetail.vbs");
   const cscriptPath = process.env.SYSTEMROOT + "\\SysWOW64\\cscript.exe"; // Use 32-bit cscript explicitly
   const command = `"${cscriptPath}" //Nologo "${vbsFilePath}" ${longWO}`;
+  console.log("[DETAIL VBScript] Executing command:", command);
 
   exec(command, (error, stdout, stderr) => {
     if (error) {
-      console.error(`Error executing VBScript: ${error.message}`);
+      console.error(
+        `[DETAIL ERROR] Error executing VBScript: ${error.message}`
+      );
       return res.status(500).send("Error retrieving data.");
     }
     if (stderr) {
@@ -75,7 +78,7 @@ router.get("/detail/:id", (req, res) => {
 // ==================================================
 // Get record
 router.get("/:id", (req, res) => {
-  console.log("Received request for WO No:", req.params.id);
+  console.log("[MAIN CERT REQUEST] Received request for WO No:", req.params.id);
   const rmaNo = req.params.id;
   const vbsFilePath = path.join(__dirname, "cert.vbs");
   const cscriptPath = process.env.SYSTEMROOT + "\\SysWOW64\\cscript.exe"; // Use 32-bit cscript explicitly
@@ -250,6 +253,10 @@ router.get("/heat/:id", (req, res) => {
 // ==================================================
 // Save revision log (edit)
 router.post("/revision/edit", (req, res) => {
+  console.log(
+    "[REVISION/EDIT REQUEST] Received edit request with body:",
+    req.body
+  );
   const { woNo, section, serialNumber, originalData, notes } = req.body;
   const userName = req.headers["x-user"] || "SYSTEM";
 
@@ -269,31 +276,34 @@ router.post("/revision/edit", (req, res) => {
 
     const query =
       "INSERT INTO CERT_REVISION (WO_NO, SECTION, SERIAL_NUMBER, REVISION_TYPE, ORIGINAL_DATA, NOTES, CREATE_BY) VALUES (?, ?, ?, 'EDIT', ?, ?, ?)";
-    connection.query(
-      query,
-      [
-        woNo,
-        section,
-        serialNumber || null,
-        JSON.stringify(originalData),
-        notes,
-        userName,
-      ],
-      (err, results) => {
-        connection.end();
-        if (err) {
-          console.error("Error inserting revision record:", err);
-          return res.status(500).json({ error: "Failed to save revision" });
-        }
-        res.json({ success: true, revisionId: results.insertId });
+    const values = [
+      woNo,
+      section,
+      serialNumber || null,
+      JSON.stringify(originalData),
+      notes,
+      userName,
+    ];
+    console.log("[CERT_REVISION EDIT] SQL:", query);
+    console.log("[CERT_REVISION EDIT] Values:", values);
+    connection.query(query, values, (err, results) => {
+      connection.end();
+      if (err) {
+        console.error("Error inserting revision record:", err);
+        return res.status(500).json({ error: "Failed to save revision" });
       }
-    );
+      res.json({ success: true, revisionId: results.insertId });
+    });
   });
 });
 
 // ==================================================
 // Save revision log (delete)
 router.post("/revision/delete", (req, res) => {
+  console.log(
+    "[REVISION/DELETE REQUEST] Received delete request with body:",
+    req.body
+  );
   const { woNo, section, serialNumber, originalData, notes } = req.body;
   const userName = req.headers["x-user"] || "SYSTEM";
 
@@ -313,31 +323,31 @@ router.post("/revision/delete", (req, res) => {
 
     const query =
       "INSERT INTO CERT_REVISION (WO_NO, SECTION, SERIAL_NUMBER, REVISION_TYPE, ORIGINAL_DATA, NOTES, CREATE_BY) VALUES (?, ?, ?, 'DELETE', ?, ?, ?)";
-    connection.query(
-      query,
-      [
-        woNo,
-        section,
-        serialNumber || null,
-        JSON.stringify(originalData),
-        notes,
-        userName,
-      ],
-      (err, results) => {
-        connection.end();
-        if (err) {
-          console.error("Error inserting revision record:", err);
-          return res.status(500).json({ error: "Failed to save revision" });
-        }
-        res.json({ success: true, revisionId: results.insertId });
+    const values = [
+      woNo,
+      section,
+      serialNumber || null,
+      JSON.stringify(originalData),
+      notes,
+      userName,
+    ];
+    console.log("[CERT_REVISION DELETE] SQL:", query);
+    console.log("[CERT_REVISION DELETE] Values:", values);
+    connection.query(query, values, (err, results) => {
+      connection.end();
+      if (err) {
+        console.error("Error inserting revision record:", err);
+        return res.status(500).json({ error: "Failed to save revision" });
       }
-    );
+      res.json({ success: true, revisionId: results.insertId });
+    });
   });
 });
 
 // ==================================================
 // Add new row to CERT_ADD table
 router.post("/add", (req, res) => {
+  console.log("[CERT/ADD REQUEST] Received add request with body:", req.body);
   const { woNo, section, rowData } = req.body;
   const userName = req.headers["x-user"] || "SYSTEM";
 
@@ -361,22 +371,21 @@ router.post("/add", (req, res) => {
 
     const query =
       "INSERT INTO CERT_ADD (WO_NO, SECTION, ROW_DATA, CREATE_BY) VALUES (?, ?, ?, ?)";
-    connection.query(
-      query,
-      [woNo, section, JSON.stringify(rowData), userName],
-      (err, results) => {
-        connection.end();
-        if (err) {
-          console.error("Error inserting CERT_ADD record:", err);
-          return res.status(500).json({ error: "Failed to save new row" });
-        }
-        res.json({
-          success: true,
-          certAddId: results.insertId,
-          source: "mysql",
-        });
+    const values = [woNo, section, JSON.stringify(rowData), userName];
+    console.log("[CERT_ADD] SQL:", query);
+    console.log("[CERT_ADD] Values:", values);
+    connection.query(query, values, (err, results) => {
+      connection.end();
+      if (err) {
+        console.error("Error inserting CERT_ADD record:", err);
+        return res.status(500).json({ error: "Failed to save new row" });
       }
-    );
+      res.json({
+        success: true,
+        certAddId: results.insertId,
+        source: "mysql",
+      });
+    });
   });
 });
 
@@ -384,6 +393,10 @@ router.post("/add", (req, res) => {
 // Get customer addresses by customer code
 router.get("/customer-addresses/:customerCode", (req, res) => {
   const customerCode = req.params.customerCode.trim();
+  console.log(
+    "[CUSTOMER_ADDRESSES REQUEST] Received request for customer code:",
+    customerCode
+  );
 
   const connection = mysql.createConnection({
     host: process.env.DB_HOST,
@@ -399,8 +412,11 @@ router.get("/customer-addresses/:customerCode", (req, res) => {
     WHERE CUSTOMER = ?
     ORDER BY REC ASC
   `;
+  const values = [customerCode];
+  console.log("[CUSTOMER_ADDRESSES] SQL:", query);
+  console.log("[CUSTOMER_ADDRESSES] Values:", values);
 
-  connection.query(query, [customerCode], (err, results) => {
+  connection.query(query, values, (err, results) => {
     connection.end();
 
     if (err) {
@@ -472,6 +488,62 @@ router.get("/customer-addresses/:customerCode", (req, res) => {
     });
 
     res.json(filteredResults);
+  });
+});
+
+// ==================================================
+// Recursive item history query endpoint
+router.get("/item-history/:woNumber", (req, res) => {
+  const woNumber = req.params.woNumber;
+  console.log(
+    "[ITEM_HISTORY REQUEST] Received request for WO Number:",
+    woNumber
+  );
+  const vbsFilePath = path.join(__dirname, "itemhistory.vbs");
+  const cscriptPath = process.env.SYSTEMROOT + "\\SysWOW64\\cscript.exe";
+  const command = `"${cscriptPath}" //Nologo "${vbsFilePath}" ${woNumber}`;
+
+  exec(command, (error, stdout, stderr) => {
+    if (error) {
+      console.error(`Error executing VBScript: ${error.message}`);
+      return res.status(500).json({ error: "Error retrieving data" });
+    }
+    if (stderr) {
+      console.error(`VBScript stderr: ${stderr}`);
+      return res.status(500).json({ error: stderr });
+    }
+
+    try {
+      let sanitizedOutput = stdout.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+      sanitizedOutput = sanitizedOutput.replace(/^\uFEFF/, "");
+      sanitizedOutput = sanitizedOutput.trim();
+
+      if (!sanitizedOutput) {
+        console.log("Item history VBScript returned no data");
+        return res.json([]);
+      }
+
+      const data = JSON.parse(sanitizedOutput);
+
+      // Log sample OPERATION field values to terminal - COMMENTED OUT
+      // console.log(`\n=== Item History for WO ${woNumber} ===`);
+      // console.log(`Total records: ${data.length}`);
+      // console.log(`\nSample OPERATION values (first 10 records):`);
+      // data.slice(0, 10).forEach((record, idx) => {
+      //   console.log(
+      //     `  [${idx}] JOB: ${record.JOB}, OPERATION: "${record.OPERATION}", SEQUENCE: "${record.SEQUENCE}"`
+      //   );
+      // });
+      // console.log(`\n`);
+
+      res.json(data);
+    } catch (parseError) {
+      console.error(
+        `Error parsing item history VBScript output: ${parseError.message}`
+      );
+      console.error(`Raw stdout start: ${stdout.substring(0, 100)}`);
+      res.status(500).json({ error: parseError.message });
+    }
   });
 });
 
