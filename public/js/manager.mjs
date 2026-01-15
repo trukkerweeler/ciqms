@@ -437,9 +437,10 @@ async function initManager() {
         // close URL
         let closeUrl = `http://localhost:${port}/manager/completed`;
         // create the record
+        const completionDate = getDateTime();
         const closeRecord = {
           AUDIT_MANAGER_ID: record[0].AUDIT_MANAGER_ID,
-          COMPLETION_DATE: getDateTime(),
+          COMPLETION_DATE: completionDate,
         };
 
         // put the edits
@@ -452,11 +453,25 @@ async function initManager() {
         })
           .then((response) => response.json())
           .then((data) => {
-            // reload the page
-            window.location.reload();
+            // Disable the close button and update visual state
+            btnClose.disabled = true;
+            btnClose.style.opacity = "0.5";
+            btnClose.style.cursor = "not-allowed";
+
+            // Update the completion date in the details section
+            const detailsParagraphs = document.querySelectorAll(".details p");
+            detailsParagraphs.forEach((p) => {
+              if (p.textContent.includes("COMPLETION DATE")) {
+                const completionDateObj = new Date(completionDate);
+                p.textContent =
+                  "COMPLETION DATE: " + completionDateObj.toLocaleDateString();
+              }
+            });
+
+            // Alert to send results email
+            alert("Send results email to auditee");
+            // NO PAGE RELOAD - maintains scroll position
           });
-        // alert to send results email
-        alert("Send results email to auditee");
       });
 
       // listen for btnEditObs click, open dialog, populate fields, associate checklist id
