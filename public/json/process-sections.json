@@ -1,0 +1,32 @@
+{
+  "PASSIVATION": {
+    "display_name": "PASSIVATION",
+    "display_order": 1,
+    "operations": ["PASST6", "PASSM2"]
+  },
+  "HEAT": {
+    "display_name": "HEAT TREATING",
+    "display_order": 2,
+    "operations": ["HT"]
+  },
+  "CHEM": {
+    "display_name": "CHEMICAL TREATMENT",
+    "display_order": 3,
+    "operations": ["FT1C3A", "FT1C1A", "FT1C3", "FT2C3", "FT2C1A"]
+  },
+  "FWELD": {
+    "display_name": "FUSION WELDING",
+    "display_order": 4,
+    "operations": ["FUSION", "D171C", "D17.1"]
+  },
+  "SWELD": {
+    "display_name": "SPOT WELDING",
+    "display_order": 5,
+    "operations": ["SPOTW"]
+  },
+  "PAINT": {
+    "display_name": "PAINT",
+    "display_order": 6,
+    "operations": ["BACPRM"]
+  }
+}

@@ -18,7 +18,7 @@ app.use(
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
-  })
+  }),
 );
 
 app.use(express.static("public"));
@@ -107,6 +107,15 @@ try {
   console.error(`Error loading auth routes:`, error.message);
 }
 
+// Load cert3 routes (new certificate search with drill-down)
+// try {
+//   const cert3Routes = require("./routes/cert3");
+//   app.use("/cert3", cert3Routes);
+//   console.log(`Loaded route: /cert3 from cert3.js`);
+// } catch (error) {
+//   console.error(`Error loading cert3 routes:`, error.message);
+// }
+
 // Serve training files from a dedicated directory
 const trainingFilesPath =
   process.env.TRAINING_FILES_PATH || path.join(__dirname, "training-files");
@@ -147,7 +156,7 @@ if (hostname === "QUALITY-MGR") {
 }
 const equipmentImagesPath = path.join(
   baseEquipmentImagesPath,
-  "_equipment_images"
+  "_equipment_images",
 );
 app.use("/_equipment-images", express.static(equipmentImagesPath));
 
