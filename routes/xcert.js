@@ -1,0 +1,46 @@
+// routes/xcert.js - Express route for xcert
+const express = require("express");
+const { execFile } = require("child_process");
+const path = require("path");
+const router = express.Router();
+
+// GET /xcert?baseWorkorder=123456
+router.get("/", (req, res) => {
+  const baseWorkorder = req.query.baseWorkorder;
+  if (!/^\d{6}$/.test(baseWorkorder)) {
+    return res.status(400).json({ error: "Invalid baseWorkorder" });
+  }
+  const vbsPath = path.join(__dirname, "xcert.vbs");
+  // Always use 32-bit cscript.exe for ODBC compatibility
+  const cscript32 = process.env.SYSTEMROOT
+    ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
+    : "C:/Windows/SysWOW64/cscript.exe";
+  execFile(
+    cscript32,
+    ["//Nologo", vbsPath, baseWorkorder],
+    { windowsHide: true },
+    (err, stdout, stderr) => {
+      console.log("xcert VBS stderr:", stderr);
+      console.log("xcert VBS stdout:", stdout);
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "VBS execution failed", details: stderr });
+      }
+      try {
+        const data = JSON.parse(stdout);
+        res.json(data);
+      } catch (e) {
+        res
+          .status(500)
+          .json({
+            error: "Failed to parse VBS output",
+            raw: stdout,
+            stderr: stderr,
+          });
+      }
+    },
+  );
+});
+
+module.exports = router;
