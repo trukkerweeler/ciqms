@@ -7,19 +7,6 @@ let currentWoNo = "";
 let currentRevisionData = {};
 let currentAddSection = "";
 
-// ========== ITEM HISTORY DATA STRUCTURE ==========
-let itemHistoryData = [];
-let itemHistorySections = {
-  MATERIAL: [],
-  HEAT: [],
-  PASS: [],
-  SWELD: [],
-  FWELD: [],
-  CHEM: [],
-  PAINT: [],
-  OTHER: [],
-};
-
 // ========== SECTION FORM FIELDS CONFIGURATION ==========
 const sectionFormFields = {
   MATERIAL: [
@@ -64,6 +51,58 @@ const sectionFormFields = {
     { name: "serialNumber", label: "Trace ID", type: "text", required: false },
   ],
 };
+
+// ========== OPTIMIZED ENDPOINT-BASED DATA FETCHING ==========
+/**
+ * Fetch certification data for all processes using optimized endpoints
+ * Each process queries the database once via its dedicated endpoint
+ */
+async function fetchCertDataOptimized(woNumber) {
+  const endpoints = [
+    { key: "MATERIAL", url: null }, // MATERIAL doesn't have an endpoint yet
+    { key: "CHEM", url: `/cert-chem?baseWorkorder=${woNumber}` },
+    { key: "FWELD", url: `/cert-fweld?baseWorkorder=${woNumber}` },
+    { key: "SWELD", url: `/cert-sweld?baseWorkorder=${woNumber}` },
+    { key: "HEAT", url: `/cert-heat?baseWorkorder=${woNumber}` },
+    { key: "PASS", url: `/xcert?baseWorkorder=${woNumber}` },
+    { key: "PAINT", url: `/cert-paint?baseWorkorder=${woNumber}` },
+  ];
+
+  const categorized = {};
+
+  for (const ep of endpoints) {
+    if (!ep.url) continue; // Skip MATERIAL for now
+    try {
+      const res = await fetch(ep.url);
+      if (res.ok) {
+        const data = await res.json();
+        // Transform endpoint data to cert.mjs format
+        // Endpoints return: ROUTER, JOB, SUFFIX, REFERENCE, DATE_COMPLETED
+        // cert.mjs expects: PART, JOB, SUFFIX, OPERATION, SERIAL_NUMBER, DATE_COMPLETED, etc.
+        const transformed = Array.isArray(data)
+          ? data.map((row) => ({
+              PART: row.ROUTER || "",
+              JOB: row.JOB || "",
+              SUFFIX: row.SUFFIX || "",
+              OPERATION: row.DESCRIPTION || "",
+              OPERATION_CODE: row.OPERATION || "",
+              SERIAL_NUMBER: row.REFERENCE || "",
+              DATE_COMPLETED: row.DATE_COMPLETED || "",
+              REFERENCE: row.REFERENCE || "",
+            }))
+          : [];
+        categorized[ep.key] = transformed;
+      } else {
+        categorized[ep.key] = [];
+      }
+    } catch (err) {
+      console.error(`Error fetching ${ep.key} data:`, err);
+      categorized[ep.key] = [];
+    }
+  }
+
+  return { categorized, raw: [] };
+}
 
 // ========== HELPER FUNCTIONS ==========
 /**
@@ -299,405 +338,6 @@ function createActionCell(section, serialNumber, rowData) {
   return td;
 }
 
-// ========== DETERMINE SECTION FROM ITEM HISTORY RECORD ==========
-/**
- * Determines which section a record belongs to based on OPERATION field
- * Uses exact operation code matching from cert_old.mjs
- */
-function determineRecordSection(record) {
-  if (!record) return "OTHER";
-
-  const operation = (record.OPERATION || "").toUpperCase().trim();
-
-  // Chemical treatment operations - specific codes from cert_old.mjs
-  if (
-    operation === "FT1C3A" ||
-    operation === "FT1C1A" ||
-    operation === "FT1C3" ||
-    operation === "FT2C3" ||
-    operation === "FT2C1A"
-  ) {
-    return "CHEM";
-  }
-
-  // Fusion welding operations - specific codes
-  if (
-    operation === "FUSION" ||
-    operation === "D171C" ||
-    operation === "D17.1"
-  ) {
-    return "FWELD";
-  }
-
-  // Spot welding operations - specific code
-  if (operation === "SPOTW") {
-    return "SWELD";
-  }
-
-  // Passivation operations - specific codes
-  if (operation === "PASSM2" || operation === "PASST6") {
-    return "PASS";
-  }
-
-  // Paint operations - specific code
-  if (operation === "BACPRM") {
-    return "PAINT";
-  }
-
-  // Heat treatment operations - check for HT prefix or specific codes
-  if (
-    operation.startsWith("HT") ||
-    operation.includes("6061") ||
-    operation.includes("HT2") ||
-    operation.includes("2024") ||
-    operation.includes("7075")
-  ) {
-    return "HEAT";
-  }
-
-  // Fallback: substring matching for generic cases
-  const operationLower = operation.toLowerCase();
-
-  if (operationLower.includes("passiv") || operationLower.includes("pass")) {
-    return "PASS";
-  }
-
-  if (operationLower.includes("chem") || operationLower.includes("chemical")) {
-    return "CHEM";
-  }
-
-  if (operationLower.includes("weld") && !operationLower.includes("spot")) {
-    return "FWELD";
-  }
-
-  if (operationLower.includes("spot")) {
-    return "SWELD";
-  }
-
-  if (operationLower.includes("paint") || operationLower.includes("coat")) {
-    return "PAINT";
-  }
-
-  if (operationLower.includes("heat")) {
-    return "HEAT";
-  }
-
-  // Material/Raw Material - default
-  return "MATERIAL";
-}
-
-// ========== CATEGORIZE ITEM HISTORY ==========
-/**
- * Takes flat array of item history records and organizes them by section
- * Records that match the job reference pattern are already included via recursion
- */
-function categorizeItemHistory(records) {
-  itemHistorySections = {
-    MATERIAL: [],
-    HEAT: [],
-    PASS: [],
-    SWELD: [],
-    FWELD: [],
-    CHEM: [],
-    PAINT: [],
-    OTHER: [],
-  };
-
-  if (!records || !Array.isArray(records)) {
-    return itemHistorySections;
-  }
-
-  records.forEach((record) => {
-    const section = determineRecordSection(record);
-    itemHistorySections[section].push(record);
-  });
-
-  return itemHistorySections;
-}
-
-// ========== DRILL-DOWN PROCESSING ==========
-/**
- * Processes the master array by drilling down on WO format serial numbers
- * Rules:
- *  - If SERIAL_NUMBER matches ##### or ####### → Stop (no drill-down)
- *  - If SERIAL_NUMBER matches ######-### (WO format) → Query same endpoint with this as WO number
- *  - Continue recursively until no more WO patterns are found
- */
-async function processWithDrillDown(masterArray, visitedWOs = new Set()) {
-  if (!Array.isArray(masterArray) || masterArray.length === 0) {
-    return masterArray;
-  }
-
-  const woPattern = /^\d{6}-\d{3}$/; // ######-### format
-  const endMarkers = /^#+$/; // ##### or ####### or any sequence of # only
-
-  let allRecords = [...masterArray];
-  let needsDrillDown = false;
-
-  // Check each record for drill-down candidates
-  for (const record of masterArray) {
-    const serialNumber = (record.SERIAL_NUMBER || "").trim();
-
-    // Skip if it's an end marker
-    if (endMarkers.test(serialNumber)) {
-      console.log(
-        `  → Serial number "${serialNumber}" is an end marker, skipping`,
-      );
-      continue;
-    }
-
-    // Check if it's a WO format and not already visited
-    if (woPattern.test(serialNumber) && !visitedWOs.has(serialNumber)) {
-      console.log(
-        `  → Found WO pattern: "${serialNumber}", will drill down...`,
-      );
-      needsDrillDown = true;
-      visitedWOs.add(serialNumber);
-
-      try {
-        // Recursively fetch data for this WO
-        console.log(`    Fetching detail data for WO: ${serialNumber}`);
-        const response = await fetch(
-          `http://${
-            window.location.hostname
-          }:${port}/cert/item-history/${encodeURIComponent(serialNumber)}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (response.ok) {
-          const detailData = await response.json();
-          console.log(
-            `    Retrieved ${detailData.length} records for WO: ${serialNumber}`,
-          );
-
-          // Add the detail records to our master array
-          allRecords = allRecords.concat(detailData);
-
-          // Check if these detail records have more drill-down candidates
-          const furtherDrillDown = await processWithDrillDown(
-            detailData,
-            visitedWOs,
-          );
-
-          // If there were additional records from deeper drilling, add them
-          if (furtherDrillDown && furtherDrillDown.length > detailData.length) {
-            // Already included via recursion, but update reference
-            allRecords = Array.from(
-              new Map(
-                allRecords.map((item) => [
-                  `${item.PART}-${item.JOB}-${item.SUFFIX}-${item.SEQUENCE}-${item.SERIAL_NUMBER}`,
-                  item,
-                ]),
-              ).values(),
-            );
-          }
-        }
-      } catch (error) {
-        console.warn(`  × Error drilling down for WO ${serialNumber}:`, error);
-      }
-    }
-  }
-
-  return allRecords;
-}
-
-// ========== FETCH AND PROCESS ITEM HISTORY ==========
-/**
- * Fetches the full recursive item history for a work order
- * Includes drill-down processing for WO format serial numbers
- * Fetches processes data for each WO-format serial number
- * Returns: Promise resolving to categorized data
- */
-async function fetchItemHistory(woNumber) {
-  try {
-    console.log(`Fetching item history for WO: ${woNumber}`);
-
-    const response = await fetch(
-      `http://${
-        window.location.hostname
-      }:${port}/cert/item-history/${encodeURIComponent(woNumber)}`,
-      {
-        method: "GET",
-        headers: {
-          "Content-Type": "application/json",
-        },
-      },
-    );
-
-    if (!response.ok) {
-      throw new Error(`Failed to fetch item history: ${response.statusText}`);
-    }
-
-    let data = await response.json();
-    console.log(`Retrieved ${data.length} initial history records`);
-
-    // Process drill-down for WO format serial numbers
-    console.log("Processing drill-down for WO format serial numbers...");
-    const processedData = await processWithDrillDown(data);
-
-    console.log(
-      `Total records after drill-down: ${processedData.length} (${processedData.length - data.length} additional)`,
-    );
-
-    // Fetch processes data for all WO-format serial numbers
-    console.log("Fetching processes data for WO-format serial numbers...");
-    const woPattern = /^\d{6}-\d{3}$/;
-    const serialNumbers = processedData
-      .map((item) => item.SERIAL_NUMBER && item.SERIAL_NUMBER.trim())
-      .filter((sn) => woPattern.test(sn));
-
-    const uniqueSerials = [...new Set(serialNumbers)];
-    console.log(
-      `Found ${uniqueSerials.length} unique WO-format serial numbers`,
-    );
-
-    // Fetch processes for each serial number
-    for (const serialNumber of uniqueSerials) {
-      try {
-        const procResponse = await fetch(
-          `http://${
-            window.location.hostname
-          }:${port}/cert/processes/${encodeURIComponent(serialNumber)}`,
-          {
-            method: "GET",
-            headers: {
-              "Content-Type": "application/json",
-            },
-          },
-        );
-
-        if (procResponse.ok) {
-          const procData = await procResponse.json();
-          console.log(
-            `Retrieved ${procData.length} process records for WO: ${serialNumber}`,
-          );
-          if (procData && procData.length > 0) {
-            procData.forEach((proc) => {
-              proc.source = "vbs";
-            });
-            processedData.push(...procData);
-          }
-        }
-      } catch (err) {
-        console.warn(`Error fetching processes for ${serialNumber}:`, err);
-      }
-    }
-
-    console.log("Item History Data:", processedData);
-
-    // Store raw data
-    itemHistoryData = processedData;
-
-    // Categorize by section
-    const categorized = categorizeItemHistory(processedData);
-
-    // Log categorized results
-    Object.entries(categorized).forEach(([section, records]) => {
-      if (records.length > 0) {
-        console.log(`${section}: ${records.length} records`);
-      }
-    });
-
-    return {
-      raw: itemHistoryData,
-      categorized: itemHistorySections,
-    };
-  } catch (error) {
-    console.error("Error fetching item history:", error);
-    throw error;
-  }
-}
-
-// ========== CONSOLE DISPLAY FUNCTIONS ==========
-/**
- * Displays item history data nicely formatted in browser console
- * Call from browser console: displayItemHistory('000123')
- */
-async function displayItemHistory(woNumber) {
-  try {
-    console.clear();
-    console.log(
-      "%c === ITEM HISTORY QUERY RESULTS ===",
-      "color: #0066cc; font-size: 14px; font-weight: bold;",
-    );
-    console.log(
-      `%cWork Order: ${woNumber}`,
-      "color: #00aa00; font-weight: bold;",
-    );
-    console.log("");
-
-    const result = await fetchItemHistory(woNumber);
-
-    console.log(
-      `%cTotal Records: ${result.raw.length}`,
-      "color: #ff6600; font-weight: bold;",
-    );
-    console.log("");
-
-    console.log(
-      "%c--- RAW DATA (All Records) ---",
-      "color: #0066cc; font-weight: bold;",
-    );
-    console.table(result.raw);
-    console.log("Raw JSON:", result.raw);
-    console.log("");
-
-    console.log(
-      "%c--- CATEGORIZED BY SECTION ---",
-      "color: #0066cc; font-weight: bold;",
-    );
-    Object.entries(result.categorized).forEach(([section, records]) => {
-      if (records.length > 0) {
-        console.log(
-          `%c${section} (${records.length} records)`,
-          "color: #009900; font-weight: bold;",
-        );
-        console.table(records);
-        console.log(`${section} JSON:`, records);
-        console.log("");
-      }
-    });
-
-    console.log("%c=== END RESULTS ===", "color: #0066cc; font-weight: bold;");
-
-    return result;
-  } catch (error) {
-    console.error("Failed to display item history:", error);
-  }
-}
-
-/**
- * Quick display - just logs the raw JSON array
- */
-async function quickDisplayHistory(woNumber) {
-  try {
-    const result = await fetchItemHistory(woNumber);
-    console.log("Item History JSON:", result.raw);
-    return result.raw;
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-
-/**
- * Copy-paste ready display - logs JSON string for copying
- */
-async function copyableHistory(woNumber) {
-  try {
-    const result = await fetchItemHistory(woNumber);
-    const jsonString = JSON.stringify(result.raw, null, 2);
-    console.log(jsonString);
-    return jsonString;
-  } catch (error) {
-    console.error("Error:", error);
-  }
-}
-
 // ========== PAGE TABLE DISPLAY ==========
 /**
  * Renders categorized item history as separate section tables on the page
@@ -709,7 +349,7 @@ async function renderCategorizedSections(
 ) {
   try {
     currentWoNo = woNumber;
-    const result = await fetchItemHistory(woNumber);
+    const result = await fetchCertDataOptimized(woNumber);
 
     // Get or create container
     let container = document.getElementById(containerId);
@@ -942,8 +582,10 @@ async function renderCategorizedSections(
           if (sectionInfo.key !== "MATERIAL") {
             const tdSpec = document.createElement("td");
             tdSpec.textContent = record.OPERATION || "";
+            tdSpec.title = record.OPERATION_CODE || ""; // Tooltip shows operation code
             tdSpec.style.border = "1px solid #ddd";
             tdSpec.style.padding = "7px";
+            tdSpec.style.cursor = "help"; // Show help cursor on hover
             row.appendChild(tdSpec);
           }
 
@@ -1020,124 +662,25 @@ async function renderCategorizedSections(
   }
 }
 
-/**
- * Displays item history in an HTML table on the page
- * Columns: PART, JOB, SUFFIX, SEQUENCE, SERIAL_NUMBER
- */
-async function showItemHistoryTable(
-  woNumber,
-  containerId = "item-history-table",
-) {
-  try {
-    const result = await fetchItemHistory(woNumber);
-    const records = result.raw;
-
-    // Create table HTML
-    let tableHTML = `
-      <div style="margin: 20px 0;">
-        <h3>Item History for WO: ${woNumber}</h3>
-        <p>Total Records: ${records.length}</p>
-        <table border="1" cellpadding="10" cellspacing="0" style="width: 100%; border-collapse: collapse; font-family: Arial, sans-serif;">
-          <thead style="background-color: #4CAF50; color: white;">
-            <tr>
-              <th>PART</th>
-              <th>JOB</th>
-              <th>SUFFIX</th>
-              <th>SEQUENCE</th>
-              <th>SERIAL_NUMBER</th>
-            </tr>
-          </thead>
-          <tbody>
-    `;
-
-    records.forEach((record) => {
-      tableHTML += `
-        <tr>
-          <td>${record.PART || ""}</td>
-          <td>${record.JOB || ""}</td>
-          <td>${record.SUFFIX || ""}</td>
-          <td>${record.SEQUENCE || ""}</td>
-          <td>${record.SERIAL_NUMBER || ""}</td>
-        </tr>
-      `;
-    });
-
-    tableHTML += `
-          </tbody>
-        </table>
-      </div>
-    `;
-
-    // Insert into page
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.innerHTML = tableHTML;
-    } else {
-      // Create a div if container doesn't exist
-      const newDiv = document.createElement("div");
-      newDiv.id = containerId;
-      newDiv.innerHTML = tableHTML;
-      document.body.appendChild(newDiv);
-    }
-
-    return result;
-  } catch (error) {
-    console.error("Error displaying table:", error);
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.innerHTML = `<p style="color: red;">Error loading data: ${error.message}</p>`;
-    }
-  }
-}
-
 // ========== MAKE AVAILABLE IN BROWSER CONSOLE ==========
 // Use self-invoking function to expose to window immediately
 (function () {
   // Attach to window object so it can be called directly from console
-  window.displayItemHistory = displayItemHistory;
-  window.quickDisplayHistory = quickDisplayHistory;
-  window.copyableHistory = copyableHistory;
-  window.fetchItemHistory = fetchItemHistory;
-  window.showItemHistoryTable = showItemHistoryTable;
+  window.fetchCertDataOptimized = fetchCertDataOptimized;
   window.renderCategorizedSections = renderCategorizedSections;
-  window.processWithDrillDown = processWithDrillDown;
-  window.itemHistoryData = itemHistoryData;
-  window.itemHistorySections = itemHistorySections;
-  window.categorizeItemHistory = categorizeItemHistory;
-  window.determineRecordSection = determineRecordSection;
 
   console.log(
-    "%c✓ Item History Functions Loaded",
+    "%c✓ Certification Lookup Functions Loaded",
     "color: #00aa00; font-weight: bold;",
   );
   console.log("Available commands:");
-  console.log("  displayItemHistory(woNumber)");
-  console.log("  quickDisplayHistory(woNumber)");
-  console.log("  copyableHistory(woNumber)");
-  console.log("  fetchItemHistory(woNumber)");
-  console.log(
-    "  showItemHistoryTable(woNumber, containerId='item-history-table')",
-  );
   console.log(
     "  renderCategorizedSections(woNumber, containerId='item-history-sections')",
   );
-  console.log("  processWithDrillDown(masterArray, visitedWOs=new Set())");
 })();
 
 // ========== EXPORT FOR USE IN CERT PAGE ==========
-export {
-  fetchItemHistory,
-  itemHistoryData,
-  itemHistorySections,
-  categorizeItemHistory,
-  determineRecordSection,
-  displayItemHistory,
-  quickDisplayHistory,
-  copyableHistory,
-  showItemHistoryTable,
-  renderCategorizedSections,
-  processWithDrillDown,
-};
+export { fetchCertDataOptimized, renderCategorizedSections };
 
 // ========== SEARCH RESULTS DISPLAY ==========
 /**
@@ -1483,18 +1026,50 @@ document.addEventListener("DOMContentLoaded", () => {
       }
 
       try {
+        // Start timer
+        const startTime = performance.now();
+
+        // Clear previous results
+        const traceContainer = document.getElementById("trace");
+        if (traceContainer) {
+          traceContainer.innerHTML = "";
+        }
+
         // Show loading indicator
         const loadingIndicator = document.getElementById("loadingIndicator");
         if (loadingIndicator) {
           loadingIndicator.style.display = "block";
+          loadingIndicator.innerHTML =
+            '<p>Loading... <span id="elapsed">0</span>s</p>';
+
+          // Update elapsed time every 100ms
+          const timerInterval = setInterval(() => {
+            const elapsed = ((performance.now() - startTime) / 1000).toFixed(2);
+            const elapsedSpan = document.getElementById("elapsed");
+            if (elapsedSpan) {
+              elapsedSpan.textContent = elapsed;
+            }
+          }, 100);
+
+          // Store interval ID for cleanup
+          loadingIndicator.dataset.timerInterval = timerInterval;
         }
 
         // Fetch item history with drill-down processing and render categorized sections
         await renderCategorizedSections(woNumber, "trace");
 
-        // Hide loading indicator
+        // Calculate total time
+        const totalTime = ((performance.now() - startTime) / 1000).toFixed(2);
+
+        // Show completion time
         if (loadingIndicator) {
-          loadingIndicator.style.display = "none";
+          clearInterval(parseInt(loadingIndicator.dataset.timerInterval));
+          loadingIndicator.innerHTML = `<p style="color: #00aa00; font-weight: bold;">Completed in ${totalTime}s</p>`;
+
+          // Hide after 3 seconds
+          setTimeout(() => {
+            loadingIndicator.style.display = "none";
+          }, 3000);
         }
       } catch (error) {
         console.error("Error during search:", error);
@@ -1512,11 +1087,6 @@ document.addEventListener("DOMContentLoaded", () => {
 
 // ========== MAKE AVAILABLE IN BROWSER CONSOLE ==========
 // Attach to window object so it can be called directly from console
-window.displayItemHistory = displayItemHistory;
-window.quickDisplayHistory = quickDisplayHistory;
-window.copyableHistory = copyableHistory;
-window.fetchItemHistory = fetchItemHistory;
-window.showItemHistoryTable = showItemHistoryTable;
 window.renderCategorizedSections = renderCategorizedSections;
 window.displaySearchResults = displaySearchResults;
 window.openEditDialog = openEditDialog;
@@ -1525,5 +1095,3 @@ window.openAddDialog = openAddDialog;
 window.saveRevision = saveRevision;
 window.saveNewRow = saveNewRow;
 window.formatPartNumber = formatPartNumber;
-window.itemHistoryData = itemHistoryData;
-window.itemHistorySections = itemHistorySections;

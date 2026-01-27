@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ACert Query</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <h1>ACert Workorder Lookup</h1>
+    <form id="acert-form">
+      <label for="baseWorkorder">Base Workorder (6 digits):</label>
+      <input
+        type="text"
+        id="baseWorkorder"
+        name="baseWorkorder"
+        pattern="\d{6}"
+        maxlength="6"
+        value="122353"
+        required
+      />
+      <button type="submit">Query</button>
+    </form>
+    <div id="working" style="display: none; color: blue; font-weight: bold">
+      Working...
+    </div>
+    <div id="results"></div>
+    <script type="module" src="js/acert.mjs"></script>
+  </body>
+</html>

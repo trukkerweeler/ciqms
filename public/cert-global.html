@@ -1,0 +1,313 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <title id="pageTitle">CERT - Global</title>
+  </head>
+  <body>
+    <header>
+      <h1 class="greenfont d-none">Global Cert (AWS Database)</h1>
+    </header>
+    <main>
+      <div id="historyButton">
+        <p class="d-none">Go to <a href="index.html">HOME</a></p>
+      </div>
+      <div id="logoContainer">
+        <div id="logoAndContact">
+          <div id="logoSection">
+            <img
+              id="logoImage"
+              src="../images/ci-logo.png"
+              alt="CI logo"
+              title=""
+            />
+          </div>
+          <div id="contactSection">
+            <p id="contactInfo">
+              2990 S. Main Street<br />
+              Salt Lake City, UT 84115<br />
+              <strong>801-466-3334</strong><br />
+              www.christensenindustries.com
+            </p>
+          </div>
+        </div>
+      </div>
+      <div id="searchForm">
+        <label for="woNo">WO No:</label>
+        <input type="text" id="woNo" name="woNo" value="122353" />
+        <button type="submit" id="btnSearch">Search</button>
+      </div>
+      <div id="loadingIndicator" class="loading-spinner" style="display: none">
+        <div class="spinner"></div>
+        <p>Loading certificate data...</p>
+      </div>
+      <h2 id="textTitle">CERTIFICATE OF PROCESSING - GLOBAL AWS DATABASE</h2>
+
+      <!-- Search Results Table -->
+      <div id="searchResultsContainer" style="display: none; margin-top: 30px">
+        <h3>Search Results</h3>
+        <table
+          id="searchResultsTable"
+          style="
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+          "
+        >
+          <thead style="background-color: #4caf50; color: white">
+            <tr>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                JOB
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SUFFIX
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                CUSTOMER
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                CUSTOMER NAME
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                DATE REQUIRED
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                DATE COMPLETED
+              </th>
+            </tr>
+          </thead>
+          <tbody id="searchResultsBody">
+            <!-- Results will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Item History Table -->
+      <div id="itemHistoryContainer" style="margin-top: 30px">
+        <h3>Item History & Traceability</h3>
+        <table
+          id="itemHistoryTable"
+          style="
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+          "
+        >
+          <thead style="background-color: #2196f3; color: white">
+            <tr>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SEQUENCE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PART
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                JOB
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SUFFIX
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SERIAL NUMBER
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                REFERENCE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                QUANTITY
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PURCHASE ORDER
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PO LINE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                DESCRIPTION
+              </th>
+            </tr>
+          </thead>
+          <tbody id="itemHistoryBody">
+            <!-- Results will be inserted here -->
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Recursive Item History Table -->
+      <div id="itemHistoryContainer" style="display: none; margin-top: 30px">
+        <h3>Recursive Item History</h3>
+        <table
+          id="itemHistoryTable"
+          style="
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+          "
+        >
+          <thead style="background-color: #2196f3; color: white">
+            <tr>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PART
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                JOB
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SUFFIX
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SEQUENCE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SERIAL NUMBER
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                REFERENCE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                QUANTITY
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PURCHASE ORDER
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PO LINE
+              </th>
+            </tr>
+          </thead>
+          <tbody id="itemHistoryBody"></tbody>
+        </table>
+      </div>
+
+      <!-- Recursive Child/Grandchild Item History Table -->
+      <div
+        id="recursiveItemHistoryContainer"
+        style="display: none; margin-top: 30px"
+      >
+        <h3>Recursive Child/Grandchild Item History</h3>
+        <table
+          id="recursiveItemHistoryTable"
+          style="
+            width: 100%;
+            border-collapse: collapse;
+            margin: 20px 0;
+            font-family: Arial, sans-serif;
+          "
+        >
+          <thead style="background-color: #673ab7; color: white">
+            <tr>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SEQUENCE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PART
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                JOB
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SUFFIX
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                SERIAL NUMBER
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                REFERENCE
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PARENT SERIAL
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                QUANTITY
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PURCHASE ORDER
+              </th>
+              <th
+                style="border: 1px solid #ddd; padding: 12px; text-align: left"
+              >
+                PO LINE
+              </th>
+            </tr>
+          </thead>
+          <tbody id="recursiveItemHistoryBody"></tbody>
+        </table>
+      </div>
+    </main>
+
+    <script type="module" src="js/cert-global.mjs"></script>
+  </body>
+</html>
