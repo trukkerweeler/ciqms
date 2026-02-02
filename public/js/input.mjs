@@ -1,3 +1,54 @@
+// Wire up cancel button for collect data dialog
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "cancelCollData") {
+    const dlg = document.getElementById("collectDataDialog");
+    if (dlg) dlg.close();
+  }
+});
+// Handle save for collect data dialog and POST to /csr/:iid
+document.addEventListener("submit", async (e) => {
+  if (e.target && e.target.id === "collectForm") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog");
+    const form = e.target;
+    try {
+      const port = myport();
+      const iid = getUrlParam("id");
+      // Fetch next COLLECT_ID from backend
+      const nextIdRes = await fetch(`http://localhost:${port}/csr/nextCSRId`);
+      if (!nextIdRes.ok) throw new Error("Failed to get next COLLECT_ID");
+      const nextCollectId = await nextIdRes.json();
+      const data = {
+        COLLECT_ID: nextCollectId,
+        CUSTOMER_ID: form.CUSTOMER_ID.value.toUpperCase(),
+        UNIT: form.UNIT.value.toUpperCase(),
+        VALUE: form.VALUE.value,
+        SAMPLE_DATE: form.SAMPLE_DATE.value,
+        INPUT_USER: (await getUserValue()) || "",
+      };
+      const url = `http://localhost:${port}/csr/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+});
+// Show collect data dialog when Collect button is clicked
+document.addEventListener("click", (e) => {
+  if (e.target && e.target.id === "btnCollData") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog");
+    if (dlg) dlg.showModal();
+  }
+});
 import {
   loadHeaderFooter,
   createNotesSection,
@@ -176,14 +227,14 @@ fetch(url, { method: "GET" })
         rec["FOLLOWUP_TEXT"],
         null,
         rec["FOLLOWUP_DATE"],
-        rec["FOLLOWUP_BY"]
+        rec["FOLLOWUP_BY"],
       );
       createNotesSection(
         "RESPONSE_TEXT",
         rec["RESPONSE_TEXT"],
         null,
         rec["RESPONSE_DATE"],
-        rec["RESPONSE_BY"]
+        rec["RESPONSE_BY"],
       );
     }
 
@@ -220,7 +271,7 @@ fetch(url, { method: "GET" })
             const responseText = timestampText(
               user,
               newResponseText,
-              oldResponseText
+              oldResponseText,
             );
 
             const data = {
@@ -276,7 +327,7 @@ fetch(url, { method: "GET" })
             const actionText = timestampText(
               user,
               newActionText,
-              oldActionText
+              oldActionText,
             ).replace(/\n/g, "<br>");
 
             const data = {
@@ -330,7 +381,7 @@ fetch(url, { method: "GET" })
             const followUpText = timestampText(
               user,
               newFollowUpText,
-              oldFollowUpText
+              oldFollowUpText,
             );
 
             const data = {
@@ -417,23 +468,23 @@ fetch(url, { method: "GET" })
 
         document.querySelector("#ASSIGNED_TO").value = extractText(
           assignedToElem.textContent,
-          13
+          13,
         );
         document.querySelector("#DUE_DATE").value = extractText(
           dueDateElem.textContent,
-          10
+          10,
         );
         document.querySelector("#PROJECT_ID").value = extractText(
           projectElem.textContent,
-          9
+          9,
         ).split(" ")[0];
         document.querySelector("#REQUESTED_BY").value = extractText(
           requestByElem.textContent,
-          11
+          11,
         );
         document.querySelector("#SUBJECT").value = extractText(
           subjectElem.textContent,
-          9
+          9,
         );
 
         document.querySelector("#cancelEdit").addEventListener("click", () => {
@@ -490,7 +541,7 @@ fetch(url, { method: "GET" })
 
             const assignedToText = extractText(
               document.querySelector("#assignedto").textContent,
-              13
+              13,
             );
             const userEmail =
               userEmails[assignedToText] ?? userEmails["DEFAULT"];
@@ -499,7 +550,7 @@ fetch(url, { method: "GET" })
             const followUpNoteElem = document.querySelector("#followUpNote");
             const projectText = extractText(
               document.querySelector("#project").textContent,
-              9
+              9,
             ).split(" ")[0];
 
             const emailData = {

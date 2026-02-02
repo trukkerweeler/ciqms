@@ -205,6 +205,11 @@ fetch(url, { method: "GET" })
         btnClose.disabled = false;
       } else {
         btnClose.disabled = true;
+        Object.assign(btnClose.style, {
+          opacity: "0.5",
+          cursor: "not-allowed",
+          backgroundColor: "#e0e0e0",
+        });
       }
 
       divSubTitle.appendChild(btnClose);
@@ -229,6 +234,15 @@ fetch(url, { method: "GET" })
         const closeUrl = `http://localhost:${port}/requests/close/${drid}`;
         saveClose.addEventListener("click", async (event) => {
           event.preventDefault();
+
+          // Disable and grey out the save button to prevent double-click
+          saveClose.disabled = true;
+          Object.assign(saveClose.style, {
+            opacity: "0.5",
+            cursor: "not-allowed",
+            backgroundColor: "#e0e0e0",
+          });
+
           //   match case decision select and change to Y-N-P
           let decision = document.querySelector("#decision").value;
           let decisioncode = "";
@@ -272,22 +286,21 @@ fetch(url, { method: "GET" })
           };
           const response = await fetch(closeUrl, options);
 
-          // Call document release notifications
-          try {
-            const notifyUrl = `http://localhost:${port}/documents/release-notifications`;
-            await fetch(notifyUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
+          // Only reload if the response is successful
+          if (response.ok) {
+            // Grey out and disable the close button
+            btnClose.disabled = true;
+            Object.assign(btnClose.style, {
+              opacity: "0.5",
+              cursor: "not-allowed",
+              backgroundColor: "#e0e0e0",
             });
-          } catch (error) {
-            console.log("Error calling release notifications:", error);
+            closeDialog.close();
+            // Reload page to show updated DCR
+            window.location.reload();
+          } else {
+            alert("Error closing DCR. Please try again.");
           }
-
-          closeDialog.close();
-          // refresh the page
-          window.location.reload();
         });
       });
 

@@ -6,7 +6,30 @@
     <link rel="stylesheet" href="css/styles.css" />
   </head>
   <body>
-    <h1>ACert Workorder Lookup</h1>
+    <div id="logoContainer">
+      <div
+        id="logoAndContact"
+        style="display: flex; align-items: center; margin-bottom: 1rem"
+      >
+        <div id="logoSection" style="margin-right: 1rem">
+          <img
+            id="logoImage"
+            src="images/ci-logo.png"
+            alt="CI logo"
+            style="height: 64px; vertical-align: middle"
+          />
+        </div>
+        <div id="contactSection">
+          <p id="contactInfo" style="margin: 0">
+            2990 S. Main Street<br />
+            Salt Lake City, UT 84115<br />
+            <strong>801-466-3334</strong><br />
+            www.christensenindustries.com
+          </p>
+        </div>
+      </div>
+    </div>
+    <h1 style="margin: 0">ACert Workorder Lookup</h1>
     <form id="acert-form">
       <label for="baseWorkorder">Base Workorder (6 digits):</label>
       <input
@@ -20,9 +43,15 @@
       />
       <button type="submit">Query</button>
     </form>
-    <div id="working" style="display: none; color: blue; font-weight: bold">
-      Working...
+    <div
+      id="loadingIndicator"
+      class="loading-spinner"
+      style="display: none; margin-top: 1rem"
+    >
+      <div class="spinner" style="margin: 0 auto"></div>
+      <p>Loading certificate data...</p>
     </div>
+    <h2 id="textTitle" style="margin-top: 2rem">CERTIFICATE OF PROCESSING</h2>
     <div id="results"></div>
     <script type="module" src="js/acert.mjs"></script>
   </body>

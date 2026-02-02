@@ -74,107 +74,58 @@ router.get("/lineage/:job", async (req, res) => {
 router.post("/process", async (req, res) => {
   let connection;
   try {
-    const { process, serial } = req.body;
-    if (!process || !serial) {
-      console.error("Missing process or serial", req.body);
-      return res.status(400).json({ error: "Missing process or serial" });
-    }
-    const processMap = {
-      HEAT: { operation: "FT1C1A", job: 122353, suffix: "002" },
-      SWLD: { operation: "D171", job: 122354, suffix: "003" },
-      FWLD: { operation: "FUSION", job: 122355, suffix: "004" },
-      PASS: { operation: "PASSOP", job: 122356, suffix: "005" },
-      CHEM: { operation: "CHEMOP", job: 122357, suffix: "006" },
-      PAINT: { operation: "", job: null, suffix: null },
-    };
-    const opData = processMap[process];
-    if (!opData || !opData.operation) {
-      console.warn("No opData for process", process);
-      return res.json([]); // No data for PAINT or unknown
+    const { baseWorkorder, operationCodes } = req.body;
+    if (
+      !baseWorkorder ||
+      !Array.isArray(operationCodes) ||
+      operationCodes.length === 0
+    ) {
+      console.error("Missing baseWorkorder or operationCodes", req.body);
+      return res
+        .status(400)
+        .json({ error: "Missing baseWorkorder or operationCodes" });
     }
     connection = getDbConnection();
-    // ...existing code for routerNum query and process query...
-    connection.query(
-      "SELECT ROUTER FROM JOB_OPERATIONS WHERE JOB = ? AND SUFFIX = ? LIMIT 1",
-      [opData.job, opData.suffix],
-      (err, routerRows) => {
-        if (err) {
-          if (connection && connection.end)
-            try {
-              connection.end();
-            } catch {}
-          console.error("MySQL error fetching routerNum", err);
-          return res.status(500).json({ error: err.message });
-        }
-        const routerNum =
-          routerRows && routerRows[0] ? routerRows[0].ROUTER : null;
-        if (!routerNum) {
-          if (connection && connection.end)
-            try {
-              connection.end();
-            } catch {}
-          console.warn(
-            "No ROUTER found for JOB/SUFFIX",
-            opData.job,
-            opData.suffix,
-          );
-          return res.json([]);
-        }
-        const query = `
-SET @router    = SUBSTRING_INDEX(?, ' ', 1);
-SET @operation = ?;
-SET @job       = ?;
-SET @suffix    = ?;
-SELECT
-    rl.ROUTER,
-    jo.JOB,
-    jo.SUFFIX,
-    rl.LINE_ROUTER,
-    jo.SEQ,
-    jo.ROUTER_SEQ,
-    rl.LMO,
-    rl.PART_WC_OUTSIDE,
-    rl.OPERATION,
-    jo.OPERATION AS JOB_OPERATION,
-    jd.REFERENCE,
-    jo.DATE_COMPLETED,
-    jo.DESCRIPTION
-FROM ROUTER_LINE rl
-JOIN JOB_OPERATIONS jo
-  ON jo.ROUTER_SEQ BETWEEN rl.LINE_ROUTER AND rl.LINE_ROUTER + 99
-     AND jo.JOB = @job
-     AND jo.SUFFIX = @suffix
-LEFT JOIN (
-  SELECT JOB, SUFFIX, SEQ, MAX(REFERENCE) AS REFERENCE
-  FROM JOB_DETAIL
-  GROUP BY JOB, SUFFIX, SEQ
-) jd
-  ON jd.JOB like jo.JOB
-     AND jd.SUFFIX = jo.SUFFIX
-     AND jd.SEQ = jo.SEQ
-WHERE SUBSTRING_INDEX(rl.ROUTER,' ',1) like SUBSTRING_INDEX(jo.ROUTER,' ',1)
-  AND rl.OPERATION = @operation
-  AND jd.REFERENCE IS NOT NULL;
-`;
-        connection.query(
-          query,
-          [routerNum, opData.operation, opData.job, opData.suffix],
-          (err, results) => {
-            try {
-              if (connection && connection.end) connection.end();
-            } catch {}
-            if (err) {
-              console.error("MySQL error in /acert/process", err);
-              return res.status(500).json({ error: err.message });
-            }
-            const rows = Array.isArray(results)
-              ? results[results.length - 1]
-              : [];
-            res.json(rows);
-          },
-        );
-      },
-    );
+    const query = `
+      SELECT DISTINCT
+          rl.ROUTER,
+          jo.JOB,
+          jo.SUFFIX,
+          jd.REFERENCE,
+          jo.DATE_COMPLETED,
+          rl.OPERATION,
+          jo.DESCRIPTION
+      FROM ITEM_HISTORY ih
+      JOIN ROUTER_LINE rl
+            ON rl.ROUTER = ih.PART
+      JOIN JOB_OPERATIONS jo
+            ON CAST(jo.ROUTER_SEQ AS UNSIGNED)
+               BETWEEN CAST(rl.LINE_ROUTER AS UNSIGNED)
+                   AND CAST(rl.LINE_ROUTER AS UNSIGNED) + 99
+      JOIN JOB_DETAIL jd
+            ON jd.JOB = jo.JOB
+           AND jd.SUFFIX = jo.SUFFIX
+           AND jd.SEQ = jo.SEQ
+      WHERE ih.JOB = ?
+        AND ih.SERIAL_NUMBER LIKE '______-___'
+        AND jo.JOB = CAST(SUBSTRING(ih.SERIAL_NUMBER, 1, 6) AS UNSIGNED)
+        AND jo.SUFFIX = CAST(SUBSTRING(ih.SERIAL_NUMBER, 8, 3) AS UNSIGNED)
+        AND rl.OPERATION IN (${Array.from({ length: operationCodes.length })
+          .map(() => "?")
+          .join(",")})
+        AND jd.REFERENCE IS NOT NULL;
+    `;
+    const params = [baseWorkorder, ...operationCodes];
+    connection.query(query, params, (err, rows) => {
+      try {
+        if (connection && connection.end) connection.end();
+      } catch {}
+      if (err) {
+        console.error("MySQL error in /acert/process", err);
+        return res.status(500).json({ error: err.message });
+      }
+      res.json(rows);
+    });
   } catch (err) {
     console.error("Logic error in /acert/process", err);
     if (connection && connection.end) {

@@ -5,567 +5,567 @@ import {
   myport,
 } from "./utils.mjs";
 
-// Initialize the manager page
+// ===== UTILITY FUNCTIONS =====
+
+/**
+ * Create an element with classes, id, and/or text content
+ */
+const createElement = (tag, { classes = [], id = "", text = "" } = {}) => {
+  const element = document.createElement(tag);
+  if (id) element.id = id;
+  if (classes.length) element.classList.add(...classes);
+  if (text) element.textContent = text;
+  return element;
+};
+
+/**
+ * Safely fetch and parse JSON
+ */
+const fetchJson = async (url, options = {}) => {
+  try {
+    const response = await fetch(url, { method: "GET", ...options });
+    if (!response.ok) throw new Error(`HTTP ${response.status}`);
+    return await response.json();
+  } catch (error) {
+    console.error(`Fetch error: ${url}`, error);
+    throw error;
+  }
+};
+
+/**
+ * Format date for display
+ */
+const formatDisplayDate = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toLocaleDateString();
+};
+
+/**
+ * Format date for input field (YYYY-MM-DD)
+ */
+const formatInputDate = (dateString) => {
+  if (!dateString) return "";
+  return new Date(dateString).toISOString().split("T")[0];
+};
+
+/**
+ * Clear all child nodes from an element
+ */
+const clearElement = (element) => {
+  while (element.firstChild) {
+    element.removeChild(element.firstChild);
+  }
+};
+
+/**
+ * Update summary span with question counts
+ */
+const updateChecklistSummary = (summarySpan) => {
+  const allRows = document.querySelectorAll(".rowdiv");
+  const totalQuestions = allRows.length;
+  const answeredQuestions = Array.from(allRows).filter((row) => {
+    const obsContent = row.querySelector(".obs-content");
+    return obsContent?.textContent.trim() !== "";
+  }).length;
+  const unansweredQuestions = totalQuestions - answeredQuestions;
+  summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
+};
+
+// ===== MAIN INITIALIZATION =====
+
 async function initManager() {
-  loadHeaderFooter();
+  try {
+    loadHeaderFooter();
 
-  // get user value
-  const user = await getUserValue();
-  const port = myport();
+    const user = await getUserValue();
+    const port = myport();
+    const urlParams = new URLSearchParams(window.location.search);
+    const id = urlParams.get("id");
 
-  // get url parameters
-  const urlParams = new URLSearchParams(window.location.search);
-  const id = urlParams.get("id");
+    const apiUrls = {
+      manager: `http://localhost:${port}/manager/`,
+      checklist: `http://localhost:${port}/checklist/`,
+    };
 
-  const url = `http://localhost:${port}/manager/${id}`;
-  const managerUrl = `http://localhost:${port}/manager/`;
-  const checklistUrl = `http://localhost:${port}/checklist/`;
-  // console.log(url);
+    const main = document.querySelector("main");
+    clearElement(main);
 
-  const main = document.querySelector("main");
+    // Fetch audit data
+    const record = await fetchJson(`${apiUrls.manager}${id}`);
 
-  while (main.firstChild) {
-    main.removeChild(main.firstChild);
+    // Render audit details and checklist
+    await renderAuditDetails(record[0], main, id, port, apiUrls, urlParams);
+  } catch (error) {
+    console.error("Error initializing manager:", error);
+    alert("Error loading audit data. Please refresh the page.");
+  }
+}
+
+/**
+ * Render main audit details section
+ */
+async function renderAuditDetails(
+  auditData,
+  main,
+  id,
+  port,
+  apiUrls,
+  urlParams,
+) {
+  // ===== HEADER SECTION =====
+  const divMainTitle = createElement("div", { classes: ["main-title"] });
+  const h1 = createElement("h1", {
+    classes: ["header"],
+    text: "Audit Manager",
+  });
+
+  const btnClose = createElement("button", {
+    classes: ["btn", "btn-primary"],
+    id: "btnClose",
+    text: "Close",
+  });
+
+  const isAuditClosed = auditData.CLOSED === "Yes";
+  if (isAuditClosed) {
+    btnClose.disabled = true;
+    Object.assign(btnClose.style, {
+      opacity: "0.5",
+      cursor: "not-allowed",
+    });
   }
 
-  fetch(url, { method: "GET" })
-    .then((response) => response.json())
-    .then((record) => {
-      // console.log(record);
+  divMainTitle.appendChild(h1);
+  divMainTitle.appendChild(btnClose);
+  main.appendChild(divMainTitle);
 
-      // Create main title with close button
-      const h1 = document.createElement("h1");
-      h1.textContent = "Audit Manager";
+  // ===== DETAILS SECTION =====
+  const section = createElement("section", { classes: ["details"] });
+  const h2 = createElement("h2", { text: "Details" });
 
-      const btnClose = document.createElement("button");
-      btnClose.textContent = "Close";
-      btnClose.classList.add("btn");
-      btnClose.classList.add("btn-primary");
-      btnClose.id = "btnClose";
+  const divTitleAndEdit = createElement("div", { classes: ["title-and-edit"] });
+  divTitleAndEdit.appendChild(h2);
 
-      // Shade/disable the close button if audit is already closed
-      if (record[0].CLOSED === "Yes") {
-        btnClose.disabled = true;
-        btnClose.style.opacity = "0.5";
-        btnClose.style.cursor = "not-allowed";
+  const btnEditDetail = createElement("button", {
+    classes: ["btn", "btn-primary"],
+    id: "btnEditDetail",
+    text: "Edit",
+  });
+
+  divTitleAndEdit.appendChild(btnEditDetail);
+
+  const divDetailBtns = createElement("div", { classes: ["detailbtns"] });
+  divDetailBtns.appendChild(divTitleAndEdit);
+
+  const divDetailHeader = createElement("div", { classes: ["detailheader"] });
+  divDetailHeader.appendChild(divDetailBtns);
+  section.appendChild(divDetailHeader);
+
+  // Add detail fields
+  const fieldList = [
+    "AUDIT_ID",
+    "AUDIT_MANAGER_ID",
+    "STANDARD",
+    "SUBJECT",
+    "SCHEDULED_DATE",
+    "LEAD_AUDITOR",
+    "AUDITEE1",
+    "COMPLETION_DATE",
+  ];
+
+  for (const key of fieldList) {
+    const value = auditData[key];
+    let displayText = value || "";
+
+    if (key.endsWith("DATE")) {
+      if (key === "COMPLETION_DATE" && !value) {
+        displayText = "";
+      } else if (value) {
+        displayText = formatDisplayDate(value);
       }
+    }
 
-      const divMainTitle = document.createElement("div");
-      divMainTitle.classList.add("main-title");
-      divMainTitle.appendChild(h1);
-      divMainTitle.appendChild(btnClose);
-
-      main.appendChild(divMainTitle);
-
-      // Detail header div
-      const divDetailHeader = document.createElement("div");
-      divDetailHeader.classList.add("detailheader");
-
-      // Details
-      const section = document.createElement("section");
-      section.classList.add("details");
-      const h2 = document.createElement("h2");
-      h2.textContent = "Details";
-
-      // Create a div for h2 and edit button
-      const divTitleAndEdit = document.createElement("div");
-      divTitleAndEdit.classList.add("title-and-edit");
-      divTitleAndEdit.appendChild(h2);
-
-      // add button to section
-      const btneditdetail = document.createElement("button");
-      btneditdetail.textContent = "Edit";
-      btneditdetail.classList.add("btn");
-      btneditdetail.classList.add("btn-primary");
-      btneditdetail.id = "btnEditDetail";
-
-      // Add edit button to the title div
-      divTitleAndEdit.appendChild(btneditdetail);
-
-      const divDetailBtns = document.createElement("div");
-      divDetailBtns.classList.add("detailbtns");
-      divDetailBtns.appendChild(divTitleAndEdit);
-
-      // divDetailHeader.appendChild(h2);
-      divDetailHeader.appendChild(divDetailBtns);
-      // divDetailHeader.appendChild(btnClose);
-      section.appendChild(divDetailHeader);
-
-      const fieldList = [
-        "AUDIT_ID",
-        "AUDIT_MANAGER_ID",
-        "STANDARD",
-        "SUBJECT",
-        "SCHEDULED_DATE",
-        "LEAD_AUDITOR",
-        "AUDITEE1",
-        "COMPLETION_DATE",
-      ];
-      for (const key in record[0]) {
-        if (!fieldList.includes(key)) {
-          continue;
-        }
-        let amid = record[0].AUDIT_MANAGER_ID;
-        const p = document.createElement("p");
-        p.textContent = key.replace(/_/g, " ") + ": " + record[0][key];
-
-        // if the last 4 =='DATE' then format the date
-        if (key.slice(-4) == "DATE") {
-          // if its the completion date and its null then set it to zls
-          if (key == "COMPLETION_DATE" && record[0][key] == null) {
-            p.textContent = key.replace(/_/g, " ") + ": ";
-          } else {
-            p.textContent =
-              key + ": " + new Date(record[0][key]).toLocaleDateString();
-          }
-        }
-
-        if (key == "AUDIT_ID") {
-          p.textContent = key.replace(/_/g, " ") + ": " + record[0][key];
-          p.setAttribute("id", "audit_id");
-        }
-
-        section.appendChild(p);
-      }
-      main.appendChild(section);
-
-      // Checklist
-      const sectionChecklist = document.createElement("section");
-      sectionChecklist.classList.add("checklist");
-      const h3 = document.createElement("h3");
-      h3.textContent = "Checklist";
-      h3.style.display = "inline-block";
-      sectionChecklist.appendChild(h3);
-
-      // Summary span for question counts (inline with h3)
-      const summarySpan = document.createElement("span");
-      summarySpan.id = "checklistSummary";
-      summarySpan.style.fontSize = "0.9em";
-      summarySpan.style.color = "#666";
-      summarySpan.style.marginLeft = "1em";
-      summarySpan.style.fontWeight = "normal";
-      sectionChecklist.appendChild(summarySpan);
-
-      // Container for scrollable checklist items
-      const checklistItemsContainer = document.createElement("div");
-      checklistItemsContainer.classList.add("checklist-items");
-
-      main.appendChild(sectionChecklist);
-
-      // Checklist button
-      const btnChecklist = document.createElement("button");
-      btnChecklist.textContent = "Add Checklist";
-      btnChecklist.classList.add("btn");
-      btnChecklist.classList.add("btn-primary");
-      btnChecklist.id = "btnAddQust";
-      sectionChecklist.appendChild(btnChecklist);
-
-      sectionChecklist.appendChild(checklistItemsContainer);
-
-      fetch(checklistUrl + id, { method: "GET" })
-        .then((response) => response.json())
-        .then((records) => {
-          // console.log(records);
-
-          let checklistFields = [
-            "CHECKLIST_ID",
-            "QUESTION",
-            "OBSERVATION",
-            "REFERENCE",
-          ];
-
-          // Count questions and answered questions
-          const totalQuestions = records.length;
-          const answeredQuestions = records.filter(
-            (r) => r.OBSERVATION && r.OBSERVATION.trim() !== ""
-          ).length;
-          const unansweredQuestions = totalQuestions - answeredQuestions;
-
-          // Update summary
-          summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
-
-          for (const row in records) {
-            // console.log(records[row]);
-            // for every row we want a div
-            const rowdiv = document.createElement("div");
-            rowdiv.classList.add("rowdiv");
-
-            for (const key in records[row]) {
-              // console.log(key);
-              if (checklistFields.includes(key)) {
-                const divcklst = document.createElement("div");
-                // console.log(key);
-                switch (key) {
-                  case "CHECKLIST_ID":
-                    const pcklst = document.createElement("p");
-                    pcklst.id = "checklist_id";
-                    pcklst.classList.add("chkdet");
-                    pcklst.textContent = "Checklist Id: " + records[row][key];
-                    rowdiv.appendChild(pcklst);
-                    break;
-                  case "STANDARD":
-                    const scklst = document.createElement("p");
-                    scklst.id = "standard";
-                    scklst.classList.add("chkdet");
-                    scklst.textContent = "Standard: " + records[row][key];
-                    rowdiv.appendChild(scklst);
-                    break;
-                  case "QUESTION":
-                    const qcklst = document.createElement("p");
-                    qcklst.id = "question";
-                    qcklst.textContent = key + ": " + records[row][key];
-                    rowdiv.appendChild(qcklst);
-                    break;
-                  case "OBSERVATION":
-                    const ocklst = document.createElement("div");
-                    ocklst.classList.add("observations");
-
-                    // Create separate label and content elements
-                    const obsLabel = document.createElement("span");
-                    obsLabel.classList.add("obs-label");
-                    obsLabel.textContent = "OBSERVATION: ";
-
-                    const obsContent = document.createElement("span");
-                    obsContent.classList.add("obs-content");
-
-                    // Set to empty string if null
-                    let observationText = records[row][key];
-                    if (
-                      observationText == null ||
-                      observationText.trim() === ""
-                    ) {
-                      observationText = "";
-                      obsContent.classList.add("obs-empty");
-                    }
-                    obsContent.textContent = observationText;
-
-                    const obs = document.createElement("p");
-                    obs.id = "observation";
-                    obs.appendChild(obsLabel);
-                    obs.appendChild(obsContent);
-
-                    // create a button to edit the observation
-                    const btnEditObs = document.createElement("button");
-                    btnEditObs.textContent = "Observation";
-                    btnEditObs.classList.add("btn");
-                    btnEditObs.classList.add("btn-primary");
-                    btnEditObs.classList.add("btnEditObs");
-                    // Set the custom attribute to the checklist id
-                    btnEditObs.setAttribute(
-                      "data-checklist-id",
-                      records[row].CHECKLIST_ID
-                    );
-
-                    ocklst.appendChild(obs);
-                    ocklst.appendChild(btnEditObs);
-                    rowdiv.appendChild(ocklst);
-                    break;
-                  case "REFERENCE":
-                    const rcklst = document.createElement("p");
-                    rcklst.id = "reference";
-                    rcklst.classList.add("chkdet");
-                    // Set to zls if null
-                    if (records[row][key] == null) {
-                      records[row][key] = "";
-                    }
-                    rcklst.textContent = "Ref." + ": " + records[row][key];
-                    rowdiv.appendChild(rcklst);
-                    break;
-                  default:
-                    // break;
-                    continue;
-                }
-
-                // console.log(divcklst);
-                divcklst.textContent = key + ": " + records[row][key];
-                // divChecklistRow.appendChild(divcklst);
-              }
-            }
-            checklistItemsContainer.appendChild(rowdiv);
-          }
-        });
-      main.appendChild(sectionChecklist);
-
-      const btnAddQust = document.getElementById("btnAddQust");
-      btnAddQust.addEventListener("click", async (e) => {
-        // prevent default
-        e.preventDefault();
-        // get the dialog from the html
-        const addQdialog = document.querySelector("#addquestion");
-        // show the dialog
-        addQdialog.showModal();
-
-        // listen for the savenewquestion button
-        const btnSaveNewQuestion = document.getElementById("savenewquestion");
-        btnSaveNewQuestion.addEventListener("click", async (e) => {
-          // prevent default
-          e.preventDefault();
-          // get the AUDIT_MANAGER_ID from the url parameter
-          const auditManagerId = urlParams.get("id");
-          // get the checklist id
-          // console.log(checklistUrl + "nextChecklist/" + auditManagerId);
-          const checklistId = fetch(
-            checklistUrl + "nextChecklist/" + auditManagerId,
-            { method: "GET" }
-          )
-            .then((response) => response.json())
-            .then((data) => {
-              // convert data to string and return
-              // return JSON.stringify(data);
-              return data;
-            });
-
-          // if reference is blank pull first line of question if starts with AS9100
-          if (document.getElementById("newreference").value == "") {
-            const newQuestion = document.getElementById("newquestion").value;
-            if (newQuestion.startsWith("AS9100")) {
-              document.getElementById("newreference").value =
-                newQuestion.split("\n")[0];
-              // set the new question to the rest of the question
-              document.getElementById("newquestion").value = newQuestion
-                .split("\n")
-                .slice(1)
-                .join("\n");
-            }
-          }
-
-          // get the dialog from the html
-          const addQdialog = document.querySelector("#addquestion");
-          // get the values from the form
-          const newQuestion = document.getElementById("newquestion").value;
-          // const newStandard = document.getElementById('newstandard').value;
-          const newReference = document.getElementById("newreference").value;
-          // console.log(newQuestion, newObservation, newReference);
-          // create the new record
-          const newRecord = {
-            AUDIT_MANAGER_ID: auditManagerId,
-            CHECKLIST_ID: (await checklistId).toString().padStart(7, "0"),
-            QUESTION: newQuestion,
-            REFERENCE: newReference,
-          };
-          // console.log(newRecord);
-
-          // post the new record
-          fetch(checklistUrl, {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newRecord),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              // console.log(data);
-              // close the dialog
-              addQdialog.close();
-              // reload the page
-              window.location.reload();
-            });
-        });
-      });
-
-      // listen for btneditdetail click, open dialog, populate fields
-      const btnEditDetail = document.getElementById("btnEditDetail");
-      btnEditDetail.addEventListener("click", async (e) => {
-        // prevent default
-        e.preventDefault();
-        // get the dialog from the html
-        const editdialog = document.getElementById("editaudit");
-        // show the dialog
-        editdialog.showModal();
-        // get the values from the form
-        document.getElementById("standard").value = record[0].STANDARD;
-        document.getElementById("subject").value = record[0].SUBJECT;
-        document.getElementById("scheddate").value = new Date(
-          record[0].SCHEDULED_DATE
-        )
-          .toISOString()
-          .split("T")[0];
-        document.getElementById("leadauditor").value = record[0].LEAD_AUDITOR;
-        document.getElementById("auditee").value = record[0].AUDITEE1;
-      });
-
-      // listen for save button click
-      const btnSave = document.getElementById("saveaudit");
-      btnSave.addEventListener("click", async (e) => {
-        // prevent default
-        e.preventDefault();
-        // get the dialog from the html
-        const editdialog = document.getElementById("editaudit");
-        // get the values from the form
-        const editStandard = document.getElementById("standard").value;
-        const editSubject = document.getElementById("subject").value;
-        const editScheduledDate = document.getElementById("scheddate").value;
-        // change the following to uppercase
-        const editLeadAuditor = document
-          .getElementById("leadauditor")
-          .value.toUpperCase();
-        const editAuditee1 = document
-          .getElementById("auditee")
-          .value.toUpperCase();
-        // create the record
-        const editRecord = {
-          STANDARD: editStandard,
-          SUBJECT: editSubject,
-          SCHEDULED_DATE: editScheduledDate,
-          LEAD_AUDITOR: editLeadAuditor,
-          AUDITEE1: editAuditee1,
-        };
-        // console.log(editRecord);
-
-        // put the edits
-        fetch(managerUrl + id, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(editRecord),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            // console.log(data);
-            // close the dialog
-            editdialog.close();
-            // reload the page
-            window.location.reload();
-          });
-      });
-
-      btnClose.addEventListener("click", async (e) => {
-        // prevent default
-        e.preventDefault();
-        // close URL
-        let closeUrl = `http://localhost:${port}/manager/completed`;
-        // create the record
-        const completionDate = getDateTime();
-        const closeRecord = {
-          AUDIT_MANAGER_ID: record[0].AUDIT_MANAGER_ID,
-          COMPLETION_DATE: completionDate,
-        };
-
-        // put the edits
-        fetch(closeUrl, {
-          method: "PUT",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(closeRecord),
-        })
-          .then((response) => response.json())
-          .then((data) => {
-            // Disable the close button and update visual state
-            btnClose.disabled = true;
-            btnClose.style.opacity = "0.5";
-            btnClose.style.cursor = "not-allowed";
-
-            // Update the completion date in the details section
-            const detailsParagraphs = document.querySelectorAll(".details p");
-            detailsParagraphs.forEach((p) => {
-              if (p.textContent.includes("COMPLETION DATE")) {
-                const completionDateObj = new Date(completionDate);
-                p.textContent =
-                  "COMPLETION DATE: " + completionDateObj.toLocaleDateString();
-              }
-            });
-
-            // Alert to send results email
-            alert("Send results email to auditee");
-            // NO PAGE RELOAD - maintains scroll position
-          });
-      });
-
-      // listen for btnEditObs click, open dialog, populate fields, associate checklist id
-      // const btnEditObs = document.querySelectorAll(".btnEditObs");
-      document.addEventListener("click", async (e) => {
-        // check if the button clicked is the btnEditObs
-        if (e.target.classList.contains("btnEditObs")) {
-          // get the checklist id from the custom attribute
-          const checklistId = e.target.getAttribute("data-checklist-id");
-          // console.log(checklistId);
-          // get the dialog from the html
-          const editObsDialog = document.querySelector("#editobservation");
-          // show the dialog
-          editObsDialog.showModal();
-          // set the value after the dialog is shown
-          document.getElementById("obsid").textContent = checklistId;
-        }
-
-        // listen for the saveobservation button
-        const btnSaveNewObservation =
-          document.getElementById("saveobservation");
-        btnSaveNewObservation.addEventListener("click", async (e) => {
-          // prevent default
-          e.preventDefault();
-          // get the checklist id
-          let checklistId = document.getElementById("obsid").textContent;
-          // prepend with 0's to make 7 digits
-          checklistId = checklistId.padStart(7, "0");
-          // get the dialog from the html
-          const addObsDialog = document.querySelector("#editobservation");
-          // get the values from the form
-          let newObservation = document.getElementById("newobservation").value;
-          // create the new record
-          const newRecord = {
-            AUDIT_MANAGER_ID: id,
-            CHECKLIST_ID: checklistId,
-            OBSERVATION: newObservation,
-          };
-          console.log(newRecord);
-
-          // post the new record
-          fetch(checklistUrl + "/obsn", {
-            method: "POST",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify(newRecord),
-          })
-            .then((response) => response.json())
-            .then((data) => {
-              // console.log(data);
-              // Find and update the observation in the DOM
-              const obsButtons = document.querySelectorAll(".btnEditObs");
-              obsButtons.forEach((btn) => {
-                if (btn.getAttribute("data-checklist-id") === checklistId) {
-                  // Find the observation content span and update it
-                  const obsContent =
-                    btn.parentElement.querySelector(".obs-content");
-                  if (obsContent) {
-                    obsContent.textContent = newObservation;
-                    obsContent.classList.remove("obs-empty");
-                  }
-                }
-              });
-
-              // Update the checklistSummary counts
-              const allRows = document.querySelectorAll(".rowdiv");
-              let totalQuestions = 0;
-              let answeredQuestions = 0;
-
-              allRows.forEach((row) => {
-                totalQuestions++;
-                const obsContent = row.querySelector(".obs-content");
-                if (obsContent && obsContent.textContent.trim() !== "") {
-                  answeredQuestions++;
-                }
-              });
-
-              const unansweredQuestions = totalQuestions - answeredQuestions;
-              const summarySpan = document.getElementById("checklistSummary");
-              if (summarySpan) {
-                summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
-              }
-
-              // clear the form
-              document.getElementById("obsid").textContent = "";
-              document.getElementById("newobservation").value = "";
-              // close the dialog
-              addObsDialog.close();
-              // NO PAGE RELOAD - maintains scroll position
-            });
-        });
-      });
+    const p = createElement("p", {
+      text: `${key.replace(/_/g, " ")}: ${displayText}`,
     });
+
+    if (key === "AUDIT_ID") {
+      p.id = "audit_id";
+    }
+
+    section.appendChild(p);
+  }
+
+  main.appendChild(section);
+
+  // ===== CHECKLIST SECTION =====
+  const sectionChecklist = createElement("section", { classes: ["checklist"] });
+  const h3 = createElement("h3", { text: "Checklist" });
+  h3.style.display = "inline-block";
+  sectionChecklist.appendChild(h3);
+
+  const summarySpan = createElement("span", { id: "checklistSummary" });
+  Object.assign(summarySpan.style, {
+    fontSize: "0.9em",
+    color: "#666",
+    marginLeft: "1em",
+    fontWeight: "normal",
+  });
+  sectionChecklist.appendChild(summarySpan);
+
+  const checklistItemsContainer = createElement("div", {
+    classes: ["checklist-items"],
+  });
+
+  const btnAddQust = createElement("button", {
+    classes: ["btn", "btn-primary"],
+    id: "btnAddQust",
+    text: "Add Checklist",
+  });
+
+  sectionChecklist.appendChild(btnAddQust);
+  sectionChecklist.appendChild(checklistItemsContainer);
+  main.appendChild(sectionChecklist);
+
+  // ===== LOAD CHECKLIST ITEMS =====
+  try {
+    const records = await fetchJson(`${apiUrls.checklist}${id}`);
+    renderChecklistItems(records, checklistItemsContainer, summarySpan);
+  } catch (error) {
+    console.error("Error loading checklist:", error);
+  }
+
+  // ===== EVENT LISTENERS =====
+  setupDetailEditListener(btnEditDetail, auditData, id, apiUrls);
+  setupAddQuestionListener(btnAddQust, id, urlParams, apiUrls);
+  setupObservationListener(id, apiUrls, summarySpan);
+  setupCloseAuditListener(btnClose, port, auditData, isAuditClosed);
+}
+
+/**
+ * Render checklist items
+ */
+function renderChecklistItems(records, container, summarySpan) {
+  const checklistFields = [
+    "CHECKLIST_ID",
+    "QUESTION",
+    "OBSERVATION",
+    "REFERENCE",
+  ];
+
+  const totalQuestions = records.length;
+  const answeredQuestions = records.filter(
+    (r) => r.OBSERVATION?.trim() !== "",
+  ).length;
+  const unansweredQuestions = totalQuestions - answeredQuestions;
+
+  summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
+
+  records.forEach((record) => {
+    const rowdiv = createElement("div", { classes: ["rowdiv"] });
+
+    for (const [key, value] of Object.entries(record)) {
+      if (!checklistFields.includes(key)) continue;
+
+      switch (key) {
+        case "CHECKLIST_ID": {
+          const p = createElement("p", {
+            classes: ["chkdet"],
+            id: "checklist_id",
+            text: `Checklist Id: ${value}`,
+          });
+          rowdiv.appendChild(p);
+          break;
+        }
+
+        case "QUESTION": {
+          const p = createElement("p", {
+            id: "question",
+            text: `${key}: ${value}`,
+          });
+          rowdiv.appendChild(p);
+          break;
+        }
+
+        case "OBSERVATION": {
+          const obsDiv = createElement("div", { classes: ["observations"] });
+          const obsLabel = createElement("span", {
+            classes: ["obs-label"],
+            text: "OBSERVATION: ",
+          });
+
+          const obsContent = createElement("span", {
+            classes: ["obs-content"],
+            text: value?.trim() || "",
+          });
+
+          if (!value?.trim()) {
+            obsContent.classList.add("obs-empty");
+          }
+
+          const p = createElement("p", { id: "observation" });
+          p.appendChild(obsLabel);
+          p.appendChild(obsContent);
+
+          const btnEditObs = createElement("button", {
+            classes: ["btn", "btn-primary", "btnEditObs"],
+            text: "Observation",
+          });
+          btnEditObs.setAttribute("data-checklist-id", record.CHECKLIST_ID);
+
+          obsDiv.appendChild(p);
+          obsDiv.appendChild(btnEditObs);
+          rowdiv.appendChild(obsDiv);
+          break;
+        }
+
+        case "REFERENCE": {
+          const p = createElement("p", {
+            classes: ["chkdet"],
+            id: "reference",
+            text: `Ref.: ${value || ""}`,
+          });
+          rowdiv.appendChild(p);
+          break;
+        }
+      }
+    }
+
+    container.appendChild(rowdiv);
+  });
+}
+
+/**
+ * Setup detail edit listener
+ */
+function setupDetailEditListener(btnEditDetail, auditData, id, apiUrls) {
+  btnEditDetail.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const editDialog = document.getElementById("editaudit");
+    editDialog.showModal();
+
+    document.getElementById("standard").value = auditData.STANDARD;
+    document.getElementById("subject").value = auditData.SUBJECT;
+    document.getElementById("scheddate").value = formatInputDate(
+      auditData.SCHEDULED_DATE,
+    );
+    document.getElementById("leadauditor").value = auditData.LEAD_AUDITOR || "";
+    document.getElementById("auditee").value = auditData.AUDITEE1 || "";
+
+    const btnSave = document.getElementById("saveaudit");
+    const handleSave = async (saveEvent) => {
+      saveEvent.preventDefault();
+
+      try {
+        const editRecord = {
+          STANDARD: document.getElementById("standard").value,
+          SUBJECT: document.getElementById("subject").value,
+          SCHEDULED_DATE: document.getElementById("scheddate").value,
+          LEAD_AUDITOR: document
+            .getElementById("leadauditor")
+            .value.toUpperCase(),
+          AUDITEE1: document.getElementById("auditee").value.toUpperCase(),
+        };
+
+        await fetchJson(`${apiUrls.manager}${id}`, {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(editRecord),
+        });
+
+        editDialog.close();
+        window.location.reload();
+      } catch (error) {
+        console.error("Error saving audit details:", error);
+        alert("Error saving changes. Please try again.");
+      } finally {
+        btnSave.removeEventListener("click", handleSave);
+      }
+    };
+
+    btnSave.addEventListener("click", handleSave);
+  });
+}
+
+/**
+ * Setup add question listener
+ */
+function setupAddQuestionListener(btnAddQust, id, urlParams, apiUrls) {
+  btnAddQust.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const addQdialog = document.querySelector("#addquestion");
+    addQdialog.showModal();
+
+    const btnSaveNewQuestion = document.getElementById("savenewquestion");
+    const handleSaveQuestion = async (saveEvent) => {
+      saveEvent.preventDefault();
+
+      try {
+        const auditManagerId = urlParams.get("id");
+        const checklistId = await fetchJson(
+          `${apiUrls.checklist}nextChecklist/${auditManagerId}`,
+        );
+
+        let newQuestion = document.getElementById("newquestion").value;
+        let newReference = document.getElementById("newreference").value;
+
+        // Auto-extract reference from question if needed
+        if (!newReference && newQuestion.startsWith("AS9100")) {
+          const lines = newQuestion.split("\n");
+          newReference = lines[0];
+          newQuestion = lines.slice(1).join("\n");
+        }
+
+        const newRecord = {
+          AUDIT_MANAGER_ID: auditManagerId,
+          CHECKLIST_ID: checklistId.toString().padStart(7, "0"),
+          QUESTION: newQuestion,
+          REFERENCE: newReference,
+        };
+
+        await fetchJson(`${apiUrls.checklist}`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newRecord),
+        });
+
+        addQdialog.close();
+        window.location.reload();
+      } catch (error) {
+        console.error("Error saving question:", error);
+        alert("Error saving question. Please try again.");
+      } finally {
+        btnSaveNewQuestion.removeEventListener("click", handleSaveQuestion);
+      }
+    };
+
+    btnSaveNewQuestion.addEventListener("click", handleSaveQuestion);
+  });
+}
+
+/**
+ * Setup observation dialog listener
+ */
+function setupObservationListener(id, apiUrls, summarySpan) {
+  document.addEventListener("click", async (e) => {
+    if (!e.target.classList.contains("btnEditObs")) return;
+
+    const checklistId = e.target.getAttribute("data-checklist-id");
+    const editObsDialog = document.querySelector("#editobservation");
+    editObsDialog.showModal();
+
+    document.getElementById("obsid").textContent = checklistId;
+
+    // Display the corresponding question
+    const rowDiv = e.target.closest(".rowdiv");
+    if (rowDiv) {
+      const questionElement = rowDiv.querySelector("#question");
+      if (questionElement) {
+        const cleanQuestion = questionElement.textContent.replace(
+          /^QUESTION:\s*/,
+          "",
+        );
+        const questionDisplay = document.getElementById("obsQuestion");
+        if (questionDisplay) {
+          questionDisplay.textContent = cleanQuestion;
+        }
+      }
+    }
+
+    const btnSaveObservation = document.getElementById("saveobservation");
+    const handleSaveObservation = async (obsEvent) => {
+      obsEvent.preventDefault();
+
+      try {
+        const paddedChecklistId = checklistId.padStart(7, "0");
+        const newObservation = document.getElementById("newobservation").value;
+
+        const newRecord = {
+          AUDIT_MANAGER_ID: id,
+          CHECKLIST_ID: paddedChecklistId,
+          OBSERVATION: newObservation,
+        };
+
+        await fetchJson(`${apiUrls.checklist}/obsn`, {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(newRecord),
+        });
+
+        // Update DOM
+        document.querySelectorAll(".btnEditObs").forEach((btn) => {
+          if (btn.getAttribute("data-checklist-id") === checklistId) {
+            const obsContent = btn.parentElement?.querySelector(".obs-content");
+            if (obsContent) {
+              obsContent.textContent = newObservation;
+              obsContent.classList.remove("obs-empty");
+            }
+          }
+        });
+
+        // Update summary
+        updateChecklistSummary(summarySpan);
+
+        document.getElementById("obsid").textContent = "";
+        document.getElementById("newobservation").value = "";
+        editObsDialog.close();
+      } catch (error) {
+        console.error("Error saving observation:", error);
+        alert("Error saving observation. Please try again.");
+      } finally {
+        btnSaveObservation.removeEventListener("click", handleSaveObservation);
+      }
+    };
+
+    btnSaveObservation.addEventListener("click", handleSaveObservation);
+  });
+}
+
+/**
+ * Setup close audit listener
+ */
+function setupCloseAuditListener(btnClose, port, auditData, isAuditClosed) {
+  btnClose.addEventListener("click", async (e) => {
+    e.preventDefault();
+
+    if (isAuditClosed) {
+      alert("This audit is already closed.");
+      return;
+    }
+
+    try {
+      const completionDate = getDateTime();
+      const closeUrl = `http://localhost:${port}/manager/completed`;
+      const closeRecord = {
+        AUDIT_MANAGER_ID: auditData.AUDIT_MANAGER_ID,
+        COMPLETION_DATE: completionDate,
+      };
+
+      await fetchJson(closeUrl, {
+        method: "PUT",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(closeRecord),
+      });
+
+      // Update UI
+      btnClose.disabled = true;
+      Object.assign(btnClose.style, {
+        opacity: "0.5",
+        cursor: "not-allowed",
+      });
+
+      const detailsParagraphs = document.querySelectorAll(".details p");
+      detailsParagraphs.forEach((p) => {
+        if (p.textContent.includes("COMPLETION DATE")) {
+          p.textContent = `COMPLETION DATE: ${formatDisplayDate(completionDate)}`;
+        }
+      });
+
+      alert("Send results email to auditee");
+    } catch (error) {
+      console.error("Error closing audit:", error);
+      alert("Error closing audit. Please try again.");
+    }
+  });
 }
 
 // Initialize when DOM is ready

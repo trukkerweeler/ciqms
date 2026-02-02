@@ -134,7 +134,7 @@ router.put("/request/:id", async (req, res) => {
                 }
 
                 res.json(rows);
-              }
+              },
             );
           } else {
             connection.end();
@@ -248,7 +248,7 @@ router.post("/", (req, res) => {
       connection.query(updateQuery, updateValues, (err, rows, fields) => {
         if (err) {
           console.log(
-            "Failed to query for doc change system id update: " + err
+            "Failed to query for doc change system id update: " + err,
           );
           res.sendStatus(500);
           return;
@@ -410,41 +410,43 @@ router.put("/close/:id", async (req, res) => {
           return;
         }
 
-        // Send email if decision is Approved (A)
+        // Send email if decision is Approved (A) - fire and forget (don't wait for email to complete)
         if (req.body.DECISION === "A") {
-          try {
-            const transporter = nodemailer.createTransport({
-              host: process.env.SMTP_HOST,
-              port: Number(process.env.SMTP_PORT),
-              secure: true,
-              auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-              },
-            });
+          // Start email send but don't await it
+          (async () => {
+            try {
+              const transporter = nodemailer.createTransport({
+                host: process.env.SMTP_HOST,
+                port: Number(process.env.SMTP_PORT),
+                secure: true,
+                auth: {
+                  user: process.env.SMTP_USER,
+                  pass: process.env.SMTP_PASS,
+                },
+              });
 
-            // Compose recipients with fallbacks so 'To' is never blank in the sent message
-            const toRcpts = [process.env.EMAIL_GM].filter(Boolean);
-            const ccRcpts = [process.env.EMAIL_QM].filter(Boolean);
-            const toHeader = toRcpts.length
-              ? toRcpts.join(", ")
-              : process.env.SMTP_FROM || "";
-            const ccHeader = ccRcpts.length ? ccRcpts.join(", ") : undefined;
+              // Compose recipients with fallbacks so 'To' is never blank in the sent message
+              const toRcpts = [process.env.EMAIL_GM, process.env.EMAIL_QM]
+                .filter(Boolean)
+                .filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
+              const toHeader = toRcpts.length
+                ? toRcpts.join(", ")
+                : process.env.SMTP_FROM || "";
 
-            const mailOptions = {
-              to: toHeader,
-              cc: ccHeader,
-              from: process.env.SMTP_FROM,
-              subject: `DCR Approved: ${req.params.id} - ${req.body.DOCUMENT_ID}`,
-              text: `Document Change Request ${req.params.id} has been approved.\n\nDocument: ${req.body.DOCUMENT_ID}\nNew Revision: ${req.body.REVISION_LEVEL}\nRevision Date: ${req.body.REVISION_DATE}\nApproved By: ${req.body.MODIFIED_BY}\n\nPlease log in to the QMS system to view the details.`,
-              bcc: "<tim.kent@ci-aviation.com>",
-            };
+              const mailOptions = {
+                to: toHeader,
+                from: process.env.SMTP_FROM,
+                subject: `DCR Approved: ${req.params.id} - ${req.body.DOCUMENT_ID}`,
+                text: `Document Change Request ${req.params.id} has been approved.\n\nDocument: ${req.body.DOCUMENT_ID}\nNew Revision: ${req.body.REVISION_LEVEL}\nRevision Date: ${req.body.REVISION_DATE}\nApproved By: ${req.body.MODIFIED_BY}\n\nPlease log in to the QMS system to view the details.`,
+                bcc: "<tim.kent@ci-aviation.com>",
+              };
 
-            await transporter.sendMail(mailOptions);
-            console.log("Approval email sent to GM and QM");
-          } catch (emailError) {
-            console.log("Error sending approval email:", emailError);
-          }
+              await transporter.sendMail(mailOptions);
+              console.log("Approval email sent to GM and QM");
+            } catch (emailError) {
+              console.log("Error sending approval email:", emailError);
+            }
+          })();
         }
 
         connection.end();
