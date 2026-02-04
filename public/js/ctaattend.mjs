@@ -22,7 +22,7 @@ function filterTrainingData(employeeId) {
     // Filter data by PEOPLE_ID
     const filteredData = allTrainingData.filter(
       (item) =>
-        item.PEOPLE_ID && item.PEOPLE_ID.toUpperCase().includes(employeeId)
+        item.PEOPLE_ID && item.PEOPLE_ID.toUpperCase().includes(employeeId),
     );
     displayTrainingTable(filteredData);
   }
@@ -167,14 +167,9 @@ async function saveTraining(event) {
           } else if (field === "INSTRUCTOR") {
             dataJson[field] = formData.get(field).toUpperCase();
           } else if (field === "LINK") {
+            // Send the full LINK path to the backend for file moving
             const linkValue = formData.get(field);
-            console.log("LINK field value before send:", linkValue);
-            if (linkValue) {
-              const filename = linkValue.split("\\").pop().split("/").pop();
-              dataJson[field] = filename;
-            } else {
-              dataJson[field] = linkValue;
-            }
+            dataJson[field] = linkValue || "";
           } else {
             dataJson[field] = formData.get(field);
           }
@@ -191,6 +186,43 @@ async function saveTraining(event) {
         if (!response.ok) {
           const errorText = await response.text();
           alert(`Failed to save training record for ${personId}: ` + errorText);
+          return; // Stop processing other attendees if one fails
+        }
+
+        // Check for file move errors in the response
+        const responseData = await response.json();
+        if (responseData.fileMoveError) {
+          // Check if file is locked (in use)
+          if (responseData.isFileLocked) {
+            const retryMove = confirm(
+              `Training record saved, but the file is currently open or in use:\n\n${responseData.fileMoveError}\n\nPlease close the file and click "OK" to retry moving it, or "Cancel" to skip.`,
+            );
+
+            if (retryMove) {
+              // Retry the file move
+              try {
+                const retryResponse = await fetch(`${url}/retry-move-file`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ linkPath: dataJson.LINK }),
+                });
+
+                const retryData = await retryResponse.json();
+                if (!retryData.success) {
+                  alert(`Retry failed: ${retryData.error}`);
+                } else {
+                  alert("File moved successfully!");
+                }
+              } catch (retryErr) {
+                alert(`Error retrying file move: ${retryErr.message}`);
+              }
+            }
+          } else {
+            // Not a file lock error, just a regular failure
+            alert(
+              `Training record saved, but file move failed: ${responseData.fileMoveError}. You may need to move the file manually.`,
+            );
+          }
         }
       }
 
@@ -264,7 +296,7 @@ function displayTrainingTable(data) {
       <td>${
         item.CTA_ATTENDANCE_LINK
           ? `<a href="/training-files/${encodeURIComponent(
-              item.CTA_ATTENDANCE_LINK
+              item.CTA_ATTENDANCE_LINK,
             )}" target="_blank">Open File</a>`
           : ""
       }</td>

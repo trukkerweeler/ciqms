@@ -84,6 +84,63 @@ while (main.firstChild) {
   main.removeChild(main.firstChild);
 }
 
+// Helper function to update DOM after AJAX save
+async function updateAfterSave() {
+  const response = await fetch(url, { method: "GET" });
+  const record = await response.json();
+
+  // Get the first (and usually only) key from the record
+  const key = Object.keys(record)[0];
+  const rec = record[key];
+
+  // Update specific DOM elements
+  const closedDateElem = document.querySelector("#closed");
+  if (closedDateElem) {
+    closedDateElem.textContent = `Closed Date: ${formatDate(rec["CLOSED_DATE"])}`;
+  }
+
+  const assignedElem = document.querySelector("#assignedto");
+  if (assignedElem) {
+    assignedElem.textContent = `Assigned To: ${rec["ASSIGNED_TO"]}`;
+  }
+
+  const dueDateElem = document.querySelector("#duedate");
+  if (dueDateElem) {
+    dueDateElem.textContent = `Due date: ${formatDate(rec["DUE_DATE"])}`;
+  }
+
+  const subjectElem = document.querySelector("#subject");
+  if (subjectElem) {
+    subjectElem.textContent = `Subject: ${rec["SUBJECT"]}`;
+  }
+
+  // Update notes sections
+  const actionNote = document.querySelector("#actionNote");
+  if (actionNote && rec["INPUT_TEXT"]) {
+    actionNote.innerHTML = rec["INPUT_TEXT"].replace(/\n/g, "<br>");
+  }
+
+  const followupNote = document.querySelector("#followUpNote");
+  if (followupNote && rec["FOLLOWUP_TEXT"]) {
+    followupNote.innerHTML = rec["FOLLOWUP_TEXT"].replace(/\n/g, "<br>");
+  }
+
+  const responseNote = document.querySelector("#responseNote");
+  if (responseNote && rec["RESPONSE_TEXT"]) {
+    responseNote.innerHTML = rec["RESPONSE_TEXT"].replace(/\n/g, "<br>");
+  }
+
+  // Handle close button state
+  const btnClose = document.querySelector("#btnClose");
+  if (btnClose && (rec["CLOSED"] === "Y" || rec["CLOSED_DATE"])) {
+    btnClose.disabled = true;
+    btnClose.style.opacity = "0.5";
+    btnClose.style.cursor = "not-allowed";
+    btnClose.style.backgroundColor = "#e0e0e0";
+    btnClose.title = "This action item is already closed";
+  }
+}
+
 fetch(url, { method: "GET" })
   .then((response) => response.json())
   .then((record) => {
@@ -291,7 +348,7 @@ fetch(url, { method: "GET" })
             });
 
             responseDialog.close();
-            location.reload();
+            await updateAfterSave();
           });
       });
     }
@@ -343,7 +400,7 @@ fetch(url, { method: "GET" })
             });
 
             actionDialog.close();
-            location.reload();
+            await updateAfterSave();
           });
       });
     }
@@ -401,7 +458,7 @@ fetch(url, { method: "GET" })
             });
 
             followUpDialog.close();
-            location.reload();
+            await updateAfterSave();
           });
       });
     }
@@ -447,7 +504,14 @@ fetch(url, { method: "GET" })
           body: JSON.stringify(data),
         });
 
-        location.reload();
+        // Disable the button and update visual state
+        btnClose.disabled = true;
+        btnClose.style.opacity = "0.5";
+        btnClose.style.cursor = "not-allowed";
+        btnClose.style.backgroundColor = "#e0e0e0";
+        btnClose.title = "This action item is already closed";
+
+        await updateAfterSave();
       });
     }
 
@@ -514,7 +578,7 @@ fetch(url, { method: "GET" })
             });
 
             detailDialog.close();
-            location.reload();
+            await updateAfterSave();
           });
       });
     }
@@ -592,7 +656,7 @@ fetch(url, { method: "GET" })
             }
 
             emailDialog.close();
-            location.reload();
+            await updateAfterSave();
           });
       });
     }

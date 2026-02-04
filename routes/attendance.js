@@ -1,6 +1,73 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const fs = require("fs");
+const path = require("path");
+
+// Helper function to move file from _to-enter to _entered
+function moveCompetencyFile(linkPath) {
+  if (!linkPath) {
+    return { success: true };
+  }
+
+  // Check if it's a K: drive path or UNC path
+  const toEnterK = "K:\\Quality - Records\\7200 - Competency\\_to-enter\\";
+  const enteredK = "K:\\Quality - Records\\7200 - Competency\\_entered\\";
+  const toEnterUNC =
+    "\\\\fs1\\Common\\Quality - Records\\7200 - Competency\\_to-enter\\";
+  const enteredUNC =
+    "\\\\fs1\\Common\\Quality - Records\\7200 - Competency\\_entered\\";
+
+  try {
+    let sourcePath = null;
+    let destPath = null;
+    let filename = path.basename(linkPath);
+
+    // Check which format the link is in
+    if (linkPath.toLowerCase().startsWith(toEnterK.toLowerCase())) {
+      sourcePath = linkPath;
+      destPath = path.join(enteredK, filename);
+    } else if (linkPath.toLowerCase().startsWith(toEnterUNC.toLowerCase())) {
+      sourcePath = linkPath;
+      destPath = path.join(enteredUNC, filename);
+    } else {
+      // If it's just a filename without a path, assume it's in the _to-enter directory on K: drive
+      sourcePath = path.join(toEnterK, filename);
+      destPath = path.join(enteredK, filename);
+    }
+
+    // Check if source file exists
+    const fileExists = fs.existsSync(sourcePath);
+
+    if (!fileExists) {
+      return { success: false, error: `Source file not found: ${sourcePath}` };
+    }
+
+    // Ensure destination directory exists
+    const destDir = path.dirname(destPath);
+
+    if (!fs.existsSync(destDir)) {
+      fs.mkdirSync(destDir, { recursive: true });
+    }
+
+    // Move the file (rename from _to-enter to _entered)
+    fs.renameSync(sourcePath, destPath);
+    return { success: true };
+  } catch (error) {
+    // Detect if file is locked/in use (common EBUSY or EACCES errors)
+    const isFileLocked =
+      error.code === "EBUSY" ||
+      error.code === "EACCES" ||
+      error.message.includes("used by another process") ||
+      error.message.includes("Permission denied");
+
+    return {
+      success: false,
+      error: error.message,
+      isFileLocked: isFileLocked,
+    };
+  }
+}
 
 // ==================================================
 // Get all records
@@ -131,7 +198,8 @@ router.post("/", (req, res) => {
 
         // If there's a LINK field, insert it into CTA_ATTENDANCE_LINK table
         if (req.body.LINK && req.body.LINK.trim() !== "") {
-          const linkQuery = `INSERT INTO CTA_ATTENDANCE_LINK (COURSE_ATND_ID, CTA_ATTENDANCE_LINK) VALUES (?, ?)`;
+          // Attempt to move the file
+          const moveResult = moveCompetencyFile(req.body.LINK);
           const linkValues = [req.body.COURSE_ATND_ID, req.body.LINK];
           // console.log(
           //   "Attempting to insert into CTA_ATTENDANCE_LINK:",
@@ -150,7 +218,7 @@ router.post("/", (req, res) => {
               } else {
                 console.log(
                   "Successfully inserted attendance link:",
-                  linkValues
+                  linkValues,
                 );
               }
               // After link insert, update SYSTEM_IDS
@@ -158,16 +226,21 @@ router.post("/", (req, res) => {
               connection.query(updateQuery, (err2, rows2, fields2) => {
                 if (err2) {
                   console.log(
-                    "Failed to query for attendance system id update: " + err2
+                    "Failed to query for attendance system id update: " + err2,
                   );
                   res.sendStatus(500);
                   connection.end();
                   return;
                 }
-                res.json(rows);
+                // Add file move error to response if it occurred
+                const responseData = rows;
+                if (!moveResult.success) {
+                  responseData.fileMoveError = moveResult.error;
+                }
+                res.json(responseData);
                 connection.end();
               });
-            }
+            },
           );
         } else {
           // If no link, just update SYSTEM_IDS
@@ -175,7 +248,7 @@ router.post("/", (req, res) => {
           connection.query(updateQuery, (err2, rows2, fields2) => {
             if (err2) {
               console.log(
-                "Failed to query for attendance system id update: " + err2
+                "Failed to query for attendance system id update: " + err2,
               );
               res.sendStatus(500);
               connection.end();
@@ -190,6 +263,26 @@ router.post("/", (req, res) => {
   } catch (err) {
     console.log("Error connecting to Db (changes 144)");
     return;
+  }
+});
+
+// ==================================================
+// Retry moving a file that was locked
+router.post("/retry-move-file", (req, res) => {
+  try {
+    const linkPath = req.body.linkPath;
+    if (!linkPath) {
+      return res
+        .status(400)
+        .json({ success: false, error: "No file path provided" });
+    }
+
+    // Attempt to move the file again
+    const moveResult = moveCompetencyFile(linkPath);
+    res.json(moveResult);
+  } catch (err) {
+    console.error("Error in retry-move-file:", err);
+    res.status(500).json({ success: false, error: err.message });
   }
 });
 

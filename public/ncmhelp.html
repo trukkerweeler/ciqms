@@ -1,87 +1,218 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="js node test page." />
-    <meta name="author" content="This page authored by timokent" />
+    <meta
+      name="description"
+      content="Non-Conformance Management (NCM) Help & Reference Guide"
+    />
+    <meta name="author" content="Quality Management System" />
     <link
       rel="stylesheet"
       href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
     />
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="images/ci-logo.png" />
-    <title>NCM Code Help</title>
+    <title>NCM Help & Reference Guide</title>
+    <style>
+      main {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      section {
+        margin-bottom: 2.5rem;
+        padding: 1.5rem;
+        background-color: #f9f9f9;
+        border-left: 4px solid #0066cc;
+        border-radius: 4px;
+      }
+      .dialogTitle {
+        color: #0066cc;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.3em;
+        font-weight: 600;
+      }
+      ul {
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+      }
+      li {
+        margin-bottom: 0.75rem;
+        line-height: 1.6;
+      }
+      .codeinstrns {
+        margin: 0.5rem 0 0.75rem 0;
+        padding-left: 1rem;
+        color: #555;
+        font-size: 0.95em;
+        border-left: 2px solid #ddd;
+        padding-left: 0.75rem;
+      }
+      p {
+        line-height: 1.7;
+        color: #333;
+        margin-bottom: 1rem;
+      }
+      strong {
+        color: #0066cc;
+      }
+    </style>
   </head>
   <body>
     <header id="header"></header>
 
-    <section id="trendHelp">
-      <h2 class="dialogTitle">Description</h2>
-      <p>
-        Enter NCM Description in a should be is format. For NCMs not related to
-        product discrepancies (Eg: Calibration), enter enough detail so one can
-        ascertain the intention.
-      </p>
-      <p>
-        Make sure to enter the correct NCM Type: Calibration for Calibration,
-        Return for Returns et al.
-      </p>
-    </section>
-    <section id="subjectCodeHelp">
-      <h2 class="dialogTitle">Subject Codes</h2>
-      <ul>
-        <li>
-          HFS - Held For Statement
-          <p class="codeinstrns">Use this for paperwork issues.</p>
-        </li>
-        <li>DAM - Damaged</li>
-        <li>FRM - Form</li>
-        <li>FIT - Fit</li>
-        <li>FUN - Function</li>
-        <li>
-          WKM - Workmanship
-          <p class="codeinstrns">
-            Use this for workmanship issues that do not fit into
-            form/fit/function subjects (Eg: Burrs).
-          </p>
-        </li>
-      </ul>
-    </section>
-    <section id="causeCodeHelp">
-      <h2 class="dialogTitle">Cause Codes</h2>
-      <p>If you don't know, just enter TBD</p>
-      <ul>
-        <li>"HE" - Human Error.</li>
-        <li>"ME" - Machine Error.</li>
-        <li>"MA" - Material Error.</li>
-        <li>"DE" - Design Error.</li>
-        <li>"VE" - Vendor Error.</li>
-        <li>"OT" - Other.</li>
-        <li>"PC" - Process Control (Did not follow process)</li>
-        <li>"UD" - Undetermined</li>
-      </ul>
-    </section>
-    <section id="dispHelp">
-      <h2 class="dialogTitle">Disposition</h2>
-      <p>
-        Enter the Disposition of the NCM. This is the action that will be taken
-        to resolve the NCM. Eg: Rework, Scrap, Return to Vendor, etc.
-      </p>
-    </section>
-    <section id="verfHelp">
-      <h2 class="dialogTitle">Verification</h2>
-      <p>
-        Enter the Verification of the NCM. This is the action that has been
-        taken to verify the NCM has been resolved.
-      </p>
-      <p>Enter a tracking number as applicable for returns</p>
-      <p>Enter a WO number for new rework orders.</p>
-    </section>
+    <main id="main">
+      <section id="trendHelp">
+        <h2 class="dialogTitle">📝 NCM Description Guidelines</h2>
+        <p>
+          Enter the NCM description in a
+          <strong>"should be / is"</strong> format to clearly articulate the
+          discrepancy.
+        </p>
+        <p>
+          For NCMs not related to product discrepancies (e.g., Calibration,
+          Documentation), provide sufficient detail to ensure the intent and
+          scope are clearly understood.
+        </p>
+        <p>
+          <strong>Important:</strong> Ensure you select the correct NCM Type
+          that corresponds to the issue (Calibration, Return, Rework, etc.).
+        </p>
+      </section>
 
-    <main id="main"></main>
+      <section id="subjectCodeHelp">
+        <h2 class="dialogTitle">🏷️ Subject Codes</h2>
+        <p>
+          Select the subject code that best describes the nature of the
+          non-conformance:
+        </p>
+        <ul>
+          <li>
+            <strong>HFS</strong> – Held For Statement
+            <p class="codeinstrns">
+              Use for documentation and administrative issues.
+            </p>
+          </li>
+          <li>
+            <strong>DAM</strong> – Damaged
+            <p class="codeinstrns">
+              Use for physical damage, including scratches and surface defects.
+            </p>
+          </li>
+          <li>
+            <strong>FRM</strong> – Form
+            <p class="codeinstrns">
+              Use for geometric dimensioning and tolerance (GDT) issues such as
+              Position, Perpendicularity, and Profile.
+            </p>
+          </li>
+          <li>
+            <strong>FIT</strong> – Fit
+            <p class="codeinstrns">
+              Use for fit and interference issues between components.
+            </p>
+          </li>
+          <li>
+            <strong>FUN</strong> – Function
+            <p class="codeinstrns">
+              Use for functional performance and operational failures.
+            </p>
+          </li>
+          <li>
+            <strong>WKM</strong> – Workmanship
+            <p class="codeinstrns">
+              Use for workmanship issues not covered by form/fit/function
+              subjects (e.g., burrs, contamination, assembly errors).
+            </p>
+          </li>
+        </ul>
+      </section>
+
+      <section id="causeCodeHelp">
+        <h2 class="dialogTitle">🔍 Root Cause Codes</h2>
+        <p>
+          Identify the root cause of the non-conformance. If the cause is
+          undetermined, enter <strong>TBD</strong>.
+        </p>
+        <ul>
+          <li><strong>HE</strong> – Human Error: Operator or assembly error</li>
+          <li>
+            <strong>ME</strong> – Machine Error: Equipment malfunction or
+            calibration issue
+          </li>
+          <li>
+            <strong>MA</strong> – Material Error: Defective or off-spec material
+          </li>
+          <li>
+            <strong>DE</strong> – Design Error: Design specification issue
+          </li>
+          <li><strong>VE</strong> – Vendor Error: Supplier-related issue</li>
+          <li>
+            <strong>PC</strong> – Process Control: Non-adherence to established
+            process
+          </li>
+          <li>
+            <strong>UD</strong> – Undetermined: Cause cannot be determined at
+            this time
+          </li>
+          <li>
+            <strong>OT</strong> – Other: Cause does not fit above categories
+          </li>
+        </ul>
+      </section>
+
+      <section id="dispHelp">
+        <h2 class="dialogTitle">✅ Disposition</h2>
+        <p>
+          Select the disposition that describes the corrective action to be
+          taken for the non-conforming item(s).
+        </p>
+        <p>Common dispositions include:</p>
+        <ul>
+          <li>Rework – Item will be corrected to meet specifications</li>
+          <li>Scrap – Item will be destroyed or recycled</li>
+          <li>Return to Vendor – Item will be sent back to the supplier</li>
+          <li>Use-As-Is – Item will be approved for use without correction</li>
+          <li>Repair – Item will be repaired to meet specifications</li>
+        </ul>
+      </section>
+
+      <section id="verfHelp">
+        <h2 class="dialogTitle">🔐 Verification & Closeout</h2>
+        <p>
+          Document the verification activities completed to confirm that the NCM
+          has been resolved and the corrective action was effective.
+        </p>
+        <ul>
+          <li>
+            <strong>For Returns:</strong> Enter the return authorization number
+            or tracking number including the prefixed zeros
+          </li>
+          <li>
+            <strong>For Rework:</strong> Enter the work order (WO) number or
+            rework reference
+          </li>
+          <li>
+            <strong>For Inspection:</strong> Document the inspection results or
+            audit trail
+          </li>
+          <li>
+            <strong>For Scrap:</strong> Enter the scrap authorization or batch
+            number
+          </li>
+        </ul>
+        <p>
+          Verification must include evidence that the issue has been resolved
+          and preventive measures are in place to avoid recurrence.
+        </p>
+      </section>
+    </main>
+
     <footer id="footer"></footer>
   </body>
-  <script type="module" src="/js/ncm.mjs"></script>
+  <script type="module" src="/js/ncmhelp.mjs"></script>
 </html>
