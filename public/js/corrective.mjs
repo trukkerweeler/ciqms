@@ -18,6 +18,52 @@ while (main.firstChild) {
   main.removeChild(main.firstChild);
 }
 
+// Helper function to disable and grey out close button
+function disableCloseButton() {
+  const closeBtn = document.getElementById("btnCloseCA");
+  if (closeBtn) {
+    closeBtn.disabled = true;
+    closeBtn.style.opacity = "0.5";
+    closeBtn.style.cursor = "not-allowed";
+    closeBtn.style.backgroundColor = "#e0e0e0";
+    closeBtn.title = "This corrective action is already closed";
+  }
+}
+
+// Helper function to update DOM after AJAX save
+async function updateAfterSave() {
+  const response = await fetch(url, { method: "GET" });
+  const record = await response.json();
+  const rec = record[0];
+
+  // Update correction section
+  const correctionTextElem = document.querySelector("#correctiontext");
+  if (correctionTextElem && rec["CORRECTION_TEXT"]) {
+    correctionTextElem.innerHTML = rec["CORRECTION_TEXT"].replace(
+      /\n/g,
+      "<br>",
+    );
+  }
+
+  const actionerElem = document.querySelector("#actioner");
+  if (actionerElem) {
+    const actioner = rec["ACTION_BY"] ? rec["ACTION_BY"].toUpperCase() : "";
+    actionerElem.textContent = "Action By: " + actioner;
+  }
+
+  // Update cause section
+  const causeTextElem = document.querySelector("#causetext");
+  if (causeTextElem && rec["CAUSE_TEXT"]) {
+    causeTextElem.innerHTML = rec["CAUSE_TEXT"].replace(/\n/g, "<br>");
+  }
+
+  // Update control/systemic section
+  const controlTextElem = document.querySelector("#controltext");
+  if (controlTextElem && rec["CONTROL_TEXT"]) {
+    controlTextElem.innerHTML = rec["CONTROL_TEXT"].replace(/\n/g, "<br>");
+  }
+}
+
 fetch(url, { method: "GET" })
   .then((response) => response.json())
   .then((record) => {
@@ -44,6 +90,20 @@ fetch(url, { method: "GET" })
       closebutton.setAttribute("class", "closebutton");
       closebutton.setAttribute("id", "btnCloseCA");
       closebutton.textContent = "Close CA";
+
+      // Disable close button if already closed
+      if (
+        record[key]["CLOSED"] === "Y" ||
+        (record[key]["CLOSED_DATE"] &&
+          record[key]["CLOSED_DATE"] !== "0000-00-00" &&
+          record[key]["CLOSED_DATE"] !== "")
+      ) {
+        closebutton.disabled = true;
+        closebutton.style.opacity = "0.5";
+        closebutton.style.cursor = "not-allowed";
+        closebutton.style.backgroundColor = "#e0e0e0";
+        closebutton.title = "This corrective action is already closed";
+      }
 
       divSubTitle.appendChild(subTitle);
       divSubTitle.appendChild(closebutton);
@@ -173,8 +233,10 @@ fetch(url, { method: "GET" })
             CLOSED_DATE: new Date().toISOString(),
           }),
         });
-        // reload the page
-        location.reload();
+        // Disable the button and grey it out
+        disableCloseButton();
+        // Update the DOM with fresh data
+        await updateAfterSave();
       });
 
       const detailButtons = document.createElement("div");
@@ -220,7 +282,7 @@ fetch(url, { method: "GET" })
       correctionText.textContent = record[key]["CORRECTION_TEXT"];
       correctionText.innerHTML = correctionText.innerHTML.replace(
         /\n/g,
-        "<br>"
+        "<br>",
       );
       const correctionDate = document.createElement("p");
       // correctionDate.setAttribute('class', 'tbl');
@@ -274,7 +336,7 @@ fetch(url, { method: "GET" })
             let correctiontext =
               document.getElementById("correctiontext").value;
             let newcorrectiontext = document.getElementById(
-              "new-correction-text"
+              "new-correction-text",
             ).value;
             let formatteddate = new Date()
               .toISOString()
@@ -300,7 +362,7 @@ fetch(url, { method: "GET" })
               }),
             });
             document.getElementById("correctionDialog").close();
-            location.reload();
+            await updateAfterSave();
           });
           correctionSaveBtn.dataset.listener = "true";
         }
@@ -385,8 +447,7 @@ fetch(url, { method: "GET" })
             });
             // close the dialog
             document.getElementById("causeDialog").close();
-            // reload the page
-            location.reload();
+            await updateAfterSave();
           });
       });
 
@@ -480,8 +541,7 @@ fetch(url, { method: "GET" })
             });
             // close the dialog
             document.getElementById("controlDialog").close();
-            // reload the page
-            location.reload();
+            await updateAfterSave();
           });
       });
 

@@ -198,9 +198,32 @@ router.post("/", (req, res) => {
 
         // If there's a LINK field, insert it into CTA_ATTENDANCE_LINK table
         if (req.body.LINK && req.body.LINK.trim() !== "") {
-          // Attempt to move the file
-          const moveResult = moveCompetencyFile(req.body.LINK);
-          const linkValues = [req.body.COURSE_ATND_ID, req.body.LINK];
+          // Only attempt to move the file if this is the first record
+          let moveResult = { success: true };
+          let movedFilePath = req.body.LINK;
+
+          if (req.body.moveFileOnFirstRecord) {
+            moveResult = moveCompetencyFile(req.body.LINK);
+            if (moveResult.success) {
+              // Calculate the moved path for returning to client
+              const path = require("path");
+              const filename = path.basename(req.body.LINK);
+              // Check if it's a K: drive path or UNC path
+              if (req.body.LINK.toLowerCase().startsWith("K:\\")) {
+                movedFilePath =
+                  "K:\\Quality - Records\\7200 - Competency\\_entered\\" +
+                  filename;
+              } else if (req.body.LINK.toLowerCase().startsWith("\\\\")) {
+                movedFilePath =
+                  "\\\\fs1\\Common\\Quality - Records\\7200 - Competency\\_entered\\" +
+                  filename;
+              }
+            }
+          }
+
+          const linkQuery =
+            "INSERT INTO CTA_ATTENDANCE_LINK (COURSE_ATND_ID, CTA_ATTENDANCE_LINK) VALUES (?, ?)";
+          const linkValues = [req.body.COURSE_ATND_ID, movedFilePath];
           // console.log(
           //   "Attempting to insert into CTA_ATTENDANCE_LINK:",
           //   linkQuery,
@@ -232,10 +255,13 @@ router.post("/", (req, res) => {
                   connection.end();
                   return;
                 }
-                // Add file move error to response if it occurred
-                const responseData = rows;
+                // Build response with moved file path and any file move error
+                const responseData = { success: true };
                 if (!moveResult.success) {
                   responseData.fileMoveError = moveResult.error;
+                  responseData.isFileLocked = moveResult.isFileLocked;
+                } else if (movedFilePath) {
+                  responseData.movedFilePath = movedFilePath;
                 }
                 res.json(responseData);
                 connection.end();
@@ -279,7 +305,23 @@ router.post("/retry-move-file", (req, res) => {
 
     // Attempt to move the file again
     const moveResult = moveCompetencyFile(linkPath);
-    res.json(moveResult);
+    const response = { ...moveResult };
+
+    // If successful, calculate and return the moved file path
+    if (moveResult.success) {
+      const path = require("path");
+      const filename = path.basename(linkPath);
+      if (linkPath.toLowerCase().startsWith("K:\\")) {
+        response.movedFilePath =
+          "K:\\Quality - Records\\7200 - Competency\\_entered\\" + filename;
+      } else if (linkPath.toLowerCase().startsWith("\\\\")) {
+        response.movedFilePath =
+          "\\\\fs1\\Common\\Quality - Records\\7200 - Competency\\_entered\\" +
+          filename;
+      }
+    }
+
+    res.json(response);
   } catch (err) {
     console.error("Error in retry-move-file:", err);
     res.status(500).json({ success: false, error: err.message });

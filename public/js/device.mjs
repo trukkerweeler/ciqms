@@ -69,7 +69,7 @@ async function initializePage() {
         // Add event listener for See All Images button
         seeAllBtn.addEventListener("click", async () => {
           const modal = document.getElementById(
-            "view-all-device-images-dialog"
+            "view-all-device-images-dialog",
           );
           const imgElement = document.getElementById("currentDeviceImage");
           const prevBtn = document.getElementById("prevDeviceImage");
@@ -81,7 +81,7 @@ async function initializePage() {
 
           try {
             const filenameRes = await fetch(
-              `http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`
+              `http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`,
             );
             const filenameJson = await filenameRes.json();
             filenames = filenameJson.filenames || [];
@@ -89,7 +89,7 @@ async function initializePage() {
             if (filenames.length > 0) {
               currentIndex = 0;
               imgElement.src = `/_device-images/${encodeURIComponent(
-                filenames[0]
+                filenames[0],
               )}`;
               imgElement.style.display = "block";
               noImagesDiv.style.display = "none";
@@ -121,7 +121,7 @@ async function initializePage() {
             if (currentIndex > 0) {
               currentIndex--;
               imgElement.src = `/_device-images/${encodeURIComponent(
-                filenames[currentIndex]
+                filenames[currentIndex],
               )}`;
               newPrevBtn.disabled = currentIndex === 0;
               newNextBtn.disabled = false;
@@ -132,7 +132,7 @@ async function initializePage() {
             if (currentIndex < filenames.length - 1) {
               currentIndex++;
               imgElement.src = `/_device-images/${encodeURIComponent(
-                filenames[currentIndex]
+                filenames[currentIndex],
               )}`;
               newPrevBtn.disabled = false;
               newNextBtn.disabled = currentIndex === filenames.length - 1;
@@ -151,7 +151,7 @@ async function initializePage() {
               mainImage.id = "main-device-image";
               mainImage.alt = "Device Image";
               mainImage.src = `/_device-images/${encodeURIComponent(
-                filenames[0]
+                filenames[0],
               )}`;
               imageContainer.appendChild(mainImage);
             } else {
@@ -185,7 +185,7 @@ async function initializePage() {
                 const img = document.createElement("img");
                 img.id = "device-image-preview";
                 img.src = `/_device-images/${encodeURIComponent(
-                  imageFilename
+                  imageFilename,
                 )}`;
                 img.alt = "Device Image";
                 img.style.maxWidth = "400px";
@@ -193,18 +193,18 @@ async function initializePage() {
                 divTitle.appendChild(img);
                 // Remove preview image when dialog closes
                 const modal = document.getElementById(
-                  "view-device-image-dialog"
+                  "view-device-image-dialog",
                 );
                 if (modal) {
                   modal.addEventListener(
                     "close",
                     () => {
                       let previewImg = document.getElementById(
-                        "device-image-preview"
+                        "device-image-preview",
                       );
                       if (previewImg) previewImg.remove();
                     },
-                    { once: true }
+                    { once: true },
                   );
                 }
               } else {
@@ -221,7 +221,7 @@ async function initializePage() {
         calibrationsBtn.classList.add(
           "btn",
           "btn-primary",
-          "calibrations-button"
+          "calibrations-button",
         );
         calibrationsBtn.innerHTML = "View Calibrations";
         calibrationsBtn.addEventListener("click", () => {
@@ -315,12 +315,12 @@ async function initializePage() {
             let date = new Date(data[field]);
             deviceDiv.innerHTML = `<strong>${field.replace(
               /_/g,
-              " "
+              " ",
             )}:</strong> ${date.toLocaleDateString()}`;
           } else {
             deviceDiv.innerHTML = `<strong>${field.replace(
               /_/g,
-              " "
+              " ",
             )}:</strong> ${data[field] || ""}`;
           }
           deviceSection.appendChild(deviceDiv);
@@ -352,7 +352,7 @@ async function initializePage() {
         editCalibrationButton.classList.add(
           "btn",
           "btn-primary",
-          "edit-button"
+          "edit-button",
         );
         editCalibrationButton.addEventListener("click", () => {
           document.getElementById("edit-assi-employee-id").value =
@@ -368,6 +368,7 @@ async function initializePage() {
             data["STANDARD_INTERVAL"] || "";
           document.getElementById("edit-warning-interval").value =
             data["WARNING_INTERVAL"] || "";
+          document.getElementById("status").value = data["STATUS"] || "";
 
           document.getElementById("edit-devcal-dialog").showModal();
         });
@@ -376,7 +377,7 @@ async function initializePage() {
         calibrationSection.appendChild(calibDiv);
 
         let calibrationFields = deviceFields.filter(
-          (field) => !fieldsToDisplay.includes(field)
+          (field) => !fieldsToDisplay.includes(field),
         );
 
         calibrationFields.forEach((field) => {
@@ -387,12 +388,24 @@ async function initializePage() {
             let date = new Date(data[field]);
             calibrationDiv.innerHTML = `<strong>${field.replace(
               /_/g,
-              " "
+              " ",
             )}:</strong> ${date.toLocaleDateString()}`;
+          } else if (field === "STATUS") {
+            // Display X for EXTENDED, E for EXPIRED, or the full status value
+            let statusDisplay = data[field] || "";
+            if (statusDisplay.toUpperCase() === "EXTENDED") {
+              statusDisplay = "X";
+            } else if (statusDisplay.toUpperCase() === "EXPIRED") {
+              statusDisplay = "E";
+            }
+            calibrationDiv.innerHTML = `<strong>${field.replace(
+              /_/g,
+              " ",
+            )}:</strong> ${statusDisplay}`;
           } else {
             calibrationDiv.innerHTML = `<strong>${field.replace(
               /_/g,
-              " "
+              " ",
             )}:</strong> ${data[field] || ""}`;
           }
           calibrationSection.appendChild(calibrationDiv);
@@ -456,13 +469,13 @@ async function initializePage() {
             // Fetch the image filenames from DEVICE_IMAGES
             try {
               const filenameRes = await fetch(
-                `http://localhost:${port}/image/filename/${deviceId}`
+                `http://localhost:${port}/image/filename/${deviceId}`,
               );
               const filenameJson = await filenameRes.json();
               const filenames = filenameJson.filenames;
               if (filenames.length > 0) {
                 imgElement.src = `/_device-images/${encodeURIComponent(
-                  filenames[0]
+                  filenames[0],
                 )}`;
                 imgElement.style.display = "block";
                 imgElement.onerror = () => {
@@ -511,7 +524,7 @@ async function initializePage() {
                 imgElement.src = "";
                 imgElement.style.display = "none";
               },
-              { once: true }
+              { once: true },
             );
           });
         mainElement.appendChild(sectionsDiv);
@@ -531,7 +544,7 @@ document
     const deviceName = document.getElementById("edit-device-name").value;
     const deviceType = document.getElementById("edit-device-type").value;
     const manufacturerName = document.getElementById(
-      "edit-manufacturer-name"
+      "edit-manufacturer-name",
     ).value;
     const model = document.getElementById("edit-model").value;
     const serialNumber = document.getElementById("edit-serial-number").value;
@@ -574,18 +587,18 @@ document
     const urlParams = new URLSearchParams(window.location.search);
     const deviceId = urlParams.get("id");
     const assiEmployeeId = document.getElementById(
-      "edit-assi-employee-id"
+      "edit-assi-employee-id",
     ).value;
     const daysRemaining = document.getElementById("edit-days-remaining").value;
     const nextDate = document.getElementById("edit-next-date").value;
     const specialInterval = document.getElementById(
-      "edit-special-interval"
+      "edit-special-interval",
     ).value;
     const standardInterval = document.getElementById(
-      "edit-standard-interval"
+      "edit-standard-interval",
     ).value;
     const warningInterval = document.getElementById(
-      "edit-warning-interval"
+      "edit-warning-interval",
     ).value;
     const statusSelect = document.getElementById("status");
     const status = statusSelect.value;
@@ -723,12 +736,12 @@ if (editDialog) {
     });
   } else {
     console.error(
-      "Button with id 'cancelDeviceEdit' not found in edit dialog."
+      "Button with id 'cancelDeviceEdit' not found in edit dialog.",
     );
   }
 } else {
   console.error(
-    "Dialog element with attribute 'edit-device-dialog' is missing or not a <dialog>."
+    "Dialog element with attribute 'edit-device-dialog' is missing or not a <dialog>.",
   );
 }
 

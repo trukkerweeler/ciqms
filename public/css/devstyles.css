@@ -1,4 +1,174 @@
-/* Device and Equipment page specific styles - extends stylescal.css */
+/* Device and Equipment page specific styles */
+
+/* Base styles */
+body {
+  font-family: "Arial", sans-serif;
+  background-color: #f4f4f4;
+  color: #333;
+  margin: 0;
+  padding: 0;
+}
+
+input {
+  margin-bottom: 5px;
+}
+
+/* Button styles */
+.btn {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+  margin-left: 1rem;
+}
+
+.btn-cancel {
+  background-color: #f44336;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+}
+
+.btn-cancel:hover {
+  background-color: #e53935;
+}
+
+.btn-primary:hover,
+.btn-save:hover {
+  background-color: #45a049;
+}
+
+/* Page header styles */
+.page-header {
+  align-items: center;
+  font-style: italic;
+  color: #4caf50;
+  margin-left: 1rem;
+  display: flex;
+  justify-content: center;
+}
+
+.page-header-div {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+/* Sections grid layout */
+.sections-div {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  gap: 20px 30px;
+  margin: 20px;
+  margin-top: 0px;
+  padding: 20px;
+  background-color: #fff;
+  border-radius: 8px;
+}
+
+.sections-div section {
+  border: #333 solid 1px;
+  border-radius: 8px;
+}
+
+.section-header-edit {
+  font-size: 18px;
+  margin-top: 0px;
+  margin-bottom: 10px;
+  display: flex;
+  justify-content: space-between;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  grid-column: span 2;
+  height: 60px;
+}
+
+.section-header-edit button {
+  background-color: grey;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  cursor: pointer;
+  font-size: 14px;
+  border-radius: 5px;
+  align-self: center;
+}
+
+.calibration-section {
+  grid-template-columns: 1fr 1fr;
+  min-width: 325px;
+}
+
+.device-info-field {
+  display: flex;
+  justify-content: space-between;
+  margin-left: 1rem;
+  margin-right: 1rem;
+  padding: 10px 0;
+}
+
+.notes-content {
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  max-width: 400px;
+  grid-column: span 2;
+}
+
+/* Form styles */
+#edit-device-form,
+#create-device-form,
+#create-calibration-form,
+#edit-devcal-form {
+  display: flex;
+  flex-direction: column;
+  margin-left: 1rem;
+  margin-right: 1rem;
+}
+
+#edit-device-form label {
+  margin-bottom: 5px;
+}
+
+/* Dialog styles */
+dialog {
+  border-radius: 8px;
+  padding: 20px;
+  background-color: #fff;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.dialog-actions {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  margin-top: 1rem;
+}
+
+/* Footer styles */
+#footer {
+  background-color: #333;
+  color: white;
+  text-align: center;
+  padding: 10px 20px;
+  position: fixed;
+  bottom: 0;
+  width: 100%;
+  box-sizing: border-box;
+  left: 0;
+  right: 0;
+}
+
+#footer a {
+  color: white;
+  text-decoration: none;
+}
 
 /* Override compact main content layout for device/equipment pages */
 #main-content {

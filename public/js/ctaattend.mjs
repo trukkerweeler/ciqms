@@ -148,8 +148,14 @@ async function saveTraining(event) {
         .slice(0, 19)
         .replace("T", " ");
 
+      // Get the original link value once (before moving)
+      const originalLinkValue = formData.get("LINK") || "";
+      let movedFilePath = originalLinkValue; // Will update after first record with moved path
+
       // Loop through attendees and submit each record
-      for (const personId of attendees) {
+      for (let index = 0; index < attendees.length; index++) {
+        const personId = attendees[index];
+
         // Get next ID from server for each attendee
         const nextIdResponse = await fetch(`${url}/nextId`);
         const nextId = await nextIdResponse.json();
@@ -167,13 +173,16 @@ async function saveTraining(event) {
           } else if (field === "INSTRUCTOR") {
             dataJson[field] = formData.get(field).toUpperCase();
           } else if (field === "LINK") {
-            // Send the full LINK path to the backend for file moving
-            const linkValue = formData.get(field);
-            dataJson[field] = linkValue || "";
+            // Use the moved file path for all records after the first
+            // First record will move the file, subsequent ones use the moved path
+            dataJson[field] = index === 0 ? originalLinkValue : movedFilePath;
           } else {
             dataJson[field] = formData.get(field);
           }
         }
+
+        // Send moveFileOnFirstRecord flag so backend knows this is the first record
+        dataJson.moveFileOnFirstRecord = index === 0;
 
         const response = await fetch(url, {
           method: "POST",
@@ -191,6 +200,12 @@ async function saveTraining(event) {
 
         // Check for file move errors in the response
         const responseData = await response.json();
+
+        // After first record, update the file path to the moved location
+        if (index === 0 && responseData.movedFilePath) {
+          movedFilePath = responseData.movedFilePath;
+        }
+
         if (responseData.fileMoveError) {
           // Check if file is locked (in use)
           if (responseData.isFileLocked) {
@@ -212,6 +227,10 @@ async function saveTraining(event) {
                   alert(`Retry failed: ${retryData.error}`);
                 } else {
                   alert("File moved successfully!");
+                  // Update the moved file path if move was successful
+                  if (index === 0 && retryData.movedFilePath) {
+                    movedFilePath = retryData.movedFilePath;
+                  }
                 }
               } catch (retryErr) {
                 alert(`Error retrying file move: ${retryErr.message}`);
