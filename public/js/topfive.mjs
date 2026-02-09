@@ -1,10 +1,10 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, myport, getApiUrl } from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
-const port = myport() || 3003;
-const url = `http://localhost:${port}/topfive`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/topfive`;
 
 /**
  * Fetch top 5 customers data from the server

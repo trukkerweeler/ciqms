@@ -1,6 +1,7 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
 
-// Constants
+loadHeaderFooter();
+const apiUrl = await getApiUrl();
 const DEBUG = false;
 const FIELD_LIST = [
   "DOCUMENT_ID",
@@ -118,7 +119,7 @@ const renderDocumentDetail = (record, user) => {
   const detailHeading = createElement(
     "h3",
     { id: "detailTitle", style: "margin: 0; flex: 1;" },
-    "Document Detail"
+    "Document Detail",
   );
 
   const btnEditDoc = createElement(
@@ -129,7 +130,7 @@ const renderDocumentDetail = (record, user) => {
       type: "submit",
       style: "padding: 0.5rem 1rem; width: 120px;",
     },
-    "Edit"
+    "Edit",
   );
 
   headerContainer.appendChild(detailHeading);
@@ -155,7 +156,7 @@ const renderDocumentDetail = (record, user) => {
             href: `/document-files/${docPath}`,
             target: "_blank",
           },
-          filename
+          filename,
         );
 
         // Add error handler for when file is not available
@@ -169,12 +170,12 @@ const renderDocumentDetail = (record, user) => {
               window.open(`/document-files/${docPath}`, "_blank");
             } else {
               alert(
-                "Document file is not currently available. The network location may be unavailable or the file may have been moved. Please contact Quality Management."
+                "Document file is not currently available. The network location may be unavailable or the file may have been moved. Please contact Quality Management.",
               );
             }
           } catch (error) {
             alert(
-              "Unable to access document files. Please check your network connection or contact IT."
+              "Unable to access document files. Please check your network connection or contact IT.",
             );
           }
         });
@@ -219,7 +220,7 @@ const renderEditDialog = (record) => {
       className: "btn dialogSaveBtn",
       id: "saveDetail",
     },
-    "Save"
+    "Save",
   );
   detailDialog.appendChild(saveDetail);
 
@@ -229,7 +230,7 @@ const renderEditDialog = (record) => {
       className: "btn closedialog",
       id: "btnCancelDetail",
     },
-    "Cancel"
+    "Cancel",
   );
   detailDialog.appendChild(btnCancelDetail);
 
@@ -292,7 +293,7 @@ const setupSaveHandler = (record, port, documentId, user) => {
     }
 
     try {
-      const detailsUrl = `http://localhost:${port}/sysdocs/${documentId}`;
+      const detailsUrl = `${apiUrl}/sysdocs/${documentId}`;
       await updateDocument(detailsUrl, data);
 
       const detailDialog = document.querySelector("#detailDialog");
@@ -312,7 +313,6 @@ const init = async () => {
   loadHeaderFooter();
 
   const user = await getUserValue();
-  const port = myport();
 
   const urlParams = new URLSearchParams(window.location.search);
   const documentId = urlParams.get("document_id");
@@ -322,7 +322,7 @@ const init = async () => {
     console.log("Document ID:", documentId);
   }
 
-  const url = `http://localhost:${port}/sysdocs/${documentId}`;
+  const url = `${apiUrl}/sysdocs/${documentId}`;
   const main = document.querySelector("main");
   clearElement(main);
 

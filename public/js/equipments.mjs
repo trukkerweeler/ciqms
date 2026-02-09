@@ -1,10 +1,10 @@
-import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, myport, getUserValue, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
-const port = myport();
 const user = await getUserValue();
+const apiUrl = await getApiUrl();
 
-const equipmentUrl = `http://localhost:${port}/equipment`;
+const equipmentUrl = `${apiUrl}/equipment`;
 console.log(`Equipment URL: ${equipmentUrl}`);
 
 let mainElement = document.getElementById("main");
@@ -55,7 +55,7 @@ if (!addEquipmentBtn) {
         });
       }
       const createButton = createDialog.querySelector(
-        "#create-equipment-button"
+        "#create-equipment-button",
       );
       if (createButton) {
         createButton.addEventListener("click", (e) => {
@@ -126,7 +126,7 @@ if (!addEquipmentBtn) {
       }
     } else {
       console.error(
-        "Dialog element with id 'create-equipment-dialog' is missing or not a <dialog>."
+        "Dialog element with id 'create-equipment-dialog' is missing or not a <dialog>.",
       );
     }
     // clear the form fields
@@ -204,8 +204,8 @@ function getRecords() {
             (equipment[field] ?? "")
               .toString()
               .toLowerCase()
-              .includes(filterValue)
-          )
+              .includes(filterValue),
+          ),
         );
 
         tableBody.innerHTML = filteredData

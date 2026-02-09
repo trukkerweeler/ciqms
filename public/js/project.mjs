@@ -1,17 +1,17 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, myport, getApiUrl } from "./utils.mjs";
 loadHeaderFooter();
-const port = myport();
+const apiUrl = await getApiUrl();
 
 // Get the project id from the url params
 let queryString = window.location.search;
 let urlParams = new URLSearchParams(queryString);
 let projectId = urlParams.get("id");
 
-const url = `http://localhost:${port}/project/${projectId}`;
+const url = `${apiUrl}/project/${projectId}`;
 
 // Fetch recurring subjects for this project
 let recurringSubjects = [];
-const recurringUrl = `http://localhost:${port}/project/rcursbjct/${projectId}`;
+const recurringUrl = `${apiUrl}/project/rcursbjct/${projectId}`;
 
 const main = document.querySelector("main");
 // Delete the child nodes of the main element
@@ -28,7 +28,7 @@ Promise.all([
   fetch(recurringUrl, { method: "GET" }),
 ])
   .then(([projectResponse, recurringResponse]) =>
-    Promise.all([projectResponse.json(), recurringResponse.json()])
+    Promise.all([projectResponse.json(), recurringResponse.json()]),
   )
   .then(([record, recurringSubjectsData]) => {
     recurringSubjects = recurringSubjectsData;

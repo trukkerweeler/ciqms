@@ -3,9 +3,33 @@ const cors = require("cors");
 const express = require("express");
 const session = require("express-session");
 const app = express();
-const port = process.env.APP_PORT || 3003;
 
-app.use(cors());
+// Determine environment and set port based on NODE_ENV
+const nodeEnv = process.env.NODE_ENV || "development";
+const isDevelopment = nodeEnv === "development" || nodeEnv === "dev";
+const isProduction = nodeEnv === "production" || nodeEnv === "prod";
+
+// Set default port based on environment, can be overridden by APP_PORT env var
+let defaultPort = 3003; // development default
+if (isProduction) {
+  defaultPort = 3004;
+}
+
+const port = process.env.APP_PORT || defaultPort;
+
+// Configure CORS to allow credentials
+const corsOptions = {
+  origin: function (origin, callback) {
+    // Allow requests from any origin (we'll be more specific if needed)
+    // For now, allow all for development
+    callback(null, true);
+  },
+  credentials: true,
+  methods: ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+  allowedHeaders: ["Content-Type", "Authorization"],
+};
+
+app.use(cors(corsOptions));
 
 // Session configuration
 app.use(
@@ -14,22 +38,41 @@ app.use(
     resave: false,
     saveUninitialized: false,
     cookie: {
-      secure: false, // Set to true in production with HTTPS
+      secure: isProduction, // Set to true in production with HTTPS
       httpOnly: true,
       maxAge: 24 * 60 * 60 * 1000, // 24 hours
     },
   }),
 );
 
-app.use(express.static("public"));
+// Disable caching for all static files to prevent stale files being served
+app.use(
+  express.static("public", {
+    maxAge: 0,
+    etag: false,
+    setHeaders: (res, path, stat) => {
+      res.setHeader("Cache-Control", "no-cache, no-store, must-revalidate");
+      res.setHeader("Pragma", "no-cache");
+      res.setHeader("Expires", "0");
+    },
+  }),
+);
 app.use(express.json());
 
+// Set CORS headers for requests WITH credentials support
 app.use((req, res, next) => {
-  res.setHeader("Access-Control-Allow-Origin", "*");
+  const origin = req.get("origin");
+  if (origin) {
+    res.setHeader("Access-Control-Allow-Origin", origin);
+    res.setHeader("Access-Control-Allow-Credentials", "true");
+  } else {
+    // Fallback if no origin header (same-origin requests)
+    res.setHeader("Access-Control-Allow-Origin", "*");
+  }
   next();
 });
 
-// Configuration endpoint
+// Configuration endpoint for UI config
 app.get("/config", (req, res) => {
   try {
     const fs = require("fs");
@@ -47,6 +90,13 @@ app.get("/config", (req, res) => {
       features: { enableEmailNotifications: true },
     });
   }
+});
+
+// API configuration endpoint - returns the API URL for frontend to use
+app.get("/api/config", (req, res) => {
+  const apiUrl = process.env.API_URL || `http://localhost:${port}`;
+  console.log("[/api/config] Returning apiUrl:", apiUrl);
+  res.json({ apiUrl });
 });
 
 // Autoload routes from the routes directory
@@ -160,6 +210,12 @@ const equipmentImagesPath = path.join(
 );
 app.use("/_equipment-images", express.static(equipmentImagesPath));
 
-app.listen(port, async () => {
-  console.log(`Example app listening at http://localhost:${port}`);
+app.listen(port, "0.0.0.0", async () => {
+  console.log(`\n========================================`);
+  console.log(`CIQMS Server is running`);
+  console.log(`Environment: ${nodeEnv}`);
+  console.log(`Port: ${port}`);
+  console.log(`Localhost: http://localhost:${port}`);
+  console.log(`Network: http://192.168.1.10:${port}`);
+  console.log(`========================================\n`);
 });

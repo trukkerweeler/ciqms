@@ -1,7 +1,7 @@
-import { myport } from "./utils.mjs";
+import { myport, getApiUrl } from "./utils.mjs";
 
-const port = myport() || 3003;
-const url = `http://localhost:${port}/opcodesGlobal`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/opcodesGlobal`;
 
 let allData = [];
 
@@ -16,7 +16,7 @@ function filterData() {
     ? allData.filter((record) =>
         String(record.MACHINE || "")
           .toLowerCase()
-          .startsWith(machineNo)
+          .startsWith(machineNo),
       )
     : allData;
 }
@@ -37,7 +37,7 @@ async function fetchData() {
     if (!response.ok) {
       const errorText = await response.text();
       throw new Error(
-        `Network response was not ok (${response.status} ${response.statusText}): ${errorText}`
+        `Network response was not ok (${response.status} ${response.statusText}): ${errorText}`,
       );
     }
 

@@ -1,11 +1,11 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
 // Configuration
-const port = myport() || 3003;
-const url = `http://localhost:${port}/project`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/project`;
 const skippers = ["ENTITY_ID", "MODIFIED_DATE", "MODIFIED_BY", "COST_SAVINGS"];
 let sortOrder = "asc";
 let user; // Will be set in initialization

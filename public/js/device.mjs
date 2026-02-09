@@ -3,6 +3,7 @@ import {
   myport,
   getUserValue,
   timestampAndJoinNotes,
+  getApiUrl,
 } from "./utils.mjs";
 
 // Debug mode flag - set to true to enable console logging
@@ -11,13 +12,14 @@ const DEBUG_MODE = false;
 loadHeaderFooter();
 const port = myport();
 let user = (await getUserValue("user")) || "Unknown User";
+let apiUrl = await getApiUrl();
 
 async function initializePage() {
   // read the url parameter
   const urlParams = new URLSearchParams(window.location.search);
   const deviceId = urlParams.get("id");
 
-  const deviceUrl = `http://localhost:${port}/device/${deviceId}`;
+  const deviceUrl = `${apiUrl}/device/${deviceId}`;
 
   function getRecords() {
     fetch(deviceUrl, {
@@ -81,7 +83,7 @@ async function initializePage() {
 
           try {
             const filenameRes = await fetch(
-              `http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`,
+              `${apiUrl}/image/filename/${data["DEVICE_ID"]}`,
             );
             const filenameJson = await filenameRes.json();
             filenames = filenameJson.filenames || [];
@@ -142,7 +144,7 @@ async function initializePage() {
 
         imageContainer.appendChild(seeAllBtn);
         // Show device image on page load if it exists
-        fetch(`http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`)
+        fetch(`${apiUrl}/image/filename/${data["DEVICE_ID"]}`)
           .then((response) => response.json())
           .then((result) => {
             const filenames = result.filenames;
@@ -176,7 +178,7 @@ async function initializePage() {
           let oldImg = document.getElementById("device-image-preview");
           if (oldImg) oldImg.remove();
           // Fetch the image filename from DEVICE_IMAGES table
-          fetch(`http://localhost:${port}/image/filename/${data["DEVICE_ID"]}`)
+          fetch(`${apiUrl}/image/filename/${data["DEVICE_ID"]}`)
             .then((response) => response.json())
             .then((result) => {
               const filenames = result.filenames || [];
@@ -469,7 +471,7 @@ async function initializePage() {
             // Fetch the image filenames from DEVICE_IMAGES
             try {
               const filenameRes = await fetch(
-                `http://localhost:${port}/image/filename/${deviceId}`,
+                `${apiUrl}/image/filename/${deviceId}`,
               );
               const filenameJson = await filenameRes.json();
               const filenames = filenameJson.filenames;
@@ -554,7 +556,7 @@ document
     const purchasePrice = document.getElementById("edit-purchase-price").value;
     const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
 
-    const deviceEditUrl = `http://localhost:${port}/device/editdevice`;
+    const deviceEditUrl = `${apiUrl}/device/editdevice`;
     fetch(deviceEditUrl, {
       method: "PUT",
       headers: {
@@ -620,7 +622,7 @@ document
     // console.log("Mod Date: ", modDate);
     if (DEBUG_MODE) console.log("Status: ", status);
 
-    const devCalEditUrl = `http://localhost:${port}/device/editdevcal`;
+    const devCalEditUrl = `${apiUrl}/device/editdevcal`;
 
     // Build the JSON object for the request body
     const devCalEditData = {
@@ -668,7 +670,7 @@ changeImageButton.addEventListener("click", async () => {
     const deviceId = urlParams.get("id");
     formData.append("deviceId", deviceId);
     try {
-      const response = await fetch(`http://localhost:${port}/image`, {
+      const response = await fetch(`${apiUrl}/image`, {
         method: "POST",
         body: formData,
       });
@@ -690,7 +692,7 @@ const deleteImageButton = document.getElementById("deleteImage");
 deleteImageButton.addEventListener("click", async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const deviceId = urlParams.get("id");
-  const deleteImageUrl = `http://localhost:${port}/image/${deviceId}`;
+  const deleteImageUrl = `${apiUrl}/image/${deviceId}`;
 
   try {
     if (DEBUG_MODE)
@@ -754,7 +756,7 @@ if (saveNotes) {
     const newNotes = notesTextarea.value;
 
     // Save the notes (you can implement the actual save logic here)
-    const urlSaveDeviceNote = `http://localhost:${port}/device/savenote`;
+    const urlSaveDeviceNote = `${apiUrl}/device/savenote`;
     const urlParams = new URLSearchParams(window.location.search);
     const deviceId = urlParams.get("id");
     // get the existing notes content div

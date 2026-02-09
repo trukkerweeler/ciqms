@@ -1,11 +1,11 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
 // Configuration
-const port = myport() || 3004;
-const url = `http://localhost:${port}/expiry`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/expiry`;
 let sortOrder = "asc";
 let user; // Will be set in initialization
 

@@ -1,8 +1,8 @@
-import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, myport, getUserValue, getApiUrl } from "./utils.mjs";
 
 // Constants
-const PORT = myport() || 3003;
-const BASE_URL = `http://localhost:${PORT}/requests`;
+const apiUrl = await getApiUrl();
+const BASE_URL = `${apiUrl}/requests`;
 const REQUIRED_FIELDS = [
   "DOCUMENT_ID",
   "CHANGE_TYPE",
@@ -30,11 +30,11 @@ const getDueDateISO = (daysFromNow = 30) => {
 
 const validateRequiredFields = (data) => {
   const missingField = REQUIRED_FIELDS.find(
-    (field) => !data[field] || data[field].trim() === ""
+    (field) => !data[field] || data[field].trim() === "",
   );
   if (missingField) {
     throw new Error(
-      `Please fill in the required field: ${missingField.replace(/_/g, " ")}`
+      `Please fill in the required field: ${missingField.replace(/_/g, " ")}`,
     );
   }
 };
@@ -108,7 +108,7 @@ const createTableCell = (key, value) => {
   if (DATE_FIELDS.includes(key)) {
     td.textContent = formatDate(value);
   } else if (key === "REQUEST_ID") {
-    td.innerHTML = `<a href="http://localhost:${PORT}/dcr.html?id=${value}">${value}</a>`;
+    td.innerHTML = `<a href="./dcr.html?id=${value}">${value}</a>`;
   } else {
     td.textContent = value ?? "";
   }
@@ -146,8 +146,8 @@ const attachFilterListener = (filterInput, tableBody, records) => {
     const filterValue = e.target.value.toLowerCase();
     const filteredData = records.filter((record) =>
       Object.values(record).some((value) =>
-        (value ?? "").toString().toLowerCase().includes(filterValue)
-      )
+        (value ?? "").toString().toLowerCase().includes(filterValue),
+      ),
     );
 
     tableBody.innerHTML = "";

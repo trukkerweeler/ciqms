@@ -1,12 +1,18 @@
-import { loadHeaderFooter, getUserValue, myport, getConfig } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  getUserValue,
+  myport,
+  getConfig,
+  getApiUrl,
+} from "./utils.mjs";
 import users from "./users.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
 // Configuration
-const port = myport() || 3003;
-const url = `http://localhost:${port}/ncm`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/ncm`;
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let config; // Will be set in initialization
@@ -195,7 +201,7 @@ async function saveNcm(event) {
     // Subject length validation
     if (dataJson.SUBJECT && dataJson.SUBJECT.length > 6) {
       alert(
-        "Subject must be 6 characters or less. Please see the help file for valid codes."
+        "Subject must be 6 characters or less. Please see the help file for valid codes.",
       );
       window.open("/ncmhelp.html", "_blank");
       const subjectField = document.querySelector("#SUBJECT");
@@ -527,7 +533,7 @@ async function saveTrend(event) {
 
   try {
     // Save trend data
-    const trendUrl = `http://localhost:${port}/trend/${ncmId}`;
+    const trendUrl = `${apiUrl}/trend/${ncmId}`;
     const response = await fetch(trendUrl, {
       method: "PUT",
       headers: {
@@ -542,7 +548,7 @@ async function saveTrend(event) {
       // Handle corrective action link if provided
       if (data.CORRECTIVE_ID) {
         const corrData = { CORRECTIVE_ID: data.CORRECTIVE_ID };
-        const corrUrl = `http://localhost:${port}/trend/${ncmId}/ncl`;
+        const corrUrl = `${apiUrl}/trend/${ncmId}/ncl`;
 
         await fetch(corrUrl, {
           method: "PUT",
@@ -574,7 +580,7 @@ window.openTrendDialog = openTrendDialog;
 // Function to fetch subjects from the server for the dropdown
 async function loadSubjects() {
   try {
-    const subjectsUrl = `http://localhost:${port}/ncm/subjects`;
+    const subjectsUrl = `${apiUrl}/ncm/subjects`;
     const response = await fetch(subjectsUrl, { method: "GET" });
 
     if (!response.ok) {
@@ -631,7 +637,7 @@ function getHardcodedSubjects() {
 // Function to fetch causes from the server for the dropdown
 async function loadCauses() {
   try {
-    const causesUrl = `http://localhost:${port}/causemaint/`;
+    const causesUrl = `${apiUrl}/causemaint/`;
     const response = await fetch(causesUrl, { method: "GET" });
 
     if (!response.ok) {

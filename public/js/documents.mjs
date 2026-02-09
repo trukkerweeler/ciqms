@@ -3,15 +3,16 @@ import {
   getDocType,
   getUserValue,
   myport,
+  getApiUrl,
 } from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
 // Configuration
-const port = myport() || 3004;
-const url = `http://localhost:${port}/sysdocs`;
-const url2 = `http://localhost:${port}/docsavail`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/sysdocs`;
+const url2 = `${apiUrl}/docsavail`;
 let sortOrder = "asc";
 
 // Global variables - will be initialized on DOMContentLoaded
@@ -262,7 +263,7 @@ function createTable(data) {
     const filterValue = filterInput.value.toLowerCase();
     const filteredData = documentsData.filter((doc) => {
       return Object.values(doc).some((value) =>
-        (value ?? "").toString().toLowerCase().includes(filterValue)
+        (value ?? "").toString().toLowerCase().includes(filterValue),
       );
     });
     renderDocumentTable(filteredData);

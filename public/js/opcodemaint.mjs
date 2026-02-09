@@ -1,7 +1,7 @@
-import { myport } from "./utils.mjs";
+import { myport, getApiUrl } from "./utils.mjs";
 
-const port = myport() || 3003;
-const url = `http://localhost:${port}/opcodes`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/opcodes`;
 
 let isEditMode = false;
 let originalOpcode = null;
@@ -68,9 +68,8 @@ async function loadOpcodeData(opcode) {
     originalOpcode = data.OPCODE;
 
     // Update UI
-    document.getElementById(
-      "formTitle"
-    ).textContent = `Edit OP Code: ${data.OPCODE}`;
+    document.getElementById("formTitle").textContent =
+      `Edit OP Code: ${data.OPCODE}`;
     document.getElementById("opcode").disabled = true; // Don't allow changing the primary key
     document.getElementById("deleteButton").style.display = "inline-block";
     document.getElementById("saveButton").textContent = "Update";
@@ -100,7 +99,7 @@ async function saveOpcode(formData) {
       const errorData = await response.json();
       throw new Error(
         errorData.error ||
-          `Failed to ${isEditMode ? "update" : "create"} OP code`
+          `Failed to ${isEditMode ? "update" : "create"} OP code`,
       );
     }
 
@@ -138,7 +137,7 @@ async function deleteOpcode() {
         headers: {
           "Content-Type": "application/json",
         },
-      }
+      },
     );
 
     if (!response.ok) {

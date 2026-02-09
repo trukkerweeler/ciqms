@@ -1,6 +1,54 @@
 // import { dotenv } from "../../node_modules/dotenv";
 // dotenv.config();
 
+// VERSION: 3.0 - WITH DYNAMIC API URL AND DEBUG LOGS
+console.log("[utils.mjs] Version 3.0 loaded with dynamic API URL support");
+
+// Cache the API URL after first fetch
+let cachedApiUrl = null;
+
+/**
+ * Get the API base URL
+ * In development (localhost), uses localhost and the port from myport()
+ * In production, fetches the configured API URL from server
+ * @returns {Promise<string>} The API base URL (e.g., "http://localhost:3003" or "http://192.168.1.10:3004")
+ */
+export async function getApiUrl() {
+  if (cachedApiUrl) {
+    console.log("[getApiUrl] Returning cached URL:", cachedApiUrl);
+    return cachedApiUrl;
+  }
+
+  try {
+    // Try to fetch config from server (this works on both dev and prod)
+    const response = await fetch("/api/config");
+    if (response.ok) {
+      const config = await response.json();
+      cachedApiUrl = config.apiUrl;
+      console.log("[getApiUrl] Got API URL from server:", cachedApiUrl);
+      return cachedApiUrl;
+    }
+  } catch (err) {
+    console.warn("[getApiUrl] Failed to fetch API config, falling back:", err);
+  }
+
+  // Fallback: if we're on localhost, use localhost with dynamic port
+  if (
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+  ) {
+    const port = myport();
+    cachedApiUrl = `http://localhost:${port}`;
+    console.log("[getApiUrl] Using localhost fallback:", cachedApiUrl);
+  } else {
+    // Fallback for other environments - assume same host
+    cachedApiUrl = `http://${window.location.hostname}:3004`;
+    console.log("[getApiUrl] Using network host fallback:", cachedApiUrl);
+  }
+
+  return cachedApiUrl;
+}
+
 async function loadTemplate(path) {
   const res = await fetch(path);
   const template = await res.text();
@@ -12,7 +60,7 @@ export function renderWithTemplate(
   parentElement,
   data,
   callback,
-  position = "afterbegin"
+  position = "afterbegin",
 ) {
   if (parentElement) {
     parentElement.insertAdjacentHTML(position, template);
@@ -29,7 +77,7 @@ export function renderWithTemplate2(
   parentElement,
   data,
   callback,
-  position = "afterbegin"
+  position = "afterbegin",
 ) {
   if (parentElement) {
     let output = template;
@@ -72,8 +120,8 @@ export async function loadHeaderFooter() {
 // Setup authentication-related UI elements
 async function setupAuthUI() {
   try {
-    const port = myport();
-    const response = await fetch(`http://localhost:${port}/auth/status`, {
+    const apiUrl = await getApiUrl();
+    const response = await fetch(`${apiUrl}/auth/status`, {
       credentials: "include",
     });
 
@@ -99,14 +147,14 @@ async function setupAuthUI() {
 // Logout function
 async function logoutUser() {
   try {
-    const port = myport();
-    const response = await fetch(`http://localhost:${port}/auth/logout`, {
+    const apiUrl = await getApiUrl();
+    const response = await fetch(`${apiUrl}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
 
     if (response.ok) {
-      window.location.href = `http://localhost:${port}/login.html`;
+      window.location.href = `${apiUrl}/login.html`;
     }
   } catch (err) {
     console.error("Logout failed:", err);
@@ -217,7 +265,7 @@ export async function createNotesSection(
   notes,
   sectionId = null,
   dateValue = null,
-  byValue = null
+  byValue = null,
 ) {
   let notesSection = document.createElement("section");
   notesSection.classList.add("notesSection");
@@ -577,7 +625,7 @@ export async function getCertNos(childWorkOrderNoValue) {
         const { QUANTITY1: _, ...restT } = t;
         const { QUANTITY1: __, ...restLine } = line;
         return JSON.stringify(restT) === JSON.stringify(restLine);
-      })
+      }),
   );
   return cert; // Return the cert object containing lines and lookup arrays
 }
@@ -605,7 +653,7 @@ export function parseXML(xmlString) {
 export async function getDetails(
   parsedData,
   childWorkOrderNoValue,
-  workOrderNoValue
+  workOrderNoValue,
 ) {
   const cert = { lines: [] }; // Initialize the cert object with an empty lines array
   try {
@@ -677,7 +725,7 @@ export async function getDetails(
         const { QUANTITY1: _, ...restT } = t;
         const { QUANTITY1: __, ...restLine } = line;
         return JSON.stringify(restT) === JSON.stringify(restLine);
-      })
+      }),
   );
   return cert; // Return the cert object containing lines and lookup arrays
 }
@@ -786,8 +834,8 @@ export function timestampAndJoinNotes(existingNotes, newNote, user) {
 // Get application configuration from server
 export async function getConfig() {
   try {
-    const port = myport() || 3003;
-    const response = await fetch(`http://localhost:${port}/config`);
+    const apiUrl = await getApiUrl();
+    const response = await fetch(`${apiUrl}/config`);
     return await response.json();
   } catch (error) {
     console.error("Error fetching config:", error);
@@ -822,7 +870,7 @@ export async function getcodedesc(code) {
  */
 export function createElement(
   tag,
-  { className = "", id = "", text = "", type = "", ...attrs } = {}
+  { className = "", id = "", text = "", type = "", ...attrs } = {},
 ) {
   const el = document.createElement(tag);
   if (className) el.className = className;

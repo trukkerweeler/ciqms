@@ -1,3 +1,33 @@
+import {
+  loadHeaderFooter,
+  createNotesSection,
+  getUserValue,
+  getDateTime,
+  myport,
+  createElement,
+  formatDate,
+  getUrlParam,
+  extractText,
+  timestampText,
+  getApiUrl,
+} from "./utils.mjs";
+import userEmails from "./users.mjs";
+
+loadHeaderFooter();
+
+const port = myport();
+const user = await getUserValue();
+const iid = getUrlParam("id");
+
+const apiUrl = await getApiUrl();
+
+// Replace all hardcoded URLs with dynamic apiUrl
+const apiUrls = {
+  input: `${apiUrl}/input/`,
+  csr: `${apiUrl}/csr/`,
+  ssr: `${apiUrl}/ssr/`,
+};
+
 // Wire up cancel button for collect data dialog
 document.addEventListener("click", (e) => {
   if (e.target && e.target.id === "cancelCollData") {
@@ -12,10 +42,8 @@ document.addEventListener("submit", async (e) => {
     const dlg = document.getElementById("collectDataDialog");
     const form = e.target;
     try {
-      const port = myport();
-      const iid = getUrlParam("id");
       // Fetch next COLLECT_ID from backend
-      const nextIdRes = await fetch(`http://localhost:${port}/csr/nextCSRId`);
+      const nextIdRes = await fetch(`${apiUrls.csr}nextCSRId`);
       if (!nextIdRes.ok) throw new Error("Failed to get next COLLECT_ID");
       const nextCollectId = await nextIdRes.json();
       const data = {
@@ -26,7 +54,7 @@ document.addEventListener("submit", async (e) => {
         SAMPLE_DATE: form.SAMPLE_DATE.value,
         INPUT_USER: (await getUserValue()) || "",
       };
-      const url = `http://localhost:${port}/csr/${iid}`;
+      const url = `${apiUrls.csr}${iid}`;
       const body = {};
       body["data"] = data;
       const res = await fetch(url, {
@@ -49,32 +77,6 @@ document.addEventListener("click", (e) => {
     if (dlg) dlg.showModal();
   }
 });
-import {
-  loadHeaderFooter,
-  createNotesSection,
-  getUserValue,
-  getDateTime,
-  myport,
-  createElement,
-  formatDate,
-  getUrlParam,
-  extractText,
-  timestampText,
-} from "./utils.mjs";
-import userEmails from "./users.mjs";
-
-loadHeaderFooter();
-
-const port = myport();
-const user = await getUserValue();
-const iid = getUrlParam("id");
-
-// Build API URLs
-const apiUrls = {
-  input: `http://localhost:${port}/input/`,
-  csr: `http://localhost:${port}/csr/`,
-  ssr: `http://localhost:${port}/ssr/`,
-};
 
 const url = `${apiUrls.input}${iid}`;
 const main = document.querySelector("main");

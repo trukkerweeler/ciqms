@@ -1,10 +1,10 @@
-import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, myport, getUserValue, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
-const port = myport();
 const user = await getUserValue();
+const apiUrl = await getApiUrl();
 
-const deviceUrl = `http://localhost:${port}/device`;
+const deviceUrl = `${apiUrl}/device`;
 console.log(`Device URL: ${deviceUrl}`);
 
 let mainElement = document.getElementById("main");
@@ -120,7 +120,7 @@ if (!addDeviceBtn) {
       }
     } else {
       console.error(
-        "Dialog element with id 'create-device-dialog' is missing or not a <dialog>."
+        "Dialog element with id 'create-device-dialog' is missing or not a <dialog>.",
       );
     }
     // clear the form fields
@@ -193,8 +193,11 @@ function getRecords() {
         const filterValue = filterInput.value.toLowerCase();
         const filteredData = data.filter((device) =>
           myFields.some((field) =>
-            (device[field] ?? "").toString().toLowerCase().includes(filterValue)
-          )
+            (device[field] ?? "")
+              .toString()
+              .toLowerCase()
+              .includes(filterValue),
+          ),
         );
 
         tableBody.innerHTML = filteredData

@@ -1,12 +1,13 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
 loadHeaderFooter();
 const user = await getUserValue();
 const port = myport();
+const apiUrl = await getApiUrl();
 
 // Get the id from the url
 let urlParams = new URLSearchParams(window.location.search);
 let caid = urlParams.get("id");
-let url = `http://localhost:${port}/corrective/${caid}`;
+let url = `${apiUrl}/corrective/${caid}`;
 
 const main = document.querySelector("main");
 const closebutton = document.getElementById("btnClose");
@@ -188,7 +189,7 @@ fetch(url, { method: "GET" })
               .value.toUpperCase();
             let project = document.getElementById("project").value;
             // update the record
-            let url = `http://localhost:${port}/corrective/${caid}`;
+            let url = `${apiUrl}/corrective/${caid}`;
             await fetch(url, {
               method: "PUT",
               headers: {
@@ -221,7 +222,7 @@ fetch(url, { method: "GET" })
           alert("Only TKENT can close the CA");
           return;
         }
-        const closeUrl = `http://localhost:${port}/corrective/${caid}/close`;
+        const closeUrl = `${apiUrl}/corrective/${caid}/close`;
         await fetch(closeUrl, {
           method: "PUT",
           headers: {
@@ -350,7 +351,7 @@ fetch(url, { method: "GET" })
                 : newcorrectiontext + "\n" + correctiontext;
             let correctiondate =
               document.getElementById("correctiondate").value;
-            let url = `http://localhost:${port}/corrective/${caid}`;
+            let url = `${apiUrl}/corrective/${caid}`;
             await fetch(url, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
@@ -434,7 +435,7 @@ fetch(url, { method: "GET" })
             // let causeDate = document.getElementById('causedate').value;
             let causeDate = new Date().toISOString().slice(0, 10);
             // update the record
-            let url = `http://localhost:${port}/corrective/${caid}`;
+            let url = `${apiUrl}/corrective/${caid}`;
             await fetch(url, {
               method: "PUT",
               headers: {
@@ -528,7 +529,7 @@ fetch(url, { method: "GET" })
             // let controlDate = document.getElementById('controldate').value;
             let controlDate = new Date().toISOString().slice(0, 10);
             // update the record
-            let url = `http://localhost:${port}/corrective/${caid}`;
+            let url = `${apiUrl}/corrective/${caid}`;
             await fetch(url, {
               method: "PUT",
               headers: {

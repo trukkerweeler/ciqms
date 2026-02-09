@@ -1,6 +1,6 @@
-import { myport } from "./utils.mjs";
+import { myport, getApiUrl } from "./utils.mjs";
 
-const port = myport() || 3003;
+const apiUrl = await getApiUrl();
 const btnSearch = document.getElementById("btnSearch");
 const rmaNo = document.getElementById("rmaNo"); // Assuming this is the input field for Work Order No
 
@@ -16,7 +16,7 @@ btnSearch.addEventListener("click", async function (event) {
   while (rmaNumber.length < 7) {
     rmaNumber = "0" + rmaNumber;
   }
-  const url = `http://localhost:${port}/rmahistory/${rmaNumber}`;
+  const url = `${apiUrl}/rmahistory/${rmaNumber}`;
   // console.log("Fetching data from URL:", url); // Log the URL for debugging
   try {
     const response = await fetch(url, {
@@ -57,59 +57,53 @@ btnSearch.addEventListener("click", async function (event) {
     customerName.classList.add("headerinfo");
     searchResults.appendChild(customerName);
 
-  
-  // Iterate through each record in the data array
-  data.forEach(record => {
-    const section = document.createElement("section");
-    section.classList.add("record-section");
+    // Iterate through each record in the data array
+    data.forEach((record) => {
+      const section = document.createElement("section");
+      section.classList.add("record-section");
 
-    // Add a header for the section using RMA_LINE
-    const sectionHeader = document.createElement("h2");
-    sectionHeader.textContent = `RMA Line: ${record.RMA_LINE}`;
-    section.appendChild(sectionHeader);
+      // Add a header for the section using RMA_LINE
+      const sectionHeader = document.createElement("h2");
+      sectionHeader.textContent = `RMA Line: ${record.RMA_LINE}`;
+      section.appendChild(sectionHeader);
 
-    // Add PART_NO
-    const partNo = document.createElement("p");
-    partNo.textContent = `Part No: ${record.PART}`;
-    section.appendChild(partNo);
+      // Add PART_NO
+      const partNo = document.createElement("p");
+      partNo.textContent = `Part No: ${record.PART}`;
+      section.appendChild(partNo);
 
-    // // Add PART_REV
-    // const partRev = document.createElement("p");
-    // partRev.textContent = `Part Rev: ${record.PART_REV}`;
-    // section.appendChild(partRev);
+      // // Add PART_REV
+      // const partRev = document.createElement("p");
+      // partRev.textContent = `Part Rev: ${record.PART_REV}`;
+      // section.appendChild(partRev);
 
-    // Add PART_DESC
-    const partDesc = document.createElement("p");
-    partDesc.textContent = `Part Desc: ${record.PART_DESCRIPTION}`;
-    section.appendChild(partDesc);
+      // Add PART_DESC
+      const partDesc = document.createElement("p");
+      partDesc.textContent = `Part Desc: ${record.PART_DESCRIPTION}`;
+      section.appendChild(partDesc);
 
-    // Add REQ_TEXT label and paragraph
-    const reqTextLabel = document.createElement("label");
-    reqTextLabel.textContent = "Requested:";
-    section.appendChild(reqTextLabel);
+      // Add REQ_TEXT label and paragraph
+      const reqTextLabel = document.createElement("label");
+      reqTextLabel.textContent = "Requested:";
+      section.appendChild(reqTextLabel);
 
-    const reqTextParagraph = document.createElement("p");
-    reqTextParagraph.textContent = `${record.REQ_TEXT?.trim() || "No text found"}`;
-    section.appendChild(reqTextParagraph);
+      const reqTextParagraph = document.createElement("p");
+      reqTextParagraph.textContent = `${record.REQ_TEXT?.trim() || "No text found"}`;
+      section.appendChild(reqTextParagraph);
 
-    // Add PFR_TEXT label and paragraph
-    const pfrTextLabel = document.createElement("label");
-    pfrTextLabel.textContent = "Performed:";
-    section.appendChild(pfrTextLabel);
+      // Add PFR_TEXT label and paragraph
+      const pfrTextLabel = document.createElement("label");
+      pfrTextLabel.textContent = "Performed:";
+      section.appendChild(pfrTextLabel);
 
-    const pfrTextParagraph = document.createElement("p");
-    pfrTextParagraph.textContent = `${record.PFR_TEXT?.trim() || "No text found"}`;
-    section.appendChild(pfrTextParagraph);
+      const pfrTextParagraph = document.createElement("p");
+      pfrTextParagraph.textContent = `${record.PFR_TEXT?.trim() || "No text found"}`;
+      section.appendChild(pfrTextParagraph);
 
-    // Append the section to searchResults
-    searchResults.appendChild(section);
-  });
-
-    
-
+      // Append the section to searchResults
+      searchResults.appendChild(section);
+    });
   } catch (error) {
     console.error("Error fetching RMA data:", error);
   }
-  
 });
-

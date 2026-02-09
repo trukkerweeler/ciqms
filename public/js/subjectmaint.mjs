@@ -1,9 +1,9 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
 
-const port = myport();
-const baseUrl = `http://localhost:${port}/subjectmaint`;
+const apiUrl = await getApiUrl();
+const baseUrl = `${apiUrl}/subjectmaint`;
 let user;
 let editingSubject = null;
 

@@ -1,10 +1,10 @@
-import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, myport, getUserValue, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
-const port = myport();
 const user = await getUserValue();
+const apiUrl = await getApiUrl();
 
-const equipmentUrl = `http://localhost:${port}/equipment`;
+const equipmentUrl = `${apiUrl}/equipment`;
 
 // Get equipment ID from URL
 const urlParams = new URLSearchParams(window.location.search);
@@ -105,9 +105,7 @@ function displayEquipment(equipment) {
   document.getElementById("images-col").appendChild(imageContainer);
 
   // Show equipment image on page load if it exists
-  fetch(
-    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
-  )
+  fetch(`${apiUrl}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`)
     .then((response) => response.json())
     .then((result) => {
       const filenames = result.filenames;
@@ -192,15 +190,13 @@ function openEditDialog(equipment) {
 
   // Populate image in edit dialog
   const editImage = document.getElementById("editEquipmentImage");
-  fetch(
-    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
-  )
+  fetch(`${apiUrl}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`)
     .then((response) => response.json())
     .then((result) => {
       const filenames = result.filenames || [];
       if (filenames.length > 0) {
         editImage.src = `/_equipment-images/${encodeURIComponent(
-          filenames[0]
+          filenames[0],
         )}`;
         editImage.style.display = "block";
       } else {
@@ -270,15 +266,13 @@ function openImageDialog(equipment) {
   imgElement.style.display = "none";
 
   // Fetch the image filenames
-  fetch(
-    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
-  )
+  fetch(`${apiUrl}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`)
     .then((response) => response.json())
     .then((result) => {
       const filenames = result.filenames || [];
       if (filenames.length > 0) {
         imgElement.src = `/_equipment-images/${encodeURIComponent(
-          filenames[0]
+          filenames[0],
         )}`;
         imgElement.style.display = "block";
         imgElement.onerror = () => {
@@ -307,9 +301,7 @@ function openSeeAllDialog(equipment) {
   let currentIndex = 0;
 
   // Fetch the image filenames
-  fetch(
-    `http://localhost:${port}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`
-  )
+  fetch(`${apiUrl}/equipmentImage/filename/${equipment.EQUIPMENT_ID}`)
     .then((response) => response.json())
     .then((result) => {
       filenames = result.filenames || [];
@@ -340,7 +332,7 @@ function openSeeAllDialog(equipment) {
   function showImage(index) {
     if (filenames.length > 0 && index >= 0 && index < filenames.length) {
       imgElement.src = `/_equipment-images/${encodeURIComponent(
-        filenames[index]
+        filenames[index],
       )}`;
       currentIndex = index;
       prevBtn.disabled = index === 0;
@@ -372,19 +364,19 @@ if (editDialog) {
     });
   } else {
     console.error(
-      "Button with id 'cancelEquipmentEdit' not found in edit dialog."
+      "Button with id 'cancelEquipmentEdit' not found in edit dialog.",
     );
   }
 }
 
 // listen for changeEquipmentImage
 const changeEquipmentImageButton = document.getElementById(
-  "changeEquipmentImage"
+  "changeEquipmentImage",
 );
 if (changeEquipmentImageButton) {
   changeEquipmentImageButton.addEventListener("click", async () => {
     const equipmentImagePicker = document.getElementById(
-      "equipmentImagePicker"
+      "equipmentImagePicker",
     );
     if (!equipmentImagePicker || !equipmentImagePicker.value) {
       alert("Must choose an image first.");
@@ -398,13 +390,10 @@ if (changeEquipmentImageButton) {
       const equipmentId = urlParams.get("id");
       formData.append("equipmentId", equipmentId);
       try {
-        const response = await fetch(
-          `http://localhost:${port}/equipmentImage`,
-          {
-            method: "POST",
-            body: formData,
-          }
-        );
+        const response = await fetch(`${apiUrl}/equipmentImage`, {
+          method: "POST",
+          body: formData,
+        });
         if (response.ok) {
           alert("Image uploaded successfully!");
           // Close the dialog and reload the page to reflect the upload
@@ -427,13 +416,13 @@ if (changeEquipmentImageButton) {
 
 // listen for deleteEquipmentImage click event
 const deleteEquipmentImageButton = document.getElementById(
-  "deleteEquipmentImage"
+  "deleteEquipmentImage",
 );
 if (deleteEquipmentImageButton) {
   deleteEquipmentImageButton.addEventListener("click", async () => {
     const urlParams = new URLSearchParams(window.location.search);
     const equipmentId = urlParams.get("id");
-    const deleteEquipmentImageUrl = `http://localhost:${port}/equipmentImage/${equipmentId}`;
+    const deleteEquipmentImageUrl = `${apiUrl}/equipmentImage/${equipmentId}`;
 
     try {
       const response = await fetch(deleteEquipmentImageUrl, {

@@ -3,9 +3,10 @@ import {
   getUserValue,
   myport,
   getDateTime,
+  getApiUrl,
 } from "./utils.mjs";
 loadHeaderFooter();
-const port = myport() || 3003;
+const apiUrl = await getApiUrl();
 const user = await getUserValue();
 const test = false;
 
@@ -23,12 +24,12 @@ if (test) {
   console.log(iid);
 }
 
-const url = `http://localhost:${port}/ncm/${iid}`;
+const url = `${apiUrl}/ncm/${iid}`;
 
 // Function to fetch subjects from the server
 async function fetchSubjects() {
   try {
-    const subjectsUrl = `http://localhost:${port}/ncm/subjects`;
+    const subjectsUrl = `${apiUrl}/ncm/subjects`;
     const response = await fetch(subjectsUrl, { method: "GET" });
     const subjects = await response.json();
     return subjects;
@@ -40,7 +41,7 @@ async function fetchSubjects() {
 
 async function fetchCauses() {
   try {
-    const causesUrl = `http://localhost:${port}/causemaint/`;
+    const causesUrl = `${apiUrl}/causemaint/`;
     const response = await fetch(causesUrl, { method: "GET" });
     const causes = await response.json();
     return causes;
@@ -369,7 +370,7 @@ fetch(url, { method: "GET" })
         divDisposition.textContent = record[key]["DISPOSITION"];
         divDisposition.innerHTML = divDisposition.innerHTML.replace(
           /\n/g,
-          "<br>"
+          "<br>",
         );
       }
 
@@ -396,7 +397,7 @@ fetch(url, { method: "GET" })
       verificationTitle.setAttribute("id", "verificationTitle");
       divVerification.innerHTML = divVerification.innerHTML.replace(
         /\n/g,
-        "<br>"
+        "<br>",
       );
       if (
         record[key]["VERIFICATION"] === null ||
@@ -408,7 +409,7 @@ fetch(url, { method: "GET" })
         divVerification.textContent = record[key]["VERIFICATION"];
         divVerification.innerHTML = divVerification.innerHTML.replace(
           /\n/g,
-          "<br>"
+          "<br>",
         );
       }
 
@@ -465,7 +466,7 @@ fetch(url, { method: "GET" })
       event.preventDefault();
       // show the trend description dialog
       const trendDescriptionDialog = document.querySelector(
-        "#trendDescriptionDialog"
+        "#trendDescriptionDialog",
       );
       trendDescriptionDialog.showModal();
     });
@@ -520,7 +521,7 @@ fetch(url, { method: "GET" })
       event.preventDefault();
       const trendDialog = document.querySelector("#trendDialog");
 
-      const trendUrl = `http://localhost:${port}/trend/${iid}`;
+      const trendUrl = `${apiUrl}/trend/${iid}`;
       try {
         const response = await fetch(trendUrl);
         const trendData = await response.json();
@@ -675,7 +676,7 @@ fetch(url, { method: "GET" })
 
           case "saveTrendDetail":
             const formData = new FormData(
-              document.getElementById("edittrendform")
+              document.getElementById("edittrendform"),
             );
             const trendData = Object.fromEntries(formData.entries());
             data = { ...data, ...trendData };
@@ -691,7 +692,7 @@ fetch(url, { method: "GET" })
 
         let fetchUrl = url;
         if (fieldname === "saveTrendDetail") {
-          fetchUrl = `http://localhost:${port}/trend/${iid}`;
+          fetchUrl = `${apiUrl}/trend/${iid}`;
         }
 
         const options = {
@@ -841,7 +842,7 @@ fetch(url, { method: "GET" })
 
       // Listen for the saveDetail button click
       const saveDetail = document.querySelector("#saveDetail");
-      const detailsUrl = `http://localhost:${port}/ncm/details/${iid}`;
+      const detailsUrl = `${apiUrl}/ncm/details/${iid}`;
       saveDetail.addEventListener("click", async (event) => {
         event.preventDefault();
         const nid = document.querySelector("#nid");
@@ -886,7 +887,7 @@ fetch(url, { method: "GET" })
         // Subject length validation
         if (data.SUBJECT && data.SUBJECT.length > 6) {
           alert(
-            "Subject must be 6 characters or less. Please see the help file for valid codes."
+            "Subject must be 6 characters or less. Please see the help file for valid codes.",
           );
           window.open("/ncmhelp.html", "_blank");
           const subjectNcm = document.querySelector("#SUBJECT");
@@ -937,7 +938,7 @@ fetch(url, { method: "GET" })
         alert("Only TKENT can close the NCM");
         return;
       }
-      const closeUrl = `http://localhost:${port}/ncm/close/${iid}`;
+      const closeUrl = `${apiUrl}/ncm/close/${iid}`;
 
       let data = {
         NCM_ID: iid,

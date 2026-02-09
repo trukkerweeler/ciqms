@@ -1,12 +1,18 @@
-import { loadHeaderFooter, getUserValue, myport, getConfig } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  getUserValue,
+  myport,
+  getConfig,
+  getApiUrl,
+} from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
 // Configuration
-const port = myport() || 3003;
-const url = `http://localhost:${port}/supplierlist`;
-const qmsUrl = `http://localhost:${port}/suppliers/qms`;
+const apiUrl = await getApiUrl();
+const url = `${apiUrl}/supplierlist`;
+const qmsUrl = `${apiUrl}/suppliers/qms`;
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let config; // Will be set in initialization
