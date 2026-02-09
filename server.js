@@ -31,6 +31,12 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
+// Request logging middleware
+app.use((req, res, next) => {
+  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  next();
+});
+
 // Session configuration
 app.use(
   session({
@@ -94,7 +100,18 @@ app.get("/config", (req, res) => {
 
 // API configuration endpoint - returns the API URL for frontend to use
 app.get("/api/config", (req, res) => {
-  const apiUrl = process.env.API_URL || `http://localhost:${port}`;
+  console.log("[/api/config] Request received");
+  let apiUrl = process.env.API_URL;
+
+  // If API_URL not explicitly set, generate it based on environment
+  if (!apiUrl) {
+    if (isDevelopment) {
+      apiUrl = `http://localhost:${port}`;
+    } else {
+      apiUrl = `http://192.168.1.10:${port}`;
+    }
+  }
+
   console.log("[/api/config] Returning apiUrl:", apiUrl);
   res.json({ apiUrl });
 });
@@ -105,6 +122,7 @@ const path = require("path");
 const os = require("os");
 
 const routesDir = path.join(__dirname, "routes");
+console.log(`[Routes] Loading routes from: ${routesDir}`);
 
 fs.readdirSync(routesDir)
   .filter((file) => file.endsWith(".js") && !file.includes(".vbs"))
@@ -142,7 +160,7 @@ fs.readdirSync(routesDir)
       }
 
       app.use(routePath, routes);
-      // console.log(`Loaded route: ${routePath} from ${file}`);
+      console.log(`Loaded route: ${routePath} from ${file}`);
     } catch (error) {
       console.error(`Error loading route ${file}:`, error.message);
     }
@@ -152,10 +170,12 @@ fs.readdirSync(routesDir)
 try {
   const authRoutes = require("./routes/auth");
   app.use("/auth", authRoutes);
-  // console.log(`Loaded route: /auth from auth.js`);
+  console.log(`Loaded route: /auth from auth.js`);
 } catch (error) {
   console.error(`Error loading auth routes:`, error.message);
 }
+
+console.log(`[Routes] Route loading complete\n`);
 
 // Load cert3 routes (new certificate search with drill-down)
 // try {
@@ -209,6 +229,14 @@ const equipmentImagesPath = path.join(
   "_equipment_images",
 );
 app.use("/_equipment-images", express.static(equipmentImagesPath));
+
+// Catch-all 404 handler for debugging
+app.use((req, res) => {
+  console.log(`[404] ${req.method} ${req.path} - No matching route found`);
+  res
+    .status(404)
+    .json({ error: "Not found", path: req.path, method: req.method });
+});
 
 app.listen(port, "0.0.0.0", async () => {
   console.log(`\n========================================`);

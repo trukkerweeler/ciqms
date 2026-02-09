@@ -1,12 +1,20 @@
 // Authentication utilities for client-side
-import { myport } from "./utils.mjs";
+import { getApiUrl } from "./utils.mjs";
 
-const port = myport();
+let apiUrl = "";
+
+// Initialize API URL on first use
+async function ensureApiUrl() {
+  if (!apiUrl) {
+    apiUrl = await getApiUrl();
+  }
+}
 
 // Check if user is logged in
 export async function checkAuthStatus() {
+  await ensureApiUrl();
   try {
-    const response = await fetch(`http://localhost:${port}/auth/status`, {
+    const response = await fetch(`${apiUrl}/auth/status`, {
       credentials: "include",
     });
 
@@ -23,11 +31,12 @@ export async function checkAuthStatus() {
 
 // Redirect to login if not authenticated
 export async function requireAuth() {
+  await ensureApiUrl();
   const authStatus = await checkAuthStatus();
 
   if (!authStatus.loggedIn) {
     // Redirect to login page
-    window.location.href = `http://localhost:${port}/login.html`;
+    window.location.href = `${apiUrl}/login.html`;
     return false;
   }
 
@@ -36,15 +45,16 @@ export async function requireAuth() {
 
 // Logout function
 export async function logout() {
+  await ensureApiUrl();
   try {
-    const response = await fetch(`http://localhost:${port}/auth/logout`, {
+    const response = await fetch(`${apiUrl}/auth/logout`, {
       method: "POST",
       credentials: "include",
     });
 
     if (response.ok) {
       // Redirect to login page
-      window.location.href = `http://localhost:${port}/login.html`;
+      window.location.href = `${apiUrl}/login.html`;
     }
   } catch (err) {
     console.error("Logout failed:", err);

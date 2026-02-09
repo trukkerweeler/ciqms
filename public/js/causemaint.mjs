@@ -1,15 +1,16 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
 
-const port = myport();
-const baseUrl = `http://localhost:${port}/causemaint`;
+let baseUrl = "";
 let user;
 let editingCause = null;
 
 // Initialize when DOM is ready
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    const apiUrl = await getApiUrl();
+    baseUrl = `${apiUrl}/causemaint`;
     user = await getUserValue();
     await loadCauses();
     setupEventListeners();

@@ -1,15 +1,14 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
 loadHeaderFooter();
-
-const port = myport() || 3003;
-const url = `http://localhost:${port}/suppliers`;
 
 // get the current year
 const year = new Date().getFullYear();
 // document.querySelector('#year').textContent = year;
 
-function getRecords() {
+async function getRecords() {
   const main = document.querySelector("main");
+  const apiUrl = await getApiUrl();
+  const url = `${apiUrl}/suppliers`;
 
   fetch(url, { method: "GET" })
     .then((response) => response.json())

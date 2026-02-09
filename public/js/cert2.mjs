@@ -1,7 +1,12 @@
-import { renderTableFromArray, myport} from "./utils.mjs";
-const port = myport();
+import { renderTableFromArray, getApiUrl} from "./utils.mjs";
+let apiUrl = "";
 
-btnSearch.addEventListener("click", async function (event) {
+document.addEventListener("DOMContentLoaded", async () => {
+  apiUrl = await getApiUrl();
+});
+
+if (btnSearch) {
+  btnSearch.addEventListener("click", async function (event) {
   event.preventDefault();
 
   let woNumber = woNo.value.trim();
@@ -10,7 +15,7 @@ btnSearch.addEventListener("click", async function (event) {
     return;
   }
 
-  const url = `http://localhost:${port}/cert/${woNumber}`;
+  const url = `${apiUrl}/cert/${woNumber}`;
   try {
     const response = await fetch(url, {
       method: "GET",
@@ -65,7 +70,7 @@ btnSearch.addEventListener("click", async function (event) {
           ? item["SERIAL_NUMBER"].trim()
           : "";
         if (/^\d{6}-\d{3}$/.test(serialNumber)) {
-            return fetch(`http://localhost:${port}/cert/detail/${serialNumber}`)
+            return fetch(`${apiUrl}/cert/detail/${serialNumber}`)
             .then((res) => {
               if (!res.ok) throw new Error("Detail fetch failed");
               return res.json();
@@ -166,7 +171,7 @@ btnSearch.addEventListener("click", async function (event) {
     for (const serialNumber of serialNumbers) {
       try {
         const procResponse = await fetch(
-          `http://localhost:${port}/cert/processes/${encodeURIComponent(
+          `${apiUrl}/cert/processes/${encodeURIComponent(
             serialNumber
           )}`,
           {
@@ -254,7 +259,7 @@ btnSearch.addEventListener("click", async function (event) {
         const job = item[jobField] ? item[jobField].trim() : "";
         const suffix = item[suffixField] ? item[suffixField].trim() : "";
         const rtr_seq = item[seqField] ? item[seqField].trim() : "";
-        const receiverUrl = `http://localhost:${port}/receiver?job=${encodeURIComponent(
+        const receiverUrl = `${apiUrl}/receiver?job=${encodeURIComponent(
           job
         )}&suffix=${encodeURIComponent(suffix)}&rtr_seq=${encodeURIComponent(
           rtr_seq

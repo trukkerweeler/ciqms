@@ -1,4 +1,4 @@
-import { loadHeaderFooter, myport, getUserValue } from "/js/utils.mjs";
+import { loadHeaderFooter, getApiUrl, getUserValue } from "/js/utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
@@ -10,12 +10,13 @@ class InputCopyManager {
     this.copyBtn = null;
     this.closeBtn = null;
     this.resultsContainer = null;
-    this.port = myport() || 3003;
+    this.apiUrl = ""; // Will be initialized in init
     this.user = null;
   }
 
   async init() {
-    // Get current user
+    // Get current user and api URL
+    this.apiUrl = await getApiUrl();
     this.user = await getUserValue();
 
     // Initialize DOM elements
@@ -96,7 +97,7 @@ class InputCopyManager {
       this.setButtonLoading(true);
 
       // Get the next available ID
-      const inputUrl = `http://localhost:${this.port}/input`;
+      const inputUrl = `${this.apiUrl}/input`;
       const nextId = await this.getNextId(inputUrl);
 
       // Get the original input record
@@ -111,7 +112,7 @@ class InputCopyManager {
         originalInput[0],
         nextId,
         copyDate,
-        dueDays
+        dueDays,
       );
 
       // Submit the new record
@@ -119,7 +120,7 @@ class InputCopyManager {
 
       // Show success and close dialog
       this.showSuccessMessage(
-        `Input record copied successfully! New ID: ${nextId}`
+        `Input record copied successfully! New ID: ${nextId}`,
       );
       this.closeCopyDialog();
     } catch (error) {

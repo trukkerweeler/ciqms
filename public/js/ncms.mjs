@@ -1,7 +1,6 @@
 import {
   loadHeaderFooter,
   getUserValue,
-  myport,
   getConfig,
   getApiUrl,
 } from "./utils.mjs";
@@ -10,14 +9,16 @@ import users from "./users.mjs";
 // Initialize header/footer
 loadHeaderFooter();
 
-// Configuration
-const apiUrl = await getApiUrl();
-const url = `${apiUrl}/ncm`;
+// Configuration - will be initialized in DOMContentLoaded
+let apiUrl = "";
+let url = "";
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let config; // Will be set in initialization
 
 document.addEventListener("DOMContentLoaded", async function () {
+  apiUrl = await getApiUrl();
+  url = `${apiUrl}/ncm`;
   user = await getUserValue();
   config = await getConfig();
   setupEventListeners();
@@ -429,7 +430,7 @@ async function openTrendDialog(ncmId) {
 
   try {
     // Fetch trend data
-    const trendUrl = `http://localhost:${port}/trend/${ncmId}`;
+    const trendUrl = `${apiUrl}/trend/${ncmId}`;
     const response = await fetch(trendUrl, { method: "GET" });
     const records = await response.json();
 

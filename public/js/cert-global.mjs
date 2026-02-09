@@ -1,6 +1,12 @@
-import { myport } from "./utils.mjs";
+import { getApiUrl } from "./utils.mjs";
 
-const port = myport() || 3003;
+let apiUrl = "";
+
+document.addEventListener("DOMContentLoaded", async () => {
+  apiUrl = await getApiUrl();
+});
+
+const port = null; // kept for reference, not used
 
 // DOM elements
 const btnSearch = document.getElementById("btnSearch");
@@ -40,9 +46,7 @@ async function handleSearch() {
   try {
     // Fetch main certification data
     console.log(`Fetching: /cert-global/${trimmedWo}`);
-    const certResponse = await fetch(
-      `http://localhost:${port}/cert-global/${trimmedWo}`,
-    );
+    const certResponse = await fetch(`${apiUrl}/cert-global/${trimmedWo}`);
     if (!certResponse.ok)
       throw new Error(
         `HTTP ${certResponse.status}: Failed to fetch certification data`,
@@ -57,7 +61,7 @@ async function handleSearch() {
       `Fetching item history: /cert-global/item-history/${trimmedWo}`,
     );
     const historyResponse = await fetch(
-      `http://localhost:${port}/cert-global/item-history/${trimmedWo}`,
+      `${apiUrl}/cert-global/item-history/${trimmedWo}`,
     );
     if (!historyResponse.ok)
       throw new Error(
@@ -84,7 +88,7 @@ async function handleSearch() {
     for (const serial of serials) {
       const [job, suffix] = serial.split("-");
       if (!job || !suffix) continue;
-      const recUrl = `http://localhost:${port}/cert-global/recursive-item-history/${job}/${suffix}`;
+      const recUrl = `${apiUrl}/cert-global/recursive-item-history/${job}/${suffix}`;
       console.log(`Fetching recursive item history for child: ${serial}`);
       const recResp = await fetch(recUrl);
       if (recResp.ok) {

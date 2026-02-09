@@ -1,6 +1,6 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
-loadHeaderFooter();
-const port = myport();
+import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
+
+let url = "";
 const skippers = [
   "ASST_AUDITOR1",
   "ASST_AUDITOR2",
@@ -14,97 +14,102 @@ const skippers = [
   "CREATED_DATE",
 ];
 
-const url = `http://localhost:${port}/schedule`;
+document.addEventListener("DOMContentLoaded", async () => {
+  const apiUrl = await getApiUrl();
+  url = `${apiUrl}/schedule`;
 
-function getRecords(year) {
-  const main = document.querySelector("main");
+  loadHeaderFooter();
 
-  // Clear previous content
-  main.innerHTML = "";
+  function getRecords(year) {
+    const main = document.querySelector("main");
 
-  fetch(`${url}?year=${year}`, { method: "GET" })
-    .then((response) => response.json())
-    .then((records) => {
-      // console.log(records);
+    // Clear previous content
+    main.innerHTML = "";
 
-      // Count completed audits
-      const totalAudits = records.length;
-      const completedAudits = records.filter(
-        (r) => r.COMPLETION_DATE && r.COMPLETION_DATE.trim() !== ""
-      ).length;
-      const incompleteAudits = totalAudits - completedAudits;
+    fetch(`${url}?year=${year}`, { method: "GET" })
+      .then((response) => response.json())
+      .then((records) => {
+        // console.log(records);
 
-      // Update summary
-      const summarySpan = document.getElementById("scheduleSummary");
-      if (summarySpan) {
-        summarySpan.textContent = `Total: ${totalAudits} | Completed: ${completedAudits} | In Progress: ${incompleteAudits}`;
-      }
+        // Count completed audits
+        const totalAudits = records.length;
+        const completedAudits = records.filter(
+          (r) => r.COMPLETION_DATE && r.COMPLETION_DATE.trim() !== "",
+        ).length;
+        const incompleteAudits = totalAudits - completedAudits;
 
-      const tableContainer = document.createElement("div");
-      tableContainer.classList.add("table-container");
-
-      const table = document.createElement("table");
-      table.classList.add("schedule-table");
-      const thead = document.createElement("thead");
-      const tbody = document.createElement("tbody");
-      const header = document.createElement("tr");
-      const td = document.createElement("td");
-
-      for (let key in records[0]) {
-        if (!skippers.includes(key)) {
-          const th = document.createElement("th");
-          th.textContent = key;
-          header.appendChild(th);
+        // Update summary
+        const summarySpan = document.getElementById("scheduleSummary");
+        if (summarySpan) {
+          summarySpan.textContent = `Total: ${totalAudits} | Completed: ${completedAudits} | In Progress: ${incompleteAudits}`;
         }
-      }
-      thead.appendChild(header);
 
-      for (let record of records) {
-        const tr = document.createElement("tr");
-        // Shade row if COMPLETION_DATE exists and is not null/empty
-        if (record.COMPLETION_DATE && record.COMPLETION_DATE.trim() !== "") {
-          tr.style.backgroundColor = "#e0e0e0";
-          tr.style.color = "#888";
-        }
-        for (let key in record) {
-          const td = document.createElement("td");
+        const tableContainer = document.createElement("div");
+        tableContainer.classList.add("table-container");
+
+        const table = document.createElement("table");
+        table.classList.add("schedule-table");
+        const thead = document.createElement("thead");
+        const tbody = document.createElement("tbody");
+        const header = document.createElement("tr");
+        const td = document.createElement("td");
+
+        for (let key in records[0]) {
           if (!skippers.includes(key)) {
-            if (key !== null) {
-              if (
-                key.substring(key.length - 4) === "DATE" &&
-                key.length > 0 &&
-                record[key] !== null
-              ) {
-                td.textContent = record[key].slice(0, 10);
-              } else {
-                if (key == "AUDIT_MANAGER_ID") {
-                  td.innerHTML = `<a href="http://localhost:${port}/manager.html?id=${record[key]}">${record[key]}</a>`;
-                } else {
-                  td.textContent = record[key];
-                }
-              }
-            } else {
-              td.textContent = record[key];
-            }
-            tr.appendChild(td);
+            const th = document.createElement("th");
+            th.textContent = key;
+            header.appendChild(th);
           }
         }
-        tbody.appendChild(tr);
-      }
+        thead.appendChild(header);
 
-      table.appendChild(thead);
-      table.appendChild(tbody);
-      tableContainer.appendChild(table);
-      main.appendChild(tableContainer);
+        for (let record of records) {
+          const tr = document.createElement("tr");
+          // Shade row if COMPLETION_DATE exists and is not null/empty
+          if (record.COMPLETION_DATE && record.COMPLETION_DATE.trim() !== "") {
+            tr.style.backgroundColor = "#e0e0e0";
+            tr.style.color = "#888";
+          }
+          for (let key in record) {
+            const td = document.createElement("td");
+            if (!skippers.includes(key)) {
+              if (key !== null) {
+                if (
+                  key.substring(key.length - 4) === "DATE" &&
+                  key.length > 0 &&
+                  record[key] !== null
+                ) {
+                  td.textContent = record[key].slice(0, 10);
+                } else {
+                  if (key == "AUDIT_MANAGER_ID") {
+                    td.innerHTML = `<a href="${apiUrl}/manager.html?id=${record[key]}">${record[key]}</a>`;
+                  } else {
+                    td.textContent = record[key];
+                  }
+                }
+              } else {
+                td.textContent = record[key];
+              }
+              tr.appendChild(td);
+            }
+          }
+          tbody.appendChild(tr);
+        }
+
+        table.appendChild(thead);
+        table.appendChild(tbody);
+        tableContainer.appendChild(table);
+        main.appendChild(tableContainer);
+      });
+  }
+
+  // Initialize with current year (2025 since we're in 2026 and there's no 2026 data)
+  const yearPicker = document.getElementById("yearPicker");
+  if (yearPicker) {
+    yearPicker.value = new Date().getFullYear() - 1; // Default to last year
+    yearPicker.addEventListener("change", (e) => {
+      getRecords(e.target.value);
     });
-}
-
-// Initialize with current year (2025 since we're in 2026 and there's no 2026 data)
-const yearPicker = document.getElementById("yearPicker");
-if (yearPicker) {
-  yearPicker.value = new Date().getFullYear() - 1; // Default to last year
-  yearPicker.addEventListener("change", (e) => {
-    getRecords(e.target.value);
-  });
-}
-getRecords(yearPicker ? yearPicker.value : new Date().getFullYear() - 1);
+  }
+  getRecords(yearPicker ? yearPicker.value : new Date().getFullYear() - 1);
+});

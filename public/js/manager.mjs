@@ -2,7 +2,7 @@ import {
   loadHeaderFooter,
   getUserValue,
   getDateTime,
-  myport,
+  getApiUrl,
 } from "./utils.mjs";
 
 // ===== UTILITY FUNCTIONS =====
@@ -78,13 +78,13 @@ async function initManager() {
     loadHeaderFooter();
 
     const user = await getUserValue();
-    const port = myport();
+    const apiUrl = await getApiUrl();
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");
 
     const apiUrls = {
-      manager: `http://localhost:${port}/manager/`,
-      checklist: `http://localhost:${port}/checklist/`,
+      manager: `${apiUrl}/manager/`,
+      checklist: `${apiUrl}/checklist/`,
     };
 
     const main = document.querySelector("main");
@@ -94,7 +94,7 @@ async function initManager() {
     const record = await fetchJson(`${apiUrls.manager}${id}`);
 
     // Render audit details and checklist
-    await renderAuditDetails(record[0], main, id, port, apiUrls, urlParams);
+    await renderAuditDetails(record[0], main, id, apiUrl, apiUrls, urlParams);
   } catch (error) {
     console.error("Error initializing manager:", error);
     alert("Error loading audit data. Please refresh the page.");
@@ -108,7 +108,7 @@ async function renderAuditDetails(
   auditData,
   main,
   id,
-  port,
+  apiUrl,
   apiUrls,
   urlParams,
 ) {
@@ -534,7 +534,7 @@ function setupCloseAuditListener(btnClose, port, auditData, isAuditClosed) {
 
     try {
       const completionDate = getDateTime();
-      const closeUrl = `http://localhost:${port}/manager/completed`;
+      const closeUrl = `${apiUrl}/manager/completed`;
       const closeRecord = {
         AUDIT_MANAGER_ID: auditData.AUDIT_MANAGER_ID,
         COMPLETION_DATE: completionDate,

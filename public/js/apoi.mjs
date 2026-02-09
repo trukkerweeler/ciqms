@@ -1,7 +1,7 @@
-import { myport } from "./utils.mjs";
+import { getApiUrl } from "./utils.mjs";
 
-const port  = myport() || 3003; // Get the port from utils.mjs
-const url = `http://localhost:${port}/apoi`;
+const port = null; // no longer used
+let url = "";
 
 let allData = [];
 
@@ -28,17 +28,17 @@ async function fetchData() {
 
 // Render table based on filtered data
 function renderTable(data) {
-  let table = document.getElementById('apoi-table');
+  let table = document.getElementById("apoi-table");
   if (table) table.remove();
 
   if (!data.length) return;
 
-  table = document.createElement('table');
-  table.id = 'apoi-table';
-  const thead = document.createElement('thead');
-  const headerRow = document.createElement('tr');
-  Object.keys(data[0]).forEach(key => {
-    const th = document.createElement('th');
+  table = document.createElement("table");
+  table.id = "apoi-table";
+  const thead = document.createElement("thead");
+  const headerRow = document.createElement("tr");
+  Object.keys(data[0]).forEach((key) => {
+    const th = document.createElement("th");
     th.className = "smaller-font";
     th.textContent = key;
     headerRow.appendChild(th);
@@ -46,21 +46,25 @@ function renderTable(data) {
   thead.appendChild(headerRow);
   table.appendChild(thead);
 
-  const tbody = document.createElement('tbody');
-  data.forEach(record => {
-    const row = document.createElement('tr');
+  const tbody = document.createElement("tbody");
+  data.forEach((record) => {
+    const row = document.createElement("tr");
     Object.entries(record).forEach(([key, value]) => {
-      const td = document.createElement('td');
+      const td = document.createElement("td");
       td.className = "smaller-font";
-      if (key.startsWith("DATE_") && typeof value === "string" && /^\d{6}$/.test(value)) {
-      // Convert mmddyy to YYYY-mm-DD
-      const mm = value.slice(0, 2);
-      const dd = value.slice(2, 4);
-      const yy = value.slice(4, 6);
-      const year = Number(yy) < 50 ? "20" + yy : "19" + yy; // Y2K-safe
-      td.textContent = `${year}-${mm}-${dd}`;
+      if (
+        key.startsWith("DATE_") &&
+        typeof value === "string" &&
+        /^\d{6}$/.test(value)
+      ) {
+        // Convert mmddyy to YYYY-mm-DD
+        const mm = value.slice(0, 2);
+        const dd = value.slice(2, 4);
+        const yy = value.slice(4, 6);
+        const year = Number(yy) < 50 ? "20" + yy : "19" + yy; // Y2K-safe
+        td.textContent = `${year}-${mm}-${dd}`;
       } else {
-      td.textContent = value;
+        td.textContent = value;
       }
       row.appendChild(td);
     });
@@ -68,17 +72,22 @@ function renderTable(data) {
   });
   table.appendChild(tbody);
 
-  document.querySelector('main').appendChild(table);
+  document.querySelector("main").appendChild(table);
 }
 
 // Filter and update table as user types
-document.addEventListener('DOMContentLoaded', () => {
+document.addEventListener("DOMContentLoaded", async () => {
+  // Initialize URL
+  const apiUrl = await getApiUrl();
+  url = `${apiUrl}/apoi`;
   const vendorNoInput = document.getElementById("vendorNo");
   if (vendorNoInput) {
-    vendorNoInput.addEventListener('input', () => {
+    vendorNoInput.addEventListener("input", () => {
       const vendorNo = vendorNoInput.value.trim().toLowerCase();
       const filtered = vendorNo
-        ? allData.filter(record => String(record.VENDOR).toLowerCase().startsWith(vendorNo))
+        ? allData.filter((record) =>
+            String(record.VENDOR).toLowerCase().startsWith(vendorNo),
+          )
         : allData;
       renderTable(filtered);
     });

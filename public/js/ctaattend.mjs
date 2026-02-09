@@ -27,18 +27,21 @@ function filterTrainingData(employeeId) {
     displayTrainingTable(filteredData);
   }
 }
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getUserValue, getApiUrl } from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
 // Configuration
-const port = myport() || 3003;
-const url = `http://localhost:${port}/attendance`;
+let url = ""; // Will be set dynamically
 let sortOrder = "asc";
 let allTrainingData = []; // Store all data for filtering
 
 document.addEventListener("DOMContentLoaded", async function () {
+  // Get the dynamic API URL before loading data
+  const apiUrl = await getApiUrl();
+  url = `${apiUrl}/attendance`;
+
   setupEventListeners();
   await loadTrainingData();
 });

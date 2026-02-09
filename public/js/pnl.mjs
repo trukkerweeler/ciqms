@@ -1,10 +1,10 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
-const port = myport();
 
 // Handles P&L summary fetch and UI rendering
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  const apiUrl = await getApiUrl();
   const yearPicker = document.getElementById("yearPicker");
   const pnlTable = document.getElementById("pnlTable");
   const fetchBtn = document.getElementById("fetchPnlBtn");
@@ -84,9 +84,9 @@ window.addEventListener("DOMContentLoaded", () => {
           <td style="font-weight:bold;color:${
             profit >= 0 ? "green" : "red"
           }">${profit.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-      })}</td>
+            style: "currency",
+            currency: "USD",
+          })}</td>
         </tr>`;
     }
     // Add summary row for total Revenue, COGS, SG&A, Taxes, and Profit for the year
@@ -114,9 +114,9 @@ window.addEventListener("DOMContentLoaded", () => {
       <td style="color:${
         totalProfit >= 0 ? "green" : "red"
       }">${totalProfit.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    })}</td>
+        style: "currency",
+        currency: "USD",
+      })}</td>
     </tr>`;
     pnlTable.innerHTML = html;
   }
@@ -198,10 +198,10 @@ window.addEventListener("DOMContentLoaded", () => {
       T_DATE: document.getElementById("t_date").value,
       PERIOD: document.getElementById("period").value,
       PERIOD_BEG_DATE: formatDateToYYYYMMDD(
-        document.getElementById("period_beg_date").value
+        document.getElementById("period_beg_date").value,
       ),
       PERIOD_END_DATE: formatDateToYYYYMMDD(
-        document.getElementById("period_end_date").value
+        document.getElementById("period_end_date").value,
       ),
       REFERENCE: document.getElementById("reference").value,
       AMOUNT: parseFloat(document.getElementById("amount").value),
@@ -215,7 +215,7 @@ window.addEventListener("DOMContentLoaded", () => {
     };
 
     try {
-      const response = await fetch(`http://localhost:${port}/gldetail`, {
+      const response = await fetch(`${apiUrl}/gldetail`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

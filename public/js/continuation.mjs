@@ -1,12 +1,14 @@
-import { myport } from "./utils.mjs";
+import { getApiUrl } from "./utils.mjs";
 
-const port  = myport() || 3003; // Get the port from utils.mjs
-const url = `http://localhost:${port}/continuation`;
-
+let url = "";
 let allData = [];
 
-// Fetch data once
-async function fetchData() {
+// Initialize on page load
+document.addEventListener("DOMContentLoaded", async () => {
+  url = await getApiUrl();
+  url += "/continuation";
+  await fetchData();
+});
   try {
     const response = await fetch(url, {
       method: "GET",

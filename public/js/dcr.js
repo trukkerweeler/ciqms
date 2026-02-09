@@ -1,13 +1,12 @@
 import {
   loadHeaderFooter,
   getUserValue,
-  myport,
+  getApiUrl,
   getDateTime,
 } from "./utils.mjs";
 loadHeaderFooter();
 const user = await getUserValue();
-const port = myport() || 3003;
-const test = true;
+const apiUrl = await getApiUrl();
 
 // Get the project id from the url params
 let queryString = window.location.search;
@@ -20,7 +19,7 @@ let drid = urlParams.get("id");
 //     console.log(drid);
 // }
 
-const url = `http://localhost:${port}/requests/${drid}`;
+const url = `${apiUrl}/requests/${drid}`;
 
 const main = document.querySelector("main");
 // Delete the child nodes of the main element
@@ -225,7 +224,7 @@ fetch(url, { method: "GET" })
 
         // Listen for the SaveClose button click
         const saveClose = document.querySelector("#btnSaveClose");
-        const closeUrl = `http://localhost:${port}/requests/close/${drid}`;
+        const closeUrl = `${apiUrl}/requests/close/${drid}`;
         saveClose.addEventListener("click", async (event) => {
           event.preventDefault();
           //   match case decision select and change to Y-N-P
@@ -307,7 +306,7 @@ fetch(url, { method: "GET" })
 
     // Listen for the saveDetail button click
     const saveDetail = document.querySelector("#btnSaveEditReq");
-    const detailsUrl = `http://localhost:${port}/sysdocs/${drid}`;
+    const detailsUrl = `${apiUrl}/sysdocs/${drid}`;
     saveDetail.addEventListener("click", async (event) => {
       // prevent the default action
       event.preventDefault();
@@ -375,7 +374,7 @@ fetch(url, { method: "GET" })
 
       // Listen for the saveRequest button click
       const saveRequest = document.querySelector("#btnSaveRequest");
-      const requestUrl = `http://localhost:${port}/requests/request/${drid}`;
+      const requestUrl = `${apiUrl}/requests/request/${drid}`;
       saveRequest.addEventListener("click", async (event) => {
         // prevent the default action
         event.preventDefault();
@@ -446,7 +445,7 @@ fetch(url, { method: "GET" })
 
       // Listen for the saveResponse button click
       const saveResponse = document.querySelector("#btnSaveResponse");
-      const responseUrl = `http://localhost:${port}/requests/response/${drid}`;
+      const responseUrl = `${apiUrl}/requests/response/${drid}`;
 
       saveResponse.addEventListener("click", async (event) => {
         // prevent the default action

@@ -1,6 +1,5 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
 loadHeaderFooter();
-const port = myport();
 document
   .querySelector("#subjectFilter")
   .addEventListener("keyup", function (event) {
@@ -20,10 +19,10 @@ document
     });
   });
 
-const url = `http://localhost:${port}/input/closed`;
-
-function getRecords() {
+async function getRecords() {
   const main = document.querySelector("main");
+  const apiUrl = await getApiUrl();
+  const url = `${apiUrl}/input/closed`;
 
   fetch(url, { method: "GET" })
     .then((response) => response.json())
@@ -65,7 +64,7 @@ function getRecords() {
               td.textContent = record[key].slice(0, 10);
             } else {
               if (key == "INPUT_ID") {
-                td.innerHTML = `<a href="http://localhost:${port}/input.html?id=${record[key]}">${record[key]}</a>`;
+                td.innerHTML = `<a href="${apiUrl}/input.html?id=${record[key]}">${record[key]}</a>`;
               } else {
                 td.textContent = record[key];
               }

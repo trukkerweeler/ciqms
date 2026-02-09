@@ -1,11 +1,11 @@
-import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl, getUserValue } from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
-// Configuration
-const port = myport() || 3004;
-const url = `http://localhost:${port}/corrective`;
+// Configuration - will be set in DOMContentLoaded
+let url = "";
+let apiUrl = ""; // Module-level variable for API URL
 let sortOrder = "asc";
 
 // Global variables - will be initialized on DOMContentLoaded
@@ -13,6 +13,10 @@ let dialog, addButton, cancelButton, form, user;
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
+    // Get the dynamic API URL
+    apiUrl = await getApiUrl();
+    url = `${apiUrl}/corrective`;
+
     // Initialize DOM elements
     dialog = document.querySelector("dialog[create-corrective-dialog]");
     addButton = document.getElementById("btnAddCorrective");
@@ -291,7 +295,7 @@ function createTableBody(data, headers) {
       if (header.toLowerCase().includes("date")) {
         td.textContent = formatDate(cellValue);
       } else if (header === "CORRECTIVE_ID") {
-        td.innerHTML = `<a href="http://localhost:${port}/corrective.html?id=${cellValue}" target="_blank">${cellValue}</a>`;
+        td.innerHTML = `<a href="${apiUrl}/corrective.html?id=${cellValue}" target="_blank">${cellValue}</a>`;
       } else {
         td.textContent = cellValue || "";
       }

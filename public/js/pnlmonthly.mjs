@@ -1,12 +1,12 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
-const port = myport();
 
 // Test mode flag for logging
 const TEST_MODE = false;
 
 let trendChartInstance = null; // Global chart instance
+let apiUrl = ""; // Will be initialized in DOMContentLoaded
 
 // Month labels for chart
 const monthLabels = [
@@ -25,7 +25,8 @@ const monthLabels = [
 ];
 
 // Handles P&L account details fetch and UI rendering
-window.addEventListener("DOMContentLoaded", () => {
+window.addEventListener("DOMContentLoaded", async () => {
+  apiUrl = await getApiUrl();
   const yearPicker = document.getElementById("yearPicker");
   const pnlTable = document.getElementById("pnlTable");
   const addManualGLBtn = document.getElementById("addManualGLBtn");
@@ -234,9 +235,9 @@ window.addEventListener("DOMContentLoaded", () => {
       <td style="color:${
         profit >= 0 ? "green" : "red"
       }">${profit.toLocaleString("en-US", {
-      style: "currency",
-      currency: "USD",
-    })}</td>
+        style: "currency",
+        currency: "USD",
+      })}</td>
       <td></td>
     </tr>`;
 
@@ -247,9 +248,9 @@ window.addEventListener("DOMContentLoaded", () => {
         <td style="color:${
           adjustedProfit >= 0 ? "green" : "red"
         }">${adjustedProfit.toLocaleString("en-US", {
-        style: "currency",
-        currency: "USD",
-      })}</td>
+          style: "currency",
+          currency: "USD",
+        })}</td>
         <td></td>
       </tr>`;
     }
@@ -302,7 +303,7 @@ window.addEventListener("DOMContentLoaded", () => {
         {
           method: "GET",
           headers: { "Content-Type": "application/json" },
-        }
+        },
       );
 
       let corrections = [];
@@ -347,7 +348,7 @@ window.addEventListener("DOMContentLoaded", () => {
   function renderDrillDownTable(
     transactions,
     corrections = [],
-    glAccount = null
+    glAccount = null,
   ) {
     const drillDownTable = document.getElementById("drillDownTable");
     const drillDownDialog = document.getElementById("drillDownDialog");
@@ -429,10 +430,10 @@ window.addEventListener("DOMContentLoaded", () => {
           <button class="btn-small" style="padding: 2px 6px; font-size: 0.85em" onclick="correctGLTransaction('${
             txn.GL_ACCOUNT
           }', '${txn.POST_DATE}', '${txn.REFERENCE || ""}', '${
-        txn.DESCR || ""
-      }', ${txn.AMOUNT}, '${txn.VENDOR || ""}', '${txn.BATCH_NUM || ""}', '${
-        txn.BATCH_LINE || ""
-      }')">Correct</button>
+            txn.DESCR || ""
+          }', ${txn.AMOUNT}, '${txn.VENDOR || ""}', '${txn.BATCH_NUM || ""}', '${
+            txn.BATCH_LINE || ""
+          }')">Correct</button>
         </td>
       </tr>`;
     }
@@ -799,7 +800,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
     try {
       // Submit all entries
-      const response = await fetch(`http://localhost:${port}/gldetail/batch`, {
+      const response = await fetch(`${apiUrl}/gldetail/batch`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",
@@ -811,7 +812,7 @@ window.addEventListener("DOMContentLoaded", () => {
         alert(
           `${entries.length} GL Entr${
             entries.length === 1 ? "y" : "ies"
-          } saved successfully!`
+          } saved successfully!`,
         );
         manualGLDialog.close();
         // Refresh the P&L table
@@ -843,7 +844,7 @@ window.addEventListener("DOMContentLoaded", () => {
   window.editAdjustment = async function (batchNum, batchLine) {
     try {
       const response = await fetch(
-        `http://localhost:${port}/gldetail/${batchNum}/${batchLine}`
+        `${apiUrl}/gldetail/${batchNum}/${batchLine}`,
       );
       if (!response.ok) {
         alert("Failed to load adjustment details");
@@ -901,7 +902,7 @@ window.addEventListener("DOMContentLoaded", () => {
     e.preventDefault();
 
     const correctPostDate = document.getElementById(
-      "correction_post_date"
+      "correction_post_date",
     ).value;
 
     if (!correctPostDate) {
@@ -940,19 +941,19 @@ window.addEventListener("DOMContentLoaded", () => {
         BATCH_NUM: "CORR", // Use CORR batch for corrections
         T_DATE: correctionDialog.dataset.postDate,
         PERIOD: String(
-          new Date(correctionDialog.dataset.postDate).getMonth() + 1
+          new Date(correctionDialog.dataset.postDate).getMonth() + 1,
         ).padStart(2, "0"),
         PERIOD_BEG_DATE: new Date(
           new Date(correctionDialog.dataset.postDate).getFullYear(),
           new Date(correctionDialog.dataset.postDate).getMonth(),
-          1
+          1,
         )
           .toISOString()
           .split("T")[0],
         PERIOD_END_DATE: new Date(
           new Date(correctionDialog.dataset.postDate).getFullYear(),
           new Date(correctionDialog.dataset.postDate).getMonth() + 1,
-          0
+          0,
         )
           .toISOString()
           .split("T")[0],
@@ -1012,21 +1013,18 @@ window.addEventListener("DOMContentLoaded", () => {
       if (TEST_MODE) {
         console.log(
           "About to send correction request with GL_ACCOUNT:",
-          requestBody.GL_ACCOUNT
+          requestBody.GL_ACCOUNT,
         );
         console.log("Full request body:", requestBody);
       }
 
-      const response = await fetch(
-        `http://localhost:${port}/gldetail/createCorrection`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(requestBody),
-        }
-      );
+      const response = await fetch(`${apiUrl}/gldetail/createCorrection`, {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(requestBody),
+      });
       if (TEST_MODE) {
         console.log("Correction request GL_ACCOUNT:", entry.GL_ACCOUNT);
         console.log("Full correction entry:", entry);
@@ -1037,7 +1035,7 @@ window.addEventListener("DOMContentLoaded", () => {
       if (response.ok) {
         const result = await response.json();
         console.log(
-          `Correction entries created - Reversal: BL ${result.reversalBatchLine}, Correction: BL ${result.correctionBatchLine}`
+          `Correction entries created - Reversal: BL ${result.reversalBatchLine}, Correction: BL ${result.correctionBatchLine}`,
         );
         correctionDialog.close();
         manualGLDialog.close();
@@ -1067,10 +1065,10 @@ window.addEventListener("DOMContentLoaded", () => {
 
     try {
       const response = await fetch(
-        `http://localhost:${port}/pnlmonthly/adjustments/${batchNum}/${batchLine}`,
+        `${apiUrl}/pnlmonthly/adjustments/${batchNum}/${batchLine}`,
         {
           method: "DELETE",
-        }
+        },
       );
 
       if (response.ok) {
@@ -1095,7 +1093,7 @@ window.addEventListener("DOMContentLoaded", () => {
     amount,
     vendor,
     batchNum,
-    batchLine
+    batchLine,
   ) {
     // Debug: Log incoming parameters
     if (TEST_MODE) {
@@ -1137,9 +1135,8 @@ window.addEventListener("DOMContentLoaded", () => {
 
     // Set the title to show what transaction is being corrected
     const txnDate = new Date(postDate).toLocaleDateString();
-    document.getElementById(
-      "correctionTitle"
-    ).textContent = `Create Correction for GL ${glAccount} (${txnDate})`;
+    document.getElementById("correctionTitle").textContent =
+      `Create Correction for GL ${glAccount} (${txnDate})`;
 
     // Clear the correction date field
     document.getElementById("correction_post_date").value = "";
@@ -1179,13 +1176,13 @@ window.addEventListener("DOMContentLoaded", () => {
             method: "POST",
             headers: { "Content-Type": "application/json" },
             body: JSON.stringify({ year }),
-          }
+          },
         );
 
         if (TEST_MODE) {
           console.log(
             "Adjustments response status:",
-            adjustmentsResponse.status
+            adjustmentsResponse.status,
           );
         }
 
@@ -1203,7 +1200,7 @@ window.addEventListener("DOMContentLoaded", () => {
             if (TEST_MODE) {
               console.log(`Month ${month} adjustments object:`, adjustments);
               console.log(
-                `Month ${month} before: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}`
+                `Month ${month} before: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}`,
               );
             }
 
@@ -1253,7 +1250,7 @@ window.addEventListener("DOMContentLoaded", () => {
 
             if (TEST_MODE) {
               console.log(
-                `Month ${month} after: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}, ni=${monthData.netIncome}`
+                `Month ${month} after: rev=${monthData.revenue}, cogs=${monthData.cogs}, sga=${monthData.sga}, ni=${monthData.netIncome}`,
               );
             }
           });
@@ -1264,7 +1261,7 @@ window.addEventListener("DOMContentLoaded", () => {
         } else {
           console.error(
             "Failed to fetch adjustments, status:",
-            adjustmentsResponse.status
+            adjustmentsResponse.status,
           );
         }
       }
@@ -1286,7 +1283,7 @@ window.addEventListener("DOMContentLoaded", () => {
     const sgaData = data.map((m) => m.sga);
     const netIncomeData = data.map((m) => m.netIncome);
     const grossMarginPercentData = data.map((m) =>
-      parseFloat(m.grossMarginPercent)
+      parseFloat(m.grossMarginPercent),
     );
 
     if (TEST_MODE) {
@@ -1295,7 +1292,7 @@ window.addEventListener("DOMContentLoaded", () => {
         "April (index 3) revenue:",
         revenueData[3],
         "COGS:",
-        cogsData[3]
+        cogsData[3],
       );
     }
 

@@ -1,18 +1,24 @@
-import { loadHeaderFooter, getUserValue, myport, getConfig } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  getUserValue,
+  getApiUrl,
+  getConfig,
+} from "./utils.mjs";
 import users from "./users.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
 
-// Configuration
-const port = myport() || 3003;
-const url = `http://localhost:${port}/input`;
+// Configuration - will be set in DOM Loaded
+let url = "";
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let userEmail; // Will be set in initialization
 let config; // Will be set in initialization
 
 document.addEventListener("DOMContentLoaded", async function () {
+  const apiUrl = await getApiUrl();
+  url = `${apiUrl}/input`;
   user = await getUserValue();
   userEmail = users[user];
   config = await getConfig();

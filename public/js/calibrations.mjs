@@ -1,56 +1,63 @@
-import { loadHeaderFooter, myport, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl, getUserValue } from "./utils.mjs";
 
 loadHeaderFooter();
-const port = myport();
-const user = await getUserValue();
 
-const calibrationUrl = `http://localhost:${port}/calibrate`;
-const idsUrl = `http://localhost:${port}/ids`;
-const deviceUrl = `http://localhost:${port}/device/nextdue`;
-let mainElement = document.getElementById("main-content");
-// read the id from the URL
-const urlParams = new URLSearchParams(window.location.search);
-const id = urlParams.get("id");
+let calibrationUrl = "";
+let idsUrl = "";
+let deviceUrl = "";
 
-const createCalHeader = document.querySelector("#create-cal-header");
-if (createCalHeader) {
-  if (id) {
-    createCalHeader.innerHTML = "Create Calibration for Device: " + id;
+// Wait for DOM and fetch API URL before anything else
+document.addEventListener("DOMContentLoaded", async () => {
+  const apiUrl = await getApiUrl();
+  calibrationUrl = `${apiUrl}/calibrate`;
+  idsUrl = `${apiUrl}/ids`;
+  deviceUrl = `${apiUrl}/device/nextdue`;
+  
+  const user = await getUserValue();
+  const mainElement = document.getElementById("main-content");
+  // read the id from the URL
+  const urlParams = new URLSearchParams(window.location.search);
+  const id = urlParams.get("id");
+
+  const createCalHeader = document.querySelector("#create-cal-header");
+  if (createCalHeader) {
+    if (id) {
+      createCalHeader.innerHTML = "Create Calibration for Device: " + id;
+    } else {
+      createCalHeader.innerHTML = "Create Calibration";
+    }
   } else {
-    createCalHeader.innerHTML = "Create Calibration";
+    console.error("Header element with id 'create-cal-header' not found.");
   }
-} else {
-  console.error("Header element with id 'create-cal-header' not found.");
-}
 
-// Make the page header div
-function makePageHeaderDiv() {
-  const divTitle = document.createElement("div");
-  divTitle.classList.add("page-header-div");
-  const pageTitle = document.createElement("h1");
-  pageTitle.classList.add("page-header");
-  if (id) {
-    pageTitle.innerHTML = "Calibrations List: " + id;
-  } else {
-    pageTitle.innerHTML = "All Calibrations";
-  }
-  divTitle.appendChild(pageTitle);
-  // Add the button to the header div
-  let AddCalBtn = document.createElement("button");
-  AddCalBtn.type = "submit";
-  AddCalBtn.classList.add("btn", "btn-plus");
-  AddCalBtn.id = "btnAddCal";
-  AddCalBtn.textContent = "+ Add Cal";
+  // Make the page header div
+  function makePageHeaderDiv() {
+    const divTitle = document.createElement("div");
+    divTitle.classList.add("page-header-div");
+    const pageTitle = document.createElement("h1");
+    pageTitle.classList.add("page-header");
+    if (id) {
+      pageTitle.innerHTML = "Calibrations List: " + id;
+    } else {
+      pageTitle.innerHTML = "All Calibrations";
+    }
+    divTitle.appendChild(pageTitle);
+    // Add the button to the header div
+    let AddCalBtn = document.createElement("button");
+    AddCalBtn.type = "submit";
+    AddCalBtn.classList.add("btn", "btn-plus");
+    AddCalBtn.id = "btnAddCal";
+    AddCalBtn.textContent = "+ Add Cal";
 
-  AddCalBtn.setAttribute("title", "Click to add a new calibration");
+    AddCalBtn.setAttribute("title", "Click to add a new calibration");
 
-  // Add event listener to the Add Cal button immediately when creating it
-  AddCalBtn.addEventListener("click", (e) => {
-    e.preventDefault();
-    const createCalibrationDialog = document.querySelector(
-      "[create-calibration-dialog]"
-    );
-    const deviceIdField = document.getElementById("device-id");
+    // Add event listener to the Add Cal button immediately when creating it
+    AddCalBtn.addEventListener("click", (e) => {
+      e.preventDefault();
+      const createCalibrationDialog = document.querySelector(
+        "[create-calibration-dialog]"
+      );
+      const deviceIdField = document.getElementById("device-id");
 
     // If we have a device ID from the URL, pre-populate the field
     if (id && deviceIdField) {

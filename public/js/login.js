@@ -1,6 +1,5 @@
-import { loadHeaderFooter, myport } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
 loadHeaderFooter();
-const port = myport();
 
 const btnLogin = document.getElementById("btnLogin");
 btnLogin.addEventListener("click", async () => {
@@ -14,7 +13,8 @@ btnLogin.addEventListener("click", async () => {
   }
 
   // Use the auth endpoint for login
-  const url = `http://localhost:${port}/auth/login`;
+  const apiUrl = await getApiUrl();
+  const url = `${apiUrl}/auth/login`;
   try {
     const response = await fetch(url, {
       method: "POST",
@@ -28,7 +28,7 @@ btnLogin.addEventListener("click", async () => {
 
     if (response.status === 200) {
       // Login successful, redirect to main page
-      window.location.href = `http://localhost:${port}/index.html`;
+      window.location.href = `${apiUrl}/index.html`;
     } else {
       // Login failed, show error message
       const errorMsg = document.getElementById("errorMsg");
