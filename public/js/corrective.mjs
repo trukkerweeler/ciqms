@@ -112,7 +112,13 @@ fetch(url, { method: "GET" })
       }
 
       divSubTitle.appendChild(subTitle);
-      divSubTitle.appendChild(closebutton);
+
+      // Create a buttons container for proper alignment
+      const buttonsContainer = document.createElement("div");
+      buttonsContainer.style.display = "flex";
+      buttonsContainer.style.justifyContent = "flex-end";
+      buttonsContainer.style.alignItems = "center";
+      buttonsContainer.style.gap = "10px";
 
       // Add escalation button if overdue
       const daysOverdue = calculateDaysOverdue(record[key]["DUE_DATE"]);
@@ -129,9 +135,12 @@ fetch(url, { method: "GET" })
             location.reload();
           },
         );
-        escalationBtn.style.marginLeft = "10px";
-        divSubTitle.appendChild(escalationBtn);
+        buttonsContainer.appendChild(escalationBtn);
       }
+
+      // Add close button to container
+      buttonsContainer.appendChild(closebutton);
+      divSubTitle.appendChild(buttonsContainer);
 
       // Detail section=======================================
       const detailSection = document.createElement("section");

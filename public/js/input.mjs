@@ -266,7 +266,13 @@ fetch(url, { method: "GET" })
       // Store record data on button for later access
       btnClose.dataset.closed = rec["CLOSED"] || "";
       btnClose.dataset.closedDate = rec["CLOSED_DATE"] || "";
-      divSubTitle.appendChild(btnClose);
+
+      // Create a buttons container for proper alignment
+      const buttonsContainer = document.createElement("div");
+      buttonsContainer.style.display = "flex";
+      buttonsContainer.style.justifyContent = "flex-end";
+      buttonsContainer.style.alignItems = "center";
+      buttonsContainer.style.gap = "10px";
 
       // Add escalation button if overdue
       const daysOverdue = calculateDaysOverdue(rec["DUE_DATE"]);
@@ -283,9 +289,13 @@ fetch(url, { method: "GET" })
             location.reload();
           },
         );
-        escalationBtn.style.marginLeft = "10px";
-        divSubTitle.appendChild(escalationBtn);
+        escalationBtn.style.display = "none"; // Hide escalation button
+        buttonsContainer.appendChild(escalationBtn);
       }
+
+      // Add close button to container
+      buttonsContainer.appendChild(btnClose);
+      divSubTitle.appendChild(buttonsContainer);
 
       // Assemble detail section
       detailSection.appendChild(detailTitle);
@@ -325,6 +335,7 @@ fetch(url, { method: "GET" })
         "INPUT",
         rec["INPUT_ID"],
       );
+      escalationHistory.style.display = "none"; // Hide escalation history
       main.appendChild(escalationHistory);
     }
 

@@ -300,14 +300,25 @@ fetch(url, { method: "GET" })
       btnClose.setAttribute("id", "btnCloseNCM");
       btnClose.setAttribute("type", "submit");
 
-      // disable the close button
-      if (user === "TKENT") {
+      // disable the close button if already closed or if user is not TKENT
+      if (record[key]["CLOSED"] === "Y") {
+        btnClose.disabled = true;
+        btnClose.style.opacity = "0.5";
+        btnClose.style.cursor = "not-allowed";
+        btnClose.style.backgroundColor = "#e0e0e0";
+        btnClose.title = "This NCM is already closed";
+      } else if (user === "TKENT") {
         btnClose.disabled = false;
       } else {
         btnClose.disabled = true;
       }
 
-      divSubTitle.appendChild(btnClose);
+      // Create a buttons container for proper alignment
+      const buttonsContainer = document.createElement("div");
+      buttonsContainer.style.display = "flex";
+      buttonsContainer.style.justifyContent = "flex-end";
+      buttonsContainer.style.alignItems = "center";
+      buttonsContainer.style.gap = "10px";
 
       // Add escalation button if overdue
       const daysOverdue = calculateDaysOverdue(record[key]["DUE_DATE"]);
@@ -324,9 +335,13 @@ fetch(url, { method: "GET" })
             location.reload();
           },
         );
-        escalationBtn.style.marginLeft = "10px";
-        divSubTitle.appendChild(escalationBtn);
+        escalationBtn.style.display = "none"; // Hide escalation button for now
+        buttonsContainer.appendChild(escalationBtn);
       }
+
+      // Add close button to container
+      buttonsContainer.appendChild(btnClose);
+      divSubTitle.appendChild(buttonsContainer);
 
       const empty = document.createElement("p");
 
@@ -480,13 +495,6 @@ fetch(url, { method: "GET" })
       main.appendChild(divSubTitle);
       main.appendChild(detailSection);
       main.appendChild(notesSection);
-
-      // Add escalation history
-      const escalationHistory = await createEscalationHistory(
-        "NONCONFORMANCE",
-        record[key]["NCM_ID"],
-      );
-      main.appendChild(escalationHistory);
     }
 
     // =============================================
@@ -992,6 +1000,12 @@ fetch(url, { method: "GET" })
 
       const response = await fetch(closeUrl, options);
       const json = await response.json();
+
+      // Disable and grey out the button
+      closeNCM.disabled = true;
+      closeNCM.style.opacity = "0.5";
+      closeNCM.style.cursor = "not-allowed";
+      closeNCM.style.backgroundColor = "#e0e0e0";
 
       // refresh the page
       window.location.reload();
