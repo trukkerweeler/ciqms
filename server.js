@@ -3,19 +3,12 @@ const cors = require("cors");
 const express = require("express");
 const session = require("express-session");
 const app = express();
+const configModule = require("./config");
 
-// Determine environment and set port based on NODE_ENV
-const nodeEnv = process.env.NODE_ENV || "development";
-const isDevelopment = nodeEnv === "development" || nodeEnv === "dev";
-const isProduction = nodeEnv === "production" || nodeEnv === "prod";
-
-// Set default port based on environment, can be overridden by APP_PORT env var
-let defaultPort = 3003; // development default
-if (isProduction) {
-  defaultPort = 3004;
-}
-
-const port = process.env.APP_PORT || defaultPort;
+// Load environment-based configuration
+const { port, env: nodeEnv } = configModule;
+const isDevelopment = nodeEnv === "development";
+const isProduction = nodeEnv === "production";
 
 // Configure CORS to allow credentials
 const corsOptions = {

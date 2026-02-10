@@ -238,7 +238,7 @@ async function renderAuditDetails(
   setupDetailEditListener(btnEditDetail, auditData, id, apiUrls);
   setupAddQuestionListener(btnAddQust, id, urlParams, apiUrls);
   setupObservationListener(id, apiUrls, summarySpan);
-  setupCloseAuditListener(btnClose, port, auditData, isAuditClosed);
+  setupCloseAuditListener(btnClose, apiUrls, auditData, isAuditClosed);
 }
 
 /**
@@ -523,7 +523,7 @@ function setupObservationListener(id, apiUrls, summarySpan) {
 /**
  * Setup close audit listener
  */
-function setupCloseAuditListener(btnClose, port, auditData, isAuditClosed) {
+function setupCloseAuditListener(btnClose, apiUrls, auditData, isAuditClosed) {
   btnClose.addEventListener("click", async (e) => {
     e.preventDefault();
 
@@ -534,7 +534,7 @@ function setupCloseAuditListener(btnClose, port, auditData, isAuditClosed) {
 
     try {
       const completionDate = getDateTime();
-      const closeUrl = `${apiUrl}/manager/completed`;
+      const closeUrl = `${apiUrls.manager}completed`;
       const closeRecord = {
         AUDIT_MANAGER_ID: auditData.AUDIT_MANAGER_ID,
         COMPLETION_DATE: completionDate,
