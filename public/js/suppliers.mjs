@@ -20,12 +20,25 @@ let user; // Will be set in initialization
 let config; // Will be set in initialization
 let allSuppliers = []; // Store all suppliers for filtering
 
-document.addEventListener("DOMContentLoaded", async function () {
+// Initialize handler function
+async function initializeSuppliers() {
+  console.log("[suppliers.mjs] Initializing suppliers");
   user = await getUserValue();
   config = await getConfig();
   setupEventListeners();
   await loadSupplierData();
-});
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === "loading") {
+  console.log(
+    "[suppliers.mjs] DOM still loading, waiting for DOMContentLoaded",
+  );
+  document.addEventListener("DOMContentLoaded", initializeSuppliers);
+} else {
+  console.log("[suppliers.mjs] DOM already loaded, initializing immediately");
+  initializeSuppliers();
+}
 
 function setupEventListeners() {
   // Add Supplier button

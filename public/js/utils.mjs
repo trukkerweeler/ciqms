@@ -925,3 +925,167 @@ export function timestampText(user, newText, oldText = "") {
     ? `${timestamp}\n${newText}\n\n${oldText}`
     : `${timestamp}\n${newText}`;
 }
+
+/**
+ * Log an email to the email history table
+ * @param {string} appModule - Module name (CORRECTIVE, INPUT, NONCONFORMANCE)
+ * @param {string} appId - Entity ID
+ * @param {string} recipientEmail - Recipient email
+ * @param {string} subject - Email subject
+ * @param {string} emailBody - Email body
+ * @param {string} sentBy - User who sent it
+ * @param {string} emailType - Email type (ESCALATION, ASSIGNMENT, CLOSURE, etc.)
+ * @param {string} notes - Optional notes
+ * @returns {Promise<Object>} Response with email_id
+ */
+export async function logEmail(
+  appModule,
+  appId,
+  recipientEmail,
+  subject,
+  emailBody,
+  sentBy,
+  emailType,
+  notes = "",
+) {
+  try {
+    const apiUrl = await getApiUrl();
+    const response = await fetch(`${apiUrl}/email-history`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        app_module: appModule,
+        app_id: appId,
+        recipient_email: recipientEmail,
+        subject,
+        email_body: emailBody,
+        sent_by: sentBy,
+        email_status: "SENT",
+        email_type: emailType,
+        notes,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to log email: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error logging email:", error);
+    throw error;
+  }
+}
+
+/**
+ * Get email history for an entity
+ * @param {string} appModule - Module name (CORRECTIVE, INPUT, NONCONFORMANCE)
+ * @param {string} appId - Entity ID
+ * @param {string} emailType - Optional: filter by email type
+ * @param {number} limit - Number of records to return (default: 10)
+ * @returns {Promise<Array>} Array of email records
+ */
+export async function getEmailHistory(
+  appModule,
+  appId,
+  emailType = null,
+  limit = 10,
+) {
+  try {
+    const apiUrl = await getApiUrl();
+    const params = new URLSearchParams({
+      app_module: appModule,
+      app_id: appId,
+      limit,
+    });
+
+    if (emailType) {
+      params.append("email_type", emailType);
+    }
+
+    const response = await fetch(`${apiUrl}/email-history?${params}`);
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch email history: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching email history:", error);
+    return [];
+  }
+}
+
+/**
+ * Get last escalation for an entity and check if escalation is needed
+ * @param {string} appModule - Module name (CORRECTIVE, INPUT, NONCONFORMANCE)
+ * @param {string} appId - Entity ID
+ * @returns {Promise<Object>} { lastEscalation, daysSinceEscalation, needsEscalation }
+ */
+export async function getEscalationStatus(appModule, appId) {
+  try {
+    const apiUrl = await getApiUrl();
+    const response = await fetch(
+      `${apiUrl}/email-history/last-escalation/${appModule}/${appId}`,
+    );
+
+    if (!response.ok) {
+      throw new Error(`Failed to fetch escalation status: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error fetching escalation status:", error);
+    return {
+      lastEscalation: null,
+      daysSinceEscalation: null,
+      needsEscalation: true,
+    };
+  }
+}
+
+/**
+ * Calculate row color based on escalation status
+ * @param {Object} record - The corrective/input record
+ * @param {string} appModule - Module type for checking escalation
+ * @param {boolean} isClosed - Whether the record is closed
+ * @param {number} daysOverdue - Number of days overdue
+ * @returns {Promise<string>} Color code or empty string
+ */
+export async function calculateEscalationColor(
+  record,
+  appModule,
+  isClosed,
+  daysOverdue,
+) {
+  // Closed items: gray
+  if (isClosed) {
+    return "#d3d3d3"; // Light gray
+  }
+
+  // Not overdue: green
+  if (daysOverdue < 0) {
+    return "#e8f5e9"; // Light green
+  }
+
+  // Get escalation status
+  const escalationStatus = await getEscalationStatus(
+    appModule,
+    record.CORRECTIVE_ID || record.INPUT_ID,
+  );
+
+  // Overdue but escalated in last 30 days: yellow
+  if (
+    escalationStatus.daysSinceEscalation !== null &&
+    escalationStatus.daysSinceEscalation <= 30
+  ) {
+    return "#fff3e0"; // Light orange/yellow
+  }
+
+  // Overdue > 30 days with no recent escalation: red
+  if (daysOverdue > 30) {
+    return "#ffebee"; // Light red
+  }
+
+  return ""; // Default (no color)
+}

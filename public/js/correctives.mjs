@@ -1,4 +1,5 @@
 import { loadHeaderFooter, getApiUrl, getUserValue } from "./utils.mjs";
+import { calculateDaysOverdue, getRowColor } from "./escalation-utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
@@ -287,6 +288,14 @@ function createTableBody(data, headers) {
   data.forEach((item) => {
     const row = document.createElement("tr");
 
+    // Apply escalation color
+    const daysOverdue = calculateDaysOverdue(item.DUE_DATE);
+    getRowColor(item, "CORRECTIVE", daysOverdue).then((color) => {
+      if (color) {
+        row.style.backgroundColor = color;
+      }
+    });
+
     headers.forEach((header) => {
       const td = document.createElement("td");
       const cellValue = item[header];
@@ -295,13 +304,23 @@ function createTableBody(data, headers) {
       if (header.toLowerCase().includes("date")) {
         td.textContent = formatDate(cellValue);
       } else if (header === "CORRECTIVE_ID") {
-        td.innerHTML = `<a href="${apiUrl}/corrective.html?id=${cellValue}" target="_blank">${cellValue}</a>`;
+        td.innerHTML = `<a href="${apiUrl}/corrective.html?id=${cellValue}">${cellValue}</a>`;
       } else {
         td.textContent = cellValue || "";
       }
 
       row.appendChild(td);
     });
+
+    // Make row clickable for full record view
+    row.addEventListener("click", (e) => {
+      if (e.target.tagName !== "A") {
+        // Navigate to detail page if not clicking on link
+        const correctiveId = item.CORRECTIVE_ID;
+        window.location.href = `${apiUrl}/corrective.html?id=${correctiveId}`;
+      }
+    });
+    row.style.cursor = "pointer";
 
     tbody.appendChild(row);
   });

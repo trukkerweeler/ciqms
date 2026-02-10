@@ -7,19 +7,25 @@ import {
 } from "./utils.mjs";
 
 // Initialize header/footer
+console.log("[documents.mjs] Loading...");
 loadHeaderFooter();
 
 // Configuration
+console.log("[documents.mjs] Getting API URL...");
 const apiUrl = await getApiUrl();
+console.log("[documents.mjs] API URL:", apiUrl);
 const url = `${apiUrl}/sysdocs`;
 const url2 = `${apiUrl}/docsavail`;
+console.log("[documents.mjs] URLs set:", { url, url2 });
 let sortOrder = "asc";
 
 // Global variables - will be initialized on DOMContentLoaded
 let dialog, addButton, cancelButton, form, user;
 let documentsData = []; // Store original data for filtering
 
-document.addEventListener("DOMContentLoaded", async () => {
+// Initialize handler function
+async function initializeDocuments() {
+  console.log("[documents.mjs] Initializing documents");
   try {
     // Initialize DOM elements
     dialog = document.querySelector("dialog[add-document-dialog]");
@@ -28,38 +34,45 @@ document.addEventListener("DOMContentLoaded", async () => {
     form = document.getElementById("document-form");
 
     // Get current user
+    console.log("[documents.mjs] Getting user...");
     user = await getUserValue();
+    console.log("[documents.mjs] User:", user);
 
-    // Verify all required elements exist
-    if (!dialog || !addButton || !cancelButton || !form) {
-      console.error("Required dialog elements not found:", {
-        dialog: !!dialog,
-        addButton: !!addButton,
-        cancelButton: !!cancelButton,
-        form: !!form,
-      });
-      return;
-    }
-
-    // Load initial data
+    // Load initial data (always do this, regardless of dialog elements)
+    console.log("[documents.mjs] About to load document data");
     await loadDocumentData();
 
-    // Setup dialog event listeners
-    setupDialogHandlers();
-
-    // Set form defaults
-    setupFormDefaults();
+    // Setup dialog event listeners only if dialog elements exist
+    if (dialog && addButton && cancelButton && form) {
+      setupDialogHandlers();
+      setupFormDefaults();
+    } else {
+      console.warn(
+        "Dialog elements not found - add document feature unavailable",
+      );
+    }
   } catch (error) {
     console.error("Error initializing documents page:", error);
   }
-});
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === "loading") {
+  console.log(
+    "[documents.mjs] DOM still loading, waiting for DOMContentLoaded",
+  );
+  document.addEventListener("DOMContentLoaded", initializeDocuments);
+} else {
+  console.log("[documents.mjs] DOM already loaded, initializing immediately");
+  initializeDocuments();
+}
 
 /**
  * Load document data from the server and display it in a table
  */
 async function loadDocumentData() {
   try {
-    // console.log("Fetching document data from:", url);
+    console.log("Fetching document data from:", url);
     const response = await fetch(url, { method: "GET" });
 
     if (!response.ok) {
@@ -67,18 +80,19 @@ async function loadDocumentData() {
     }
 
     const data = await response.json();
-    // console.log("Document data received:", data);
+    console.log("Document data received:", data);
 
     if (data && data.length > 0) {
       documentsData = data; // Store for filtering
       createTable(data);
     } else {
-      console.log("No document data found");
+      console.log("No document data found", data);
       document.querySelector("main").innerHTML =
         "<p>No document records found.</p>";
     }
   } catch (error) {
     console.error("Error fetching document data:", error);
+    console.error("Error details:", error.message, error.stack);
     document.querySelector("main").innerHTML =
       "<p>Error loading document records.</p>";
   }

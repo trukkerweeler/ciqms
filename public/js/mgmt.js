@@ -19,31 +19,34 @@ async function renderMgmtTable() {
 
       // Row coloring logic (like inputs)
       if (config && config.inputs && config.inputs.enableRowColors) {
-        // Use STATUS for mgmt (e.g., 'Closed', 'Open', 'Past Due')
-        if (row.STATUS && row.STATUS.toUpperCase() === "CLOSED") {
+        // Use CLOSED for mgmt (e.g., 'Y' or 'N')
+        if (row.CLOSED && row.CLOSED.toUpperCase() === "Y") {
           const closedColor = config.inputs.colorScheme?.closed || "#e8f5e8";
           tr.style.backgroundColor = closedColor;
-        } else if (
-          row.STATUS &&
-          row.STATUS.toUpperCase().includes("PAST DUE")
-        ) {
-          const pastDueColor = config.inputs.colorScheme?.pastDue || "#ffebee";
-          tr.style.backgroundColor = pastDueColor;
-        } else if (
-          row.STATUS &&
-          row.STATUS.toUpperCase().includes("DUE SOON")
-        ) {
-          const dueSoonColor = config.inputs.colorScheme?.dueSoon || "#fff3e0";
-          tr.style.backgroundColor = dueSoonColor;
+        } else if (row.DUE_DATE) {
+          const dueDate = new Date(row.DUE_DATE);
+          const today = new Date();
+          const msPerDay = 24 * 60 * 60 * 1000;
+          const daysUntilDue = Math.floor((dueDate - today) / msPerDay);
+
+          if (daysUntilDue < 0) {
+            const pastDueColor =
+              config.inputs.colorScheme?.pastDue || "#ffebee";
+            tr.style.backgroundColor = pastDueColor;
+          } else if (daysUntilDue <= 7) {
+            const dueSoonColor =
+              config.inputs.colorScheme?.dueSoon || "#fff3e0";
+            tr.style.backgroundColor = dueSoonColor;
+          }
         }
       }
 
       tr.innerHTML = `
-        <td>${row.ID ?? ""}</td>
-        <td>${row.DATE ? row.DATE.slice(0, 10) : ""}</td>
-        <td>${row.TOPIC ?? ""}</td>
-        <td>${row.OWNER ?? ""}</td>
-        <td>${row.STATUS ?? ""}</td>
+        <td>${row.INPUT_ID ?? ""}</td>
+        <td>${row.INPUT_DATE ? row.INPUT_DATE.slice(0, 10) : ""}</td>
+        <td>${row.SUBJECT ?? ""}</td>
+        <td>${row.ASSIGNED_TO ?? ""}</td>
+        <td>${row.CLOSED ? (row.CLOSED === "Y" ? "Closed" : "Open") : "Open"}</td>
         <td><!-- actions here --></td>
       `;
       tbody.appendChild(tr);

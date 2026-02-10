@@ -4,6 +4,7 @@ import {
   getApiUrl,
   getConfig,
 } from "./utils.mjs";
+import { calculateDaysOverdue, getRowColor } from "./escalation-utils.mjs";
 import users from "./users.mjs";
 
 // Initialize header/footer
@@ -328,29 +329,21 @@ function displayInputTable(data, includeClosed = false) {
   data.forEach((item) => {
     const row = document.createElement("tr");
 
-    // Apply row styling based on closed status (if enabled in config)
-    if (config && config.inputs && config.inputs.enableRowColors) {
-      if (item.CLOSED === "Y") {
-        const closedColor = config.inputs.colorScheme?.closed || "#d4edda";
-        row.style.backgroundColor = closedColor; // Green for closed
-      } else {
-        // Check if item is past due or due soon
-        const dueDate = new Date(item.DUE_DATE);
-        const today = new Date();
-        const daysDiff = Math.ceil((dueDate - today) / (1000 * 60 * 60 * 24));
-
-        if (daysDiff < 0) {
-          // Past due
-          const pastDueColor = config.inputs.colorScheme?.pastDue || "#ffebee";
-          row.style.backgroundColor = pastDueColor;
-        } else if (daysDiff <= 3) {
-          // Due soon (within 3 days)
-          const dueSoonColor = config.inputs.colorScheme?.dueSoon || "#fff3e0";
-          row.style.backgroundColor = dueSoonColor;
-        }
-        // No background color for items due more than 3 days out
+    // Apply escalation color (replaces old logic)
+    const daysOverdue = calculateDaysOverdue(item.DUE_DATE);
+    getRowColor(item, "INPUT", daysOverdue).then((color) => {
+      if (color) {
+        row.style.backgroundColor = color;
       }
-    }
+    });
+
+    // Make row clickable
+    row.style.cursor = "pointer";
+    row.addEventListener("click", (e) => {
+      if (e.target.tagName !== "A") {
+        window.location.href = `input.html?id=${item.INPUT_ID}`;
+      }
+    });
 
     orderedFields.forEach((key) => {
       const td = document.createElement("td");

@@ -24,9 +24,11 @@ const corsOptions = {
 
 app.use(cors(corsOptions));
 
-// Request logging middleware
+// Request logging middleware - log only state-changing requests (POST, PUT, DELETE, PATCH)
 app.use((req, res, next) => {
-  console.log(`[${new Date().toISOString()}] ${req.method} ${req.path}`);
+  if (["POST", "PUT", "DELETE", "PATCH"].includes(req.method)) {
+    console.log(`[${req.method}] ${req.path}`);
+  }
   next();
 });
 
@@ -93,7 +95,6 @@ app.get("/config", (req, res) => {
 
 // API configuration endpoint - returns the API URL for frontend to use
 app.get("/api/config", (req, res) => {
-  console.log("[/api/config] Request received");
   let apiUrl = process.env.API_URL;
 
   // If API_URL not explicitly set, generate it based on environment
@@ -105,7 +106,6 @@ app.get("/api/config", (req, res) => {
     }
   }
 
-  console.log("[/api/config] Returning apiUrl:", apiUrl);
   res.json({ apiUrl });
 });
 
@@ -115,7 +115,6 @@ const path = require("path");
 const os = require("os");
 
 const routesDir = path.join(__dirname, "routes");
-console.log(`[Routes] Loading routes from: ${routesDir}`);
 
 fs.readdirSync(routesDir)
   .filter((file) => file.endsWith(".js") && !file.includes(".vbs"))
@@ -153,7 +152,6 @@ fs.readdirSync(routesDir)
       }
 
       app.use(routePath, routes);
-      console.log(`Loaded route: ${routePath} from ${file}`);
     } catch (error) {
       console.error(`Error loading route ${file}:`, error.message);
     }
@@ -163,12 +161,9 @@ fs.readdirSync(routesDir)
 try {
   const authRoutes = require("./routes/auth");
   app.use("/auth", authRoutes);
-  console.log(`Loaded route: /auth from auth.js`);
 } catch (error) {
   console.error(`Error loading auth routes:`, error.message);
 }
-
-console.log(`[Routes] Route loading complete\n`);
 
 // Load cert3 routes (new certificate search with drill-down)
 // try {

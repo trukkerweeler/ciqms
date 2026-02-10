@@ -86,10 +86,17 @@ function renderTable(data) {
   tableContainer.appendChild(table);
 }
 
-document.addEventListener("DOMContentLoaded", () => {
+function initializeOpcodesGlobal() {
   const machineInput = document.getElementById("machineNo");
   if (machineInput) {
     machineInput.addEventListener("input", updateTable);
   }
   fetchData();
-});
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeOpcodesGlobal);
+} else {
+  initializeOpcodesGlobal();
+}

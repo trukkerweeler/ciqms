@@ -7,8 +7,9 @@ const baseUrl = `${apiUrl}/subjectmaint`;
 let user;
 let editingSubject = null;
 
-// Initialize when DOM is ready
-document.addEventListener("DOMContentLoaded", async () => {
+// Initialize handler function
+async function initializeSubjectMaint() {
+  console.log("[subjectmaint.mjs] Initializing");
   try {
     user = await getUserValue();
     await loadSubjects();
@@ -17,7 +18,14 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Error during initialization:", error);
     showMessage("Error initializing page", "error");
   }
-});
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeSubjectMaint);
+} else {
+  initializeSubjectMaint();
+}
 
 // Setup all event listeners
 function setupEventListeners() {

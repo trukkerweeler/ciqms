@@ -17,12 +17,21 @@ let sortOrder = "asc";
 let user; // Will be set in initialization
 let config; // Will be set in initialization
 
-document.addEventListener("DOMContentLoaded", async function () {
+// Initialize handler function
+async function initializeSupplierList() {
+  console.log("[supplierlist.mjs] Initializing");
   user = await getUserValue();
   config = await getConfig();
   setupEventListeners();
   await loadSupplierListData();
-});
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeSupplierList);
+} else {
+  initializeSupplierList();
+}
 
 function setupEventListeners() {
   // Add QMS button

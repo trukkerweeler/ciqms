@@ -9,11 +9,20 @@ const url = `${apiUrl}/expiry`;
 let sortOrder = "asc";
 let user; // Will be set in initialization
 
-document.addEventListener("DOMContentLoaded", async function () {
+// Initialize handler function
+async function initializeExpirys() {
+  console.log("[expirys.mjs] Initializing");
   user = await getUserValue();
   setupEventListeners();
   await loadExpiryData();
-});
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeExpirys);
+} else {
+  initializeExpirys();
+}
 
 function setupEventListeners() {
   const addExpiryBtn = document.getElementById("addExpiryBtn");

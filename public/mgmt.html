@@ -1,44 +1,36 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-  <!DOCTYPE html>
-  <html lang="en">
-    <head>
-      <meta charset="UTF-8" />
-      <meta http-equiv="X-UA-Compatible" content="IE=edge" />
-      <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-      <title>Management Review</title>
-      <link rel="stylesheet" href="/css/styles.css" />
-      <link rel="stylesheet" href="/css/table.css" />
-      <!-- No inline style: use .table-container from styles.css for consistent look -->
-      <script type="module" src="/js/mgmt.js"></script>
-    </head>
-    <body>
-      <div id="header-root"></div>
-      <main>
-        <h1>Management Review</h1>
-        <div class="table-container">
-          <table id="mgmt-table" class="data-table">
-            <thead>
-              <tr>
-                <th>ID</th>
-                <th>Date</th>
-                <th>Topic</th>
-                <th>Owner</th>
-                <th>Status</th>
-                <th>Actions</th>
-              </tr>
-            </thead>
-            <tbody>
-              <!-- Table rows will be inserted here by mgmt.js -->
-            </tbody>
-          </table>
-        </div>
-      </main>
-      <div id="footer-root"></div>
-      <script type="module">
-        import { loadHeaderFooter } from "/js/utils.mjs";
-        loadHeaderFooter();
-      </script>
-    </body>
-  </html>
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Management Review</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/table.css" />
+  </head>
+  <body>
+    <div id="header-root"></div>
+    <main>
+      <h1>Management Review</h1>
+      <div class="table-container">
+        <table id="mgmt-table" class="data-table">
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>Date</th>
+              <th>Topic</th>
+              <th>Owner</th>
+              <th>Status</th>
+              <th>Actions</th>
+            </tr>
+          </thead>
+          <tbody>
+            <!-- Table rows will be inserted here by mgmt.js -->
+          </tbody>
+        </table>
+      </div>
+    </main>
+    <div id="footer-root"></div>
+    <script type="module" src="/js/mgmt.js"></script>
+  </body>
 </html>

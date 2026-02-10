@@ -4,6 +4,7 @@ import {
   getConfig,
   getApiUrl,
 } from "./utils.mjs";
+import { calculateDaysOverdue, getRowColor } from "./escalation-utils.mjs";
 import users from "./users.mjs";
 
 // Initialize header/footer
@@ -311,17 +312,22 @@ function displayNcmTable(data) {
   data.forEach((item) => {
     const row = document.createElement("tr");
 
-    // Apply row styling based on CLOSED field (if enabled in config)
-    if (config && config.ncm && config.ncm.enableRowColors) {
-      if (item.CLOSED === "Y") {
-        row.style.backgroundColor = "#d4edda";
-      } else if (item.CLOSED === "N") {
-        row.style.backgroundColor = "#f8d7da";
+    // Apply escalation color
+    const daysOverdue = calculateDaysOverdue(item.DUE_DATE);
+    getRowColor(item, "NONCONFORMANCE", daysOverdue).then((color) => {
+      if (color) {
+        row.style.backgroundColor = color;
       }
-    }
+    });
+
+    // Make row clickable
+    row.style.cursor = "pointer";
+    row.addEventListener("click", () => {
+      window.location.href = `ncm.html?id=${item.NCM_ID}`;
+    });
 
     row.innerHTML = `
-      <td><a href="ncm.html?id=${item.NCM_ID}">${item.NCM_ID}</a></td>
+      <td><a href="ncm.html?id=${item.NCM_ID}" onclick="event.stopPropagation()">${item.NCM_ID}</a></td>
       <td>${item.NCM_DATE ? formatDate(item.NCM_DATE) : ""}</td>
       <td>${item.NCM_TYPE || ""}</td>
       <td>${item.SUBJECT || ""}</td>
@@ -331,8 +337,8 @@ function displayNcmTable(data) {
       <td>${item.PO_NUMBER || ""}</td>
       <td>${
         item.PROCESS_ID
-          ? `<button type="button" class="btn-secondary" onclick="openTrendDialog('${item.NCM_ID}')"><!-- <span class=\"btn-icon\">📈</span> --> ${item.PROCESS_ID}</button>`
-          : `<button type="button" class="btn-secondary" onclick="openTrendDialog('${item.NCM_ID}')">Edit</button>`
+          ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); openTrendDialog('${item.NCM_ID}')"><!-- <span class=\"btn-icon\">📈</span> --> ${item.PROCESS_ID}</button>`
+          : `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); openTrendDialog('${item.NCM_ID}')">Edit</button>`
       }</td>
       <td>${truncateText(item.DESCRIPTION || "", 50)}</td>
       <td>${item.CLOSED === "Y" ? "Yes" : "No"}</td>

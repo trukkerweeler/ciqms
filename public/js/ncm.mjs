@@ -5,6 +5,11 @@ import {
   getDateTime,
   getApiUrl,
 } from "./utils.mjs";
+import {
+  calculateDaysOverdue,
+  createEscalationButton,
+  createEscalationHistory,
+} from "./escalation-utils.mjs";
 loadHeaderFooter();
 const apiUrl = await getApiUrl();
 const user = await getUserValue();
@@ -62,7 +67,7 @@ while (main.firstChild) {
 
 fetch(url, { method: "GET" })
   .then((response) => response.json())
-  .then((record) => {
+  .then(async (record) => {
     // console.log(record);
     for (const key in record) {
       const detailSection = document.createElement("section");
@@ -304,6 +309,25 @@ fetch(url, { method: "GET" })
 
       divSubTitle.appendChild(btnClose);
 
+      // Add escalation button if overdue
+      const daysOverdue = calculateDaysOverdue(record[key]["DUE_DATE"]);
+      if (daysOverdue > 0 && record[key]["CLOSED"] !== "Y") {
+        const escalationBtn = createEscalationButton(
+          "NONCONFORMANCE",
+          record[key]["NCM_ID"],
+          record[key]["SUBJECT"],
+          record[key]["ASSIGNED_TO"],
+          daysOverdue,
+          user,
+          () => {
+            // Refresh page on successful escalation
+            location.reload();
+          },
+        );
+        escalationBtn.style.marginLeft = "10px";
+        divSubTitle.appendChild(escalationBtn);
+      }
+
       const empty = document.createElement("p");
 
       detailSection.appendChild(detailHeading);
@@ -456,6 +480,13 @@ fetch(url, { method: "GET" })
       main.appendChild(divSubTitle);
       main.appendChild(detailSection);
       main.appendChild(notesSection);
+
+      // Add escalation history
+      const escalationHistory = await createEscalationHistory(
+        "NONCONFORMANCE",
+        record[key]["NCM_ID"],
+      );
+      main.appendChild(escalationHistory);
     }
 
     // =============================================

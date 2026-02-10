@@ -10,11 +10,20 @@ const skippers = ["ENTITY_ID", "MODIFIED_DATE", "MODIFIED_BY", "COST_SAVINGS"];
 let sortOrder = "asc";
 let user; // Will be set in initialization
 
-document.addEventListener("DOMContentLoaded", async function () {
+// Initialize handler function
+async function initializeProjects() {
+  console.log("[projects.mjs] Initializing");
   user = await getUserValue();
   setupEventListeners();
   await loadProjectData();
-});
+}
+
+// Run initialization when DOM is ready
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializeProjects);
+} else {
+  initializeProjects();
+}
 
 function setupEventListeners() {
   // Add Project button

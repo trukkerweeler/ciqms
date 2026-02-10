@@ -232,4 +232,8 @@ function initializePage() {
 }
 
 // Initialize when DOM is ready
-document.addEventListener("DOMContentLoaded", initializePage);
+if (document.readyState === "loading") {
+  document.addEventListener("DOMContentLoaded", initializePage);
+} else {
+  initializePage();
+}

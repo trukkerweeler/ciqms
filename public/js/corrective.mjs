@@ -1,4 +1,9 @@
 import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
+import {
+  calculateDaysOverdue,
+  createEscalationButton,
+  createEscalationHistory,
+} from "./escalation-utils.mjs";
 loadHeaderFooter();
 const user = await getUserValue();
 const port = myport();
@@ -67,7 +72,7 @@ async function updateAfterSave() {
 
 fetch(url, { method: "GET" })
   .then((response) => response.json())
-  .then((record) => {
+  .then(async (record) => {
     // console.log(record);
     let caid = record[0]["CORRECTIVE_ID"];
     for (const key in record) {
@@ -108,6 +113,25 @@ fetch(url, { method: "GET" })
 
       divSubTitle.appendChild(subTitle);
       divSubTitle.appendChild(closebutton);
+
+      // Add escalation button if overdue
+      const daysOverdue = calculateDaysOverdue(record[key]["DUE_DATE"]);
+      if (daysOverdue > 0 && record[key]["CLOSED"] !== "Y") {
+        const escalationBtn = createEscalationButton(
+          "CORRECTIVE",
+          record[key]["CORRECTIVE_ID"],
+          record[key]["TITLE"],
+          record[key]["ASSIGNED_TO"],
+          daysOverdue,
+          user,
+          () => {
+            // Refresh page on successful escalation
+            location.reload();
+          },
+        );
+        escalationBtn.style.marginLeft = "10px";
+        divSubTitle.appendChild(escalationBtn);
+      }
 
       // Detail section=======================================
       const detailSection = document.createElement("section");
@@ -572,5 +596,12 @@ fetch(url, { method: "GET" })
       main.appendChild(correctionSection);
       main.appendChild(causeSection);
       main.appendChild(controlSection);
+
+      // Add escalation history
+      const escalationHistory = await createEscalationHistory(
+        "CORRECTIVE",
+        record[key]["CORRECTIVE_ID"],
+      );
+      main.appendChild(escalationHistory);
     }
   });

@@ -310,9 +310,8 @@ const setupSaveHandler = (record, port, documentId, user) => {
 
 // Main initialization
 const init = async () => {
-  loadHeaderFooter();
-
   const user = await getUserValue();
+  const port = myport();
 
   const urlParams = new URLSearchParams(window.location.search);
   const documentId = urlParams.get("document_id");

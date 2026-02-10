@@ -11,6 +11,11 @@ import {
   timestampText,
   getApiUrl,
 } from "./utils.mjs";
+import {
+  calculateDaysOverdue,
+  createEscalationButton,
+  createEscalationHistory,
+} from "./escalation-utils.mjs";
 import userEmails from "./users.mjs";
 
 loadHeaderFooter();
@@ -145,7 +150,7 @@ async function updateAfterSave() {
 
 fetch(url, { method: "GET" })
   .then((response) => response.json())
-  .then((record) => {
+  .then(async (record) => {
     for (const key in record) {
       const rec = record[key];
 
@@ -263,6 +268,25 @@ fetch(url, { method: "GET" })
       btnClose.dataset.closedDate = rec["CLOSED_DATE"] || "";
       divSubTitle.appendChild(btnClose);
 
+      // Add escalation button if overdue
+      const daysOverdue = calculateDaysOverdue(rec["DUE_DATE"]);
+      if (daysOverdue > 0 && rec["CLOSED"] !== "Y") {
+        const escalationBtn = createEscalationButton(
+          "INPUT",
+          rec["INPUT_ID"],
+          rec["SUBJECT"],
+          rec["ASSIGNED_TO"],
+          daysOverdue,
+          user,
+          () => {
+            // Refresh page on successful escalation
+            location.reload();
+          },
+        );
+        escalationBtn.style.marginLeft = "10px";
+        divSubTitle.appendChild(escalationBtn);
+      }
+
       // Assemble detail section
       detailSection.appendChild(detailTitle);
       detailSection.appendChild(detailButtons);
@@ -295,6 +319,13 @@ fetch(url, { method: "GET" })
         rec["RESPONSE_DATE"],
         rec["RESPONSE_BY"],
       );
+
+      // Add escalation history
+      const escalationHistory = await createEscalationHistory(
+        "INPUT",
+        rec["INPUT_ID"],
+      );
+      main.appendChild(escalationHistory);
     }
 
     // ===== Response Handler =====
