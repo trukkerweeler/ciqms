@@ -1,12 +1,12 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getDateTime,
   getApiUrl,
 } from "./utils.mjs";
 
 loadHeaderFooter();
-const user = await getUserValue();
+const user = await getSessionUser();
 
 // Default the ASSIGNED_TO field to the current user
 document.getElementById("ASSIGNED_TO").value = user;

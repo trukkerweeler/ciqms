@@ -1,9 +1,9 @@
-import { loadHeaderFooter, getUserValue, getApiUrl } from "./utils.mjs";
+import { loadHeaderFooter, getSessionUser, getApiUrl } from "./utils.mjs";
 // ES6 callout for child process spawn
 // import { spawn } from 'child_process';
 
 loadHeaderFooter();
-let user = await getUserValue();
+let user = await getSessionUser();
 
 // // get the user name from the session
 // fetch('/session', { method: 'GET' })

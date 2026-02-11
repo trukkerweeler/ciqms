@@ -1,11 +1,16 @@
-import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  getSessionUser,
+  myport,
+  getApiUrl,
+} from "./utils.mjs";
 import {
   calculateDaysOverdue,
   createEscalationButton,
   createEscalationHistory,
 } from "./escalation-utils.mjs";
 loadHeaderFooter();
-const user = await getUserValue();
+const user = await getSessionUser();
 const port = myport();
 const apiUrl = await getApiUrl();
 

@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   myport,
   getDateTime,
   getApiUrl,
@@ -12,7 +12,7 @@ import {
 } from "./escalation-utils.mjs";
 loadHeaderFooter();
 const apiUrl = await getApiUrl();
-const user = await getUserValue();
+const user = await getSessionUser();
 const test = false;
 
 if (test) {
@@ -618,7 +618,7 @@ fetch(url, { method: "GET" })
 
         let data = {
           NCM_ID: nidValue,
-          INPUT_USER: getUserValue(),
+          INPUT_USER: user,
         };
         // console.log(data);
 
@@ -983,7 +983,7 @@ fetch(url, { method: "GET" })
         NCM_ID: iid,
         CLOSED: "Y",
         CLOSED_DATE: new Date().toISOString(),
-        INPUT_USER: getUserValue(),
+        INPUT_USER: user,
       };
 
       if (test) {

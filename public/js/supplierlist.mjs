@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   myport,
   getConfig,
   getApiUrl,
@@ -20,7 +20,7 @@ let config; // Will be set in initialization
 // Initialize handler function
 async function initializeSupplierList() {
   console.log("[supplierlist.mjs] Initializing");
-  user = await getUserValue();
+  user = await getSessionUser();
   config = await getConfig();
   setupEventListeners();
   await loadSupplierListData();

@@ -1,7 +1,7 @@
-import { loadHeaderFooter, getApiUrl, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 loadHeaderFooter();
 
-let user = await getUserValue();
+let user = await getSessionUser();
 
 let requestBy = document.getElementById("createby");
 requestBy.value = user;

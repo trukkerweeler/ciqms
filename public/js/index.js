@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getSessionUser } from "./utils.mjs";
 import { requireAuth } from "./auth-utils.mjs";
 
 loadHeaderFooter();
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   //   return; // Will redirect to login page
   // }
   try {
-    const user = await getUserValue();
+    const user = await getSessionUser();
     if (user === "TKENT") {
       const maintenanceSection = document.getElementById("maintenanceSection");
       if (maintenanceSection) {

@@ -1,11 +1,11 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getApiUrl,
   getDateTime,
 } from "./utils.mjs";
 loadHeaderFooter();
-const user = await getUserValue();
+const user = await getSessionUser();
 const apiUrl = await getApiUrl();
 
 // Get the project id from the url params

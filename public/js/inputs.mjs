@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getApiUrl,
   getConfig,
 } from "./utils.mjs";
@@ -20,7 +20,7 @@ let config; // Will be set in initialization
 document.addEventListener("DOMContentLoaded", async function () {
   const apiUrl = await getApiUrl();
   url = `${apiUrl}/input`;
-  user = await getUserValue();
+  user = await getSessionUser();
   userEmail = users[user];
   config = await getConfig();
   setupEventListeners();

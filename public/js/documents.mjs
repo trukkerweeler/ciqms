@@ -1,7 +1,7 @@
 import {
   loadHeaderFooter,
   getDocType,
-  getUserValue,
+  getSessionUser,
   myport,
   getApiUrl,
 } from "./utils.mjs";
@@ -35,7 +35,7 @@ async function initializeDocuments() {
 
     // Get current user
     console.log("[documents.mjs] Getting user...");
-    user = await getUserValue();
+    user = await getSessionUser();
     console.log("[documents.mjs] User:", user);
 
     // Load initial data (always do this, regardless of dialog elements)

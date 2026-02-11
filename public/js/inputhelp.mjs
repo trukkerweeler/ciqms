@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getApiUrl,
   getConfig,
 } from "./utils.mjs";
@@ -17,7 +17,7 @@ let config; // Will be set in initialization
 document.addEventListener("DOMContentLoaded", async function () {
   const apiUrl = await getApiUrl();
   url = `${apiUrl}/inputhelp`;
-  user = await getUserValue();
+  user = await getSessionUser();
   config = await getConfig();
   setupEventListeners();
   await loadInputHelpData();

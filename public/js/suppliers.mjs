@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   myport,
   getConfig,
   getApiUrl,
@@ -23,7 +23,7 @@ let allSuppliers = []; // Store all suppliers for filtering
 // Initialize handler function
 async function initializeSuppliers() {
   console.log("[suppliers.mjs] Initializing suppliers");
-  user = await getUserValue();
+  user = await getSessionUser();
   config = await getConfig();
   setupEventListeners();
   await loadSupplierData();

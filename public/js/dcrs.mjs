@@ -1,4 +1,9 @@
-import { loadHeaderFooter, myport, getUserValue, getApiUrl } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  myport,
+  getSessionUser,
+  getApiUrl,
+} from "./utils.mjs";
 
 // Constants
 const apiUrl = await getApiUrl();
@@ -235,7 +240,7 @@ const handleFormSubmit = async (e) => {
 
     const [nextId, user] = await Promise.all([
       getNextRequestId(),
-      getUserValue(),
+      getSessionUser(),
     ]);
 
     Object.assign(requestData, {

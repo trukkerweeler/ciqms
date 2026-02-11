@@ -1,6 +1,6 @@
-import { loadHeaderFooter, getApiUrl, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 loadHeaderFooter();
-const user = await getUserValue();
+const user = await getSessionUser();
 
 // Send a POST request
 const form = document.querySelector("form");

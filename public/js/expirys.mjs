@@ -1,4 +1,9 @@
-import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  getSessionUser,
+  myport,
+  getApiUrl,
+} from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
@@ -12,7 +17,7 @@ let user; // Will be set in initialization
 // Initialize handler function
 async function initializeExpirys() {
   console.log("[expirys.mjs] Initializing");
-  user = await getUserValue();
+  user = await getSessionUser();
   setupEventListeners();
   await loadExpiryData();
 }

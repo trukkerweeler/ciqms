@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getDateTime,
   getApiUrl,
 } from "./utils.mjs";
@@ -8,7 +8,7 @@ import {
 document.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = await getApiUrl();
   loadHeaderFooter();
-  const user = await getUserValue();
+  const user = await getSessionUser();
 
   // Default the ASSIGNED_TO field to the current user
   document.getElementById("ASSIGNED_TO").value = user;

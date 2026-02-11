@@ -1,4 +1,9 @@
-import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  getSessionUser,
+  myport,
+  getApiUrl,
+} from "./utils.mjs";
 
 loadHeaderFooter();
 const apiUrl = await getApiUrl();
@@ -310,7 +315,7 @@ const setupSaveHandler = (record, port, documentId, user) => {
 
 // Main initialization
 const init = async () => {
-  const user = await getUserValue();
+  const user = await getSessionUser();
   const port = myport();
 
   const urlParams = new URLSearchParams(window.location.search);

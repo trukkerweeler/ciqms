@@ -1,4 +1,4 @@
-import { getUserValue, loadHeaderFooter, getApiUrl } from "./utils.mjs";
+import { getSessionUser, loadHeaderFooter, getApiUrl } from "./utils.mjs";
 loadHeaderFooter();
 const skippers = [
   "JOB_CODE",
@@ -10,7 +10,7 @@ const skippers = [
   "CREATED_DATE",
 ];
 // const user = JSON.parse(localStorage.getItem('user'));
-const user = await getUserValue();
+const user = await getSessionUser();
 
 async function getRecords() {
   const main = document.querySelector("main");

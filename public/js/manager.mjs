@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getDateTime,
   getApiUrl,
 } from "./utils.mjs";
@@ -77,7 +77,7 @@ async function initManager() {
   try {
     loadHeaderFooter();
 
-    const user = await getUserValue();
+    const user = await getSessionUser();
     const apiUrl = await getApiUrl();
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");

@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getApiUrl, getUserValue } from "/js/utils.mjs";
+import { loadHeaderFooter, getApiUrl, getSessionUser } from "/js/utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
@@ -17,7 +17,7 @@ class InputCopyManager {
   async init() {
     // Get current user and api URL
     this.apiUrl = await getApiUrl();
-    this.user = await getUserValue();
+    this.user = await getSessionUser();
 
     // Initialize DOM elements
     this.copyDialog = document.getElementById("copyInputDialog");

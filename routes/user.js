@@ -77,9 +77,11 @@ router.post("/login", async (req, res) => {
           try {
             const passwordMatch = await bcrypt.compare(
               req.body.password,
-              dbpass
+              dbpass,
             );
             if (passwordMatch) {
+              // Store user in session
+              req.session.user_id = dbuser;
               res.send("Success");
             } else {
               res.status(500).send("Not Allowed");
@@ -95,6 +97,28 @@ router.post("/login", async (req, res) => {
   } catch (err) {
     console.log(err);
   }
+});
+
+// Get current authenticated user (from session or IP mapping)
+router.get("/me", (req, res) => {
+  const username = req.session?.user_id || req.user;
+
+  if (username) {
+    res.json({ username });
+  } else {
+    res.status(401).json({ error: "Not authenticated" });
+  }
+});
+
+// Logout endpoint
+router.post("/logout", (req, res) => {
+  req.session.destroy((err) => {
+    if (err) {
+      res.status(500).json({ error: "Failed to logout" });
+    } else {
+      res.json({ success: true });
+    }
+  });
 });
 
 module.exports = router;

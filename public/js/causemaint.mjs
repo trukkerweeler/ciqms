@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getUserValue, getApiUrl } from "./utils.mjs";
+import { loadHeaderFooter, getSessionUser, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
 
@@ -11,7 +11,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   try {
     const apiUrl = await getApiUrl();
     baseUrl = `${apiUrl}/causemaint`;
-    user = await getUserValue();
+    user = await getSessionUser();
     await loadCauses();
     setupEventListeners();
   } catch (error) {

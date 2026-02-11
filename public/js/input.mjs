@@ -1,7 +1,7 @@
 import {
   loadHeaderFooter,
   createNotesSection,
-  getUserValue,
+  getSessionUser,
   getDateTime,
   myport,
   createElement,
@@ -21,7 +21,7 @@ import userEmails from "./users.mjs";
 loadHeaderFooter();
 
 const port = myport();
-const user = await getUserValue();
+const user = await getSessionUser();
 const iid = getUrlParam("id");
 
 const apiUrl = await getApiUrl();
@@ -57,7 +57,7 @@ document.addEventListener("submit", async (e) => {
         UNIT: form.UNIT.value.toUpperCase(),
         VALUE: form.VALUE.value,
         SAMPLE_DATE: form.SAMPLE_DATE.value,
-        INPUT_USER: (await getUserValue()) || "",
+        INPUT_USER: (await getSessionUser()) || "",
       };
       const url = `${apiUrls.csr}${iid}`;
       const body = {};

@@ -1,12 +1,12 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   myport,
   getDateTime,
   getApiUrl,
 } from "./utils.mjs";
 loadHeaderFooter();
-const user = await getUserValue();
+const user = await getSessionUser();
 const apiUrl = await getApiUrl();
 const test = true;
 

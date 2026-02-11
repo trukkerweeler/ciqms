@@ -209,6 +209,25 @@ export async function getUserValue() {
   return data.username;
 }
 
+// get authenticated user from server session
+export async function getSessionUser() {
+  try {
+    const response = await fetch("/user/me", {
+      credentials: "include", // Include cookies for session
+    });
+    if (response.ok) {
+      const data = await response.json();
+      return data.username;
+    } else {
+      console.error("Failed to get session user:", response.status);
+      return null;
+    }
+  } catch (error) {
+    console.error("Error fetching session user:", error);
+    return null;
+  }
+}
+
 // get computer name from Windows environment variable
 export function getUserValue1() {
   return process.env.COMPUTERNAME;

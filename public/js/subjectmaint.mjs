@@ -1,4 +1,9 @@
-import { loadHeaderFooter, getUserValue, myport, getApiUrl } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  getSessionUser,
+  myport,
+  getApiUrl,
+} from "./utils.mjs";
 
 loadHeaderFooter();
 
@@ -11,7 +16,7 @@ let editingSubject = null;
 async function initializeSubjectMaint() {
   console.log("[subjectmaint.mjs] Initializing");
   try {
-    user = await getUserValue();
+    user = await getSessionUser();
     await loadSubjects();
     setupEventListeners();
   } catch (error) {

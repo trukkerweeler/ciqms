@@ -1,7 +1,7 @@
 import {
   loadHeaderFooter,
   myport,
-  getUserValue,
+  getSessionUser,
   timestampAndJoinNotes,
   getApiUrl,
 } from "./utils.mjs";
@@ -11,7 +11,7 @@ const DEBUG_MODE = false;
 
 loadHeaderFooter();
 const port = myport();
-let user = (await getUserValue("user")) || "Unknown User";
+let user = (await getSessionUser()) || "Unknown User";
 let apiUrl = await getApiUrl();
 
 async function initializePage() {
@@ -541,7 +541,7 @@ document
   .getElementById("saveDeviceEdit")
   .addEventListener("click", async (e) => {
     e.preventDefault();
-    const user = (await getUserValue("user")) || "Unknown User";
+    const user = (await getSessionUser()) || "Unknown User";
     const deviceId = document.getElementById("edit-device-id").value;
     const deviceName = document.getElementById("edit-device-name").value;
     const deviceType = document.getElementById("edit-device-type").value;
@@ -585,7 +585,7 @@ document
   .getElementById("saveDevcalEdit")
   .addEventListener("click", async (e) => {
     e.preventDefault();
-    let user = (await getUserValue()) || "Unknown User";
+    let user = (await getSessionUser()) || "Unknown User";
     const urlParams = new URLSearchParams(window.location.search);
     const deviceId = urlParams.get("id");
     const assiEmployeeId = document.getElementById(

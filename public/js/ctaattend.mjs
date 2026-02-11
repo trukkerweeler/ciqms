@@ -27,7 +27,7 @@ function filterTrainingData(employeeId) {
     displayTrainingTable(filteredData);
   }
 }
-import { loadHeaderFooter, getUserValue, getApiUrl } from "./utils.mjs";
+import { loadHeaderFooter, getSessionUser, getApiUrl } from "./utils.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();

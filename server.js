@@ -60,6 +60,43 @@ app.use(
 );
 app.use(express.json());
 
+// IP-to-User Mapping - configure your static IP assignments here
+const ipUserMapping = {
+  // Example format:
+  // "192.168.1.100": "john.smith",
+  // "192.168.1.101": "jane.doe",
+  // Add your IP mappings below
+  "192.168.1.68": "ZEISS",
+  "192.168.1.69": "TKENT",
+  "192.168.1.74": "AMIDDLETON",
+  "192.168.1.76": "CHARRISON",
+  "192.168.1.77": "BOBBI",
+  "192.168.1.80": "QC2",
+  "192.168.1.81": "SWARNAK",
+  "192.168.1.83": "VRASMUSSEN"
+};
+
+// Middleware: Set user from session or IP mapping
+app.use((req, res, next) => {
+  // Get user from existing session
+  if (req.session && req.session.user_id) {
+    req.user = req.session.user_id;
+  }
+
+  // Fallback: Try to identify by IP if no session user
+  if (!req.user) {
+    const clientIP = req.ip || req.connection.remoteAddress || "unknown";
+    req.user = ipUserMapping[clientIP] || null;
+
+    // If IP mapping found, set it in session for consistency
+    if (req.user && req.session) {
+      req.session.user_id = req.user;
+    }
+  }
+
+  next();
+});
+
 // Set CORS headers for requests WITH credentials support
 app.use((req, res, next) => {
   const origin = req.get("origin");

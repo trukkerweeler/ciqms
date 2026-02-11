@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getUserValue, myport } from "./utils.mjs";
+import { loadHeaderFooter, getSessionUser, myport } from "./utils.mjs";
 const port = myport() || 3003; // Default port if not set
 
 // ========== REVISION TRACKING HELPERS ==========
@@ -16,7 +16,7 @@ function openEditDialog(section, serialNumber, rowData) {
   document.getElementById("editRowData").value = JSON.stringify(
     rowData,
     null,
-    2
+    2,
   );
   document.getElementById("editNotes").value = "";
   document.getElementById("editDialog").showModal();
@@ -33,7 +33,7 @@ function openDeleteDialog(section, serialNumber, rowData) {
   document.getElementById("deleteRowData").value = JSON.stringify(
     rowData,
     null,
-    2
+    2,
   );
   document.getElementById("deleteNotes").value = "";
   document.getElementById("deleteDialog").showModal();
@@ -41,6 +41,7 @@ function openDeleteDialog(section, serialNumber, rowData) {
 
 async function saveRevision(type, notes) {
   const endpoint = `/cert/revision/${type === "edit" ? "edit" : "delete"}`;
+  const user = await getSessionUser();
   const payload = {
     woNo: currentWoNo,
     section: currentRevisionData.section,
@@ -54,7 +55,7 @@ async function saveRevision(type, notes) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-User": getUserValue(),
+        "X-User": user,
       },
       body: JSON.stringify(payload),
     });
@@ -67,7 +68,7 @@ async function saveRevision(type, notes) {
     alert(
       `${type === "edit" ? "Edit" : "Delete"} recorded successfully (ID: ${
         data.revisionId
-      })`
+      })`,
     );
 
     // Close dialogs
@@ -112,7 +113,7 @@ async function fetchCustomerAddresses(customerCode) {
     const response = await fetch(
       `http://${
         window.location.hostname
-      }:${port}/cert/customer-addresses/${encodeURIComponent(customerCode)}`
+      }:${port}/cert/customer-addresses/${encodeURIComponent(customerCode)}`,
     );
     if (!response.ok) {
       console.error("Failed to fetch customer addresses");
@@ -129,7 +130,7 @@ async function displayCustomerAddresses(
   customerCode,
   container,
   part2,
-  customerPO
+  customerPO,
 ) {
   const addresses = await fetchCustomerAddresses(customerCode);
 
@@ -377,11 +378,12 @@ async function saveNewRow() {
   }
 
   try {
+    const user = await getSessionUser();
     const response = await fetch(`/cert/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-User": getUserValue(),
+        "X-User": user,
       },
       body: JSON.stringify({
         woNo: currentWoNo,
@@ -396,7 +398,7 @@ async function saveNewRow() {
 
     const data = await response.json();
     alert(
-      `Row added successfully (ID: ${data.certAddId}). Status: PENDING approval`
+      `Row added successfully (ID: ${data.certAddId}). Status: PENDING approval`,
     );
     document.getElementById("addDialog").close();
     // Optionally refresh to show new row
@@ -578,7 +580,7 @@ btnSearch.addEventListener("click", async function (event) {
           : "";
         if (/^\d{6}-\d{3}$/.test(serialNumber)) {
           return fetch(
-            `http://${window.location.hostname}:${port}/cert/detail/${serialNumber}`
+            `http://${window.location.hostname}:${port}/cert/detail/${serialNumber}`,
           )
             .then((res) => {
               if (!res.ok) throw new Error("Detail fetch failed");
@@ -623,7 +625,7 @@ btnSearch.addEventListener("click", async function (event) {
             });
         }
         return Promise.resolve();
-      })
+      }),
     );
     // Display RM items in a table after all detail fetches are done
     if (RM.length > 0) {
@@ -785,7 +787,7 @@ btnSearch.addEventListener("click", async function (event) {
             headers: {
               "Content-Type": "application/json",
             },
-          }
+          },
         );
         if (!procResponse.ok) {
           throw new Error("Failed to fetch processes for " + serialNumber);
@@ -939,7 +941,7 @@ btnSearch.addEventListener("click", async function (event) {
           th.textContent = txt;
           if (txt === "Actions") th.style.textAlign = "center";
           chemHeaderRow.appendChild(th);
-        }
+        },
       );
       chemThead.appendChild(chemHeaderRow);
       chemTable.appendChild(chemThead);
@@ -972,7 +974,7 @@ btnSearch.addEventListener("click", async function (event) {
             const poResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/certpurchase/${encodeURIComponent(jobString)}`
+              }:${port}/cert/certpurchase/${encodeURIComponent(jobString)}`,
             );
             if (poResponse.ok) {
               const poData = await poResponse.json();
@@ -1015,7 +1017,7 @@ btnSearch.addEventListener("click", async function (event) {
             part: item.PART?.trim(),
             operation: item.OPERATION?.trim(),
             serialNumber: item.SERIAL_NUMBER?.trim(),
-          }
+          },
         );
         row.appendChild(actionCell);
 
@@ -1104,7 +1106,7 @@ btnSearch.addEventListener("click", async function (event) {
           th.textContent = txt;
           if (txt === "Actions") th.style.textAlign = "center";
           fwldHeaderRow.appendChild(th);
-        }
+        },
       );
       fwldThead.appendChild(fwldHeaderRow);
       fwldTable.appendChild(fwldThead);
@@ -1153,7 +1155,7 @@ btnSearch.addEventListener("click", async function (event) {
             const poResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/fwld/${encodeURIComponent(jobString)}`
+              }:${port}/cert/fwld/${encodeURIComponent(jobString)}`,
             );
             if (poResponse.ok) {
               const poData = await poResponse.json();
@@ -1188,7 +1190,7 @@ btnSearch.addEventListener("click", async function (event) {
             part: item.PART?.trim(),
             operation: item.OPERATION?.trim(),
             serialNumber: item.SERIAL_NUMBER?.trim(),
-          }
+          },
         );
         row.appendChild(actionCell);
 
@@ -1277,7 +1279,7 @@ btnSearch.addEventListener("click", async function (event) {
           th.textContent = txt;
           if (txt === "Actions") th.style.textAlign = "center";
           swldHeaderRow.appendChild(th);
-        }
+        },
       );
       swldThead.appendChild(swldHeaderRow);
       swldTable.appendChild(swldThead);
@@ -1326,7 +1328,7 @@ btnSearch.addEventListener("click", async function (event) {
             const poResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/swld/${encodeURIComponent(jobString)}`
+              }:${port}/cert/swld/${encodeURIComponent(jobString)}`,
             );
             if (poResponse.ok) {
               const poData = await poResponse.json();
@@ -1367,7 +1369,7 @@ btnSearch.addEventListener("click", async function (event) {
             part: item.PART?.trim(),
             operation: item.OPERATION?.trim(),
             serialNumber: item.SERIAL_NUMBER?.trim(),
-          }
+          },
         );
         row.appendChild(actionCell);
 
@@ -1471,7 +1473,7 @@ btnSearch.addEventListener("click", async function (event) {
           th.textContent = txt;
           if (txt === "Actions") th.style.textAlign = "center";
           heatHeaderRow.appendChild(th);
-        }
+        },
       );
       heatThead.appendChild(heatHeaderRow);
       heatTable.appendChild(heatThead);
@@ -1547,7 +1549,7 @@ btnSearch.addEventListener("click", async function (event) {
             const jobResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/heat/${encodeURIComponent(baseJob)}`
+              }:${port}/cert/heat/${encodeURIComponent(baseJob)}`,
             );
             if (jobResponse.ok) {
               const jobData = await jobResponse.json();
@@ -1562,7 +1564,7 @@ btnSearch.addEventListener("click", async function (event) {
                       const childResponse = await fetch(
                         `http://${
                           window.location.hostname
-                        }:${port}/cert/heat/${encodeURIComponent(childBaseJob)}`
+                        }:${port}/cert/heat/${encodeURIComponent(childBaseJob)}`,
                       );
                       if (childResponse.ok) {
                         const childData = await childResponse.json();
@@ -1582,7 +1584,7 @@ btnSearch.addEventListener("click", async function (event) {
                       console.error(
                         "Error fetching child WO",
                         childSerial,
-                        childErr
+                        childErr,
                       );
                       serial = childSerial;
                     }
@@ -1606,7 +1608,7 @@ btnSearch.addEventListener("click", async function (event) {
             const poResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/heat/${encodeURIComponent(jobString)}`
+              }:${port}/cert/heat/${encodeURIComponent(jobString)}`,
             );
             if (poResponse.ok) {
               const poData = await poResponse.json();
@@ -1651,7 +1653,7 @@ btnSearch.addEventListener("click", async function (event) {
             part: item.PART?.trim(),
             operation: item.OPERATION?.trim(),
             serialNumber: item.SERIAL_NUMBER?.trim(),
-          }
+          },
         );
         row.appendChild(actionCell);
 
@@ -1805,7 +1807,7 @@ btnSearch.addEventListener("click", async function (event) {
             const jobResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/heat/${encodeURIComponent(baseJob)}`
+              }:${port}/cert/heat/${encodeURIComponent(baseJob)}`,
             );
             if (jobResponse.ok) {
               const jobData = await jobResponse.json();
@@ -1820,7 +1822,7 @@ btnSearch.addEventListener("click", async function (event) {
                       const childResponse = await fetch(
                         `http://${
                           window.location.hostname
-                        }:${port}/cert/heat/${encodeURIComponent(childBaseJob)}`
+                        }:${port}/cert/heat/${encodeURIComponent(childBaseJob)}`,
                       );
                       if (childResponse.ok) {
                         const childData = await childResponse.json();
@@ -1840,7 +1842,7 @@ btnSearch.addEventListener("click", async function (event) {
                       console.error(
                         "Error fetching child WO",
                         childSerial,
-                        childErr
+                        childErr,
                       );
                       serial = childSerial;
                     }
@@ -1864,7 +1866,7 @@ btnSearch.addEventListener("click", async function (event) {
             const poResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/heat/${encodeURIComponent(jobString)}`
+              }:${port}/cert/heat/${encodeURIComponent(jobString)}`,
             );
             if (poResponse.ok) {
               const poData = await poResponse.json();
@@ -1906,7 +1908,7 @@ btnSearch.addEventListener("click", async function (event) {
             part: item.PART?.trim(),
             operation: item.OPERATION?.trim(),
             serialNumber: item.SERIAL_NUMBER?.trim(),
-          }
+          },
         );
         row.appendChild(actionCell);
 
@@ -2060,7 +2062,7 @@ btnSearch.addEventListener("click", async function (event) {
             const poResponse = await fetch(
               `http://${
                 window.location.hostname
-              }:${port}/cert/heat/${encodeURIComponent(jobString)}`
+              }:${port}/cert/heat/${encodeURIComponent(jobString)}`,
             );
             if (poResponse.ok) {
               const poData = await poResponse.json();
@@ -2102,7 +2104,7 @@ btnSearch.addEventListener("click", async function (event) {
             part: item.PART?.trim(),
             operation: item.OPERATION?.trim(),
             serialNumber: item.SERIAL_NUMBER?.trim(),
-          }
+          },
         );
         row.appendChild(actionCell);
 

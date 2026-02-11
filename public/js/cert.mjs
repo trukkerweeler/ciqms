@@ -1,4 +1,4 @@
-import { myport } from "./utils.mjs";
+import { myport, getSessionUser } from "./utils.mjs";
 
 const port = myport() || 3003;
 
@@ -131,15 +131,6 @@ function formatPartNumber(part) {
 }
 
 /**
- * Get user value from session/local storage or prompt
- */
-function getUserValue() {
-  return (
-    sessionStorage.getItem("user") || localStorage.getItem("user") || "unknown"
-  );
-}
-
-/**
  * Open edit dialog for a row
  */
 function openEditDialog(section, serialNumber, rowData) {
@@ -190,6 +181,7 @@ function openDeleteDialog(section, serialNumber, rowData) {
  */
 async function saveRevision(type, notes) {
   const endpoint = `/cert/revision/${type === "edit" ? "edit" : "delete"}`;
+  const user = await getSessionUser();
   const payload = {
     woNo: currentWoNo,
     section: currentRevisionData.section,
@@ -203,7 +195,7 @@ async function saveRevision(type, notes) {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-User": getUserValue(),
+        "X-User": user,
       },
       body: JSON.stringify(payload),
     });
@@ -284,11 +276,12 @@ async function saveNewRow() {
   }
 
   try {
+    const user = await getSessionUser();
     const response = await fetch(`/cert/add`, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
-        "X-User": getUserValue(),
+        "X-User": user,
       },
       body: JSON.stringify({
         woNo: currentWoNo,

@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getApiUrl, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 
 loadHeaderFooter();
 
@@ -13,7 +13,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   idsUrl = `${apiUrl}/ids`;
   deviceUrl = `${apiUrl}/device/nextdue`;
   
-  const user = await getUserValue();
+  const user = await getSessionUser();
   const mainElement = document.getElementById("main-content");
   // read the id from the URL
   const urlParams = new URLSearchParams(window.location.search);

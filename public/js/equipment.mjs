@@ -1,7 +1,12 @@
-import { loadHeaderFooter, myport, getUserValue, getApiUrl } from "./utils.mjs";
+import {
+  loadHeaderFooter,
+  myport,
+  getSessionUser,
+  getApiUrl,
+} from "./utils.mjs";
 
 loadHeaderFooter();
-const user = await getUserValue();
+const user = await getSessionUser();
 const apiUrl = await getApiUrl();
 
 const equipmentUrl = `${apiUrl}/equipment`;

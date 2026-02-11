@@ -1,12 +1,12 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getDateTime,
   getApiUrl,
 } from "./utils.mjs";
 
 loadHeaderFooter();
-const user = await getUserValue();
+const user = await getSessionUser();
 
 const main = document.querySelector("main");
 const iid = document.querySelector("#iid");
@@ -233,7 +233,7 @@ modalsave.addEventListener("click", async (event) => {
 
   let data = {
     INPUT_ID: aidValue,
-    INPUT_USER: getUserValue(),
+    INPUT_USER: user,
   };
   // console.log(data);
 

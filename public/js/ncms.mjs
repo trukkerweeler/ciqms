@@ -1,6 +1,6 @@
 import {
   loadHeaderFooter,
-  getUserValue,
+  getSessionUser,
   getConfig,
   getApiUrl,
 } from "./utils.mjs";
@@ -20,7 +20,7 @@ let config; // Will be set in initialization
 document.addEventListener("DOMContentLoaded", async function () {
   apiUrl = await getApiUrl();
   url = `${apiUrl}/ncm`;
-  user = await getUserValue();
+  user = await getSessionUser();
   config = await getConfig();
   setupEventListeners();
   // Add event listener for closed toggle

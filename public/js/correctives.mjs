@@ -1,4 +1,4 @@
-import { loadHeaderFooter, getApiUrl, getUserValue } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 import { calculateDaysOverdue, getRowColor } from "./escalation-utils.mjs";
 
 // Initialize header/footer
@@ -25,7 +25,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     form = document.getElementById("corrective-form");
 
     // Get current user
-    user = await getUserValue();
+    user = await getSessionUser();
 
     // Verify all required elements exist
     if (!dialog || !addButton || !cancelButton || !form) {
