@@ -29,7 +29,7 @@ function createCorrectiveFolder(correctiveId) {
         "Corrective Action folder created:",
         correctiveId,
         "at",
-        correctiveFolderPath
+        correctiveFolderPath,
       );
     } else {
       console.log("Corrective Action folder already exists for:", correctiveId);
@@ -39,7 +39,7 @@ function createCorrectiveFolder(correctiveId) {
       "Error creating Corrective Action folder for",
       correctiveId,
       ":",
-      error.message
+      error.message,
     );
     // Don't throw error - folder creation failure shouldn't break corrective action creation
   }
@@ -75,7 +75,7 @@ function makeCorrectiveFolders() {
       if (err) {
         console.error(
           "Error connecting to DB for corrective folder creation:",
-          err.stack
+          err.stack,
         );
         return;
       }
@@ -87,7 +87,7 @@ function makeCorrectiveFolders() {
         if (err) {
           console.log(
             "Failed to query for Corrective Action folder creation:",
-            err
+            err,
           );
           connection.end();
           return;
@@ -101,7 +101,7 @@ function makeCorrectiveFolders() {
             try {
               const correctiveFolderPath = path.join(
                 caFilesLocation,
-                correctiveId
+                correctiveId,
               );
               fs.mkdirSync(correctiveFolderPath, { recursive: true });
               console.log("Corrective Action folder created:", correctiveId);
@@ -110,7 +110,7 @@ function makeCorrectiveFolders() {
                 "Error creating folder for",
                 correctiveId,
                 ":",
-                folderError.message
+                folderError.message,
               );
             }
           }
@@ -311,7 +311,7 @@ router.post("/", (req, res) => {
         createCAProject(
           req.body.CORRECTIVE_ID,
           req.body.TITLE,
-          req.body.ASSIGNED_TO
+          req.body.ASSIGNED_TO,
         );
 
         // Send email notification after successful creation
@@ -388,7 +388,7 @@ async function sendCorrectiveEmail(correctiveData) {
         } else {
           console.log(
             "No email found for assignee:",
-            correctiveData.ASSIGNED_TO
+            correctiveData.ASSIGNED_TO,
           );
         }
 
@@ -416,7 +416,7 @@ function createCAProject(correctiveId, title, assignedTo) {
       if (err) {
         console.error(
           "Error connecting to DB for project creation:",
-          err.stack
+          err.stack,
         );
         return;
       }
@@ -439,7 +439,7 @@ function createCAProject(correctiveId, title, assignedTo) {
         }
 
         console.log(
-          `Project ${projectId} created for corrective action ${correctiveId}`
+          `Project ${projectId} created for corrective action ${correctiveId}`,
         );
 
         // Update CORRECTIVE table with project reference
@@ -477,7 +477,7 @@ function createRCAInput(projectId, assignedTo) {
       if (err) {
         console.error(
           "Error connecting to DB for RCA input creation:",
-          err.stack
+          err.stack,
         );
         return;
       }
@@ -545,7 +545,7 @@ function createRCAInput(projectId, assignedTo) {
                   console.error("Failed to update input system ID:", err);
                 }
                 console.log(
-                  `RCA input ${nextId} created for project ${projectId}`
+                  `RCA input ${nextId} created for project ${projectId}`,
                 );
                 connection.end();
               });
@@ -575,7 +575,7 @@ function createICAInput(projectId, assignedTo) {
       if (err) {
         console.error(
           "Error connecting to DB for ICA input creation:",
-          err.stack
+          err.stack,
         );
         return;
       }
@@ -643,7 +643,7 @@ function createICAInput(projectId, assignedTo) {
                   console.error("Failed to update input system ID:", err);
                 }
                 console.log(
-                  `ICA input ${nextId} created for project ${projectId}`
+                  `ICA input ${nextId} created for project ${projectId}`,
                 );
                 connection.end();
               });
@@ -790,6 +790,8 @@ router.put("/:id", (req, res) => {
       mytable = "CORRECTIVE_CTRL";
       appended = req.body.CAUSE_TEXT;
       appended = appended.replace(/<br>/g, "\n");
+      // Escape single quotes to prevent SQL syntax errors
+      appended = appended.replace(/'/g, "''");
       query = `insert into CORRECTIVE_CTRL (CORRECTIVE_ID, CAUSE_TEXT) values ('${req.params.id}','${appended}') on duplicate key update CAUSE_TEXT = '${appended}';`;
       break;
     case "CONTROL_TEXT":
@@ -797,6 +799,8 @@ router.put("/:id", (req, res) => {
       // console.log(mytable);
       appended = req.body.CONTROL_TEXT;
       appended = appended.replace(/<br>/g, "\n");
+      // Escape single quotes to prevent SQL syntax errors
+      appended = appended.replace(/'/g, "''");
       // query = `insert into CORRECTIVE_CTRL (CORRECTIVE_ID, CONTROL_TEXT, MODIFIED_DATE) values ('${req.params.id}','${appended}', NOW()) on duplicate key update CONTROL_TEXT = '${appended}';`;
       query = `
   INSERT INTO CORRECTIVE_CTRL (
@@ -828,7 +832,12 @@ router.put("/:id", (req, res) => {
       if (typeof req.body.PROJECT_ID === "undefined") {
         req.body.PROJECT_ID = "";
       }
-      query = `UPDATE CORRECTIVE SET ASSIGNED_TO = '${req.body.ASSIGNED_TO}', REQUEST_BY = '${req.body.REQUEST_BY}', REFERENCE = '${req.body.REFERENCE}', PROJECT_ID = '${req.body.PROJECT_ID}' WHERE CORRECTIVE_ID = '${req.params.id}'`;
+      // Escape single quotes in all text fields
+      const assignedTo = (req.body.ASSIGNED_TO || "").replace(/'/g, "''");
+      const requestBy = (req.body.REQUEST_BY || "").replace(/'/g, "''");
+      const reference = (req.body.REFERENCE || "").replace(/'/g, "''");
+      const projectId = (req.body.PROJECT_ID || "").replace(/'/g, "''");
+      query = `UPDATE CORRECTIVE SET ASSIGNED_TO = '${assignedTo}', REQUEST_BY = '${requestBy}', REFERENCE = '${reference}', PROJECT_ID = '${projectId}' WHERE CORRECTIVE_ID = '${req.params.id}'`;
     // console.log(query);
   }
   // Replace the br with a newline
@@ -927,7 +936,7 @@ router.put(
       console.log("Error connecting to Db 315");
     }
     return;
-  }
+  },
 
   // alert('Put not implemented yet');
 );

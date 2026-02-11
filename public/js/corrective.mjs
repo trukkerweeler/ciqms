@@ -9,6 +9,47 @@ const user = await getUserValue();
 const port = myport();
 const apiUrl = await getApiUrl();
 
+// Helper function to send closeout email
+async function sendCloseoutEmail(caId, title, assignedTo, closedBy) {
+  try {
+    const response = await fetch(`${apiUrl}/email-history`, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        app_module: "CORRECTIVE",
+        app_id: caId,
+        recipient_email: assignedTo,
+        subject: `Corrective Action Closeout: ${caId} - ${title}`,
+        email_body: `Corrective Action Closeout Notice
+
+Corrective Action ID: ${caId}
+Title: ${title}
+Assigned To: ${assignedTo}
+Closed By: ${closedBy}
+Closeout Date: ${new Date().toLocaleDateString()}
+
+This corrective action has been closed. Thank you for your attention to this matter.
+
+---
+This is an automated notification from the Quality Management System.`,
+        sent_by: closedBy,
+        email_status: "SENT",
+        email_type: "CLOSEOUT",
+        notes: `Automatic closeout email for CA ${caId}`,
+      }),
+    });
+
+    if (!response.ok) {
+      throw new Error(`Failed to send closeout email: ${response.status}`);
+    }
+
+    return response.json();
+  } catch (error) {
+    console.error("Error sending closeout email:", error);
+    throw error;
+  }
+}
+
 // Get the id from the url
 let urlParams = new URLSearchParams(window.location.search);
 let caid = urlParams.get("id");
@@ -267,6 +308,20 @@ fetch(url, { method: "GET" })
             CLOSED_DATE: new Date().toISOString(),
           }),
         });
+
+        // Send closeout email
+        try {
+          await sendCloseoutEmail(
+            caid,
+            record[key]["TITLE"],
+            record[key]["ASSIGNED_TO"],
+            user,
+          );
+        } catch (error) {
+          console.error("Error sending closeout email:", error);
+          // Don't fail the close operation if email fails
+        }
+
         // Disable the button and grey it out
         disableCloseButton();
         // Update the DOM with fresh data
@@ -367,8 +422,7 @@ fetch(url, { method: "GET" })
             e.preventDefault();
             let newactioner = document.getElementById("actionby").value;
             newactioner = newactioner ? newactioner.toUpperCase() : "";
-            let correctiontext =
-              document.getElementById("correctiontext").value;
+            let correctiontext = record[key]["CORRECTION_TEXT"] || "";
             let newcorrectiontext = document.getElementById(
               "new-correction-text",
             ).value;
@@ -448,7 +502,7 @@ fetch(url, { method: "GET" })
           .addEventListener("click", async (e) => {
             e.preventDefault();
             // get the values from the form
-            let causetext = document.getElementById("causetext").value;
+            let causetext = record[key]["CAUSE_TEXT"] || "";
             let newcausetext = document.getElementById("new-cause-text").value;
             let formatteddate = new Date().toISOString();
             formatteddate = formatteddate.replace("T", " ").substring(0, 19);
@@ -541,7 +595,7 @@ fetch(url, { method: "GET" })
           .addEventListener("click", async (e) => {
             e.preventDefault();
             // get the values from the form
-            let controltext = document.getElementById("controltext").value;
+            let controltext = record[key]["CONTROL_TEXT"] || "";
             let newcontroltext =
               document.getElementById("new-control-text").value;
             let formatteddate = new Date().toISOString();

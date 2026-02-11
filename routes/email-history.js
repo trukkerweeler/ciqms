@@ -1,6 +1,7 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const nodemailer = require("nodemailer");
 
 // GET email history with filters
 router.get("/", (req, res) => {
@@ -144,12 +145,93 @@ router.post("/", (req, res) => {
           connection.end();
           return res.sendStatus(500);
         }
-        res.json({ email_id: result.insertId, success: true });
+
+        const emailId = result.insertId;
         connection.end();
+
+        // Return immediately
+        res.json({ email_id: emailId, success: true });
+
+        // Send email via SMTP asynchronously (fire and forget)
+        setImmediate(() => {
+          try {
+            const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: process.env.SMTP_PORT,
+              secure: true,
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            });
+
+            const bccList = [
+              process.env.EMAIL_QM || "tim.kent@ci-aviation.com",
+            ];
+
+            const mailOptions = {
+              from: process.env.SMTP_USER,
+              to: recipient_email,
+              cc: process.env.EMAIL_QM || "",
+              subject: subject,
+              text: email_body,
+              bcc: bccList,
+            };
+
+            transporter.sendMail(mailOptions, (err, info) => {
+              if (err) {
+                console.error("SMTP Error:", err);
+                // Update email record with error status
+                updateEmailError(emailId, err.message);
+              } else {
+                console.log("Email sent successfully:", info.messageId);
+              }
+            });
+          } catch (emailErr) {
+            console.error("SMTP transport error:", emailErr);
+            // Update email record with error status
+            updateEmailError(emailId, emailErr.message);
+          }
+        });
       },
     );
   });
 });
+
+// Helper function to update email record with error status
+function updateEmailError(emailId, errorMessage) {
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("Error connecting to update email error:", err.stack);
+      return;
+    }
+
+    const truncatedError = errorMessage.substring(0, 255);
+    const updateQuery =
+      "UPDATE EMAIL_HISTORY SET EMAIL_STATUS = ?, ERROR_MESSAGE = ? WHERE EMAIL_ID = ?";
+
+    connection.query(
+      updateQuery,
+      ["FAILED", truncatedError, emailId],
+      (err) => {
+        if (err) {
+          console.error("Failed to update email error status:", err);
+        } else {
+          console.log("Email error status updated for ID:", emailId);
+        }
+        connection.end();
+      },
+    );
+  });
+}
 
 // GET last escalation for an entity (for checking escalation status)
 router.get("/last-escalation/:appModule/:appId", (req, res) => {

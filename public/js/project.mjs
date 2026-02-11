@@ -82,6 +82,16 @@ document.addEventListener("DOMContentLoaded", async () => {
         const closeButton = document.createElement("button");
         closeButton.textContent = "Close Project";
         closeButton.setAttribute("class", "close-button");
+
+        // Disable and grey out the close button if already closed
+        if (record[0].CLOSED === "Y" || record[0].CLOSED_DATE) {
+          closeButton.disabled = true;
+          closeButton.style.opacity = "0.5";
+          closeButton.style.cursor = "not-allowed";
+          closeButton.style.backgroundColor = "#e0e0e0";
+          closeButton.title = "This project is already closed";
+        }
+
         descriptionSection.appendChild(closeButton);
 
         // Add the event listener to the close button
@@ -92,6 +102,12 @@ document.addEventListener("DOMContentLoaded", async () => {
             // if the response is 200, reload the page
             .then((response) => {
               if (response.status === 200) {
+                // Disable and grey out the button before reload
+                closeButton.disabled = true;
+                closeButton.style.opacity = "0.5";
+                closeButton.style.cursor = "not-allowed";
+                closeButton.style.backgroundColor = "#e0e0e0";
+                closeButton.title = "This project is already closed";
                 location.reload();
               }
 
