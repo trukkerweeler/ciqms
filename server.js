@@ -73,8 +73,11 @@ const ipUserMapping = {
   "192.168.1.77": "BOBBI",
   "192.168.1.80": "QC2",
   "192.168.1.81": "SWARNAK",
-  "192.168.1.83": "VRASMUSSEN"
+  "192.168.1.83": "VRASMUSSEN",
 };
+
+// Default user for development mode (localhost testing)
+const devDefaultUser = "TKENT";
 
 // Middleware: Set user from session or IP mapping
 app.use((req, res, next) => {
@@ -92,6 +95,11 @@ app.use((req, res, next) => {
     if (req.user && req.session) {
       req.session.user_id = req.user;
     }
+  }
+
+  // Dev mode: Use default user if still no user identified
+  if (!req.user && isDevelopment) {
+    req.user = devDefaultUser;
   }
 
   next();

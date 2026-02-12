@@ -201,8 +201,9 @@ fetch(url, { method: "GET" })
       btnClose.setAttribute("id", "btnCloseDCR");
       btnClose.setAttribute("type", "submit");
 
-      // disable the close button
-      if (user === "TKENT") {
+      // disable the close button if not TKENT user OR if DCR is already closed
+      const isDcrClosed = record[0]["CLOSED"] === "Y";
+      if (user === "TKENT" && !isDcrClosed) {
         btnClose.disabled = false;
       } else {
         btnClose.disabled = true;
@@ -287,7 +288,7 @@ fetch(url, { method: "GET" })
           };
           const response = await fetch(closeUrl, options);
 
-          // Only reload if the response is successful
+          // Handle response without page reload
           if (response.ok) {
             // Grey out and disable the close button
             btnClose.disabled = true;
@@ -297,9 +298,16 @@ fetch(url, { method: "GET" })
               backgroundColor: "#e0e0e0",
             });
             closeDialog.close();
-            // Reload page to show updated DCR
-            window.location.reload();
+            // Show success message
+            alert("DCR closed successfully.");
           } else {
+            // Re-enable save button if there was an error
+            saveClose.disabled = false;
+            Object.assign(saveClose.style, {
+              opacity: "1",
+              cursor: "pointer",
+              backgroundColor: "",
+            });
             alert("Error closing DCR. Please try again.");
           }
         });
