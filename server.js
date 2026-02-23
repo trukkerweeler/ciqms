@@ -161,14 +161,18 @@ const os = require("os");
 
 const routesDir = path.join(__dirname, "routes");
 
+console.log("Loading routes from:", routesDir);
+
 fs.readdirSync(routesDir)
   .filter((file) => file.endsWith(".js") && !file.includes(".vbs"))
   .sort()
   .forEach((file) => {
     const routeName = path.basename(file, ".js");
+    console.log(`  Processing route file: ${file} (name: ${routeName})`);
 
     // Skip files that are not route modules
     if (["auth"].includes(routeName)) {
+      console.log(`    Skipped (auth handled separately)`);
       return;
     }
 
@@ -178,14 +182,16 @@ fs.readdirSync(routesDir)
 
       // Skip empty files
       if (stats.size === 0) {
+        console.log(`    Skipped (empty file)`);
         return;
       }
 
       const routes = require(filePath);
+      console.log(`    ✓ Loaded, checking type...`);
 
       // Skip if not a valid middleware function or router
       if (!routes || (typeof routes !== "function" && !routes.stack)) {
-        console.warn(`Skipped route ${file}: does not export valid middleware`);
+        console.warn(`    Skipped: does not export valid middleware`);
         return;
       }
 
@@ -196,9 +202,14 @@ fs.readdirSync(routesDir)
         routePath = "/";
       }
 
+      console.log(`    ✓ Registered at path: ${routePath}`);
       app.use(routePath, routes);
     } catch (error) {
-      console.error(`Error loading route ${file}:`, error.message);
+      console.error(
+        `  ✗ Error loading route ${file}:`,
+        error.message,
+        error.stack,
+      );
     }
   });
 

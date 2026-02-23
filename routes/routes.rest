@@ -81,3 +81,6 @@ GET http://localhost:3003/ncm/subjects
 
 ###
 http://localhost:3003/ncm/test
+
+###
+http://localhost:3003/collect

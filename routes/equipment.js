@@ -114,11 +114,15 @@ router.post("/create", async (req, res) => {
         req.body.NAME,
         req.body.EQUIPMENT_TYPE,
         req.body.STATUS,
-        req.body.ASSIGNED_TO,
+        req.body.ASSIGNED_TO
+          ? req.body.ASSIGNED_TO.toUpperCase()
+          : req.body.ASSIGNED_TO,
         req.body.MINOR_LOCATION,
         req.body.MAJOR_LOCATION,
         req.body.PM_UD1,
-        req.body.CUSTOMER_ID,
+        req.body.CUSTOMER_ID
+          ? req.body.CUSTOMER_ID.toUpperCase()
+          : req.body.CUSTOMER_ID,
         req.body.PRODUCT_ID,
         req.body.SUPPLIER_ID,
         req.body.SUPP_EQUIP_ID,
@@ -180,11 +184,15 @@ router.put("/edit", async (req, res) => {
         req.body.NAME,
         req.body.EQUIPMENT_TYPE,
         req.body.STATUS,
-        req.body.ASSIGNED_TO,
+        req.body.ASSIGNED_TO
+          ? req.body.ASSIGNED_TO.toUpperCase()
+          : req.body.ASSIGNED_TO,
         req.body.MINOR_LOCATION,
         req.body.MAJOR_LOCATION,
         req.body.PM_UD1,
-        req.body.CUSTOMER_ID,
+        req.body.CUSTOMER_ID
+          ? req.body.CUSTOMER_ID.toUpperCase()
+          : req.body.CUSTOMER_ID,
         req.body.PRODUCT_ID,
         req.body.SUPPLIER_ID,
         req.body.SUPP_EQUIP_ID,

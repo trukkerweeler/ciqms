@@ -337,14 +337,6 @@ function displayInputTable(data, includeClosed = false) {
       }
     });
 
-    // Make row clickable
-    row.style.cursor = "pointer";
-    row.addEventListener("click", (e) => {
-      if (e.target.tagName !== "A") {
-        window.location.href = `input.html?id=${item.INPUT_ID}`;
-      }
-    });
-
     orderedFields.forEach((key) => {
       const td = document.createElement("td");
       let cellContent = "";

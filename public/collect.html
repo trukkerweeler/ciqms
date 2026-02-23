@@ -1,0 +1,79 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Collect - Detail</title>
+  </head>
+
+  <body>
+    <header id="header"></header>
+    <dialog id="detailsDialog">
+      <form id="details-form">
+        <label for="assignedto">Assigned to:</label>
+        <input type="text" id="assignedto" name="assigned-to" />
+        <label for="requestby">Request by:</label>
+        <input type="text" id="requestby" name="request-by" />
+        <label for="project">Project:</label>
+        <input type="text" id="project" name="project" />
+        <label for="reference">Reference:</label>
+        <input type="text" id="reference" name="reference" />
+        <button type="submit" id="detailSave">Submit</button>
+      </form>
+    </dialog>
+
+    <dialog id="correctionDialog" class="editDialog">
+      <form id="correction-form">
+        <label for="actionby">Action by:</label>
+        <input type="text" id="actionby" name="actionby" />
+        <label for="correctiondate">Correction date:</label>
+        <input type="date" id="correctiondate" name="correctiondate" />
+        <label for="correction-text">Enter correction:</label>
+        <textarea
+          id="new-correction-text"
+          name="correction-text"
+          rows="4"
+          cols="50"
+        ></textarea>
+        <button type="submit" id="correctionSave">Submit</button>
+      </form>
+    </dialog>
+    <dialog id="causeDialog" class="editDialog">
+      <form id="root-cause-form">
+        <label for="new-cause-text">Enter root cause:</label>
+        <textarea
+          id="new-cause-text"
+          name="new-cause-text"
+          rows="4"
+          cols="50"
+        ></textarea>
+        <button type="submit" id="causeSave">Submit</button>
+      </form>
+    </dialog>
+    <dialog id="controlDialog" class="editDialog">
+      <form id="action-form">
+        <label for="new-control-text">Enter systemic action:</label>
+        <textarea
+          id="new-control-text"
+          name="new-control-text"
+          rows="4"
+          cols="50"
+        ></textarea>
+        <button type="submit" id="controlSave">Submit</button>
+      </form>
+    </dialog>
+    <main id="main"></main>
+    <footer id="footer"></footer>
+  </body>
+
+  <script type="module" src="/js/collects.mjs"></script>
+</html>

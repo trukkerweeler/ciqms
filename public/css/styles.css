@@ -419,6 +419,44 @@ dialog .edit-equipment-form select {
   margin: 0 !important;
 }
 
+/* ========== Equipment Forms ========== */
+#create-equipment-form .form-grid {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 4px 8px !important;
+  padding: 6px 10px !important;
+}
+
+#create-equipment-form .form-group {
+  gap: 2px !important;
+  margin-bottom: 0.2rem !important;
+}
+
+#create-equipment-form .form-group label {
+  font-size: 0.65rem !important;
+  margin: 0 !important;
+}
+
+#create-equipment-form .form-group input,
+#create-equipment-form .form-group select {
+  padding: 4px !important;
+  font-size: 0.85rem !important;
+}
+
+#create-equipment-form .dialog-actions {
+  padding: 6px 10px !important;
+  gap: 6px !important;
+}
+
+#create-equipment-form .form-header {
+  padding: 4px 10px !important;
+}
+
+#create-equipment-form .form-header h2 {
+  font-size: 0.95rem !important;
+  margin: 0 !important;
+}
+
 /* Equipment form fields container */
 #edit-equipment-form .form-fields-container {
   grid-column: 1 / 3;
@@ -2385,6 +2423,10 @@ input:checked + .slider:before {
 #main {
   display: block;
   padding: 0.5rem 0.5rem 1rem 0.5rem;
+  max-width: 1200px;
+  margin: 0 auto;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 /* Past date styling for devices table */

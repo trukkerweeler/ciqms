@@ -384,37 +384,74 @@ if (changeEquipmentImageButton) {
       "equipmentImagePicker",
     );
     if (!equipmentImagePicker || !equipmentImagePicker.value) {
-      alert("Must choose an image first.");
+      alert("Must choose at least one image first.");
       return;
     }
-    const file = equipmentImagePicker.files[0];
-    if (file) {
-      const formData = new FormData();
-      formData.append("image", file, file.name);
-      const urlParams = new URLSearchParams(window.location.search);
-      const equipmentId = urlParams.get("id");
-      formData.append("equipmentId", equipmentId);
+
+    const files = Array.from(equipmentImagePicker.files);
+    const urlParams = new URLSearchParams(window.location.search);
+    const equipmentId = urlParams.get("id");
+
+    // Disable button during upload
+    changeEquipmentImageButton.disabled = true;
+    const originalText = changeEquipmentImageButton.textContent;
+
+    const uploadResults = {
+      succeeded: [],
+      failed: [],
+    };
+
+    // Sequential upload with progress
+    for (let i = 0; i < files.length; i++) {
+      const file = files[i];
+      const progressText = `Uploading image ${i + 1} of ${files.length}...`;
+      changeEquipmentImageButton.textContent = progressText;
+
       try {
+        const formData = new FormData();
+        formData.append("image", file, file.name);
+        formData.append("equipmentId", equipmentId);
+
         const response = await fetch(`${apiUrl}/equipmentImage`, {
           method: "POST",
           body: formData,
         });
+
         if (response.ok) {
-          alert("Image uploaded successfully!");
-          // Close the dialog and reload the page to reflect the upload
-          const dialog = document.getElementById("view-equipment-image-dialog");
-          if (dialog) {
-            dialog.close();
-          }
-          window.location.reload();
+          uploadResults.succeeded.push(file.name);
         } else {
-          alert("Failed to upload image.");
+          uploadResults.failed.push(
+            `${file.name} (Status: ${response.status})`,
+          );
         }
       } catch (error) {
-        console.error("Error uploading image:", error);
-        alert("An error occurred while uploading the image.");
+        console.error(`Error uploading ${file.name}:`, error);
+        uploadResults.failed.push(`${file.name} (Error: ${error.message})`);
       }
-      equipmentImagePicker.value = ""; // Reset the file input value
+    }
+
+    // Reset button
+    changeEquipmentImageButton.disabled = false;
+    changeEquipmentImageButton.textContent = originalText;
+    equipmentImagePicker.value = "";
+
+    // Show results summary
+    let summaryMessage = `Upload Complete!\n\nSuccessful: ${uploadResults.succeeded.length}\nFailed: ${uploadResults.failed.length}`;
+
+    if (uploadResults.failed.length > 0) {
+      summaryMessage += `\n\nFailed files:\n${uploadResults.failed.join("\n")}`;
+    }
+
+    alert(summaryMessage);
+
+    // Reload image section if any succeeded
+    if (uploadResults.succeeded.length > 0) {
+      const dialog = document.getElementById("view-equipment-image-dialog");
+      if (dialog) {
+        dialog.close();
+      }
+      // Refresh the image display without full page reload
+      fetchEquipment(equipmentId);
     }
   });
 }
@@ -441,12 +478,13 @@ if (deleteEquipmentImageButton) {
 
       if (response.ok) {
         alert("Image deleted successfully!");
-        // Close the dialog and reload the page to reflect the deletion
+        // Close the dialog and refresh image display
         const dialog = document.getElementById("view-equipment-image-dialog");
         if (dialog) {
           dialog.close();
         }
-        window.location.reload();
+        // Refresh the image display without full page reload
+        fetchEquipment(equipmentId);
       } else {
         const errorMsg = responseData?.message || "Failed to delete image.";
         console.error("Delete failed:", errorMsg);

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -38,10 +38,20 @@
           <input type="text" id="edit-equipment-type" name="EQUIPMENT_TYPE" />
 
           <label for="edit-customer-id">Customer ID:</label>
-          <input type="text" id="edit-customer-id" name="CUSTOMER_ID" />
+          <input
+            type="text"
+            id="edit-customer-id"
+            name="CUSTOMER_ID"
+            style="text-transform: uppercase"
+          />
 
           <label for="edit-assigned-to">Assigned To:</label>
-          <input type="text" id="edit-assigned-to" name="ASSIGNED_TO" />
+          <input
+            type="text"
+            id="edit-assigned-to"
+            name="ASSIGNED_TO"
+            style="text-transform: uppercase"
+          />
 
           <label for="edit-manufacturer-name">Manufacturer Name:</label>
           <input
@@ -168,7 +178,12 @@
             </section>
             <div>
               <h3 class="upload-heading">Upload new image</h3>
-              <input type="file" id="equipmentImagePicker" accept="image/*" />
+              <input
+                type="file"
+                id="equipmentImagePicker"
+                accept="image/*"
+                multiple
+              />
               <br />
               <button
                 type="button"
@@ -187,7 +202,9 @@
       <button
         id="closeAllEquipmentImagesDialog"
         class="close-button"
-        onclick="document.getElementById('view-all-equipment-images-dialog').close()"
+        onclick="
+          document.getElementById('view-all-equipment-images-dialog').close()
+        "
       >
         &times;
       </button>
@@ -207,7 +224,11 @@
         </div>
         <div class="close-button-container">
           <button
-            onclick="document.getElementById('view-all-equipment-images-dialog').close()"
+            onclick="
+              document
+                .getElementById('view-all-equipment-images-dialog')
+                .close()
+            "
           >
             Close
           </button>

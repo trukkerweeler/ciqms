@@ -1,0 +1,143 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Devices</title>
+    <link rel="stylesheet" href="css/stylescal.css" />
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" href="./images/ci-logo.png" />
+    <style>
+      #create-product-plan-form {
+        padding: 12px !important;
+        gap: 6px;
+      }
+      #create-product-plan-form h2 {
+        margin: 0 0 8px 0 !important;
+        padding: 0 !important;
+        font-size: 1.1rem;
+      }
+      #create-product-plan-form label {
+        margin: 0 0 2px 0 !important;
+        padding: 0 !important;
+        font-size: 0.9rem;
+      }
+      #create-product-plan-form input,
+      #create-product-plan-form select {
+        margin: 0 0 6px 0 !important;
+        padding: 4px 6px !important;
+        font-size: 0.9rem;
+      }
+      #create-product-plan-form .dialog-actions {
+        margin: 8px 0 0 0 !important;
+        padding: 0 !important;
+        gap: 8px;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header"></header>
+    <nav></nav>
+    <main id="main-content">
+      <section class="section">
+        <div class="page-header-div">
+          <h1 class="page-header">Production Plan Data</h1>
+          <div
+            id="column-controls"
+            style="
+              margin-left: auto;
+              display: flex;
+              gap: 8px;
+              align-items: center;
+            "
+          ></div>
+        </div>
+
+        <div id="prod-plan-container"></div>
+      </section>
+      <dialog create-product-plan-dialog class="dialog">
+        <form id="create-product-plan-form">
+          <h2 id="create-plan-header">Create Collect</h2>
+
+          <label for="product-id">Product ID:</label>
+          <input
+            type="text"
+            id="product-id"
+            name="PRODUCT_ID"
+            style="text-transform: uppercase"
+            required
+          />
+
+          <label for="product-rev-level">Product Rev Level:</label>
+          <input
+            type="text"
+            id="product-rev-level"
+            name="PRODUCT_REV_LEVEL"
+            style="text-transform: uppercase"
+            required
+          />
+
+          <label for="operation-no">Operation No:</label>
+          <input type="text" id="operation-no" name="OPERATION_NO" required />
+
+          <label for="collection-date">Collection Date:</label>
+          <input
+            type="date"
+            id="collection-date"
+            name="COLLECTION_DATE"
+            required
+          />
+
+          <label for="po-number">PO Number:</label>
+          <input
+            type="text"
+            id="po-number"
+            name="PO_NUMBER"
+            style="text-transform: uppercase"
+          />
+
+          <label for="lot-number">Lot Number:</label>
+          <input
+            type="text"
+            id="lot-number"
+            name="LOT_NUMBER"
+            style="text-transform: uppercase"
+          />
+
+          <label for="lot-size">Lot Size:</label>
+          <input type="number" id="lot-size" name="LOT_SIZE" />
+
+          <label for="assigned-to">Assigned To:</label>
+          <input
+            type="text"
+            id="assigned-to"
+            name="ASSIGNED_TO"
+            style="text-transform: uppercase"
+          />
+
+          <label for="due-date">Due Date:</label>
+          <input type="date" id="due-date" name="DUE_DATE" />
+
+          <div class="dialog-actions">
+            <button
+              id="buttonAddProductPlan"
+              class="btn btn-primary"
+              type="submit"
+            >
+              Create
+            </button>
+            <button
+              type="button"
+              id="cancel-add-product-plan"
+              class="btn btn-cancel"
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="js/collects.mjs"></script>
+</html>

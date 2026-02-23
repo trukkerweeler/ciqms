@@ -29,6 +29,11 @@ if (!addEquipmentBtn) {
         purchaseDateField.value = new Date().toISOString().slice(0, 10);
       }
 
+      const warrantyDateField = document.getElementById("warranty-date");
+      if (warrantyDateField && !warrantyDateField.value) {
+        warrantyDateField.value = "2001-01-01";
+      }
+
       // Add input event listener to transform EQUIPMENT_TYPE to uppercase as user types
       const equipmentTypeField = document.getElementById("equipment-type");
       if (equipmentTypeField) {
@@ -63,10 +68,34 @@ if (!addEquipmentBtn) {
         "#create-equipment-button",
       );
       if (createButton) {
-        createButton.addEventListener("click", (e) => {
+        createButton.addEventListener("click", async (e) => {
           e.preventDefault();
           const formData = new FormData(createDialog.querySelector("form"));
           const equipmentData = Object.fromEntries(formData.entries());
+
+          // Check if equipment ID already exists
+          const equipmentIdInput = equipmentData["EQUIPMENT_ID"].toUpperCase();
+          try {
+            const checkResponse = await fetch(
+              `${equipmentUrl}/${equipmentIdInput}`,
+            );
+            const existingEquipment = await checkResponse.json();
+
+            // If equipment exists (checkResponse.ok), warn user
+            if (checkResponse.ok && existingEquipment.EQUIPMENT_ID) {
+              const confirmed = confirm(
+                `Equipment ID '${equipmentIdInput}' already exists!\n\nDo you want to edit the existing equipment instead, or use a different ID?`,
+              );
+              if (!confirmed) {
+                return; // User clicked Cancel, stop form submission
+              }
+              return; // Stop here and don't create duplicate
+            }
+          } catch (error) {
+            console.error("Error checking equipment ID:", error);
+            // Continue anyway if check fails
+          }
+
           // Validate required fields
           const requiredFields = ["EQUIPMENT_ID", "NAME"];
           for (const field of requiredFields) {
