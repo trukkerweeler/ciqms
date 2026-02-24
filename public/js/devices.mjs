@@ -221,12 +221,32 @@ function generateTableRow(device, fields) {
     if (field === "DEVICE_ID") {
       rowTemplate += `<td><a href="device.html?id=${device[field]}">${device[field]}</a></td>`;
     } else if (field === "STATUS") {
+      // Calculate status based on NEXT_DATE
       let statusText = "";
-      if (device[field] === "E") statusText = "EXPIRED";
-      else if (device[field] === "C") statusText = "CURRENT";
-      else if (device[field] === "X") statusText = "EXTEND";
-      else if (device[field] === "D") statusText = "DISPOSED";
-      else statusText = device[field] ?? "";
+      let statusCode = device[field];
+
+      if (device["NEXT_DATE"]) {
+        const nextDate = new Date(device["NEXT_DATE"]);
+        const now = new Date();
+
+        if (device["MAJOR_LOCATION"] === "DISPOSED") {
+          statusCode = "D";
+          statusText = "DISPOSED";
+        } else if (nextDate < now) {
+          statusCode = "E";
+          statusText = "EXPIRED";
+        } else {
+          statusCode = "C";
+          statusText = "CURRENT";
+        }
+      } else {
+        // Fallback if no NEXT_DATE
+        if (statusCode === "E") statusText = "EXPIRED";
+        else if (statusCode === "C") statusText = "CURRENT";
+        else if (statusCode === "X") statusText = "EXTEND";
+        else if (statusCode === "D") statusText = "DISPOSED";
+        else statusText = statusCode ?? "";
+      }
       rowTemplate += `<td>${statusText}</td>`;
     } else if (field.endsWith("DATE")) {
       const dateValue = device[field];

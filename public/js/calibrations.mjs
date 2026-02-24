@@ -15,6 +15,11 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const user = await getSessionUser();
   const mainElement = document.getElementById("main-content");
+
+  // Constrain main element height to prevent overflow
+  mainElement.style.maxHeight = "calc(100vh - 250px)";
+  mainElement.style.overflowY = "auto";
+
   // read the id from the URL
   const urlParams = new URLSearchParams(window.location.search);
   const id = urlParams.get("id");
@@ -115,14 +120,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Create a scrollable container for the table
         let tableContainer = document.createElement("div");
         tableContainer.className = "table-container";
-        // Calculate height to account for footer (footer height ~50px + some padding)
-        tableContainer.style.maxHeight = "calc(80vh - 60px)"; // Increased height due to compact header
+        // Calculate height accounting for filter input and header
+        tableContainer.style.maxHeight = "calc(100% - 100px)"; // Fit within constrained main element
         tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
         tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling if needed
         tableContainer.style.border = "1px solid #ddd"; // Add border for better visual separation
         tableContainer.style.borderRadius = "4px"; // Add rounded corners
         tableContainer.style.marginTop = "10px"; // Add some top margin
-        tableContainer.style.marginBottom = "80px"; // Add bottom margin to clear footer
+        tableContainer.style.marginBottom = "20px"; // Add bottom margin
 
         let table = document.createElement("table");
         table.className = "table table-striped table-bordered table-hover";
@@ -184,6 +189,58 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Append the table to the container, then container to the main element
         tableContainer.appendChild(table);
         mainElement.appendChild(tableContainer);
+
+        // Add filter functionality
+        const filterInput = document.getElementById("calibrationSearch");
+        const tableBody = table.querySelector("tbody");
+
+        filterInput.addEventListener("input", () => {
+          const filterValue = filterInput.value.toLowerCase();
+          const filteredData = displayData.filter((record) =>
+            myFields.some((field) =>
+              (record[field] ?? "")
+                .toString()
+                .toLowerCase()
+                .includes(filterValue),
+            ),
+          );
+
+          // Clear and rebuild tbody
+          tableBody.innerHTML = "";
+          if (filteredData.length === 0) {
+            let row = document.createElement("tr");
+            let td = document.createElement("td");
+            td.colSpan = myFields.length;
+            td.textContent = "No records found";
+            td.style.textAlign = "center";
+            row.appendChild(td);
+            tableBody.appendChild(row);
+          } else {
+            filteredData.forEach((record) => {
+              let row = document.createElement("tr");
+              myFields.forEach((field) => {
+                let td = document.createElement("td");
+                if (record[field] === "I") {
+                  td.textContent = "Internal";
+                } else if (record[field] === "P") {
+                  td.textContent = "Passed";
+                } else if (
+                  field.toLowerCase().endsWith("date") &&
+                  record[field]
+                ) {
+                  const date = new Date(record[field]);
+                  td.textContent = `${
+                    date.getMonth() + 1
+                  }/${date.getDate()}/${date.getFullYear()}`;
+                } else {
+                  td.textContent = record[field] || "";
+                }
+                row.appendChild(td);
+              });
+              tableBody.appendChild(row);
+            });
+          }
+        });
       })
       .catch((error) => {
         console.error("Error fetching records:", error);

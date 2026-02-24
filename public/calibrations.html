@@ -1,9 +1,9 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>Devices</title>
+    <title>Calibrations</title>
     <link rel="stylesheet" href="css/stylescal.css" />
     <link rel="stylesheet" href="css/styles.css" />
     <link rel="icon" href="./images/ci-logo.png" />
@@ -11,6 +11,10 @@
   <body>
     <header id="header"></header>
     <nav></nav>
+    <div id="calibrationFilter">
+      <label for="calibrationSearch">Filter by any field:</label>
+      <input type="text" id="calibrationSearch" />
+    </div>
     <main id="main-content">
       <dialog create-calibration-dialog class="dialog">
         <form id="create-calibration-form">
@@ -20,7 +24,7 @@
             type="text"
             id="device-id"
             name="DEVICE_ID"
-            style="text-transform: uppercase;"
+            style="text-transform: uppercase"
             required
           />
 
@@ -32,10 +36,22 @@
           </select>
 
           <label for="supplier-id">Supplier ID:</label>
-            <input type="text" id="supplier-id" name="SUPPLIER_ID" style="text-transform: uppercase;" required />
+          <input
+            type="text"
+            id="supplier-id"
+            name="SUPPLIER_ID"
+            style="text-transform: uppercase"
+            required
+          />
 
           <label for="employee-id">Employee ID:</label>
-            <input type="text" id="employee-id" name="EMPLOYEE_ID" style="text-transform: uppercase;" required />
+          <input
+            type="text"
+            id="employee-id"
+            name="EMPLOYEE_ID"
+            style="text-transform: uppercase"
+            required
+          />
 
           <label for="calibrate-date">Next Due:</label>
           <input
@@ -52,7 +68,11 @@
           </select>
 
           <div class="dialog-actions">
-            <button id="buttonAddCalibration" class="btn btn-primary" type="submit">
+            <button
+              id="buttonAddCalibration"
+              class="btn btn-primary"
+              type="submit"
+            >
               Create
             </button>
             <button

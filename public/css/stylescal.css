@@ -540,6 +540,45 @@ dialog {
   }
 }
 
+/* Compact form styling for create-calibration-form */
+#create-calibration-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+#create-calibration-form label {
+  margin: 0.25rem 0 0.1rem 0;
+  font-size: 13px;
+  font-weight: bold;
+}
+
+#create-calibration-form input,
+#create-calibration-form select {
+  padding: 5px 8px;
+  margin-bottom: 0;
+  font-size: 13px;
+}
+
+#create-calibration-form h2 {
+  margin: 0 0 0.5rem 0;
+  font-size: 18px;
+}
+
+#create-calibration-form .dialog-actions {
+  margin-top: 0.75rem;
+  display: flex;
+  gap: 0.5rem;
+}
+
+#create-calibration-form .btn,
+#create-calibration-form .btn-cancel {
+  margin-left: 0;
+  padding: 8px 12px;
+  font-size: 12px;
+  flex: 1;
+}
+
 @media print {
   nav,
   #footer {

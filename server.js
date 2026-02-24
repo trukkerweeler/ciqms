@@ -250,11 +250,11 @@ app.use("/document-files", express.static(documentFilesPath));
 const hostname = os.hostname();
 let baseDeviceImagesPath;
 if (hostname === "QUALITY-MGR") {
-  baseDeviceImagesPath = "C:\\Quality - Records\\7150 - Calibration\\";
+  baseDeviceImagesPath = "C:\\Quality - Records\\7150 - Calibration";
 } else {
   baseDeviceImagesPath =
     process.env.DEVICE_IMAGES_PATH ||
-    "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration\\";
+    "\\\\fs1\\Common\\Quality - Records\\7150 - Calibration";
 }
 const deviceImagesPath = path.join(baseDeviceImagesPath, "_device-images");
 app.use("/_device-images", express.static(deviceImagesPath));

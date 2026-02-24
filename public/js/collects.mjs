@@ -173,33 +173,23 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const displayData = data;
 
-        // Build field list from returned data, excluding user-defined and reference fields
-        let myFields = [];
-        if (displayData.length > 0) {
-          myFields = Object.keys(displayData[0]).filter((k) => {
-            return (
-              !/USER_DEFINED/i.test(k) &&
-              !/^REFERENCE/i.test(k) &&
-              !/^CREATE_BY$/i.test(k) &&
-              !/^ENTITY_ID$/i.test(k)
-            );
-          });
-        } else {
-          // sensible defaults when there are no records yet
-          myFields = [
-            "PRODUCT_COLLECT_ID",
-            "PRODUCT_ID",
-            "PRODUCT_REV_LEVEL",
-            "OPERATION_NO",
-            "COLLECTION_DATE",
-            "PO_NUMBER",
-            "LOT_NUMBER",
-            "LOT_SIZE",
-            "ASSIGNED_TO",
-            "DUE_DATE",
-            "CREATE_DATE",
-          ];
-        }
+        // Specify which fields to display in the table
+        let myFields = [
+          "PRODUCT_COLLECT_ID",
+          "PRD_INSP_PLN_SYSID",
+          "PRODUCT_ID",
+          "OPERATION_NO",
+          "COLLECTION_DATE",
+          "PO_NUMBER",
+          "LOT_NUMBER",
+          "LOT_SIZE",
+          "ACCEPTED",
+          "REJECTED",
+          "ASSIGNED_TO",
+          "PLAN_REV_LEVEL",
+          "NCM_ID",
+          "LOT_SYSID",
+        ];
 
         // Check if there are no records
         if (displayData.length === 0) {
@@ -216,18 +206,20 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Create a scrollable container for the table
         let tableContainer = document.createElement("div");
         tableContainer.className = "table-container";
-        // Calculate height to account for footer (footer height ~50px + some padding)
-        tableContainer.style.maxHeight = "calc(80vh - 60px)"; // Increased height due to compact header
+        tableContainer.style.width = "100%"; // Full width
+        tableContainer.style.maxHeight = "600px"; // Fixed height for scroll
         tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
-        tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling if needed
-        tableContainer.style.border = "1px solid #ddd"; // Add border for better visual separation
-        tableContainer.style.borderRadius = "4px"; // Add rounded corners
-        tableContainer.style.marginTop = "10px"; // Add some top margin
-        tableContainer.style.marginBottom = "80px"; // Add bottom margin to clear footer
+        tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling
+        tableContainer.style.border = "1px solid #ddd"; // Border
+        tableContainer.style.borderRadius = "4px"; // Rounded corners
+        tableContainer.style.marginTop = "10px"; // Top margin
+        tableContainer.style.marginBottom = "20px"; // Bottom margin
 
         let table = document.createElement("table");
         table.className = "table table-striped table-bordered table-hover";
         table.style.marginBottom = "0"; // Remove default table margin
+        table.style.color = "#333"; // Ensure text color is visible
+        table.style.backgroundColor = "#fff"; // Ensure background is visible
 
         // Create table header
         let thead = document.createElement("thead");
@@ -239,6 +231,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         let headerRow = document.createElement("tr");
         myFields.forEach((field) => {
           let th = document.createElement("th");
+          th.style.color = "#000"; // Ensure header text is visible
+          th.style.backgroundColor = "#f8f9fa"; // Light background for header
+          th.style.padding = "10px 8px"; // Padding
+          th.style.borderBottom = "2px solid #ddd"; // Bottom border
+          th.style.fontWeight = "bold"; // Bold text
           if (field === "COLLECTION_DATE") {
             th.textContent = "COLLECTION DATE";
           } else if (field === "DUE_DATE") {
@@ -257,18 +254,27 @@ document.addEventListener("DOMContentLoaded", async () => {
           let row = document.createElement("tr");
           myFields.forEach((field) => {
             let td = document.createElement("td");
+            td.style.color = "#000"; // Ensure text is visible
+            td.style.padding = "8px"; // Ensure spacing
             const val = record[field];
-            if (val === null || val === undefined) {
+
+            // Handle PRD_INSP_PLN_SYSID first (before null check)
+            if (field === "PRD_INSP_PLN_SYSID") {
+              if (val === null || val === undefined || val === "") {
+                td.textContent = "NO PLAN";
+                td.style.color = "red";
+                td.style.fontWeight = "bold";
+              } else {
+                td.textContent = formatIdForDisplay(val);
+              }
+            } else if (val === null || val === undefined) {
               td.textContent = "";
             } else if (
               typeof val === "string" &&
               (val === "I" || val === "P")
             ) {
               td.textContent = val === "I" ? "Internal" : "Passed";
-            } else if (
-              field === "PRODUCT_COLLECT_ID" ||
-              field === "PRD_INSP_PLN_SYSID"
-            ) {
+            } else if (field === "PRODUCT_COLLECT_ID") {
               // Format ID fields with zero-padding to 7 digits
               td.textContent = formatIdForDisplay(val);
             } else if (field.toLowerCase().endsWith("date") && record[field]) {

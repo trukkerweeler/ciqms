@@ -49,7 +49,7 @@ router.delete("/:id", async (req, res) => {
         }
         if (DEBUG_MODE) {
           console.log(
-            `Deleted ${result.affectedRows} rows from DEVICE_IMAGES for device ${deviceId}`
+            `Deleted ${result.affectedRows} rows from DEVICE_IMAGES for device ${deviceId}`,
           );
         }
         // Delete the physical file if it exists
@@ -202,6 +202,7 @@ router.post("/", upload.single("image"), async (req, res) => {
     if (!fs.existsSync(deviceImagesPath)) {
       fs.mkdirSync(deviceImagesPath, { recursive: true });
     }
+    // Use original filename
     const filename = req.file.originalname;
     const destPath = path.join(deviceImagesPath, filename);
     fs.writeFileSync(destPath, req.file.buffer);

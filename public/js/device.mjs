@@ -393,17 +393,45 @@ async function initializePage() {
               " ",
             )}:</strong> ${date.toLocaleDateString()}`;
           } else if (field === "STATUS") {
-            // Display X for EXTENDED, E for EXPIRED, or the full status value
-            let statusDisplay = data[field] || "";
-            if (statusDisplay.toUpperCase() === "EXTENDED") {
-              statusDisplay = "X";
-            } else if (statusDisplay.toUpperCase() === "EXPIRED") {
-              statusDisplay = "E";
+            // Check for explicit EXTENDED status first
+            let statusDisplay = "";
+            let isExpired = false;
+
+            if (data["STATUS"] && data["STATUS"].toUpperCase() === "EXTENDED") {
+              statusDisplay = "X"; // User manually marked as extended
+            } else {
+              // Calculate from NEXT_DATE - parse carefully to handle multiple formats
+              let nextDateObj = new Date(data["NEXT_DATE"]);
+
+              // If parse failed or invalid, try parsing as MM/DD/YYYY
+              if (isNaN(nextDateObj.getTime()) && data["NEXT_DATE"]) {
+                const parts = data["NEXT_DATE"].split("/");
+                if (parts.length === 3) {
+                  nextDateObj = new Date(parts[2], parts[0] - 1, parts[1]);
+                }
+              }
+
+              const today = new Date();
+              today.setHours(0, 0, 0, 0); // Reset to midnight for fair comparison
+              nextDateObj.setHours(0, 0, 0, 0);
+
+              if (nextDateObj < today) {
+                statusDisplay = "E"; // EXPIRED
+                isExpired = true;
+              } else {
+                statusDisplay = "X"; // Valid/Current
+              }
             }
+
             calibrationDiv.innerHTML = `<strong>${field.replace(
               /_/g,
               " ",
             )}:</strong> ${statusDisplay}`;
+
+            if (isExpired) {
+              calibrationDiv.style.color = "red";
+              calibrationDiv.style.fontWeight = "bold";
+            }
           } else {
             calibrationDiv.innerHTML = `<strong>${field.replace(
               /_/g,
