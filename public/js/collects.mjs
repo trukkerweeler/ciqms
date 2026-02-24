@@ -11,11 +11,40 @@ function formatIdForDisplay(id) {
   return String(id).padStart(7, "0");
 }
 
+// Helper function to map field names to display column aliases
+function getDisplayName(field) {
+  const aliases = {
+    PRODUCT_COLLECT_ID: "COLLECT ID",
+    PRD_INSP_PLN_SYSID: "PLAN ID",
+    OPERATION_NO: "OP",
+    COLLECTION_DATE: "COLL DATE",
+    PLAN_REV_LEVEL: "PLN REV",
+    DUE_DATE: "DUE DATE",
+    PO_NUMBER: "PO NUMBER",
+    LOT_NUMBER: "LOT NUMBER",
+    LOT_SIZE: "LOT SIZE",
+    ASSIGNED_TO: "ASSIGNED TO",
+    PRODUCT_REV_LEVEL: "PRODUCT REV LEVEL",
+    PRODUCT_ID: "PRODUCT ID",
+    ACCEPTED: "ACC",
+    REJECTED: "REJ",
+    NCM_ID: "NCM ID",
+    LOT_SYSID: "LOT SYSID",
+  };
+  return aliases[field] || field.replace(/_/g, " ");
+}
+
 // Wait for DOM and fetch API URL before anything else
 document.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = await getApiUrl();
   collectUrl = `${apiUrl}/collect/prod-plan-data`;
   idsUrl = `${apiUrl}/ids`;
+
+  console.log("[collects.mjs] Initialized URLs:", {
+    apiUrl,
+    collectUrl,
+    idsUrl,
+  });
 
   const user = await getSessionUser();
   const prodPlanContainer = document.getElementById("prod-plan-container");
@@ -104,10 +133,13 @@ document.addEventListener("DOMContentLoaded", async () => {
     const fields = Array.from(headers).map((th) => {
       const text = th.textContent.toUpperCase();
       // Map display names back to field names
-      if (text === "COLLECTION DATE") return "COLLECTION_DATE";
+      if (text === "COLL DATE") return "COLLECTION_DATE";
+      if (text === "COLLECT ID") return "PRODUCT_COLLECT_ID";
+      if (text === "PLAN ID") return "PRD_INSP_PLN_SYSID";
+      if (text === "OP") return "OPERATION_NO";
+      if (text === "PLN REV") return "PLAN_REV_LEVEL";
       if (text === "DUE DATE") return "DUE_DATE";
       if (text === "PRODUCT REV LEVEL") return "PRODUCT_REV_LEVEL";
-      if (text === "OPERATION NO") return "OPERATION_NO";
       if (text === "PO NUMBER") return "PO_NUMBER";
       if (text === "LOT NUMBER") return "LOT_NUMBER";
       if (text === "LOT SIZE") return "LOT_SIZE";
@@ -151,6 +183,15 @@ document.addEventListener("DOMContentLoaded", async () => {
 
     // Determine the URL to fetch from based on whether we have an id
     const fetchUrl = id ? `${collectUrl}/${id}` : collectUrl;
+    console.log(
+      "[collects.mjs] Fetching from URL:",
+      fetchUrl,
+      "(collectUrl:",
+      collectUrl,
+      ", id:",
+      id,
+      ")",
+    );
 
     fetch(fetchUrl, {
       method: "GET",
@@ -159,6 +200,11 @@ document.addEventListener("DOMContentLoaded", async () => {
       },
     })
       .then((response) => {
+        console.log(
+          "[collects.mjs] Response status:",
+          response.status,
+          response.statusText,
+        );
         if (!response.ok) {
           throw new Error(`HTTP ${response.status}: ${response.statusText}`);
         }
@@ -236,13 +282,7 @@ document.addEventListener("DOMContentLoaded", async () => {
           th.style.padding = "10px 8px"; // Padding
           th.style.borderBottom = "2px solid #ddd"; // Bottom border
           th.style.fontWeight = "bold"; // Bold text
-          if (field === "COLLECTION_DATE") {
-            th.textContent = "COLLECTION DATE";
-          } else if (field === "DUE_DATE") {
-            th.textContent = "DUE DATE";
-          } else {
-            th.textContent = field.replace(/_/g, " ");
-          }
+          th.textContent = getDisplayName(field);
           headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
