@@ -1,6 +1,7 @@
-import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
+import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 
 let url = "";
+
 const skippers = [
   "ASST_AUDITOR1",
   "ASST_AUDITOR2",
@@ -14,11 +15,28 @@ const skippers = [
   "CREATED_DATE",
 ];
 
+// Field name aliases for shorter display
+const fieldAliases = {
+  AUDIT_MANAGER_ID: "ID",
+  SCHEDULED_DATE: "Scheduled",
+  COMPLETION_DATE: "Completed",
+  LEAD_AUDITOR: "Lead Auditor",
+  AUDIT_ID: "Audit ID",
+};
+
+/**
+ * Get display name for a field (uses alias if available, otherwise the original name)
+ */
+function getFieldDisplayName(fieldName) {
+  return fieldAliases[fieldName] || fieldName;
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = await getApiUrl();
+  const user = await getSessionUser();
   url = `${apiUrl}/schedule`;
 
-  loadHeaderFooter();
+  await loadHeaderFooter();
 
   function getRecords(year) {
     const main = document.querySelector("main");
@@ -26,11 +44,20 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Clear previous content
     main.innerHTML = "";
 
+    // Specify which fields to display in the table
+    const myFields = [
+      "AUDIT_MANAGER_ID",
+      "STANDARD",
+      "SUBJECT",
+      "SCHEDULED_DATE",
+      "LEAD_AUDITOR",
+      "AUDITEE1",
+      "COMPLETION_DATE",
+    ];
+
     fetch(`${url}?year=${year}`, { method: "GET" })
       .then((response) => response.json())
       .then((records) => {
-        // console.log(records);
-
         // Count completed audits
         const totalAudits = records.length;
         const completedAudits = records.filter(
@@ -52,47 +79,44 @@ document.addEventListener("DOMContentLoaded", async () => {
         const thead = document.createElement("thead");
         const tbody = document.createElement("tbody");
         const header = document.createElement("tr");
-        const td = document.createElement("td");
 
-        for (let key in records[0]) {
-          if (!skippers.includes(key)) {
-            const th = document.createElement("th");
-            th.textContent = key;
-            header.appendChild(th);
-          }
+        for (let key of myFields) {
+          const th = document.createElement("th");
+          th.textContent = getFieldDisplayName(key);
+          header.appendChild(th);
         }
+
         thead.appendChild(header);
 
         for (let record of records) {
           const tr = document.createElement("tr");
+          tr.dataset.auditManagerId = record.AUDIT_MANAGER_ID;
+
           // Shade row if COMPLETION_DATE exists and is not null/empty
           if (record.COMPLETION_DATE && record.COMPLETION_DATE.trim() !== "") {
             tr.style.backgroundColor = "#e0e0e0";
             tr.style.color = "#888";
           }
-          for (let key in record) {
+
+          for (let key of myFields) {
             const td = document.createElement("td");
-            if (!skippers.includes(key)) {
-              if (key !== null) {
-                if (
-                  key.substring(key.length - 4) === "DATE" &&
-                  key.length > 0 &&
-                  record[key] !== null
-                ) {
-                  td.textContent = record[key].slice(0, 10);
-                } else {
-                  if (key == "AUDIT_MANAGER_ID") {
-                    td.innerHTML = `<a href="${apiUrl}/manager.html?id=${record[key]}">${record[key]}</a>`;
-                  } else {
-                    td.textContent = record[key];
-                  }
-                }
-              } else {
-                td.textContent = record[key];
-              }
-              tr.appendChild(td);
+            const val = record[key];
+
+            if (val === null || val === undefined) {
+              td.textContent = "";
+            } else if (
+              key.substring(key.length - 4) === "DATE" &&
+              key.length > 0
+            ) {
+              td.textContent = val.slice(0, 10);
+            } else if (key === "AUDIT_MANAGER_ID") {
+              td.innerHTML = `<a href="${apiUrl}/manager.html?id=${val}">${val}</a>`;
+            } else {
+              td.textContent = val;
             }
+            tr.appendChild(td);
           }
+
           tbody.appendChild(tr);
         }
 
@@ -100,16 +124,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         table.appendChild(tbody);
         tableContainer.appendChild(table);
         main.appendChild(tableContainer);
-      });
+      })
+      .catch((error) => console.error("Error loading records:", error));
   }
 
-  // Initialize with current year (2025 since we're in 2026 and there's no 2026 data)
+  // Determine default year: previous year if January, else current year
+  const currentDate = new Date();
+  const currentYear = currentDate.getFullYear();
+  const currentMonth = currentDate.getMonth(); // 0 = January
+  const defaultYear = currentMonth === 0 ? currentYear - 1 : currentYear;
+
   const yearPicker = document.getElementById("yearPicker");
   if (yearPicker) {
-    yearPicker.value = new Date().getFullYear() - 1; // Default to last year
+    yearPicker.value = defaultYear;
     yearPicker.addEventListener("change", (e) => {
       getRecords(e.target.value);
     });
   }
-  getRecords(yearPicker ? yearPicker.value : new Date().getFullYear() - 1);
+  getRecords(yearPicker ? yearPicker.value : defaultYear);
 });

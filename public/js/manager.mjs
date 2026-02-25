@@ -373,7 +373,6 @@ function setupDetailEditListener(btnEditDetail, auditData, id, apiUrls) {
         });
 
         editDialog.close();
-        window.location.reload();
       } catch (error) {
         console.error("Error saving audit details:", error);
         alert("Error saving changes. Please try again.");

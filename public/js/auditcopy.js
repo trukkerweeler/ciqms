@@ -85,7 +85,7 @@ button.addEventListener("click", async (event) => {
     });
 
     if (postRes.ok) {
-      alert(`Audit copied successfully with new ID: ${nextId}`);
+      // console.log(`Audit copied successfully with new ID: ${nextId}`);
     } else {
       alert("Failed to copy audit");
     }
@@ -99,9 +99,9 @@ button.addEventListener("click", async (event) => {
       }),
     });
     if (copyCklist.ok) {
-      console.log("Checklist items copied successfully");
+      // console.log("Checklist items copied successfully");
     } else {
-      console.log("Failed to copy checklist items");
+      // console.log("Failed to copy checklist items");
     }
     // send newAudit to copyReferences endpoint to copy reference items
     const copyReferences = await fetch(`${apiUrl}/audit/copyReferences`, {
@@ -113,9 +113,35 @@ button.addEventListener("click", async (event) => {
       }),
     });
     if (copyReferences.ok) {
-      console.log("Reference items copied successfully");
+      // console.log("Reference items copied successfully");
     } else {
-      console.log("Failed to copy reference items");
+      // console.log("Failed to copy reference items");
+    }
+
+    if (postRes.ok) {
+      // Show fading success notification
+      const notification = document.createElement("div");
+      notification.textContent = `✓ Audit copied! New ID: ${nextId}`;
+      notification.style.cssText = `
+        position: fixed;
+        top: 20px;
+        right: 20px;
+        background-color: #4caf50;
+        color: white;
+        padding: 16px 24px;
+        border-radius: 4px;
+        font-size: 16px;
+        box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+        z-index: 10000;
+        animation: fadeInOut 3s ease-in-out;
+      `;
+      document.body.appendChild(notification);
+
+      // Remove the notification after it fades out
+      setTimeout(() => notification.remove(), 3000);
+
+      // Clear the input field for the next copy
+      aid.value = "";
     }
   } catch (error) {
     alert("Error copying audit: " + error.message);
