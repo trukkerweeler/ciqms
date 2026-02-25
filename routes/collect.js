@@ -126,7 +126,6 @@ router.post("/prod-plan-data", (req, res) => {
       }
 
       const {
-        PRODUCT_COLLECT_ID,
         PRODUCT_ID,
         PRODUCT_REV_LEVEL,
         OPERATION_NO,
@@ -136,12 +135,14 @@ router.post("/prod-plan-data", (req, res) => {
         LOT_SIZE,
         ASSIGNED_TO,
         DUE_DATE,
+        ACCEPTED,
+        REJECTED,
+        NCM_ID,
         CREATE_BY,
         CREATE_DATE,
       } = req.body;
 
       const query = `INSERT INTO PRODUCT_PLAN_DATA (
-        PRODUCT_COLLECT_ID,
         PRODUCT_ID,
         PRODUCT_REV_LEVEL,
         OPERATION_NO,
@@ -151,12 +152,14 @@ router.post("/prod-plan-data", (req, res) => {
         LOT_SIZE,
         ASSIGNED_TO,
         DUE_DATE,
+        ACCEPTED,
+        REJECTED,
+        NCM_ID,
         CREATE_BY,
         CREATE_DATE
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
       const values = [
-        PRODUCT_COLLECT_ID,
         PRODUCT_ID,
         PRODUCT_REV_LEVEL,
         OPERATION_NO,
@@ -166,6 +169,9 @@ router.post("/prod-plan-data", (req, res) => {
         LOT_SIZE || null,
         ASSIGNED_TO || null,
         DUE_DATE || null,
+        ACCEPTED || null,
+        REJECTED || null,
+        NCM_ID || null,
         CREATE_BY,
         CREATE_DATE,
       ];
@@ -179,7 +185,7 @@ router.post("/prod-plan-data", (req, res) => {
           res.json({
             success: true,
             record: {
-              PRODUCT_COLLECT_ID,
+              PRODUCT_COLLECT_ID: result.insertId,
               PRODUCT_ID,
               PRODUCT_REV_LEVEL,
               OPERATION_NO,
@@ -189,6 +195,9 @@ router.post("/prod-plan-data", (req, res) => {
               LOT_SIZE,
               ASSIGNED_TO,
               DUE_DATE,
+              ACCEPTED,
+              REJECTED,
+              NCM_ID,
               CREATE_BY,
               CREATE_DATE,
             },
@@ -246,7 +255,9 @@ router.get(
       });
     } catch (err) {
       console.error("Exception in /insp-plan:", err.message);
-      res.status(500).json({ error: "Exception occurred", detail: err.message });
+      res
+        .status(500)
+        .json({ error: "Exception occurred", detail: err.message });
     }
   },
 );

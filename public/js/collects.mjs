@@ -3,7 +3,6 @@ import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 loadHeaderFooter();
 
 let collectUrl = "";
-let idsUrl = "";
 
 // Helper function to format ID with zero-padding to 7 digits
 function formatIdForDisplay(id) {
@@ -38,13 +37,8 @@ function getDisplayName(field) {
 document.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = await getApiUrl();
   collectUrl = `${apiUrl}/collect/prod-plan-data`;
-  idsUrl = `${apiUrl}/ids`;
 
-  console.log("[collects.mjs] Initialized URLs:", {
-    apiUrl,
-    collectUrl,
-    idsUrl,
-  });
+  console.log("[collects.mjs] Initialized URL:", collectUrl);
 
   const user = await getSessionUser();
   const prodPlanContainer = document.getElementById("prod-plan-container");
@@ -52,6 +46,27 @@ document.addEventListener("DOMContentLoaded", async () => {
   const createProductPlanDialog = document.querySelector(
     "[create-product-plan-dialog]",
   );
+
+  // Setup ASSIGNED_TO field validation: no spaces, uppercase
+  const assignedToField = document.getElementById("assigned-to");
+  if (assignedToField) {
+    assignedToField.addEventListener("input", (e) => {
+      let value = e.target.value;
+      const originalValue = value;
+
+      // Remove spaces and convert to uppercase
+      value = value.replace(/\s+/g, "").toUpperCase();
+
+      // If spaces were removed, warn the user
+      if (value !== originalValue.toUpperCase()) {
+        alert(
+          "User IDs cannot contain spaces. Please use a valid userid (no spaces).",
+        );
+      }
+
+      e.target.value = value;
+    });
+  }
 
   // read the id from the URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -364,7 +379,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     });
   }
 
-  let nextId;
   const submitFormAddProductPlan = document.querySelector(
     "#buttonAddProductPlan",
   );
@@ -383,6 +397,14 @@ document.addEventListener("DOMContentLoaded", async () => {
       // Validate required fields
       if (!data.PRODUCT_ID || !data.PRODUCT_REV_LEVEL || !data.OPERATION_NO) {
         alert("Product ID, Product Rev Level, and Operation No are required.");
+        return;
+      }
+
+      // Validate ASSIGNED_TO field - no spaces allowed
+      if (data.ASSIGNED_TO && data.ASSIGNED_TO.includes(" ")) {
+        alert(
+          "User IDs cannot contain spaces. Please use a valid userid (no spaces).",
+        );
         return;
       }
 
@@ -420,18 +442,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         }
       }
 
-      // Get next ID
-      try {
-        nextId = await fetch(idsUrl, { method: "GET" }).then((res) =>
-          res.json(),
-        );
-      } catch (error) {
-        console.error("Error fetching next ID:", error);
-        alert("Error getting record ID.");
-        return;
-      }
-
-      data["PRODUCT_COLLECT_ID"] = parseInt(nextId, 10); // Ensure it's an integer
       data["CREATE_BY"] = user;
       const now = new Date();
       const mysqlDate = now.toISOString().slice(0, 19).replace("T", " ");
@@ -449,6 +459,9 @@ document.addEventListener("DOMContentLoaded", async () => {
       }
       if (data["OPERATION_NO"]) {
         data["OPERATION_NO"] = data["OPERATION_NO"].toUpperCase();
+      }
+      if (data["ASSIGNED_TO"]) {
+        data["ASSIGNED_TO"] = data["ASSIGNED_TO"].toUpperCase();
       }
 
       // Ensure numeric fields are integers
@@ -486,19 +499,6 @@ document.addEventListener("DOMContentLoaded", async () => {
 
             // Refresh all records from server
             getRecords();
-
-            // Update the next ID
-            fetch(idsUrl, {
-              method: "POST",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({ nextId: nextId }),
-            }).then((response) => {
-              if (!response.ok) {
-                console.error("Error updating next ID:", response.statusText);
-              }
-            });
           } else {
             console.error("Error creating record:", result);
             alert("Error saving record. Please try again.");
