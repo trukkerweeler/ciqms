@@ -120,7 +120,7 @@ router.post("/", (req, res) => {
             return;
           }
           res.json(rows);
-        }
+        },
       );
 
       connection.end();
@@ -170,7 +170,7 @@ router.put("/:id", (req, res) => {
             return;
           }
           // res.json(rows);
-        }
+        },
       );
 
       const query2 =
@@ -185,7 +185,7 @@ router.put("/:id", (req, res) => {
             return;
           }
           // res.json(rows);
-        }
+        },
       );
 
       // send completion status

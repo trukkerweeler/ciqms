@@ -112,7 +112,5 @@ function renderTable(data) {
   container.appendChild(tableWrapper);
 }
 
-// Load data on page load
-document.addEventListener("DOMContentLoaded", () => {
-  fetchTopFiveData();
-});
+// Load data immediately
+fetchTopFiveData();

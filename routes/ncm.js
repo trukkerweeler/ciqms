@@ -157,7 +157,7 @@ function makeNcmFolders() {
                 "Error creating folder for",
                 ncmId,
                 ":",
-                folderError.message
+                folderError.message,
               );
             }
           }
@@ -171,6 +171,90 @@ function makeNcmFolders() {
     console.error("Error in makeNcmFolders:", error.message);
   }
 }
+
+// ==================================================
+// Get Open NCM Trend - Last 13 Months
+router.get("/trend-open-13months", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      // Generate last 13 months
+      const today = new Date();
+      const months = [];
+      const dateRanges = [];
+
+      for (let i = 12; i >= 0; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+        });
+        months.push(monthName);
+
+        // First day of current month
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        // First day of next month (exclusive end date)
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+
+        const startStr = firstDay.toISOString().split("T")[0];
+        const endStr = lastDay.toISOString().split("T")[0];
+
+        dateRanges.push({ start: startStr, end: endStr });
+      }
+
+      // Build query with UNION for each month
+      // For each month, count NCMs that were OPEN as of the last day of that month
+      const queries = dateRanges.map(
+        (range) =>
+          `SELECT '${range.start}' as month_start, COUNT(*) as count FROM NONCONFORMANCE WHERE NCM_DATE <= '${range.end}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${range.end}')`,
+      );
+
+      const query = queries.join(" UNION ALL ") + " ORDER BY month_start ASC;";
+
+      connection.query(query, (err, rows) => {
+        if (err) {
+          console.error("Failed to query for open NCM trend:", err);
+          res.status(500).json({ error: "Query failed", details: err.message });
+          connection.end();
+          return;
+        }
+
+        if (!rows || rows.length === 0) {
+          res.json({
+            labels: months,
+            counts: months.map(() => 0),
+          });
+          connection.end();
+          return;
+        }
+
+        // Extract counts from result
+        const counts = rows.map((row) => row.count || 0);
+
+        res.json({
+          labels: months,
+          counts: counts,
+        });
+        connection.end();
+      });
+    });
+  } catch (err) {
+    console.error("Error in trend endpoint:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+});
 
 // ==================================================
 // Get all records
@@ -818,7 +902,7 @@ router.put("/details/:id", (req, res) => {
             if (DEBUG_NCM)
               console.log(
                 "Verification - CAUSE field in DB:",
-                verifyRows[0].CAUSE
+                verifyRows[0].CAUSE,
               );
           }
         });

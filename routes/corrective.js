@@ -126,6 +126,76 @@ function makeCorrectiveFolders() {
 }
 
 // ==================================================
+// Trend: Open corrective actions for last 13 months
+router.get("/trend-open-13months", (req, res) => {
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "",
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("❌ DB connection failed:", err.stack);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    try {
+      // Generate last 13 months with date ranges
+      const months = [];
+      const now = new Date();
+
+      for (let i = 12; i >= 0; i--) {
+        const date = new Date(now.getFullYear(), now.getMonth() - i, 1);
+        const monthStart = new Date(date.getFullYear(), date.getMonth(), 1);
+        const monthEnd = new Date(date.getFullYear(), date.getMonth() + 1, 0);
+
+        const monthName = monthStart.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        });
+        const monthStartStr = monthStart.toISOString().split("T")[0];
+        const monthEndStr = monthEnd.toISOString().split("T")[0];
+        const LDOM = monthEndStr;
+
+        months.push({
+          monthName,
+          monthStart: monthStartStr,
+          monthEnd: monthEndStr,
+          LDOM,
+        });
+      }
+
+      // Build UNION query for each month
+      const queries = months
+        .map(
+          (m) =>
+            `SELECT '${m.monthName}' as month_name, COUNT(*) as count FROM CORRECTIVE WHERE CORRECTIVE_DATE <= '${m.LDOM}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${m.LDOM}')`,
+        )
+        .join(" UNION ALL ");
+
+      connection.query(queries, (err, rows) => {
+        if (err) {
+          console.error("❌ Query failed:", err);
+          res.status(500).json({ error: "Query execution failed" });
+        } else {
+          const labels = rows.map((row) => row.month_name);
+          const counts = rows.map((row) => row.count);
+          res.json({ labels, counts });
+        }
+        connection.end();
+      });
+    } catch (error) {
+      console.error("❌ Error in trend endpoint:", error);
+      res.status(500).json({ error: "Server error" });
+      connection.end();
+    }
+  });
+});
+
+// ==================================================
 // Get all records
 router.get("/", (req, res) => {
   const connection = mysql.createConnection({

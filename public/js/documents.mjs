@@ -456,10 +456,22 @@ function sortTable(table, column) {
     return;
   }
 
+  // Detect if this is a date column
+  const isDateColumn = column.toLowerCase().includes("date");
+
   // Sort rows based on column content
   const sortedRows = rows.sort((a, b) => {
     const aText = a.children[columnIndex]?.textContent || "";
     const bText = b.children[columnIndex]?.textContent || "";
+
+    // Handle date columns specially
+    if (isDateColumn) {
+      const aDate = new Date(aText);
+      const bDate = new Date(bText);
+      if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
+        return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
+      }
+    }
 
     // Try numeric comparison first
     const aNum = parseFloat(aText);
