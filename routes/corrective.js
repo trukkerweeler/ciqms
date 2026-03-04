@@ -359,36 +359,44 @@ router.post("/", (req, res) => {
         req.body.NC_TREND = "";
       }
 
-      const insertQuery = `insert into CORRECTIVE_TREND (CORRECTIVE_ID, NC_TREND) values ('${req.body.CORRECTIVE_ID}', '${req.body.NC_TREND}')`;
-      connection.query(insertQuery, (err, rows, fields) => {
-        if (err) {
-          console.log("Failed to query for corrective trend insert: " + err);
-          res.sendStatus(500);
-          return;
-        }
-      });
+      const insertQuery = `insert into CORRECTIVE_TREND (CORRECTIVE_ID, NC_TREND) values (?, ?)`;
+      connection.query(
+        insertQuery,
+        [req.body.CORRECTIVE_ID, req.body.NC_TREND],
+        (err, rows, fields) => {
+          if (err) {
+            console.log("Failed to query for corrective trend insert: " + err);
+            res.sendStatus(500);
+            return;
+          }
+        },
+      );
 
-      const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body.CORRECTIVE_ID}' WHERE TABLE_NAME = 'CORRECTIVE'`;
-      connection.query(updateQuery, (err, rows, fields) => {
-        if (err) {
-          console.log("Failed to query for corrective id update: " + err);
-          res.sendStatus(500);
-          return;
-        }
+      const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = ? WHERE TABLE_NAME = 'CORRECTIVE'`;
+      connection.query(
+        updateQuery,
+        [req.body.CORRECTIVE_ID],
+        (err, rows, fields) => {
+          if (err) {
+            console.log("Failed to query for corrective id update: " + err);
+            res.sendStatus(500);
+            return;
+          }
 
-        // Create Corrective Action folder after successful database insert
-        createCorrectiveFolder(req.body.CORRECTIVE_ID);
+          // Create Corrective Action folder after successful database insert
+          createCorrectiveFolder(req.body.CORRECTIVE_ID);
 
-        // Create project for the corrective action
-        createCAProject(
-          req.body.CORRECTIVE_ID,
-          req.body.TITLE,
-          req.body.ASSIGNED_TO,
-        );
+          // Create project for the corrective action
+          createCAProject(
+            req.body.CORRECTIVE_ID,
+            req.body.TITLE,
+            req.body.ASSIGNED_TO,
+          );
 
-        // Send email notification after successful creation
-        sendCorrectiveEmail(req.body);
-      });
+          // Send email notification after successful creation
+          sendCorrectiveEmail(req.body);
+        },
+      );
 
       connection.end();
     });
@@ -417,55 +425,62 @@ async function sendCorrectiveEmail(correctiveData) {
         return;
       }
 
-      const emailQuery = `SELECT WORK_EMAIL_ADDRESS FROM PEOPLE WHERE PEOPLE_ID = '${correctiveData.ASSIGNED_TO}'`;
-      connection.query(emailQuery, async (err, rows) => {
-        if (err) {
-          console.error("Error querying for assignee email:", err);
-          connection.end();
-          return;
-        }
-
-        if (rows.length > 0 && rows[0].EMAIL) {
-          const assigneeEmail = rows[0].EMAIL;
-
-          const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: true, // true for 465, false for other ports
-            auth: {
-              user: process.env.SMTP_USER,
-              pass: process.env.SMTP_PASS,
-            },
-          });
-
-          const mailOptions = {
-            from: process.env.SMTP_FROM,
-            to: assigneeEmail,
-            subject: `Corrective Action Notification: ${correctiveData.CORRECTIVE_ID} - ${correctiveData.TITLE}`,
-            text: `The following corrective action has been issued. Please review and take timely action. If you have any questions, please contact the quality manager.\n\n Title: ${
-              correctiveData.TITLE
-            }\n\n Description:\n${
-              correctiveData.USER_DEFINED_1 || "No description provided"
-            }\n\n Due Date: ${correctiveData.DUE_DATE}\n\n Reference: ${
-              correctiveData.REFERENCE || "N/A"
-            }\n\n Requested By: ${correctiveData.REQUEST_BY}\n\n`,
-          };
-
-          try {
-            const info = await transporter.sendMail(mailOptions);
-            console.log("Corrective action email sent to:", assigneeEmail);
-          } catch (emailError) {
-            console.error("Error sending corrective action email:", emailError);
+      const emailQuery = `SELECT WORK_EMAIL_ADDRESS FROM PEOPLE WHERE PEOPLE_ID = ?`;
+      connection.query(
+        emailQuery,
+        [correctiveData.ASSIGNED_TO],
+        async (err, rows) => {
+          if (err) {
+            console.error("Error querying for assignee email:", err);
+            connection.end();
+            return;
           }
-        } else {
-          console.log(
-            "No email found for assignee:",
-            correctiveData.ASSIGNED_TO,
-          );
-        }
 
-        connection.end();
-      });
+          if (rows.length > 0 && rows[0].EMAIL) {
+            const assigneeEmail = rows[0].EMAIL;
+
+            const transporter = nodemailer.createTransport({
+              host: process.env.SMTP_HOST,
+              port: process.env.SMTP_PORT,
+              secure: true, // true for 465, false for other ports
+              auth: {
+                user: process.env.SMTP_USER,
+                pass: process.env.SMTP_PASS,
+              },
+            });
+
+            const mailOptions = {
+              from: process.env.SMTP_FROM,
+              to: assigneeEmail,
+              subject: `Corrective Action Notification: ${correctiveData.CORRECTIVE_ID} - ${correctiveData.TITLE}`,
+              text: `The following corrective action has been issued. Please review and take timely action. If you have any questions, please contact the quality manager.\n\n Title: ${
+                correctiveData.TITLE
+              }\n\n Description:\n${
+                correctiveData.USER_DEFINED_1 || "No description provided"
+              }\n\n Due Date: ${correctiveData.DUE_DATE}\n\n Reference: ${
+                correctiveData.REFERENCE || "N/A"
+              }\n\n Requested By: ${correctiveData.REQUEST_BY}\n\n`,
+            };
+
+            try {
+              const info = await transporter.sendMail(mailOptions);
+              console.log("Corrective action email sent to:", assigneeEmail);
+            } catch (emailError) {
+              console.error(
+                "Error sending corrective action email:",
+                emailError,
+              );
+            }
+          } else {
+            console.log(
+              "No email found for assignee:",
+              correctiveData.ASSIGNED_TO,
+            );
+          }
+
+          connection.end();
+        },
+      );
     });
   } catch (error) {
     console.error("Error in sendCorrectiveEmail:", error);
@@ -827,11 +842,11 @@ router.get("/:id", (req, res) => {
         left join CORRECTIVE_TREND ct on c.CORRECTIVE_ID = ct.CORRECTIVE_ID            
         left join CORRECTION ia on c.CORRECTIVE_ID = ia.CORRECTIVE_ID
         left join CORRECTIVE_CTRL cc on c.CORRECTIVE_ID = cc.CORRECTIVE_ID
-        where c.CORRECTIVE_ID = '${req.params.id}'`;
+        where c.CORRECTIVE_ID = ?`;
 
       // console.log(query);
 
-      connection.query(query, (err, rows, fields) => {
+      connection.query(query, [req.params.id], (err, rows, fields) => {
         if (err) {
           console.log("250 Failed to query for corrective actions: " + err);
           res.sendStatus(500);
@@ -855,6 +870,7 @@ router.put("/:id", (req, res) => {
   let mytable = "";
   let appended = "";
   let query = "";
+  let queryParams = [];
   const myfield = Object.keys(req.body)[1];
   // console.log("My field: " + myfield);
   switch (myfield) {
@@ -862,55 +878,66 @@ router.put("/:id", (req, res) => {
       mytable = "CORRECTIVE_CTRL";
       appended = req.body.CAUSE_TEXT;
       appended = appended.replace(/<br>/g, "\n");
-      // Escape single quotes to prevent SQL syntax errors
-      appended = appended.replace(/'/g, "''");
-      query = `insert into CORRECTIVE_CTRL (CORRECTIVE_ID, CAUSE_TEXT) values ('${req.params.id}','${appended}') on duplicate key update CAUSE_TEXT = '${appended}';`;
+      query = `insert into CORRECTIVE_CTRL (CORRECTIVE_ID, CAUSE_TEXT) values (?, ?) on duplicate key update CAUSE_TEXT = ?`;
+      queryParams = [req.params.id, appended, appended];
       break;
     case "CONTROL_TEXT":
       mytable = "CORRECTIVE_CTRL";
-      // console.log(mytable);
       appended = req.body.CONTROL_TEXT;
       appended = appended.replace(/<br>/g, "\n");
-      // Escape single quotes to prevent SQL syntax errors
-      appended = appended.replace(/'/g, "''");
-      // query = `insert into CORRECTIVE_CTRL (CORRECTIVE_ID, CONTROL_TEXT, MODIFIED_DATE) values ('${req.params.id}','${appended}', NOW()) on duplicate key update CONTROL_TEXT = '${appended}';`;
       query = `
   INSERT INTO CORRECTIVE_CTRL (
     CORRECTIVE_ID, CONTROL_TEXT, MODIFIED_DATE, CREATE_DATE, CREATE_BY
   ) VALUES (
-    '${req.params.id}', '${appended}', NOW(), NOW(), '${req.body.MODIFIED_BY}'
+    ?, ?, NOW(), NOW(), ?
   )
   ON DUPLICATE KEY UPDATE 
-    CONTROL_TEXT = '${appended}',
+    CONTROL_TEXT = ?,
     MODIFIED_DATE = NOW(),
     CREATE_DATE = IF(CREATE_DATE IS NULL, NOW(), CREATE_DATE),
-    CREATE_BY = IF(CREATE_BY IS NULL OR CREATE_BY = '', '${req.body.MODIFIED_BY}', CREATE_BY);
+    CREATE_BY = IF(CREATE_BY IS NULL OR CREATE_BY = '', ?, CREATE_BY)
 `;
-      // console.log(query);
+      queryParams = [
+        req.params.id,
+        appended,
+        req.body.MODIFIED_BY,
+        appended,
+        req.body.MODIFIED_BY,
+      ];
       break;
     case "CORRECTION_TEXT":
       mytable = "CORRECTION";
       let correctiondate = req.body.CORRECTION_DATE;
       let actionby = req.body.ACTION_BY;
       appended = req.body.CORRECTION_TEXT.replace(/<br>/g, "\n");
-      // Escape single quotes to prevent SQL syntax errors
-      appended = appended.replace(/'/g, "''");
-      query = `insert into CORRECTION (CORRECTIVE_ID, CORRECTION_DATE, ACTION_BY, CORRECTION_TEXT) values ('${req.params.id}', '${correctiondate}', '${actionby}','${appended}') on duplicate key update CORRECTION_TEXT = '${appended}', CORRECTION_DATE = '${correctiondate}', ACTION_BY = '${actionby}';`;
-      //   console.log(query);
+      query = `insert into CORRECTION (CORRECTIVE_ID, CORRECTION_DATE, ACTION_BY, CORRECTION_TEXT) values (?, ?, ?, ?) on duplicate key update CORRECTION_TEXT = ?, CORRECTION_DATE = ?, ACTION_BY = ?`;
+      queryParams = [
+        req.params.id,
+        correctiondate,
+        actionby,
+        appended,
+        appended,
+        correctiondate,
+        actionby,
+      ];
       break;
     default:
       mytable = "CORRECTIVE";
-      // if PROJECT is undefined, set it to zero length string
       if (typeof req.body.PROJECT_ID === "undefined") {
         req.body.PROJECT_ID = "";
       }
-      // Escape single quotes in all text fields
-      const assignedTo = (req.body.ASSIGNED_TO || "").replace(/'/g, "''");
-      const requestBy = (req.body.REQUEST_BY || "").replace(/'/g, "''");
-      const reference = (req.body.REFERENCE || "").replace(/'/g, "''");
-      const projectId = (req.body.PROJECT_ID || "").replace(/'/g, "''");
-      query = `UPDATE CORRECTIVE SET ASSIGNED_TO = '${assignedTo}', REQUEST_BY = '${requestBy}', REFERENCE = '${reference}', PROJECT_ID = '${projectId}' WHERE CORRECTIVE_ID = '${req.params.id}'`;
-    // console.log(query);
+      const assignedTo = req.body.ASSIGNED_TO || "";
+      const requestBy = req.body.REQUEST_BY || "";
+      const reference = req.body.REFERENCE || "";
+      const projectId = req.body.PROJECT_ID || "";
+      query = `UPDATE CORRECTIVE SET ASSIGNED_TO = ?, REQUEST_BY = ?, REFERENCE = ?, PROJECT_ID = ? WHERE CORRECTIVE_ID = ?`;
+      queryParams = [
+        assignedTo,
+        requestBy,
+        reference,
+        projectId,
+        req.params.id,
+      ];
   }
   // Replace the br with a newline
   try {
@@ -930,8 +957,8 @@ router.put("/:id", (req, res) => {
       // console.log('Connected to DB');
       // console.log(req.body);
 
-      // q1 = `insert ignore into ${mytable} (CORRECTIVE_ID, CREATE_DATE) values ('${req.params.id}, now()')`
-      connection.query(query, (err, rows, fields) => {
+      // q1 = `insert ignore into ${mytable} (CORRECTIVE_ID, CREATE_DATE) values (?, now())`
+      connection.query(query, queryParams, (err, rows, fields) => {
         if (err) {
           console.log("349 Failed to query for corrective actions: " + err);
           res.sendStatus(500);
@@ -942,8 +969,8 @@ router.put("/:id", (req, res) => {
 
       if (myfield === "CONTROL_TEXT") {
         // update the CORR_ACTION_DATE
-        const updateQuery = `UPDATE CORRECTIVE SET CORR_ACTION_DATE = NOW() WHERE CORRECTIVE_ID = '${req.params.id}'`;
-        connection.query(updateQuery, (err, rows, fields) => {
+        const updateQuery = `UPDATE CORRECTIVE SET CORR_ACTION_DATE = NOW() WHERE CORRECTIVE_ID = ?`;
+        connection.query(updateQuery, [req.params.id], (err, rows, fields) => {
           if (err) {
             console.log("Failed to query for corr_action_date update: " + err);
             res.sendStatus(500);
@@ -988,20 +1015,29 @@ router.put(
         }
 
         const query = `UPDATE CORRECTIVE SET 
-            CLOSED = '${req.body.CLOSED}'
-            , CLOSED_DATE = '${req.body.CLOSED_DATE}'
-            , MODIFIED_BY = '${req.body.MODIFIED_BY}'
+            CLOSED = ?
+            , CLOSED_DATE = ?
+            , MODIFIED_BY = ?
             , MODIFIED_DATE = now() 
-            WHERE CORRECTIVE_ID = '${req.params.id}'`;
+            WHERE CORRECTIVE_ID = ?`;
         // console.log(query);
-        connection.query(query, (err, rows, fields) => {
-          if (err) {
-            console.log("Failed to query for corrective actions: " + err);
-            res.sendStatus(500);
-            return;
-          }
-          res.json(rows);
-        });
+        connection.query(
+          query,
+          [
+            req.body.CLOSED,
+            req.body.CLOSED_DATE,
+            req.body.MODIFIED_BY,
+            req.params.id,
+          ],
+          (err, rows, fields) => {
+            if (err) {
+              console.log("Failed to query for corrective actions: " + err);
+              res.sendStatus(500);
+              return;
+            }
+            res.json(rows);
+          },
+        );
         connection.end();
       });
     } catch (err) {

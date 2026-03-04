@@ -181,11 +181,18 @@ function displaySupplierListTable(data) {
 
   const headerRow = document.createElement("tr");
 
-  // Get headers from first record, excluding 'rn' column
+  // Get headers from first record, excluding 'rn' and 'STATUS' columns
   const headers = [];
+  const columnKeys = [];
   for (let key in data[0]) {
-    if (key !== "rn") {
-      headers.push(formatFieldName(key));
+    if (key !== "rn" && key !== "STATUS") {
+      columnKeys.push(key);
+      // Use abbreviations for certain columns
+      if (key === "STATE") {
+        headers.push("ST");
+      } else {
+        headers.push(formatFieldName(key));
+      }
     }
   }
 
@@ -222,9 +229,8 @@ function displaySupplierListTable(data) {
     }
 
     const cells = [];
-    for (let key in item) {
-      if (key === "rn") continue; // Skip the row number column
-
+    for (let i = 0; i < columnKeys.length; i++) {
+      const key = columnKeys[i];
       let cellContent = "";
 
       if (item[key] !== null && item[key] !== undefined) {

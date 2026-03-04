@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -13,6 +13,41 @@
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="images/ci-logo.png" />
     <title>Approved Suppliers List</title>
+    <style>
+      @media print {
+        body {
+          font-size: 11pt;
+          margin: 0.5in;
+        }
+        table {
+          width: 100%;
+          border-collapse: collapse;
+          font-size: 10pt;
+        }
+        th,
+        td {
+          padding: 6px 4px;
+          border: 1px solid #333;
+          text-align: left;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: clip;
+        }
+        th {
+          background-color: #f0f0f0;
+          font-weight: bold;
+        }
+        .recordsaddrecordheading button,
+        .addrecordheadingbutton,
+        dialog {
+          display: none;
+        }
+        h1 {
+          margin: 0 0 10px 0;
+          font-size: 14pt;
+        }
+      }
+    </style>
   </head>
   <body>
     <header id="header"></header>

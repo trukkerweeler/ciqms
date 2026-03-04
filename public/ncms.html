@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" style="height: 100%; margin: 0; padding: 0">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -14,9 +14,17 @@
     <link rel="icon" href="images/ci-logo.png" />
     <title>Nonconformance (CI QMS)</title>
   </head>
-  <body>
-    <header id="header"></header>
-    <div class="recordsaddrecordheading">
+  <body
+    style="
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <header id="header" style="flex-shrink: 0"></header>
+    <div class="recordsaddrecordheading" style="flex-shrink: 0">
       <h1>Nonconformance</h1>
       <button
         class="addrecordheadingbutton button"
@@ -27,7 +35,7 @@
       </button>
     </div>
 
-    <div id="subjectFilter">
+    <div id="subjectFilter" style="flex-shrink: 0">
       <div class="filter-controls">
         <label class="toggle-switch">
           <input type="checkbox" id="showClosedToggle" />
@@ -36,7 +44,10 @@
         </label>
       </div>
     </div>
-    <main id="main">
+    <main
+      id="main"
+      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
+    >
       <!-- Add NCM Dialog -->
       <dialog id="addNcmDialog" class="dialog">
         <form id="addNcmForm" class="form">
@@ -261,11 +272,15 @@
       </dialog>
 
       <!-- Table container for NCM data -->
-      <div id="ncmTableContainer" class="table-container">
+      <div
+        id="ncmTableContainer"
+        class="table-container"
+        style="flex: 1; overflow: auto"
+      >
         <!-- Table will be dynamically generated here -->
       </div>
     </main>
-    <footer id="footer"></footer>
+    <footer id="footer" style="flex-shrink: 0"></footer>
   </body>
   <script type="module" src="/js/ncms.mjs"></script>
 </html>

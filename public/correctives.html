@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" style="height: 100%; margin: 0; padding: 0">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -15,9 +15,21 @@
     <title>Correctives (CI QMS)</title>
   </head>
 
-  <body>
-    <header id="header"></header>
-    <div class="recordsaddrecordheading" id="addncmheading">
+  <body
+    style="
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <header id="header" style="flex-shrink: 0"></header>
+    <div
+      class="recordsaddrecordheading"
+      id="addncmheading"
+      style="flex-shrink: 0"
+    >
       <h1>Corrective Records</h1>
       <button
         class="addrecordheadingbutton"
@@ -27,7 +39,10 @@
         +
       </button>
     </div>
-    <main id="main"></main>
+    <main
+      id="main"
+      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
+    ></main>
 
     <dialog create-corrective-dialog class="dialog">
       <form id="corrective-form" class="form">
@@ -141,7 +156,7 @@
       </form>
     </dialog>
 
-    <footer id="footer"></footer>
+    <footer id="footer" style="flex-shrink: 0"></footer>
   </body>
 
   <script type="module" src="/js/correctives.mjs"></script>

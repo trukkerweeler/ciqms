@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en">
+<html lang="en" style="height: 100%; margin: 0; padding: 0">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -14,9 +14,17 @@
     <link rel="icon" href="images/ci-logo.png" />
     <title>Suppliers (CIQMS)</title>
   </head>
-  <body>
-    <header id="header"></header>
-    <div class="recordsaddrecordheading">
+  <body
+    style="
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <header id="header" style="flex-shrink: 0"></header>
+    <div class="recordsaddrecordheading" style="flex-shrink: 0">
       <h1>Suppliers</h1>
       <button
         class="addrecordheadingbutton button"
@@ -33,6 +41,7 @@
         gap: 5px;
         margin-bottom: 5px;
         padding: 0 20px;
+        flex-shrink: 0;
       "
     >
       <label for="statusFilter" style="font-weight: bold">Show:</label>
@@ -44,7 +53,10 @@
         <option value="active">Active</option>
       </select>
     </div>
-    <main id="main">
+    <main
+      id="main"
+      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
+    >
       <!-- Add Supplier Dialog -->
       <dialog id="addSupplierDialog" class="dialog">
         <div class="dialog-header">
@@ -297,7 +309,7 @@
         <!-- Table will be dynamically generated here -->
       </div>
     </main>
-    <footer id="footer"></footer>
+    <footer id="footer" style="flex-shrink: 0"></footer>
   </body>
   <script type="module" src="/js/suppliers.mjs"></script>
 </html>

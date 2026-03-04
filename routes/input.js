@@ -307,17 +307,21 @@ router.post("/", (req, res) => {
             res.sendStatus(500);
             return;
           }
-        }
+        },
       );
 
-      const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body.INPUT_ID}' WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
-      connection.query(updateQuery, (err, rows, fields) => {
-        if (err) {
-          console.log("Failed to query for system id update: " + err);
-          res.sendStatus(500);
-          return;
-        }
-      });
+      const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = ? WHERE TABLE_NAME = 'PEOPLE_INPUT'`;
+      connection.query(
+        updateQuery,
+        [req.body.INPUT_ID],
+        (err, rows, fields) => {
+          if (err) {
+            console.log("Failed to query for system id update: " + err);
+            res.sendStatus(500);
+            return;
+          }
+        },
+      );
 
       connection.end();
     });
@@ -407,11 +411,11 @@ router.get("/:id", (req, res) => {
         left join PPL_INPT_RSPN pir on pi.INPUT_ID = pir.INPUT_ID 
         left join PROJECT p on pi.PROJECT_ID = p.PROJECT_ID
         left join PPL_INPT_RCUR pirc on pi.USER_DEFINED_2 = pirc.RECUR_ID
-        where pi.INPUT_ID = '${req.params.id}'`;
+        where pi.INPUT_ID = ?`;
 
       // console.log(query);
 
-      connection.query(query, (err, rows, fields) => {
+      connection.query(query, [req.params.id], (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for corrective actions: " + err);
           res.sendStatus(500);

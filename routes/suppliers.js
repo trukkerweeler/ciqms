@@ -62,10 +62,12 @@ router.get("/:id", (req, res) => {
         if (err) {
           console.log("Failed to query for supplier: " + err);
           res.sendStatus(500);
+          connection.end();
           return;
         }
         if (rows.length === 0) {
           res.status(404).json({ message: "Supplier not found" });
+          connection.end();
           return;
         }
 
@@ -80,11 +82,10 @@ router.get("/:id", (req, res) => {
             supplier.SCOPE =
               scopeRows && scopeRows.length > 0 ? scopeRows[0].SCOPE : "";
             res.json(supplier);
+            connection.end();
           },
         );
       });
-
-      connection.end();
     });
   } catch (err) {
     console.log("Error connecting to Db");

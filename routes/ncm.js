@@ -564,30 +564,32 @@ router.post("/", (req, res) => {
             , CLOSED
             , CREATE_DATE
             , CREATE_BY
-            ) values (
-                '${req.body.NCM_ID}'
-                , '${req.body.NCM_DATE}'
-                , '${req.body.PEOPLE_ID}'
-                , '${req.body.CUSTOMER_ID}'
-                , '${req.body.SUPPLIER_ID}'
-                , '${req.body.ASSIGNED_TO}'
-                , '${req.body.DUE_DATE}'
-                , '${req.body.NCM_TYPE}'
-                , '${req.body.SUBJECT}'
-                , '${req.body.CAUSE}'
-                , '${req.body.PRODUCT_ID}'
-                , '${req.body.PO_NUMBER}'
-                , '${req.body.LOT_SIZE}'
-                , '${req.body.LOT_NUMBER}'
-                , '${req.body.USER_DEFINED_1}'
-                , '${closedValue}'
-                , '${req.body.CREATE_DATE}'
-                , '${req.body.CREATE_BY}'
-            )`;
+            ) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+
+      const queryParams = [
+        req.body.NCM_ID,
+        req.body.NCM_DATE,
+        req.body.PEOPLE_ID,
+        req.body.CUSTOMER_ID,
+        req.body.SUPPLIER_ID,
+        req.body.ASSIGNED_TO,
+        req.body.DUE_DATE,
+        req.body.NCM_TYPE,
+        req.body.SUBJECT,
+        req.body.CAUSE,
+        req.body.PRODUCT_ID,
+        req.body.PO_NUMBER,
+        req.body.LOT_SIZE,
+        req.body.LOT_NUMBER,
+        req.body.USER_DEFINED_1,
+        closedValue,
+        req.body.CREATE_DATE,
+        req.body.CREATE_BY,
+      ];
 
       // console.log(query);
 
-      connection.query(query, (err, rows, fields) => {
+      connection.query(query, queryParams, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for PEOPLE_INPUT insert: " + err);
           res.sendStatus(500);

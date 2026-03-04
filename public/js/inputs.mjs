@@ -165,10 +165,17 @@ async function saveInput(event) {
     });
 
     if (response.ok) {
-      // Send email notification after successful save
-      setTimeout(async () => {
-        await sendEmailNotification(dataJson, nextId, myRequestDate);
-      }, 100);
+      // Send email notification only if INPUT_DATE is today or earlier
+      const inputDate = new Date(dataJson.INPUT_DATE);
+      const today = new Date();
+      today.setHours(0, 0, 0, 0);
+      inputDate.setHours(0, 0, 0, 0);
+
+      if (inputDate <= today) {
+        setTimeout(async () => {
+          await sendEmailNotification(dataJson, nextId, myRequestDate);
+        }, 100);
+      }
 
       document.getElementById("addInputDialog").close();
       await loadInputData(); // Reload the data
@@ -272,6 +279,8 @@ function displayInputTable(data, includeClosed = false) {
   // Create scrollable table container
   const tableContainer = document.createElement("div");
   tableContainer.className = "table-container scrollable-table";
+  tableContainer.style.flex = "1";
+  tableContainer.style.overflowY = "auto";
 
   const table = document.createElement("table");
   table.className = "data-table";

@@ -1,5 +1,5 @@
-<!DOCTYPE html>
-<html lang="en">
+<!doctype html>
+<html lang="en" style="height: 100%; margin: 0; padding: 0">
   <head>
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
@@ -14,9 +14,17 @@
     <link rel="icon" href="images/ci-logo.png" />
     <title>Inputs (CIQMS)</title>
   </head>
-  <body>
-    <header id="header"></header>
-    <div class="recordsaddrecordheading">
+  <body
+    style="
+      display: flex;
+      flex-direction: column;
+      height: 100%;
+      margin: 0;
+      padding: 0;
+    "
+  >
+    <header id="header" style="flex-shrink: 0"></header>
+    <div class="recordsaddrecordheading" style="flex-shrink: 0">
       <h1>Input Records</h1>
       <button
         class="addrecordheadingbutton button"
@@ -26,7 +34,7 @@
         +
       </button>
     </div>
-    <div id="subjectFilter">
+    <div id="subjectFilter" style="flex-shrink: 0">
       <label for="subject">Filter by Subject:</label>
       <input type="text" id="subject" />
 
@@ -38,7 +46,10 @@
         </label>
       </div>
     </div>
-    <main id="main">
+    <main
+      id="main"
+      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
+    >
       <!-- Add Input Dialog -->
       <dialog id="addInputDialog" class="dialog">
         <div class="dialog-header">
@@ -152,7 +163,7 @@
         <!-- Table will be dynamically generated here -->
       </div>
     </main>
-    <footer id="footer"></footer>
+    <footer id="footer" style="flex-shrink: 0"></footer>
   </body>
   <script type="module" src="/js/inputs.mjs"></script>
 </html>
