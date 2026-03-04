@@ -1,0 +1,151 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Person Skills Management" />
+    <meta name="author" content="Tim Kent" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Person Skills (CIQMS)</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <div class="recordsaddrecordheading">
+      <h1>Person Skills</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addPersonSkillBtn"
+        title="Assign Person Skill"
+      >
+        +
+      </button>
+    </div>
+
+    <main id="main">
+      <!-- Assign Person Skill Dialog -->
+      <dialog id="addPersonSkillDialog" class="dialog">
+        <div class="dialog-header">
+          <h2>Assign Person Skill</h2>
+        </div>
+        <form id="personSkillForm" class="form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="personName" class="required">Person</label>
+              <select id="personName" name="personName" required>
+                <option value="">-- Select Person --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="jobTitle" class="required">Job Skill</label>
+              <select id="jobTitle" name="jobTitle" required>
+                <option value="">-- Select Job Skill --</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="competencyLevel" class="required"
+                >Competency Level</label
+              >
+              <select id="competencyLevel" name="competencyLevel" required>
+                <option value="">-- Select Level --</option>
+                <option value="Basic">Basic</option>
+                <option value="Intermediate">Intermediate</option>
+                <option value="Advanced">Advanced</option>
+                <option value="Expert">Expert</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="certificationDate">Certification Date</label>
+              <input
+                type="date"
+                id="certificationDate"
+                name="certificationDate"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="certifier">Certified By</label>
+              <input
+                type="text"
+                id="certifier"
+                name="certifier"
+                placeholder="Name of certifying person"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="notes">Notes</label>
+              <textarea
+                id="notes"
+                name="notes"
+                placeholder="Additional notes"
+                rows="3"
+              ></textarea>
+            </div>
+          </div>
+
+          <div class="dialog-footer">
+            <button
+              type="button"
+              id="cancelPersonSkillDialog"
+              class="button secondary"
+            >
+              Cancel
+            </button>
+            <button type="submit" class="button primary">Assign Skill</button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Filter Controls -->
+      <div
+        style="
+          margin-bottom: 15px;
+          display: flex;
+          gap: 10px;
+          align-items: center;
+        "
+      >
+        <label for="filterPerson" style="font-weight: bold"
+          >Filter by Person:</label
+        >
+        <select
+          id="filterPerson"
+          style="
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+          "
+        >
+          <option value="">All</option>
+        </select>
+
+        <label for="filterJob" style="font-weight: bold; margin-left: 20px"
+          >Filter by Job Skill:</label
+        >
+        <select
+          id="filterJob"
+          style="
+            padding: 0.4rem 0.6rem;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+          "
+        >
+          <option value="">All</option>
+        </select>
+      </div>
+
+      <!-- Person Skills Table -->
+      <div id="personSkillsContainer" class="table-container">
+        <!-- Table will be generated here -->
+      </div>
+    </main>
+
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/ctapersonskills.mjs"></script>
+</html>

@@ -216,9 +216,10 @@ router.get("/trend-open-13months", (req, res) => {
 
       // Build query with UNION for each month
       // For each month, count NCMs that were OPEN as of the last day of that month
+      // Also calculate average age in days for open NCMs
       const queries = dateRanges.map(
         (range) =>
-          `SELECT '${range.start}' as month_start, COUNT(*) as count FROM NONCONFORMANCE WHERE NCM_DATE <= '${range.end}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${range.end}')`,
+          `SELECT '${range.start}' as month_start, COUNT(*) as count, ROUND(COALESCE(AVG(DATEDIFF('${range.end}', NCM_DATE)), 0), 0) as avg_age FROM NONCONFORMANCE WHERE NCM_DATE <= '${range.end}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${range.end}')`,
       );
 
       const query = queries.join(" UNION ALL ") + " ORDER BY month_start ASC;";
@@ -235,17 +236,20 @@ router.get("/trend-open-13months", (req, res) => {
           res.json({
             labels: months,
             counts: months.map(() => 0),
+            aging: months.map(() => 0),
           });
           connection.end();
           return;
         }
 
-        // Extract counts from result
+        // Extract counts and aging from result
         const counts = rows.map((row) => row.count || 0);
+        const aging = rows.map((row) => row.avg_age || 0);
 
         res.json({
           labels: months,
           counts: counts,
+          aging: aging,
         });
         connection.end();
       });

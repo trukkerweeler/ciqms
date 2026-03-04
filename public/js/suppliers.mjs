@@ -71,6 +71,30 @@ function setupEventListeners() {
     });
   }
 
+  // Close button for edit supplier dialog
+  const closeEditBtn = document.getElementById("closeEditSupplierBtn");
+  if (closeEditBtn) {
+    closeEditBtn.addEventListener("click", () => {
+      document.getElementById("editSupplierDialog").close();
+    });
+  }
+
+  // Save edit supplier form
+  const saveEditSupplierBtn = document.getElementById("saveEditSupplierBtn");
+  if (saveEditSupplierBtn) {
+    saveEditSupplierBtn.addEventListener("click", saveEditSupplier);
+  }
+
+  // Close dialog on outside click for edit supplier dialog
+  const editSupplierDialog = document.getElementById("editSupplierDialog");
+  if (editSupplierDialog) {
+    editSupplierDialog.addEventListener("click", (e) => {
+      if (e.target === editSupplierDialog) {
+        editSupplierDialog.close();
+      }
+    });
+  }
+
   // Status filter
   const statusFilter = document.getElementById("statusFilter");
   if (statusFilter) {
@@ -169,6 +193,79 @@ async function saveSupplier(event) {
   }
 }
 
+async function openEditSupplierDialog(supplierId) {
+  try {
+    // Fetch the supplier data
+    const response = await fetch(`${url}/${supplierId}`);
+    if (!response.ok) {
+      throw new Error("Failed to fetch supplier data");
+    }
+    const supplier = await response.json();
+
+    // Populate the edit form
+    document.getElementById("EDIT_SUPPLIER_ID").value =
+      supplier.SUPPLIER_ID || "";
+    document.getElementById("EDIT_NAME").value = supplier.NAME || "";
+    document.getElementById("EDIT_WEBSITE").value = supplier.WEBSITE || "";
+    document.getElementById("EDIT_CITY").value = supplier.CITY || "";
+    document.getElementById("EDIT_STATE").value = supplier.STATE || "";
+    document.getElementById("EDIT_ZIP").value = supplier.ZIP || "";
+    document.getElementById("EDIT_STATUS").value = supplier.STATUS || "P";
+    document.getElementById("EDIT_SCOPE").value = supplier.SCOPE || "";
+
+    // Show the edit dialog
+    document.getElementById("editSupplierDialog").showModal();
+  } catch (error) {
+    console.error("Error opening edit dialog:", error);
+    alert("Failed to load supplier data. Please try again.");
+  }
+}
+
+async function saveEditSupplier(event) {
+  event.preventDefault();
+  const supplierId = document.getElementById("EDIT_SUPPLIER_ID").value;
+
+  try {
+    // Prepare current timestamp
+    const modDate = new Date().toISOString().slice(0, 19).replace("T", " ");
+
+    // Build data object
+    const dataJson = {
+      SUPPLIER_ID: supplierId,
+      NAME: document.getElementById("EDIT_NAME").value,
+      WEBSITE: document.getElementById("EDIT_WEBSITE").value,
+      CITY: document.getElementById("EDIT_CITY").value,
+      STATE: document.getElementById("EDIT_STATE").value.toUpperCase(),
+      ZIP: document.getElementById("EDIT_ZIP").value,
+      STATUS: document.getElementById("EDIT_STATUS").value,
+      SCOPE: document.getElementById("EDIT_SCOPE").value.toUpperCase(),
+      MODIFIED_DATE: modDate,
+      MODIFIED_BY: user || "TKENT",
+    };
+
+    // Submit the update
+    const response = await fetch(`${url}/${supplierId}`, {
+      method: "PUT",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(dataJson),
+    });
+
+    if (response.ok) {
+      document.getElementById("editSupplierDialog").close();
+      await loadSupplierData(); // Reload the data
+      alert("Supplier updated successfully!");
+    } else {
+      const errorText = await response.text();
+      alert(`Failed to update supplier: ${errorText}`);
+    }
+  } catch (error) {
+    console.error("Error saving supplier:", error);
+    alert("Failed to update supplier. Please try again.");
+  }
+}
+
 async function loadSupplierData() {
   try {
     const response = await fetch(url);
@@ -220,6 +317,17 @@ function displaySupplierTable(data) {
   table.className = "data-table";
   table.style.marginBottom = "0";
 
+  // Define column order with WEBSITE before CREATE_DATE
+  const columnOrder = [
+    "SUPPLIER_ID",
+    "NAME",
+    "WEBSITE",
+    "CITY",
+    "STATE",
+    "STATUS",
+    "CREATE_DATE",
+  ];
+
   // Create header
   const thead = document.createElement("thead");
   thead.style.position = "sticky";
@@ -228,17 +336,14 @@ function displaySupplierTable(data) {
 
   const headerRow = document.createElement("tr");
 
-  // Get headers from first record
-  const headers = [];
-  for (let key in data[0]) {
-    headers.push(formatFieldName(key));
-  }
-
-  headers.forEach((header, index) => {
+  columnOrder.forEach((colName) => {
     const th = document.createElement("th");
-    th.textContent = header;
+    th.textContent = formatFieldName(colName);
     th.style.cursor = "pointer";
-    th.addEventListener("click", () => sortTable(index));
+    th.addEventListener("click", () => {
+      const colIndex = columnOrder.indexOf(colName);
+      sortTable(colIndex);
+    });
     headerRow.appendChild(th);
   });
 
@@ -263,26 +368,30 @@ function displaySupplierTable(data) {
       }
     }
 
-    const cells = [];
-    for (let key in item) {
-      let cellContent = "";
+    // Create cells in defined column order
+    columnOrder.forEach((colName) => {
+      const td = document.createElement("td");
 
-      if (item[key] !== null && item[key] !== undefined) {
-        if (key === "CREATE_DATE") {
-          cellContent = item[key].slice(0, 10);
-        } else {
-          cellContent = item[key] || "";
-        }
+      if (colName === "SUPPLIER_ID") {
+        // Make SUPPLIER_ID a clickable link
+        const link = document.createElement("a");
+        link.href = "#";
+        link.textContent = item[colName] || "";
+        link.style.cursor = "pointer";
+        link.style.color = "#0066cc";
+        link.style.textDecoration = "underline";
+        link.addEventListener("click", (e) => {
+          e.preventDefault();
+          openEditSupplierDialog(item[colName]);
+        });
+        td.appendChild(link);
+      } else if (colName === "CREATE_DATE") {
+        // Format date
+        td.textContent = item[colName] ? item[colName].slice(0, 10) : "";
       } else {
-        cellContent = "";
+        td.textContent = item[colName] || "";
       }
 
-      cells.push(cellContent);
-    }
-
-    cells.forEach((cellContent) => {
-      const td = document.createElement("td");
-      td.textContent = cellContent;
       row.appendChild(td);
     });
 
@@ -302,6 +411,15 @@ function sortTable(columnIndex) {
   const tbody = document.getElementById("supplierTableBody");
   if (!tbody) return;
 
+  const columnOrder = [
+    "SUPPLIER_ID",
+    "NAME",
+    "WEBSITE",
+    "CITY",
+    "STATE",
+    "STATUS",
+    "CREATE_DATE",
+  ];
   const rows = Array.from(tbody.querySelectorAll("tr"));
   const headerCells = document.querySelectorAll("thead th");
 

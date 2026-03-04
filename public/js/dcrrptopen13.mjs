@@ -24,7 +24,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       );
     }
 
-    // Create chart
+    // Create chart with dual Y-axes
     new Chart(chartCanvas, {
       type: "line",
       data: {
@@ -43,6 +43,22 @@ window.addEventListener("DOMContentLoaded", async () => {
             pointBorderColor: "#fff",
             pointBorderWidth: 2,
             pointHoverRadius: 7,
+            yAxisID: "y",
+          },
+          {
+            label: "Average Age (Days)",
+            data: data.aging,
+            borderColor: "#ff6b35",
+            backgroundColor: "rgba(255, 107, 53, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 5,
+            pointBackgroundColor: "#ff6b35",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointHoverRadius: 7,
+            yAxisID: "y1",
           },
         ],
       },
@@ -60,10 +76,24 @@ window.addEventListener("DOMContentLoaded", async () => {
         },
         scales: {
           y: {
+            type: "linear",
+            position: "left",
             beginAtZero: true,
             title: {
               display: true,
               text: "Count of Open Document Change Requests",
+            },
+          },
+          y1: {
+            type: "linear",
+            position: "right",
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: "Average Age (Days)",
+            },
+            grid: {
+              drawOnChartArea: false,
             },
           },
           x: {

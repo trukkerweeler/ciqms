@@ -1,0 +1,161 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Skills Management" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/table.css" />
+    <title>Skills (CIQMS)</title>
+  </head>
+
+  <body>
+    <header id="header"></header>
+    <div class="recordsaddrecordheading">
+      <h1>Skills</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addSkillBtn"
+        title="Add new skill"
+      >
+        +
+      </button>
+    </div>
+
+    <main id="main">
+      <!-- Add/Edit Skill Dialog -->
+      <dialog
+        id="skillDialog"
+        class="dialog"
+        style="max-height: 90vh; overflow: auto"
+      >
+        <div class="dialog-content" style="padding: 1rem">
+          <h2
+            id="dialogTitle"
+            style="margin: 0 0 0.75rem 0; font-size: 1.25rem"
+          >
+            Add New Skill
+          </h2>
+          <form id="skillForm" class="form" style="display: grid; gap: 0.5rem">
+            <div class="form-group" style="margin: 0">
+              <label for="skillId" class="required" style="font-size: 0.9rem"
+                >Skill ID</label
+              >
+              <input
+                type="text"
+                id="skillId"
+                name="skillId"
+                placeholder="e.g., SKL001"
+                maxlength="16"
+                required
+                style="padding: 0.4rem; font-size: 0.9rem"
+              />
+            </div>
+
+            <div class="form-group" style="margin: 0">
+              <label for="skillName" class="required" style="font-size: 0.9rem"
+                >Skill Name</label
+              >
+              <input
+                type="text"
+                id="skillName"
+                name="skillName"
+                placeholder="e.g., CMM Operation"
+                maxlength="60"
+                required
+                style="padding: 0.4rem; font-size: 0.9rem"
+              />
+            </div>
+
+            <div class="form-group" style="margin: 0">
+              <label
+                for="skillCategory"
+                class="required"
+                style="font-size: 0.9rem"
+                >Category</label
+              >
+              <select
+                id="skillCategory"
+                name="skillCategory"
+                required
+                style="padding: 0.4rem; font-size: 0.9rem"
+              >
+                <option value="">-- Select Category --</option>
+                <option value="Technical">Technical</option>
+                <option value="Quality">Quality</option>
+                <option value="Administrative">Administrative</option>
+                <option value="Soft Skill">Soft Skill</option>
+                <option value="Certification">Certification</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin: 0">
+              <label
+                for="skillStatus"
+                class="required"
+                style="font-size: 0.9rem"
+                >Status</label
+              >
+              <select
+                id="skillStatus"
+                name="skillStatus"
+                required
+                style="padding: 0.4rem; font-size: 0.9rem"
+              >
+                <option value="A">Active</option>
+                <option value="I">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-group" style="margin: 0">
+              <label for="revisionLevel" style="font-size: 0.9rem"
+                >Revision Level</label
+              >
+              <input
+                type="text"
+                id="revisionLevel"
+                name="revisionLevel"
+                placeholder="e.g., 1.0"
+                maxlength="5"
+                style="padding: 0.4rem; font-size: 0.9rem"
+              />
+            </div>
+
+            <div
+              class="form-actions"
+              style="display: flex; gap: 0.5rem; margin-top: 0.5rem"
+            >
+              <button
+                type="submit"
+                class="button primary"
+                id="submitBtn"
+                style="flex: 1; padding: 0.4rem; font-size: 0.9rem"
+              >
+                Add Skill
+              </button>
+              <button
+                type="button"
+                class="button secondary"
+                id="cancelBtn"
+                onclick="document.getElementById('skillDialog').close()"
+                style="flex: 1; padding: 0.4rem; font-size: 0.9rem"
+              >
+                Cancel
+              </button>
+            </div>
+          </form>
+        </div>
+      </dialog>
+
+      <!-- Skills Table -->
+      <div
+        id="skillsContainer"
+        class="table-container"
+        style="max-height: 60vh; overflow-y: auto"
+      ></div>
+    </main>
+    <footer id="footer"></footer>
+
+    <script type="module" src="/js/skills.mjs"></script>
+  </body>
+</html>

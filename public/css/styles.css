@@ -216,10 +216,12 @@ body {
   color: var(--text-color-light);
 }
 
+#main-nav ul li:hover > .submenu,
 #main-nav ul li:hover .submenu {
-  visibility: visible;
-  opacity: 1;
-  transform: translateY(0);
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateY(0) !important;
+  display: flex !important;
 }
 
 #main-nav a {

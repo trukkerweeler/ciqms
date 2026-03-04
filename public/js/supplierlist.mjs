@@ -72,6 +72,14 @@ async function openAddQmsDialog() {
     const form = document.getElementById("addQmsForm");
     form.reset();
 
+    // Set default date to today
+    const today = new Date();
+    const todayStr = today.toISOString().split("T")[0];
+    const expiryDateField = document.getElementById("expiry_date");
+    if (expiryDateField) {
+      expiryDateField.value = todayStr;
+    }
+
     dialog.showModal();
   }
 }
@@ -98,6 +106,14 @@ async function saveQms(event) {
           dataJson[field] = value;
       }
     }
+
+    // Validate date field
+    if (!dataJson.EXPIRY_DATE) {
+      alert("Please select an expiry date");
+      return;
+    }
+
+    console.log("Submitting QMS data:", dataJson);
 
     // Submit to QMS endpoint
     const response = await fetch(qmsUrl, {

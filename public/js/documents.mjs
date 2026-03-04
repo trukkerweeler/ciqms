@@ -17,11 +17,12 @@ console.log("[documents.mjs] API URL:", apiUrl);
 const url = `${apiUrl}/sysdocs`;
 const url2 = `${apiUrl}/docsavail`;
 console.log("[documents.mjs] URLs set:", { url, url2 });
-let sortOrder = "asc";
 
 // Global variables - will be initialized on DOMContentLoaded
 let dialog, addButton, cancelButton, form, user;
 let documentsData = []; // Store original data for filtering
+let currentSortColumn = null; // Track which column is sorted
+let currentSortDirection = "asc"; // Track sort direction
 
 // Initialize handler function
 async function initializeDocuments() {
@@ -449,10 +450,37 @@ function formatDate(dateValue) {
 function sortTable(table, column) {
   const rows = Array.from(table.querySelectorAll("tbody tr"));
   const headerCells = Array.from(table.querySelectorAll("th"));
-  const columnIndex = headerCells.findIndex((th) => th.textContent === column);
+  const columnIndex = headerCells.findIndex(
+    (th) => th.textContent.replace(/ [↑↓]$/, "") === column,
+  );
 
   if (columnIndex === -1) {
     console.warn("Column not found for sorting:", column);
+    return;
+  }
+
+  // Determine sort direction based on current state
+  let sortDirection;
+  if (currentSortColumn === column) {
+    // Cycle through: asc → desc → unsorted → asc
+    if (currentSortDirection === "asc") {
+      sortDirection = "desc";
+    } else if (currentSortDirection === "desc") {
+      sortDirection = "unsorted";
+    } else {
+      sortDirection = "asc";
+    }
+  } else {
+    // New column, start with ascending
+    sortDirection = "asc";
+  }
+
+  currentSortColumn = column;
+  currentSortDirection = sortDirection;
+
+  // If unsorted, restore original order
+  if (sortDirection === "unsorted") {
+    renderDocumentTable(documentsData);
     return;
   }
 
@@ -469,7 +497,7 @@ function sortTable(table, column) {
       const aDate = new Date(aText);
       const bDate = new Date(bText);
       if (!isNaN(aDate.getTime()) && !isNaN(bDate.getTime())) {
-        return sortOrder === "asc" ? aDate - bDate : bDate - aDate;
+        return sortDirection === "asc" ? aDate - bDate : bDate - aDate;
       }
     }
 
@@ -478,11 +506,11 @@ function sortTable(table, column) {
     const bNum = parseFloat(bText);
 
     if (!isNaN(aNum) && !isNaN(bNum)) {
-      return sortOrder === "asc" ? aNum - bNum : bNum - aNum;
+      return sortDirection === "asc" ? aNum - bNum : bNum - aNum;
     }
 
     // Fall back to text comparison
-    return sortOrder === "asc"
+    return sortDirection === "asc"
       ? aText.localeCompare(bText, undefined, {
           numeric: true,
           sensitivity: "base",
@@ -499,25 +527,23 @@ function sortTable(table, column) {
   sortedRows.forEach((row) => tbody.appendChild(row));
 
   // Update sort indicators
-  updateSortIndicators(headerCells, columnIndex);
-
-  // Toggle sort order for next click
-  sortOrder = sortOrder === "asc" ? "desc" : "asc";
+  updateSortIndicators(headerCells, columnIndex, sortDirection);
 }
 
 /**
  * Update visual sort indicators on table headers
  * @param {Array} headerCells - Array of header cell elements
  * @param {number} activeColumnIndex - Index of currently sorted column
+ * @param {string} direction - Current sort direction (asc, desc, unsorted)
  */
-function updateSortIndicators(headerCells, activeColumnIndex) {
+function updateSortIndicators(headerCells, activeColumnIndex, direction) {
   headerCells.forEach((th, index) => {
     // Remove existing sort indicators
     th.textContent = th.textContent.replace(/ [↑↓]$/, "");
 
-    // Add indicator to active column
-    if (index === activeColumnIndex) {
-      const indicator = sortOrder === "asc" ? " ↑" : " ↓";
+    // Add indicator to active column based on direction
+    if (index === activeColumnIndex && direction !== "unsorted") {
+      const indicator = direction === "asc" ? " ↑" : " ↓";
       th.textContent += indicator;
     }
   });

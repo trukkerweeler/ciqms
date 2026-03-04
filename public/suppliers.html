@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -71,6 +71,16 @@
                 name="NAME"
                 required
                 placeholder="Enter supplier name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="WEBSITE">Website</label>
+              <input
+                type="text"
+                id="WEBSITE"
+                name="WEBSITE"
+                placeholder="Enter website URL"
               />
             </div>
 
@@ -157,6 +167,122 @@
             <button
               type="button"
               id="closeAddSupplierBtn"
+              class="btn btn-cancel"
+            >
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Edit Supplier Dialog -->
+      <dialog id="editSupplierDialog" class="dialog">
+        <div class="dialog-header">
+          <h2>Edit Supplier</h2>
+        </div>
+        <form id="editSupplierForm" class="form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="EDIT_SUPPLIER_ID" class="required">Supplier ID</label>
+              <input
+                type="text"
+                id="EDIT_SUPPLIER_ID"
+                name="EDIT_SUPPLIER_ID"
+                required
+                disabled
+                placeholder="Supplier ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="EDIT_NAME" class="required">Supplier Name</label>
+              <input
+                type="text"
+                id="EDIT_NAME"
+                name="EDIT_NAME"
+                required
+                placeholder="Enter supplier name"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="EDIT_WEBSITE">Website</label>
+              <input
+                type="text"
+                id="EDIT_WEBSITE"
+                name="EDIT_WEBSITE"
+                placeholder="Enter website URL"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="EDIT_CITY">City</label>
+              <input
+                type="text"
+                id="EDIT_CITY"
+                name="EDIT_CITY"
+                placeholder="Enter city"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="EDIT_STATE">State</label>
+              <input
+                type="text"
+                id="EDIT_STATE"
+                name="EDIT_STATE"
+                placeholder="Enter state/province"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="EDIT_ZIP">Code (Zip)</label>
+              <input
+                type="text"
+                id="EDIT_ZIP"
+                name="EDIT_ZIP"
+                placeholder="Enter code"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="EDIT_STATUS">Status</label>
+              <select
+                name="EDIT_STATUS"
+                id="EDIT_STATUS"
+                disabled
+                title="Edit approvals through ASL"
+              >
+                <option value="A">Approved</option>
+                <option value="I">Inactive</option>
+                <option value="P" selected>Pending</option>
+              </select>
+            </div>
+
+            <div class="form-group full-width">
+              <label for="EDIT_SCOPE">Cmmdty/Srvce</label>
+              <input
+                type="text"
+                id="EDIT_SCOPE"
+                name="EDIT_SCOPE"
+                placeholder="Leave one space between each commodity/service code"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button
+              id="saveEditSupplierBtn"
+              type="submit"
+              class="btn btn-primary"
+            >
+              <span class="btn-icon">✓</span>
+              Save Changes
+            </button>
+            <button
+              type="button"
+              id="closeEditSupplierBtn"
               class="btn btn-cancel"
             >
               <span class="btn-icon">✕</span>

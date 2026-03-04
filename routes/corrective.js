@@ -169,10 +169,11 @@ router.get("/trend-open-13months", (req, res) => {
       }
 
       // Build UNION query for each month
+      // Also calculate average age in days for open corrective actions
       const queries = months
         .map(
           (m) =>
-            `SELECT '${m.monthName}' as month_name, COUNT(*) as count FROM CORRECTIVE WHERE CORRECTIVE_DATE <= '${m.LDOM}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${m.LDOM}')`,
+            `SELECT '${m.monthName}' as month_name, COUNT(*) as count, ROUND(COALESCE(AVG(DATEDIFF('${m.LDOM}', CORRECTIVE_DATE)), 0), 0) as avg_age FROM CORRECTIVE WHERE CORRECTIVE_DATE <= '${m.LDOM}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${m.LDOM}')`,
         )
         .join(" UNION ALL ");
 
@@ -183,7 +184,8 @@ router.get("/trend-open-13months", (req, res) => {
         } else {
           const labels = rows.map((row) => row.month_name);
           const counts = rows.map((row) => row.count);
-          res.json({ labels, counts });
+          const aging = rows.map((row) => row.avg_age || 0);
+          res.json({ labels, counts, aging });
         }
         connection.end();
       });
