@@ -268,13 +268,13 @@ document.addEventListener("DOMContentLoaded", async () => {
         let tableContainer = document.createElement("div");
         tableContainer.className = "table-container";
         tableContainer.style.width = "100%"; // Full width
-        tableContainer.style.maxHeight = "600px"; // Fixed height for scroll
+        tableContainer.style.flex = "1"; // Flex to fill available space
         tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
         tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling
         tableContainer.style.border = "1px solid #ddd"; // Border
         tableContainer.style.borderRadius = "4px"; // Rounded corners
-        tableContainer.style.marginTop = "10px"; // Top margin
-        tableContainer.style.marginBottom = "20px"; // Bottom margin
+        tableContainer.style.marginTop = "2px"; // Top margin
+        tableContainer.style.marginBottom = "2px"; // Bottom margin
 
         let table = document.createElement("table");
         table.className = "table table-striped table-bordered table-hover";

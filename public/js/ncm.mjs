@@ -57,17 +57,27 @@ async function fetchCauses() {
 }
 
 const main = document.querySelector("main");
-// Delete the child nodes of the main element
-while (main.firstChild) {
-  main.removeChild(main.firstChild);
+
+// Function to refresh NCM data from server and re-render
+async function refreshNCMData() {
+  try {
+    const response = await fetch(url, { method: "GET" });
+    const record = await response.json();
+    renderNCMDetail(record);
+  } catch (error) {
+    console.error("Error refreshing NCM data:", error);
+    alert("Error refreshing data. Please try again.");
+  }
 }
 
-// // enable the close button
-// closebutton.disabled = false;
+// Function to render NCM detail
+async function renderNCMDetail(record) {
+  // Delete the child nodes of the main element
+  while (main.firstChild) {
+    main.removeChild(main.firstChild);
+  }
 
-fetch(url, { method: "GET" })
-  .then((response) => response.json())
-  .then(async (record) => {
+  for (const key in record) {
     // console.log(record);
     for (const key in record) {
       const detailSection = document.createElement("section");
@@ -497,6 +507,12 @@ fetch(url, { method: "GET" })
       main.appendChild(notesSection);
     }
 
+    // Setup event listeners after rendering
+    setupNCMEventListeners();
+  }
+
+  // Function to setup all event listeners
+  function setupNCMEventListeners() {
     // =============================================
     // Listen for the btnEditDesc button click
     const btnEditDesc = document.querySelector("#btnEditDesc");
@@ -618,7 +634,6 @@ fetch(url, { method: "GET" })
 
         let data = {
           NCM_ID: nidValue,
-          INPUT_USER: user,
         };
         // console.log(data);
 
@@ -743,6 +758,14 @@ fetch(url, { method: "GET" })
         };
 
         const response = await fetch(fetchUrl, options);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Error:", response.status, errorText);
+          alert(`Error saving: ${response.status} - ${errorText}`);
+          return;
+        }
+
         const json = await response.json();
 
         let dialogToClose;
@@ -767,8 +790,8 @@ fetch(url, { method: "GET" })
         }
         if (dialogToClose) dialogToClose.close();
 
-        // refresh the page
-        window.location.reload();
+        // refresh the data via AJAX
+        await refreshNCMData();
       });
     });
 
@@ -889,7 +912,6 @@ fetch(url, { method: "GET" })
 
         let data = {
           NCM_ID: nidValue,
-          INPUT_USER: user,
           MODIFIED_BY: user,
           MODIFIED_DATE: getDateTime(),
         };
@@ -949,9 +971,18 @@ fetch(url, { method: "GET" })
         };
 
         const response = await fetch(detailsUrl, options);
+
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error("API Error:", response.status, errorText);
+          alert(`Error saving: ${response.status} - ${errorText}`);
+          return;
+        }
+
         const json = await response.json();
         detailDialog.close();
-        window.location.reload();
+        // refresh the data via AJAX
+        await refreshNCMData();
       });
 
       // =============================================
@@ -983,7 +1014,6 @@ fetch(url, { method: "GET" })
         NCM_ID: iid,
         CLOSED: "Y",
         CLOSED_DATE: new Date().toISOString(),
-        INPUT_USER: user,
       };
 
       if (test) {
@@ -999,6 +1029,14 @@ fetch(url, { method: "GET" })
       };
 
       const response = await fetch(closeUrl, options);
+
+      if (!response.ok) {
+        const errorText = await response.text();
+        console.error("API Error:", response.status, errorText);
+        alert(`Error closing NCM: ${response.status} - ${errorText}`);
+        return;
+      }
+
       const json = await response.json();
 
       // Disable and grey out the button
@@ -1007,7 +1045,11 @@ fetch(url, { method: "GET" })
       closeNCM.style.cursor = "not-allowed";
       closeNCM.style.backgroundColor = "#e0e0e0";
 
-      // refresh the page
-      window.location.reload();
+      // refresh the data via AJAX
+      await refreshNCMData();
     });
-  });
+  }
+}
+
+// Initialize the page
+refreshNCMData();

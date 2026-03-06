@@ -930,12 +930,14 @@ router.put("/:id", (req, res) => {
       const requestBy = req.body.REQUEST_BY || "";
       const reference = req.body.REFERENCE || "";
       const projectId = req.body.PROJECT_ID || "";
-      query = `UPDATE CORRECTIVE SET ASSIGNED_TO = ?, REQUEST_BY = ?, REFERENCE = ?, PROJECT_ID = ? WHERE CORRECTIVE_ID = ?`;
+      const dueDate = req.body.DUE_DATE || "";
+      query = `UPDATE CORRECTIVE SET ASSIGNED_TO = ?, REQUEST_BY = ?, REFERENCE = ?, PROJECT_ID = ?, DUE_DATE = ? WHERE CORRECTIVE_ID = ?`;
       queryParams = [
         assignedTo,
         requestBy,
         reference,
         projectId,
+        dueDate,
         req.params.id,
       ];
   }

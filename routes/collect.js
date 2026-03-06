@@ -8,7 +8,6 @@ const mysql = require("mysql2");
 
 // GET all product plan data records
 router.get("/prod-plan-data", (req, res) => {
-  console.log("\n====== GET /prod-plan-data CALLED ======");
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -26,23 +25,15 @@ router.get("/prod-plan-data", (req, res) => {
           .json({ error: "DB connection failed", detail: err.message });
       }
 
-      console.log("✓ Connected to quality database");
-
       // Get table structure info for debugging
       const infoQuery = `DESCRIBE PRODUCT_PLAN_DATA`;
       connection.query(infoQuery, (err, columns) => {
         if (err) {
           console.error("ERROR describing table:", err.message);
-        } else {
-          console.log(
-            "PRODUCT_PLAN_DATA columns:",
-            columns.map((c) => c.Field).join(", "),
-          );
         }
 
         // Now run the actual select query
         const query = `SELECT * FROM PRODUCT_PLAN_DATA ORDER BY COLLECTION_DATE DESC`;
-        console.log("Executing query:", query);
 
         connection.query(query, (err, rows) => {
           if (err) {
@@ -51,12 +42,6 @@ router.get("/prod-plan-data", (req, res) => {
               .status(500)
               .json({ error: "Query failed", detail: err.message });
           } else {
-            console.log("✓ Query successful, rows returned:", rows.length);
-            if (rows.length > 0) {
-              console.log("First row keys:", Object.keys(rows[0]));
-            } else {
-              console.log("⚠ No rows returned from database");
-            }
             res.json(rows);
           }
           connection.end();

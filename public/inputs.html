@@ -18,9 +18,11 @@
     style="
       display: flex;
       flex-direction: column;
-      height: 100%;
+      height: 100vh;
       margin: 0;
       padding: 0;
+      padding-bottom: 60px;
+      box-sizing: border-box;
     "
   >
     <header id="header" style="flex-shrink: 0"></header>
@@ -94,6 +96,7 @@
                 id="ASSIGNED_TO"
                 name="ASSIGNED_TO"
                 placeholder="Enter assigned ID"
+                required
               />
             </div>
 
@@ -110,6 +113,8 @@
                 <option value="RISK">Risk</option>
                 <option value="OPPR">Opportunity</option>
                 <option value="TRN">Train</option>
+                <option value="TRG">Training</option>
+                <option value="NOTE">Notes</option>
               </select>
             </div>
 
@@ -159,7 +164,7 @@
       </dialog>
 
       <!-- Table container for input data -->
-      <div id="inputTableContainer" class="table-container">
+      <div id="inputTableContainer">
         <!-- Table will be dynamically generated here -->
       </div>
     </main>

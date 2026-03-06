@@ -778,34 +778,51 @@ router.put("/:id", (req, res) => {
   // console.log("Params: " + req.params.id);
   // console.log(req.body);
   test = false;
-  let mytable = "";
+  let mytable = req.body.MY_TABLE || "";
   let appended = "";
-  const myfield = Object.keys(req.body)[2];
+
+  // Determine the field name and value based on the table
+  let myfield = "";
+  switch (mytable) {
+    case "NCM_DESCRIPTION":
+      myfield = "DESCRIPTION";
+      appended = req.body.DESCRIPTION?.replace(/'/g, "''") || "";
+      break;
+    case "NCM_DISPOSITION":
+      myfield = "DISPOSITION";
+      appended = req.body.DISPOSITION?.replace(/'/g, "''") || "";
+      break;
+    case "NCM_VERIFICATION":
+      myfield = "VERIFICATION";
+      appended = req.body.VERIFICATION?.replace(/'/g, "''") || "";
+      break;
+    case "NCM_NOTES":
+      myfield = "NCM_NOTE";
+      appended = req.body.NCM_NOTE?.replace(/'/g, "''") || "";
+      break;
+    default:
+      console.log("No match for table: " + mytable);
+  }
+
   if (test) {
     console.log("279 - My field: " + myfield);
   }
-  switch (myfield) {
-    case "DESCRIPTION":
-      mytable = "NCM_DESCRIPTION";
-      appended = req.body.DESCRIPTION.replace(/'/g, "/''");
-      break;
-    case "DISPOSITION":
-      mytable = "NCM_DISPOSITION";
-      appended = req.body.DISPOSITION.replace(/'/g, "/''");
-      break;
-    case "VERIFICATION":
-      mytable = "NCM_VERIFICATION";
-      appended = req.body.VERIFICATION.replace(/'/g, "/''");
-      break;
-    case "NCM_NOTE":
-      mytable = "NCM_NOTES";
-      appended = req.body.NCM_NOTE.replace(/'/g, "/''");
-      break;
-    default:
-      console.log("No match");
-  }
   // Replace the br with a newline
   appended = appended.replace(/<br>/g, "\n");
+
+  // Validate that we have a table and field
+  if (!mytable || !myfield) {
+    console.log(
+      "Error: Missing table or field. Table:",
+      mytable,
+      "Field:",
+      myfield,
+    );
+    return res
+      .status(400)
+      .json({ error: "Invalid request - missing table or field" });
+  }
+
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -896,7 +913,10 @@ router.put("/details/:id", (req, res) => {
           console.log("Error code:", err.code);
           console.log("Error errno:", err.errno);
           console.log("Failed to query for nonconformance: " + err);
-          res.sendStatus(500);
+          res.status(500).json({
+            error: "Failed to update nonconformance details",
+            details: err.message,
+          });
           return;
         }
         if (DEBUG_NCM) console.log("NCM update successful!");
@@ -913,7 +933,7 @@ router.put("/details/:id", (req, res) => {
           }
         });
 
-        res.json(rows);
+        res.json({ success: true, data: rows });
       });
 
       connection.end();
@@ -951,10 +971,13 @@ router.put("/close/:id", (req, res) => {
       connection.query(query, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for nonconformance 410 : " + err);
-          res.sendStatus(500);
+          res.status(500).json({
+            error: "Failed to close nonconformance",
+            details: err.message,
+          });
           return;
         }
-        res.json(rows);
+        res.json({ success: true, data: rows });
       });
 
       connection.end();
@@ -991,7 +1014,10 @@ router.get("/previous/:id", (req, res) => {
       connection.query(query, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for corrective actions: " + err);
-          res.sendStatus(500);
+          res.status(500).json({
+            error: "Failed to fetch previous records",
+            details: err.message,
+          });
           return;
         }
         res.json(rows);

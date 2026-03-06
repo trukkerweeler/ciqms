@@ -237,6 +237,20 @@ fetch(url, { method: "GET" })
       }
       project.setAttribute("class", "tbl");
       project.setAttribute("id", "project");
+      const dueDate = document.createElement("p");
+      if (
+        record[key]["DUE_DATE"] === null ||
+        record[key]["DUE_DATE"] === "0000-00-00" ||
+        record[key]["DUE_DATE"] === "" ||
+        record[key]["DUE_DATE"].length === 0
+      ) {
+        dueDate.textContent = "Due Date:" + " " + "";
+      } else {
+        dueDate.textContent =
+          "Due Date:" + " " + record[key]["DUE_DATE"].substring(0, 10);
+      }
+      dueDate.setAttribute("class", "tbl");
+      dueDate.setAttribute("id", "duedate");
 
       const btnDetails = document.createElement("button");
       btnDetails.setAttribute("id", "btnDetails");
@@ -250,6 +264,9 @@ fetch(url, { method: "GET" })
         document.getElementById("reference").value = record[key]["REFERENCE"];
         document.getElementById("requestby").value = record[key]["REQUEST_BY"];
         document.getElementById("project").value = record[key]["PROJECT_ID"];
+        document.getElementById("duedate").value = record[key]["DUE_DATE"]
+          ? record[key]["DUE_DATE"].substring(0, 10)
+          : "";
         // show the dialog
         document.getElementById("detailsDialog").showModal();
 
@@ -267,6 +284,7 @@ fetch(url, { method: "GET" })
               .getElementById("requestby")
               .value.toUpperCase();
             let project = document.getElementById("project").value;
+            let duedate = document.getElementById("duedate").value;
             // update the record
             let url = `${apiUrl}/corrective/${caid}`;
             await fetch(url, {
@@ -279,6 +297,7 @@ fetch(url, { method: "GET" })
                 REFERENCE: reference,
                 REQUEST_BY: requestby,
                 PROJECT_ID: project,
+                DUE_DATE: duedate,
               }),
             });
             // close the dialog
@@ -352,6 +371,7 @@ fetch(url, { method: "GET" })
       detailSection.appendChild(caRef);
       detailSection.appendChild(reqBy);
       detailSection.appendChild(project);
+      detailSection.appendChild(dueDate);
 
       // Trend section=======================================
       const trendSection = document.createElement("section");

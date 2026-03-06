@@ -25,8 +25,23 @@ const corsOptions = {
 app.use(cors(corsOptions));
 
 // Request logging middleware - log only state-changing requests (POST, PUT, DELETE, PATCH)
+// Skip logging browser-specific meta-requests (Chrome DevTools, etc.)
+const browserMetaPaths = [
+  "/.well-known/",
+  "/apple-app-site-association",
+  "/.metadata",
+  "/browserconfig.xml",
+];
+
 app.use((req, res, next) => {
-  if (["POST", "PUT", "DELETE", "PATCH"].includes(req.method)) {
+  const isBrowserMetaRequest = browserMetaPaths.some((path) =>
+    req.path.startsWith(path),
+  );
+
+  if (
+    ["POST", "PUT", "DELETE", "PATCH"].includes(req.method) &&
+    !isBrowserMetaRequest
+  ) {
     console.log(`[${req.method}] ${req.path}`);
   }
   next();
@@ -276,7 +291,14 @@ app.use("/_equipment-images", express.static(equipmentImagesPath));
 
 // Catch-all 404 handler for debugging
 app.use((req, res) => {
-  console.log(`[404] ${req.method} ${req.path} - No matching route found`);
+  const isBrowserMetaRequest = browserMetaPaths.some((path) =>
+    req.path.startsWith(path),
+  );
+
+  if (!isBrowserMetaRequest) {
+    console.log(`[404] ${req.method} ${req.path} - No matching route found`);
+  }
+
   res
     .status(404)
     .json({ error: "Not found", path: req.path, method: req.method });

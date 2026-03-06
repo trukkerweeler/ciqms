@@ -43,7 +43,10 @@ router.get("/:id", (req, res) => {
       connection.query(query, [req.params.id], (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for corrective actions: " + err);
-          res.sendStatus(500);
+          res.status(500).json({
+            error: "Failed to fetch trend data",
+            details: err.message,
+          });
           return;
         }
         res.json(rows);
@@ -81,7 +84,7 @@ router.put("/:id/ncl", (req, res) => {
       .join(", ");
 
     let query = `INSERT INTO quality.NCM_CORRECT_LINK (NCM_ID, ${columns.join(
-      ", "
+      ", ",
     )})
     VALUES (?, ${placeholders})
     ON DUPLICATE KEY UPDATE ${updateClause}`;
@@ -90,10 +93,13 @@ router.put("/:id/ncl", (req, res) => {
     connection.query(query, queryParams, (err, rows, fields) => {
       if (err) {
         console.log("Failed to query for corrective action link: " + err);
-        res.sendStatus(500);
+        res.status(500).json({
+          error: "Failed to update NCM corrective link",
+          details: err.message,
+        });
         return;
       }
-      res.json(rows);
+      res.json({ success: true, data: rows });
     });
     connection.end();
   });
@@ -126,6 +132,9 @@ router.put("/:id", (req, res) => {
       // Skip NCM_ID (it's the WHERE clause identifier)
       if (key === "NCM_ID") continue;
 
+      // Skip INPUT_USER (not a database column)
+      if (key === "INPUT_USER") continue;
+
       // Skip undefined, null, empty strings
       if (value === undefined || value === null || value === "") continue;
 
@@ -146,7 +155,7 @@ router.put("/:id", (req, res) => {
     }
 
     let query = `UPDATE quality.NONCONFORMANCE SET ${queryUpdates.join(
-      ", "
+      ", ",
     )} WHERE NCM_ID = ?`;
     queryParams.push(id);
 
@@ -156,10 +165,12 @@ router.put("/:id", (req, res) => {
     connection.query(query, queryParams, (err, rows, fields) => {
       if (err) {
         console.log("Failed to query for trend data: " + err);
-        res.sendStatus(500);
+        res
+          .status(500)
+          .json({ error: "Failed to update trend data", details: err.message });
         return;
       }
-      res.json(rows);
+      res.json({ success: true, data: rows });
     });
     connection.end();
   });

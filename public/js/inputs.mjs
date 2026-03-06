@@ -279,8 +279,6 @@ function displayInputTable(data, includeClosed = false) {
   // Create scrollable table container
   const tableContainer = document.createElement("div");
   tableContainer.className = "table-container scrollable-table";
-  tableContainer.style.flex = "1";
-  tableContainer.style.overflowY = "auto";
 
   const table = document.createElement("table");
   table.className = "data-table";
@@ -322,7 +320,16 @@ function displayInputTable(data, includeClosed = false) {
 
   orderedFields.forEach((field, index) => {
     const th = document.createElement("th");
-    th.textContent = formatFieldName(field);
+
+    // Use shortened header names for certain columns
+    const headerMap = {
+      SUBJECT: "SUBJ",
+      ASSIGNED_TO: "ASGN",
+      CLOSED: "CLSD",
+      CLOSED_DATE: "CLSD_DT",
+    };
+
+    th.textContent = headerMap[field] || formatFieldName(field);
     th.style.cursor = "pointer";
     th.addEventListener("click", () => sortTable(index));
     headerRow.appendChild(th);
