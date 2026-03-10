@@ -48,10 +48,11 @@
             <option value="">Select Location</option>
             <option value="OFFICE">OFFICE</option>
             <option value="INSP">INSP</option>
+            <option value="ASSY">ASSY</option>
             <option value="CHEM">CHEM</option>
             <option value="MACH">MACHINING</option>
             <option value="PAINT">PAINT</option>
-            <option value="ASSY">ASSY</option>
+            <option value="TECH">TECH</option>
             <option value="WELD">WELD</option>
             <option value="LOCKUP">LOCKUP</option>
           </select>
@@ -241,6 +242,73 @@
             </button>
           </div>
         </section>
+      </dialog>
+
+      <!-- View Instructions Dialog -->
+      <dialog id="view-device-instructions-dialog" class="dialog">
+        <button
+          class="close-button"
+          onclick="
+            document.getElementById('view-device-instructions-dialog').close()
+          "
+        >
+          &times;
+        </button>
+        <h2>Device Instructions</h2>
+        <div id="instructions-content">
+          <p>Loading instructions...</p>
+        </div>
+        <div class="dialog-actions">
+          <button type="button" id="addInstructionsBtn" class="btn btn-primary">
+            Add Instructions
+          </button>
+          <button
+            type="button"
+            class="btn btn-cancel"
+            onclick="
+              document.getElementById('view-device-instructions-dialog').close()
+            "
+          >
+            Close
+          </button>
+        </div>
+      </dialog>
+
+      <!-- Add Instructions Dialog -->
+      <dialog id="add-instructions-dialog" class="dialog">
+        <button
+          class="close-button"
+          onclick="document.getElementById('add-instructions-dialog').close()"
+        >
+          &times;
+        </button>
+        <h2>Add Instruction</h2>
+        <form>
+          <textarea
+            id="instruction-text-textarea"
+            placeholder="Enter instruction..."
+            rows="8"
+            required
+          ></textarea>
+          <div class="dialog-actions">
+            <button
+              type="submit"
+              id="saveInstructionsBtn"
+              class="btn btn-primary"
+            >
+              Save
+            </button>
+            <button
+              type="button"
+              class="btn btn-cancel"
+              onclick="
+                document.getElementById('add-instructions-dialog').close()
+              "
+            >
+              Cancel
+            </button>
+          </div>
+        </form>
       </dialog>
     </main>
     <footer id="footer"></footer>

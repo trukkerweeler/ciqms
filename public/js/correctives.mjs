@@ -222,8 +222,23 @@ function createTable(data) {
   const table = document.createElement("table");
   table.className = "table table-striped table-bordered table-hover";
   table.style.marginBottom = "0";
+  table.id = "correctivesTable";
 
   const headers = Object.keys(data[0]);
+
+  // Create colgroup with resizable column support
+  const colgroup = document.createElement("colgroup");
+  const savedWidths = getCorrectiveColumnWidths();
+  headers.forEach((header, index) => {
+    const col = document.createElement("col");
+    if (savedWidths && savedWidths[index]) {
+      col.style.width = savedWidths[index];
+    } else {
+      col.style.width = "auto";
+    }
+    colgroup.appendChild(col);
+  });
+  table.appendChild(colgroup);
 
   // Create sticky header
   const thead = createTableHeader(headers, table);
@@ -241,6 +256,9 @@ function createTable(data) {
   const main = document.querySelector("main");
   main.innerHTML = "";
   main.appendChild(tableContainer);
+
+  // Initialize resizable columns
+  initializeCorrectiveColumnResizing(table);
 }
 
 /**
@@ -258,17 +276,26 @@ function createTableHeader(headers, table) {
 
   const headerRow = document.createElement("tr");
 
-  headers.forEach((header) => {
+  headers.forEach((header, index) => {
     const th = document.createElement("th");
-    th.style.cursor = "pointer";
-    th.title = "Click to sort";
+    th.style.position = "relative";
+    th.dataset.columnIndex = index;
+
+    // Create wrapper for header text
+    const headerText = document.createElement("span");
+    headerText.style.cursor = "pointer";
+    headerText.title = "Click to sort";
+    headerText.style.display = "inline-block";
+    headerText.style.userSelect = "none";
 
     // Apply header aliases for better display
     const displayHeader = getHeaderDisplayName(header);
-    th.textContent = displayHeader;
+    headerText.textContent = displayHeader;
 
-    // Add click handler for sorting
-    th.addEventListener("click", () => sortTable(table, displayHeader));
+    // Add click handler for sorting on text only
+    headerText.addEventListener("click", () => sortTable(table, displayHeader));
+    th.appendChild(headerText);
+
     headerRow.appendChild(th);
   });
 
@@ -311,16 +338,6 @@ function createTableBody(data, headers) {
 
       row.appendChild(td);
     });
-
-    // Make row clickable for full record view
-    row.addEventListener("click", (e) => {
-      if (e.target.tagName !== "A") {
-        // Navigate to detail page if not clicking on link
-        const correctiveId = item.CORRECTIVE_ID;
-        window.location.href = `${apiUrl}/corrective.html?id=${correctiveId}`;
-      }
-    });
-    row.style.cursor = "pointer";
 
     tbody.appendChild(row);
   });
@@ -384,7 +401,10 @@ function formatDate(dateValue) {
 function sortTable(table, column) {
   const rows = Array.from(table.querySelectorAll("tbody tr"));
   const headerCells = Array.from(table.querySelectorAll("th"));
-  const columnIndex = headerCells.findIndex((th) => th.textContent === column);
+  const columnIndex = headerCells.findIndex((th) => {
+    const headerSpan = th.querySelector("span");
+    return (headerSpan ? headerSpan.textContent : th.textContent) === column;
+  });
 
   if (columnIndex === -1) {
     console.warn("Column not found for sorting:", column);
@@ -436,12 +456,99 @@ function sortTable(table, column) {
 function updateSortIndicators(headerCells, activeColumnIndex) {
   headerCells.forEach((th, index) => {
     // Remove existing sort indicators
-    th.textContent = th.textContent.replace(/ [↑↓]$/, "");
+    const headerText = th.querySelector("span");
+    if (headerText) {
+      headerText.textContent = headerText.textContent.replace(/ [↑↓]$/, "");
 
-    // Add indicator to active column
-    if (index === activeColumnIndex) {
-      const indicator = sortOrder === "asc" ? " ↑" : " ↓";
-      th.textContent += indicator;
+      // Add indicator to active column
+      if (index === activeColumnIndex) {
+        const indicator = sortOrder === "asc" ? " ↑" : " ↓";
+        headerText.textContent += indicator;
+      }
     }
+  });
+}
+
+function getCorrectiveColumnWidths() {
+  try {
+    const widths = localStorage.getItem("corrective_column_widths");
+    return widths ? JSON.parse(widths) : null;
+  } catch (error) {
+    console.error("Error retrieving column widths:", error);
+    return null;
+  }
+}
+
+function saveCorrectiveColumnWidths(widths) {
+  try {
+    localStorage.setItem("corrective_column_widths", JSON.stringify(widths));
+  } catch (error) {
+    console.error("Error saving column widths:", error);
+  }
+}
+
+function initializeCorrectiveColumnResizing(table) {
+  const headers = table.querySelectorAll("thead th");
+  const colgroup = table.querySelector("colgroup");
+  if (!colgroup) return;
+
+  const cols = colgroup.querySelectorAll("col");
+
+  headers.forEach((header, index) => {
+    // Create resize handle
+    const resizeHandle = document.createElement("div");
+    resizeHandle.className = "column-resize-handle";
+    resizeHandle.style.position = "absolute";
+    resizeHandle.style.right = "0";
+    resizeHandle.style.top = "0";
+    resizeHandle.style.height = "100%";
+    resizeHandle.style.width = "4px";
+    resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+    resizeHandle.style.borderRight = "1px solid #999";
+    resizeHandle.style.cursor = "col-resize";
+    resizeHandle.style.userSelect = "none";
+
+    header.appendChild(resizeHandle);
+
+    // Set up resize logic
+    resizeHandle.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const currentCol = cols[index];
+      const currentWidth = currentCol.offsetWidth;
+
+      const onMouseMove = (moveEvent) => {
+        const diff = moveEvent.clientX - startX;
+        const newWidth = Math.max(50, currentWidth + diff);
+        currentCol.style.width = newWidth + "px";
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+
+        // Save the new widths to localStorage
+        const widths = Array.from(cols).map((col) => col.style.width || "auto");
+        saveCorrectiveColumnWidths(widths);
+      };
+
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    // Show handle more prominently on hover
+    resizeHandle.addEventListener("mouseenter", () => {
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      resizeHandle.style.borderRight = "1px solid #0066ff";
+    });
+
+    resizeHandle.addEventListener("mouseleave", () => {
+      resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+      resizeHandle.style.borderRight = "1px solid #999";
+    });
   });
 }

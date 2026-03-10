@@ -231,6 +231,54 @@ async function initializePage() {
         });
         // Move calibrationsBtn to bottom of divTitle
         divTitle.appendChild(calibrationsBtn);
+
+        let instructionsBtn = document.createElement("button");
+        instructionsBtn.id = "instructionsBtn";
+        instructionsBtn.classList.add(
+          "btn",
+          "btn-primary",
+          "instructions-button",
+        );
+        instructionsBtn.innerHTML = "View Instructions";
+        instructionsBtn.style.marginTop = "8px";
+        instructionsBtn.addEventListener("click", async () => {
+          const instructionsDialog = document.getElementById(
+            "view-device-instructions-dialog",
+          );
+          const instructionsContent = document.getElementById(
+            "instructions-content",
+          );
+
+          try {
+            const response = await fetch(
+              `${apiUrl}/device/instructions/${data["DEVICE_ID"]}`,
+            );
+            const result = await response.json();
+
+            if (result.instructions && result.instructions.length > 0) {
+              instructionsContent.innerHTML = result.instructions
+                .map(
+                  (instr) => `
+                <div class="instruction-item">
+                  <p><strong>Date:</strong> ${new Date(instr.CREATE_DATE).toLocaleDateString()} by ${instr.CREATE_BY}</p>
+                  <p>${instr.INSTRUCTIONS}</p>
+                  <hr>
+                </div>
+              `,
+                )
+                .join("");
+            } else {
+              instructionsContent.innerHTML =
+                "<p>No instructions available.</p>";
+            }
+          } catch (error) {
+            console.error("Error fetching instructions:", error);
+            instructionsContent.innerHTML =
+              "<p>Error loading instructions.</p>";
+          }
+
+          instructionsDialog.showModal();
+        });
         mainElement.appendChild(divTitle);
 
         let deviceFields = [
@@ -393,33 +441,51 @@ async function initializePage() {
               " ",
             )}:</strong> ${date.toLocaleDateString()}`;
           } else if (field === "STATUS") {
-            // Check for explicit EXTENDED status first
+            // Check for explicit status values first
             let statusDisplay = "";
             let isExpired = false;
 
-            if (data["STATUS"] && data["STATUS"].toUpperCase() === "EXTENDED") {
-              statusDisplay = "X"; // User manually marked as extended
-            } else {
-              // Calculate from NEXT_DATE - parse carefully to handle multiple formats
-              let nextDateObj = new Date(data["NEXT_DATE"]);
+            if (DEBUG_MODE)
+              console.log(
+                "Raw STATUS value:",
+                data["STATUS"],
+                "Type:",
+                typeof data["STATUS"],
+              );
 
-              // If parse failed or invalid, try parsing as MM/DD/YYYY
-              if (isNaN(nextDateObj.getTime()) && data["NEXT_DATE"]) {
-                const parts = data["NEXT_DATE"].split("/");
-                if (parts.length === 3) {
-                  nextDateObj = new Date(parts[2], parts[0] - 1, parts[1]);
-                }
-              }
-
-              const today = new Date();
-              today.setHours(0, 0, 0, 0); // Reset to midnight for fair comparison
-              nextDateObj.setHours(0, 0, 0, 0);
-
-              if (nextDateObj < today) {
-                statusDisplay = "E"; // EXPIRED
-                isExpired = true;
+            if (data["STATUS"]) {
+              const statusUpper = data["STATUS"].toUpperCase().trim();
+              if (DEBUG_MODE) console.log("Uppercase STATUS:", statusUpper);
+              if (statusUpper === "EXTENDED" || statusUpper === "X") {
+                statusDisplay = "X"; // Extended/Valid
+              } else if (statusUpper === "DISPOSED" || statusUpper === "D") {
+                statusDisplay = "D"; // Disposed
+              } else if (statusUpper === "RETIRED" || statusUpper === "R") {
+                statusDisplay = "R"; // Retired
+              } else if (statusUpper === "CURRENT" || statusUpper === "C") {
+                statusDisplay = "X"; // Current/Valid
               } else {
-                statusDisplay = "X"; // Valid/Current
+                // Calculate from NEXT_DATE - parse carefully to handle multiple formats
+                let nextDateObj = new Date(data["NEXT_DATE"]);
+
+                // If parse failed or invalid, try parsing as MM/DD/YYYY
+                if (isNaN(nextDateObj.getTime()) && data["NEXT_DATE"]) {
+                  const parts = data["NEXT_DATE"].split("/");
+                  if (parts.length === 3) {
+                    nextDateObj = new Date(parts[2], parts[0] - 1, parts[1]);
+                  }
+                }
+
+                const today = new Date();
+                today.setHours(0, 0, 0, 0); // Reset to midnight for fair comparison
+                nextDateObj.setHours(0, 0, 0, 0);
+
+                if (nextDateObj < today) {
+                  statusDisplay = "E"; // EXPIRED
+                  isExpired = true;
+                } else {
+                  statusDisplay = "X"; // Valid/Current
+                }
               }
             }
 
@@ -441,8 +507,9 @@ async function initializePage() {
           calibrationSection.appendChild(calibrationDiv);
         });
 
-        // Now append calibrationsBtn as the last object in calibrationSection
+        // Now append calibrationsBtn and instructionsBtn as the last objects in calibrationSection
         calibrationSection.appendChild(calibrationsBtn);
+        calibrationSection.appendChild(instructionsBtn);
 
         sectionsDiv.appendChild(calibrationSection);
         // =====================================================
@@ -754,6 +821,56 @@ deleteImageButton.addEventListener("click", async () => {
     alert("An error occurred while deleting the image.");
   }
 });
+
+// Instructions dialog functionality
+const addInstructionsBtn = document.getElementById("addInstructionsBtn");
+if (addInstructionsBtn) {
+  addInstructionsBtn.addEventListener("click", () => {
+    document.getElementById("add-instructions-dialog").showModal();
+  });
+}
+
+const saveInstructionsBtn = document.getElementById("saveInstructionsBtn");
+if (saveInstructionsBtn) {
+  saveInstructionsBtn.addEventListener("click", async (e) => {
+    e.preventDefault();
+    const urlParams = new URLSearchParams(window.location.search);
+    const deviceId = urlParams.get("id");
+    const instructionText = document.getElementById(
+      "instruction-text-textarea",
+    ).value;
+
+    if (!instructionText.trim()) {
+      alert("Please enter instruction text.");
+      return;
+    }
+
+    try {
+      const response = await fetch(`${apiUrl}/device/instructions`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          DEVICE_ID: deviceId,
+          INSTRUCTIONS: instructionText,
+          CREATE_BY: user,
+        }),
+      });
+
+      if (response.ok) {
+        alert("Instruction added successfully!");
+        document.getElementById("add-instructions-dialog").close();
+        document.getElementById("instruction-text-textarea").value = "";
+        // Refresh instructions display
+        document.getElementById("instructionsBtn").click();
+      } else {
+        alert("Failed to save instruction.");
+      }
+    } catch (error) {
+      console.error("Error saving instruction:", error);
+      alert("An error occurred while saving the instruction.");
+    }
+  });
+}
 
 // Event listener for the "Cancel" button in the edit device dialog
 const editDialog = document.getElementById("edit-device-dialog");

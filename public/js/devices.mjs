@@ -168,111 +168,311 @@ function getRecords() {
       ];
 
       let tableContainer = document.createElement("div");
-      tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling
+      tableContainer.style.overflowX = "auto";
       tableContainer.className = "table-container";
-      tableContainer.style.maxHeight = "calc(75vh - 60px)"; // Adjusted for filter
-      tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
+      tableContainer.style.maxHeight = "calc(75vh - 60px)";
+      tableContainer.style.overflowY = "auto";
       tableContainer.style.marginBottom = "2rem";
 
-      let deviceTableTemplate = `<table class="table table-striped table-bordered table-hover" id="deviceTable" style="margin-bottom: 0;">`;
-      deviceTableTemplate += `<thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10;"><tr>`;
-      for (const field of myFields) {
-        deviceTableTemplate += `<th>${field}</th>`;
-      }
-      deviceTableTemplate += `</tr></thead>`;
-      deviceTableTemplate += `<tbody id="deviceTableBody">`;
-      for (const device of data) {
-        deviceTableTemplate += generateTableRow(device, myFields);
-      }
-      deviceTableTemplate += `</tbody>`;
-      deviceTableTemplate += `</table>`;
+      // Create table with proper DOM structure for resizable columns
+      const table = document.createElement("table");
+      table.className = "table table-striped table-bordered table-hover";
+      table.id = "deviceTable";
+      table.style.marginBottom = "0";
+      table.style.tableLayout = "fixed";
 
-      tableContainer.innerHTML = deviceTableTemplate;
+      // Create colgroup with saved widths
+      const colgroup = document.createElement("colgroup");
+      const savedWidths = getDeviceColumnWidths();
+      myFields.forEach((field, index) => {
+        const col = document.createElement("col");
+        if (savedWidths && savedWidths[index]) {
+          col.style.width = savedWidths[index];
+        } else {
+          col.style.width = "auto";
+        }
+        colgroup.appendChild(col);
+      });
+      table.appendChild(colgroup);
+
+      // Create header
+      const thead = document.createElement("thead");
+      thead.style.position = "sticky";
+      thead.style.top = "0";
+      thead.style.zIndex = "1";
+      thead.style.backgroundColor = "#f8f9fa";
+
+      const headerRow = document.createElement("tr");
+      myFields.forEach((field, index) => {
+        const th = document.createElement("th");
+
+        // Create wrapper for header text
+        const headerText = document.createElement("span");
+        headerText.textContent = field;
+        headerText.style.cursor = "default";
+        headerText.style.display = "inline-block";
+        headerText.style.userSelect = "none";
+
+        th.textContent = "";
+        th.appendChild(headerText);
+        th.dataset.columnIndex = index;
+        headerRow.appendChild(th);
+      });
+
+      thead.appendChild(headerRow);
+      table.appendChild(thead);
+
+      // Create body
+      const tbody = document.createElement("tbody");
+      tbody.id = "deviceTableBody";
+
+      data.forEach((device) => {
+        const row = document.createElement("tr");
+        myFields.forEach((field) => {
+          const td = document.createElement("td");
+
+          if (field === "DEVICE_ID") {
+            const link = document.createElement("a");
+            link.href = `device.html?id=${device[field]}`;
+            link.textContent = device[field];
+            td.appendChild(link);
+          } else if (field === "STATUS") {
+            let statusText = "";
+            let statusCode = device[field];
+
+            if (device["NEXT_DATE"]) {
+              const nextDate = new Date(device["NEXT_DATE"]);
+              const now = new Date();
+
+              if (device["MAJOR_LOCATION"] === "DISPOSED") {
+                statusCode = "D";
+                statusText = "DISPOSED";
+              } else if (nextDate < now) {
+                statusCode = "E";
+                statusText = "EXPIRED";
+              } else {
+                statusCode = "C";
+                statusText = "CURRENT";
+              }
+            } else {
+              if (statusCode === "E") statusText = "EXPIRED";
+              else if (statusCode === "C") statusText = "CURRENT";
+              else if (statusCode === "X") statusText = "EXTEND";
+              else if (statusCode === "D") statusText = "DISPOSED";
+              else statusText = statusCode ?? "";
+            }
+            td.textContent = statusText;
+          } else if (field.endsWith("DATE")) {
+            const dateValue = device[field];
+            if (dateValue) {
+              const date = new Date(dateValue);
+              const options = {
+                year: "numeric",
+                month: "2-digit",
+                day: "2-digit",
+              };
+              const formattedDate = date.toLocaleDateString("en-US", options);
+              td.textContent = formattedDate;
+
+              if (
+                field === "NEXT_DATE" &&
+                new Date(dateValue) < new Date() &&
+                device["MAJOR_LOCATION"] !== "LOCKUP"
+              ) {
+                row.classList.add("past-date");
+              }
+            }
+          } else {
+            td.textContent = device[field] ?? "";
+          }
+
+          row.appendChild(td);
+        });
+        tbody.appendChild(row);
+      });
+
+      table.appendChild(tbody);
+      tableContainer.appendChild(table);
       mainElement.appendChild(tableContainer);
+
+      // Initialize resizable columns
+      initializeDeviceColumnResizing(table);
 
       // Add filter functionality
       const filterInput = document.getElementById("deviceName");
-      const tableBody = document.getElementById("deviceTableBody");
+      if (filterInput) {
+        filterInput.addEventListener("input", () => {
+          const filterValue = filterInput.value.toLowerCase();
+          const filteredData = data.filter((device) =>
+            myFields.some((field) =>
+              (device[field] ?? "")
+                .toString()
+                .toLowerCase()
+                .includes(filterValue),
+            ),
+          );
 
-      filterInput.addEventListener("input", () => {
-        const filterValue = filterInput.value.toLowerCase();
-        const filteredData = data.filter((device) =>
-          myFields.some((field) =>
-            (device[field] ?? "")
-              .toString()
-              .toLowerCase()
-              .includes(filterValue),
-          ),
-        );
+          const tbody = document.getElementById("deviceTableBody");
+          tbody.innerHTML = "";
 
-        tableBody.innerHTML = filteredData
-          .map((device) => generateTableRow(device, myFields))
-          .join("");
-      });
+          filteredData.forEach((device) => {
+            const row = document.createElement("tr");
+            myFields.forEach((field) => {
+              const td = document.createElement("td");
+
+              if (field === "DEVICE_ID") {
+                const link = document.createElement("a");
+                link.href = `device.html?id=${device[field]}`;
+                link.textContent = device[field];
+                td.appendChild(link);
+              } else if (field === "STATUS") {
+                let statusText = "";
+                let statusCode = device[field];
+
+                if (device["NEXT_DATE"]) {
+                  const nextDate = new Date(device["NEXT_DATE"]);
+                  const now = new Date();
+
+                  if (device["MAJOR_LOCATION"] === "DISPOSED") {
+                    statusCode = "D";
+                    statusText = "DISPOSED";
+                  } else if (nextDate < now) {
+                    statusCode = "E";
+                    statusText = "EXPIRED";
+                  } else {
+                    statusCode = "C";
+                    statusText = "CURRENT";
+                  }
+                } else {
+                  if (statusCode === "E") statusText = "EXPIRED";
+                  else if (statusCode === "C") statusText = "CURRENT";
+                  else if (statusCode === "X") statusText = "EXTEND";
+                  else if (statusCode === "D") statusText = "DISPOSED";
+                  else statusText = statusCode ?? "";
+                }
+                td.textContent = statusText;
+              } else if (field.endsWith("DATE")) {
+                const dateValue = device[field];
+                if (dateValue) {
+                  const date = new Date(dateValue);
+                  const options = {
+                    year: "numeric",
+                    month: "2-digit",
+                    day: "2-digit",
+                  };
+                  const formattedDate = date.toLocaleDateString(
+                    "en-US",
+                    options,
+                  );
+                  td.textContent = formattedDate;
+
+                  if (
+                    field === "NEXT_DATE" &&
+                    new Date(dateValue) < new Date() &&
+                    device["MAJOR_LOCATION"] !== "LOCKUP"
+                  ) {
+                    row.classList.add("past-date");
+                  }
+                }
+              } else {
+                td.textContent = device[field] ?? "";
+              }
+
+              row.appendChild(td);
+            });
+            tbody.appendChild(row);
+          });
+        });
+      }
     })
     .catch((error) => {
       console.error("Error fetching devices:", error);
     });
 }
 
-function generateTableRow(device, fields) {
-  let rowTemplate = `<tr>`;
-  for (const field of fields) {
-    if (field === "DEVICE_ID") {
-      rowTemplate += `<td><a href="device.html?id=${device[field]}">${device[field]}</a></td>`;
-    } else if (field === "STATUS") {
-      // Calculate status based on NEXT_DATE
-      let statusText = "";
-      let statusCode = device[field];
-
-      if (device["NEXT_DATE"]) {
-        const nextDate = new Date(device["NEXT_DATE"]);
-        const now = new Date();
-
-        if (device["MAJOR_LOCATION"] === "DISPOSED") {
-          statusCode = "D";
-          statusText = "DISPOSED";
-        } else if (nextDate < now) {
-          statusCode = "E";
-          statusText = "EXPIRED";
-        } else {
-          statusCode = "C";
-          statusText = "CURRENT";
-        }
-      } else {
-        // Fallback if no NEXT_DATE
-        if (statusCode === "E") statusText = "EXPIRED";
-        else if (statusCode === "C") statusText = "CURRENT";
-        else if (statusCode === "X") statusText = "EXTEND";
-        else if (statusCode === "D") statusText = "DISPOSED";
-        else statusText = statusCode ?? "";
-      }
-      rowTemplate += `<td>${statusText}</td>`;
-    } else if (field.endsWith("DATE")) {
-      const dateValue = device[field];
-      if (dateValue) {
-        const date = new Date(dateValue);
-        const options = { year: "numeric", month: "2-digit", day: "2-digit" };
-        const formattedDate = date.toLocaleDateString("en-US", options);
-        if (
-          field === "NEXT_DATE" &&
-          new Date(dateValue) < new Date() &&
-          device["MAJOR_LOCATION"] !== "LOCKUP"
-        ) {
-          rowTemplate = `<tr class="past-date">` + rowTemplate.slice(4); // Apply class to the entire row
-          rowTemplate += `<td>${formattedDate}</td>`;
-        } else {
-          rowTemplate += `<td>${formattedDate}</td>`;
-        }
-      } else {
-        rowTemplate += `<td></td>`;
-      }
-    } else {
-      rowTemplate += `<td>${device[field] ?? ""}</td>`;
-    }
+function getDeviceColumnWidths() {
+  try {
+    const widths = localStorage.getItem("device_column_widths");
+    return widths ? JSON.parse(widths) : null;
+  } catch (error) {
+    console.error("Error retrieving column widths:", error);
+    return null;
   }
-  rowTemplate += `</tr>`;
-  return rowTemplate;
+}
+
+function saveDeviceColumnWidths(widths) {
+  try {
+    localStorage.setItem("device_column_widths", JSON.stringify(widths));
+  } catch (error) {
+    console.error("Error saving column widths:", error);
+  }
+}
+
+function initializeDeviceColumnResizing(table) {
+  const headers = table.querySelectorAll("thead th");
+  const colgroup = table.querySelector("colgroup");
+  if (!colgroup) return;
+
+  const cols = colgroup.querySelectorAll("col");
+
+  headers.forEach((header, index) => {
+    // Create resize handle
+    const resizeHandle = document.createElement("div");
+    resizeHandle.className = "column-resize-handle";
+    resizeHandle.style.position = "absolute";
+    resizeHandle.style.right = "0";
+    resizeHandle.style.top = "0";
+    resizeHandle.style.height = "100%";
+    resizeHandle.style.width = "4px";
+    resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+    resizeHandle.style.borderRight = "1px solid #999";
+    resizeHandle.style.cursor = "col-resize";
+    resizeHandle.style.userSelect = "none";
+
+    header.style.position = "relative";
+    header.appendChild(resizeHandle);
+
+    // Set up resize logic
+    resizeHandle.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const currentCol = cols[index];
+      const currentWidth = currentCol.offsetWidth;
+
+      const onMouseMove = (moveEvent) => {
+        const diff = moveEvent.clientX - startX;
+        const newWidth = Math.max(50, currentWidth + diff);
+        currentCol.style.width = newWidth + "px";
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+
+        // Save the new widths to localStorage
+        const widths = Array.from(cols).map((col) => col.style.width || "auto");
+        saveDeviceColumnWidths(widths);
+      };
+
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    // Show handle more prominently on hover
+    resizeHandle.addEventListener("mouseenter", () => {
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      resizeHandle.style.borderRight = "1px solid #0066ff";
+    });
+
+    resizeHandle.addEventListener("mouseleave", () => {
+      resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+      resizeHandle.style.borderRight = "1px solid #999";
+    });
+  });
 }
 
 getRecords();

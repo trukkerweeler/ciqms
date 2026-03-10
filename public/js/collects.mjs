@@ -10,6 +10,91 @@ function formatIdForDisplay(id) {
   return String(id).padStart(7, "0");
 }
 
+// Resizable columns functions
+function getCollectsColumnWidths() {
+  try {
+    const widths = localStorage.getItem("collects_column_widths");
+    return widths ? JSON.parse(widths) : null;
+  } catch (error) {
+    console.error("Error retrieving column widths:", error);
+    return null;
+  }
+}
+
+function saveCollectsColumnWidths(widths) {
+  try {
+    localStorage.setItem("collects_column_widths", JSON.stringify(widths));
+  } catch (error) {
+    console.error("Error saving column widths:", error);
+  }
+}
+
+function initializeCollectsColumnResizing(table) {
+  const headers = table.querySelectorAll("thead th");
+  const colgroup = table.querySelector("colgroup");
+  if (!colgroup) return;
+
+  const cols = colgroup.querySelectorAll("col");
+
+  headers.forEach((header, index) => {
+    // Create resize handle
+    const resizeHandle = document.createElement("div");
+    resizeHandle.className = "column-resize-handle";
+    resizeHandle.style.position = "absolute";
+    resizeHandle.style.right = "0";
+    resizeHandle.style.top = "0";
+    resizeHandle.style.height = "100%";
+    resizeHandle.style.width = "4px";
+    resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+    resizeHandle.style.borderRight = "1px solid #999";
+    resizeHandle.style.cursor = "col-resize";
+    resizeHandle.style.userSelect = "none";
+
+    header.appendChild(resizeHandle);
+
+    // Set up resize logic
+    resizeHandle.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const currentCol = cols[index];
+      const currentWidth = currentCol.offsetWidth;
+
+      const onMouseMove = (moveEvent) => {
+        const diff = moveEvent.clientX - startX;
+        const newWidth = Math.max(50, currentWidth + diff);
+        currentCol.style.width = newWidth + "px";
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+
+        // Save the new widths to localStorage
+        const widths = Array.from(cols).map((col) => col.style.width || "auto");
+        saveCollectsColumnWidths(widths);
+      };
+
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    // Show handle more prominently on hover
+    resizeHandle.addEventListener("mouseenter", () => {
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      resizeHandle.style.borderRight = "1px solid #0066ff";
+    });
+
+    resizeHandle.addEventListener("mouseleave", () => {
+      resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+      resizeHandle.style.borderRight = "1px solid #999";
+    });
+  });
+}
+
 // Helper function to map field names to display column aliases
 function getDisplayName(field) {
   const aliases = {
@@ -281,6 +366,21 @@ document.addEventListener("DOMContentLoaded", async () => {
         table.style.marginBottom = "0"; // Remove default table margin
         table.style.color = "#333"; // Ensure text color is visible
         table.style.backgroundColor = "#fff"; // Ensure background is visible
+        table.id = "collectsTable";
+
+        // Create colgroup with resizable column support
+        const colgroup = document.createElement("colgroup");
+        const savedWidths = getCollectsColumnWidths();
+        myFields.forEach((field, index) => {
+          const col = document.createElement("col");
+          if (savedWidths && savedWidths[index]) {
+            col.style.width = savedWidths[index];
+          } else {
+            col.style.width = "auto";
+          }
+          colgroup.appendChild(col);
+        });
+        table.appendChild(colgroup);
 
         // Create table header
         let thead = document.createElement("thead");
@@ -290,14 +390,23 @@ document.addEventListener("DOMContentLoaded", async () => {
         thead.style.zIndex = "10"; // Ensure header stays on top
 
         let headerRow = document.createElement("tr");
-        myFields.forEach((field) => {
+        myFields.forEach((field, index) => {
           let th = document.createElement("th");
+          th.style.position = "relative";
           th.style.color = "#000"; // Ensure header text is visible
           th.style.backgroundColor = "#f8f9fa"; // Light background for header
           th.style.padding = "10px 8px"; // Padding
           th.style.borderBottom = "2px solid #ddd"; // Bottom border
           th.style.fontWeight = "bold"; // Bold text
-          th.textContent = getDisplayName(field);
+          th.dataset.columnIndex = index;
+
+          // Create wrapper for header text
+          const headerText = document.createElement("span");
+          headerText.style.display = "inline-block";
+          headerText.style.userSelect = "none";
+          headerText.textContent = getDisplayName(field);
+          th.appendChild(headerText);
+
           headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
@@ -351,6 +460,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Append the table to the container, then container to the prod plan element
         tableContainer.appendChild(table);
         prodPlanContainer.appendChild(tableContainer);
+
+        // Initialize resizable columns
+        initializeCollectsColumnResizing(table);
       })
       .catch((error) => {
         console.error("Error fetching records:", error);

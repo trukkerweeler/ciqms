@@ -192,7 +192,7 @@ router.post("/create", async (req, res) => {
 
             // Check if any folder starts with the DEVICE_ID
             const existingFolder = folders.find((folder) =>
-              folder.startsWith(deviceId)
+              folder.startsWith(deviceId),
             );
 
             if (!existingFolder) {
@@ -202,17 +202,17 @@ router.post("/create", async (req, res) => {
               console.log(`Created calibration folder: ${newFolderPath}`);
             } else {
               console.log(
-                `Calibration folder already exists: ${existingFolder}`
+                `Calibration folder already exists: ${existingFolder}`,
               );
             }
           } else {
             console.warn(
-              `Calibration base directory does not exist: ${calibrationBasePath}`
+              `Calibration base directory does not exist: ${calibrationBasePath}`,
             );
           }
         } catch (folderError) {
           console.error(
-            "Error checking/creating calibration folder: " + folderError
+            "Error checking/creating calibration folder: " + folderError,
           );
           // Don't fail the device creation if folder operations fail
         }
@@ -338,7 +338,7 @@ router.put("/editdevcal", async (req, res) => {
       }
 
       const query = `UPDATE DEVICES SET ${setClauses.join(
-        ", "
+        ", ",
       )} WHERE DEVICE_ID = ?`;
       values.push(req.body.DEVICE_ID);
 
@@ -435,6 +435,134 @@ router.put("/savenote", async (req, res) => {
   } catch (err) {
     console.error("Error connecting to DB: ", err);
     res.sendStatus(500);
+  }
+});
+
+// ==================================================
+// Get device instruction (single record per device)
+router.get("/instructions/:id", async (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect((err) => {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return res.status(500).json({ error: "Database connection failed" });
+      }
+
+      const query = `
+        SELECT DEVICE_ID, INSTRUCTIONS, CREATE_DATE, CREATE_BY
+        FROM DEVICE_INSTR
+        WHERE DEVICE_ID = ?
+      `;
+
+      connection.query(query, [req.params.id], (err, results) => {
+        connection.end();
+
+        if (err) {
+          console.error("Error fetching instruction: " + err);
+          return res.status(500).json({ error: "Failed to fetch instruction" });
+        }
+
+        res.json({ instructions: results || [] });
+      });
+    });
+  } catch (err) {
+    console.error("Error: ", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ==================================================
+// Save device instruction (prepend new to existing, maintaining history)
+router.post("/instructions", async (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect((err) => {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return res.status(500).json({ error: "Database connection failed" });
+      }
+
+      // First, fetch existing instructions
+      const selectQuery = `
+        SELECT INSTRUCTIONS
+        FROM DEVICE_INSTR
+        WHERE DEVICE_ID = ?
+        LIMIT 1
+      `;
+
+      connection.query(selectQuery, [req.body.DEVICE_ID], (err, results) => {
+        if (err) {
+          connection.end();
+          console.error("Error fetching existing instruction: " + err);
+          return res.status(500).json({ error: "Failed to fetch instruction" });
+        }
+
+        // Get existing instructions or empty string
+        const existingInstructions =
+          results.length > 0 ? results[0].INSTRUCTIONS : "";
+
+        // Create timestamp
+        const now = new Date();
+        const timestamp = now.toLocaleString();
+        const createDate = now.toISOString().slice(0, 19).replace("T", " ");
+
+        // Prepend new instruction with timestamp and separator
+        let combinedInstructions = `${timestamp} - Added by ${req.body.CREATE_BY}\n${req.body.INSTRUCTIONS}`;
+
+        if (existingInstructions && existingInstructions.trim()) {
+          combinedInstructions += `\n\n${"─".repeat(60)}\n\n${existingInstructions}`;
+        }
+
+        // Now insert or update with combined instructions
+        const upsertQuery = `
+          INSERT INTO DEVICE_INSTR 
+          (DEVICE_ID, INSTRUCTIONS, CREATE_DATE, CREATE_BY)
+          VALUES (?, ?, ?, ?)
+          ON DUPLICATE KEY UPDATE
+          INSTRUCTIONS = VALUES(INSTRUCTIONS),
+          CREATE_DATE = VALUES(CREATE_DATE),
+          CREATE_BY = VALUES(CREATE_BY)
+        `;
+
+        const values = [
+          req.body.DEVICE_ID,
+          combinedInstructions,
+          createDate,
+          req.body.CREATE_BY,
+        ];
+
+        connection.query(upsertQuery, values, (err) => {
+          connection.end();
+
+          if (err) {
+            console.error("Error saving instruction: " + err);
+            return res
+              .status(500)
+              .json({ error: "Failed to save instruction" });
+          }
+
+          res.json({ message: "Instruction saved successfully" });
+        });
+      });
+    });
+  } catch (err) {
+    console.error("Error: ", err);
+    res.status(500).json({ error: "Server error" });
   }
 });
 

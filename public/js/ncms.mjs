@@ -271,14 +271,7 @@ function displayNcmTable(data) {
   const table = document.createElement("table");
   table.className = "data-table";
   table.style.marginBottom = "0";
-
-  // Create header
-  const thead = document.createElement("thead");
-  thead.style.position = "sticky";
-  thead.style.top = "0";
-  thead.style.zIndex = "1";
-
-  const headerRow = document.createElement("tr");
+  table.style.tableLayout = "fixed";
 
   const headers = [
     "NCM ID",
@@ -294,11 +287,45 @@ function displayNcmTable(data) {
     "Closed",
   ];
 
+  // Create colgroup with saved widths or defaults
+  const colgroup = document.createElement("colgroup");
+  const savedWidths = getColumnWidths();
+  headers.forEach((header, index) => {
+    const col = document.createElement("col");
+    if (savedWidths && savedWidths[index]) {
+      col.style.width = savedWidths[index];
+    } else {
+      col.style.width = "auto";
+    }
+    colgroup.appendChild(col);
+  });
+  table.appendChild(colgroup);
+
+  // Create header
+  const thead = document.createElement("thead");
+  thead.style.position = "sticky";
+  thead.style.top = "0";
+  thead.style.zIndex = "1";
+
+  const headerRow = document.createElement("tr");
+
   headers.forEach((header, index) => {
     const th = document.createElement("th");
     th.textContent = header;
-    th.style.cursor = "pointer";
-    th.addEventListener("click", () => sortTable(index));
+    th.style.cursor = "default";
+    th.dataset.columnIndex = index;
+
+    // Create wrapper for header text to handle sorting
+    const headerText = document.createElement("span");
+    headerText.textContent = header;
+    headerText.style.cursor = "pointer";
+    headerText.style.display = "inline-block";
+    headerText.style.userSelect = "none";
+    headerText.style.marginRight = "4px";
+    headerText.addEventListener("click", () => sortTable(index));
+
+    th.textContent = "";
+    th.appendChild(headerText);
     headerRow.appendChild(th);
   });
 
@@ -320,14 +347,8 @@ function displayNcmTable(data) {
       }
     });
 
-    // Make row clickable
-    row.style.cursor = "pointer";
-    row.addEventListener("click", () => {
-      window.location.href = `ncm.html?id=${item.NCM_ID}`;
-    });
-
     row.innerHTML = `
-      <td><a href="ncm.html?id=${item.NCM_ID}" onclick="event.stopPropagation()">${item.NCM_ID}</a></td>
+      <td><a href="ncm.html?id=${item.NCM_ID}">${item.NCM_ID}</a></td>
       <td>${item.NCM_DATE ? formatDate(item.NCM_DATE) : ""}</td>
       <td>${item.NCM_TYPE || ""}</td>
       <td>${item.SUBJECT || ""}</td>
@@ -337,10 +358,10 @@ function displayNcmTable(data) {
       <td>${item.PO_NUMBER || ""}</td>
       <td>${
         item.PROCESS_ID
-          ? `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); openTrendDialog('${item.NCM_ID}')"><!-- <span class=\"btn-icon\">📈</span> --> ${item.PROCESS_ID}</button>`
-          : `<button type="button" class="btn-secondary" onclick="event.stopPropagation(); openTrendDialog('${item.NCM_ID}')">Edit</button>`
+          ? `<button type="button" class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openTrendDialog('${item.NCM_ID}')"><!-- <span class=\"btn-icon\">📈</span> --> ${item.PROCESS_ID}</button>`
+          : `<button type="button" class="btn-secondary" style="padding: 0.25rem 0.5rem; font-size: 0.75rem;" onclick="openTrendDialog('${item.NCM_ID}')">Edit</button>`
       }</td>
-      <td>${truncateText(item.DESCRIPTION || "", 50)}</td>
+      <td>${item.DESCRIPTION || ""}</td>
       <td>${item.CLOSED === "Y" ? "Yes" : "No"}</td>
     `;
 
@@ -350,6 +371,9 @@ function displayNcmTable(data) {
   table.appendChild(tbody);
   container.innerHTML = "";
   container.appendChild(table);
+
+  // Initialize resizable columns
+  initializeColumnResizing(table);
 }
 
 function truncateText(text, maxLength) {
@@ -698,4 +722,90 @@ function getHardcodedCauses() {
     "Handling damage",
     "Documentation error",
   ];
+}
+
+// Column Resizing Functions
+function getColumnWidths() {
+  try {
+    const widths = localStorage.getItem("ncm_column_widths");
+    return widths ? JSON.parse(widths) : null;
+  } catch (error) {
+    console.error("Error retrieving column widths:", error);
+    return null;
+  }
+}
+
+function saveColumnWidths(widths) {
+  try {
+    localStorage.setItem("ncm_column_widths", JSON.stringify(widths));
+  } catch (error) {
+    console.error("Error saving column widths:", error);
+  }
+}
+
+function initializeColumnResizing(table) {
+  const headers = table.querySelectorAll("thead th");
+  const colgroup = table.querySelector("colgroup");
+  if (!colgroup) return;
+
+  const cols = colgroup.querySelectorAll("col");
+
+  headers.forEach((header, index) => {
+    // Create resize handle
+    const resizeHandle = document.createElement("div");
+    resizeHandle.className = "column-resize-handle";
+    resizeHandle.style.position = "absolute";
+    resizeHandle.style.right = "0";
+    resizeHandle.style.top = "0";
+    resizeHandle.style.height = "100%";
+    resizeHandle.style.width = "4px";
+    resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+    resizeHandle.style.borderRight = "1px solid #999";
+    resizeHandle.style.cursor = "col-resize";
+    resizeHandle.style.userSelect = "none";
+
+    header.style.position = "relative";
+    header.appendChild(resizeHandle);
+
+    // Set up resize logic
+    resizeHandle.addEventListener("mousedown", (e) => {
+      e.preventDefault();
+      e.stopPropagation();
+
+      const startX = e.clientX;
+      const currentCol = cols[index];
+      const currentWidth = currentCol.offsetWidth;
+
+      const onMouseMove = (moveEvent) => {
+        const diff = moveEvent.clientX - startX;
+        const newWidth = Math.max(50, currentWidth + diff); // 50px minimum
+        currentCol.style.width = newWidth + "px";
+      };
+
+      const onMouseUp = () => {
+        document.removeEventListener("mousemove", onMouseMove);
+        document.removeEventListener("mouseup", onMouseUp);
+        resizeHandle.style.backgroundColor = "transparent";
+
+        // Save the new widths to localStorage
+        const widths = Array.from(cols).map((col) => col.style.width || "auto");
+        saveColumnWidths(widths);
+      };
+
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      document.addEventListener("mousemove", onMouseMove);
+      document.addEventListener("mouseup", onMouseUp);
+    });
+
+    // Show handle more prominently on hover
+    resizeHandle.addEventListener("mouseenter", () => {
+      resizeHandle.style.backgroundColor = "rgba(100, 150, 255, 0.9)";
+      resizeHandle.style.borderRight = "1px solid #0066ff";
+    });
+
+    resizeHandle.addEventListener("mouseleave", () => {
+      resizeHandle.style.backgroundColor = "rgba(200, 200, 200, 0.5)";
+      resizeHandle.style.borderRight = "1px solid #999";
+    });
+  });
 }

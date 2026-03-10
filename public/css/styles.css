@@ -21,13 +21,12 @@
   /* max-width: 1000px; */
   background-color: #a91730;
   --background-color: #a91730;
-  margin: 1rem 1rem;
 }
 
 h1 {
   margin-top: 0;
   margin-bottom: 0px;
-  margin-inline-start: 8px;
+  margin-inline-start: 0.5rem;
   padding-bottom: 0;
 }
 
@@ -71,6 +70,19 @@ body {
   line-height: 1.5;
   background-color: var(--background-color);
   transition: var(--transition);
+  overflow-x: hidden;
+  width: 100%;
+}
+
+html {
+  margin: 0;
+  padding: 0;
+  overflow-x: hidden;
+  box-sizing: border-box;
+}
+
+*, *:before, *:after {
+  box-sizing: inherit;
 }
 
 .tbl {
@@ -1656,6 +1668,7 @@ footer div p {
 .recordsaddrecordheading {
   display: grid;
   grid-template-columns: 1fr 1fr 1fr;
+  margin: 0 0.5rem;
 }
 .addrecordheadingbutton {
   grid-column-start: 3;
@@ -2204,6 +2217,8 @@ footer div p {
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   background: white;
+  padding-bottom: 30px;
+  margin-bottom: 30px;
 }
 
 .table-container table {
@@ -2398,7 +2413,7 @@ footer div p {
 
 /* Subject Filter Styling - Reduced spacing and height */
 #subjectFilter {
-  margin: 0;
+  margin: 0 0.5rem;
   padding: 0.25rem;
   flex-shrink: 0;
 }
@@ -2495,9 +2510,7 @@ input:checked + .slider:before {
 /* General layout for all pages */
 #main {
   display: block;
-  padding: 0.5rem 0.5rem 1rem 0.5rem;
-  max-width: 1200px;
-  margin: 0 auto;
+  padding: 0 0.5rem 1rem 0.5rem;
   width: 100%;
   box-sizing: border-box;
 }
