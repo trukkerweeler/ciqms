@@ -29,7 +29,7 @@ async function initializePage() {
       },
     })
       .then((response) => response.json())
-      .then((data) => {
+      .then(async (data) => {
         // console.log("Device data: ", data);
         if (data.message === "No records found") {
           let mainElement = document.getElementById("main-content");
@@ -232,53 +232,6 @@ async function initializePage() {
         // Move calibrationsBtn to bottom of divTitle
         divTitle.appendChild(calibrationsBtn);
 
-        let instructionsBtn = document.createElement("button");
-        instructionsBtn.id = "instructionsBtn";
-        instructionsBtn.classList.add(
-          "btn",
-          "btn-primary",
-          "instructions-button",
-        );
-        instructionsBtn.innerHTML = "View Instructions";
-        instructionsBtn.style.marginTop = "8px";
-        instructionsBtn.addEventListener("click", async () => {
-          const instructionsDialog = document.getElementById(
-            "view-device-instructions-dialog",
-          );
-          const instructionsContent = document.getElementById(
-            "instructions-content",
-          );
-
-          try {
-            const response = await fetch(
-              `${apiUrl}/device/instructions/${data["DEVICE_ID"]}`,
-            );
-            const result = await response.json();
-
-            if (result.instructions && result.instructions.length > 0) {
-              instructionsContent.innerHTML = result.instructions
-                .map(
-                  (instr) => `
-                <div class="instruction-item">
-                  <p><strong>Date:</strong> ${new Date(instr.CREATE_DATE).toLocaleDateString()} by ${instr.CREATE_BY}</p>
-                  <p>${instr.INSTRUCTIONS}</p>
-                  <hr>
-                </div>
-              `,
-                )
-                .join("");
-            } else {
-              instructionsContent.innerHTML =
-                "<p>No instructions available.</p>";
-            }
-          } catch (error) {
-            console.error("Error fetching instructions:", error);
-            instructionsContent.innerHTML =
-              "<p>Error loading instructions.</p>";
-          }
-
-          instructionsDialog.showModal();
-        });
         mainElement.appendChild(divTitle);
 
         let deviceFields = [
@@ -305,6 +258,7 @@ async function initializePage() {
         sectionsDiv.classList.add("sections-div");
 
         let deviceSection = document.createElement("section");
+        deviceSection.id = "device-section";
         let deviceDiv = document.createElement("div");
         deviceDiv.classList.add("section-header-edit");
         deviceDiv.innerHTML = `<h2>Device Info</h2>`;
@@ -367,6 +321,11 @@ async function initializePage() {
               /_/g,
               " ",
             )}:</strong> ${date.toLocaleDateString()}`;
+          } else if (field === "MINOR_LOCATION" && data[field]) {
+            deviceDiv.innerHTML = `<strong>${field.replace(
+              /_/g,
+              " ",
+            )}:</strong> ${data[field].toUpperCase()}`;
           } else {
             deviceDiv.innerHTML = `<strong>${field.replace(
               /_/g,
@@ -507,9 +466,8 @@ async function initializePage() {
           calibrationSection.appendChild(calibrationDiv);
         });
 
-        // Now append calibrationsBtn and instructionsBtn as the last objects in calibrationSection
+        // Now append calibrationsBtn as the last object in calibrationSection
         calibrationSection.appendChild(calibrationsBtn);
-        calibrationSection.appendChild(instructionsBtn);
 
         sectionsDiv.appendChild(calibrationSection);
         // =====================================================
@@ -546,6 +504,77 @@ async function initializePage() {
         notesSection.appendChild(notesContentDiv);
 
         sectionsDiv.appendChild(notesSection);
+
+        // =====================================================
+        // Instructions section
+        let instructionsSection = document.createElement("section");
+        instructionsSection.id = "instructions-section";
+        let instructionsDiv = document.createElement("div");
+        instructionsDiv.classList.add("section-header-edit");
+        instructionsDiv.style.paddingTop = "12px";
+        instructionsDiv.innerHTML = `<h2>Instructions</h2>`;
+
+        let viewInstructionsButton = document.createElement("button");
+        viewInstructionsButton.id = "btnViewInstructions";
+        viewInstructionsButton.textContent = "Edit";
+        viewInstructionsButton.classList.add(
+          "btn",
+          "btn-primary",
+          "edit-button",
+        );
+        viewInstructionsButton.style.marginTop = "0";
+        viewInstructionsButton.addEventListener("click", async () => {
+          const instructionsDialog = document.getElementById(
+            "view-device-instructions-dialog",
+          );
+          const instructionsContent = document.getElementById(
+            "instructions-content",
+          );
+
+          try {
+            const response = await fetch(
+              `${apiUrl}/device/instructions/${data["DEVICE_ID"]}`,
+            );
+            const result = await response.json();
+
+            if (result.instructions && result.instructions.length > 0) {
+              instructionsContent.innerHTML = result.instructions
+                .map(
+                  (instr) => `
+                <div class="instruction-item">
+                  <p><strong>Date:</strong> ${new Date(instr.CREATE_DATE).toLocaleDateString()} by ${instr.CREATE_BY}</p>
+                  <p>${instr.INSTRUCTIONS}</p>
+                  <hr>
+                </div>
+              `,
+                )
+                .join("");
+            } else {
+              instructionsContent.innerHTML =
+                "<p>No instructions available.</p>";
+            }
+          } catch (error) {
+            console.error("Error fetching instructions:", error);
+            instructionsContent.innerHTML =
+              "<p>Error loading instructions.</p>";
+          }
+
+          instructionsDialog.showModal();
+        });
+
+        instructionsDiv.appendChild(viewInstructionsButton);
+        instructionsSection.appendChild(instructionsDiv);
+
+        let instructionsContentDiv = document.createElement("div");
+        instructionsContentDiv.classList.add(
+          "device-info-field",
+          "notes-content",
+        );
+        instructionsContentDiv.id = "instructionsContentDiv";
+        instructionsContentDiv.innerHTML = "Instructions will load here.";
+        instructionsSection.appendChild(instructionsContentDiv);
+
+        sectionsDiv.appendChild(instructionsSection);
 
         // listen for click event on the image button
         document
@@ -625,6 +654,41 @@ async function initializePage() {
             );
           });
         mainElement.appendChild(sectionsDiv);
+
+        // Auto-load instructions into the instructions section
+        try {
+          const instructionsResponse = await fetch(
+            `${apiUrl}/device/instructions/${data["DEVICE_ID"]}`,
+          );
+          const instructionsResult = await instructionsResponse.json();
+          const instructionsContentDiv = document.getElementById(
+            "instructionsContentDiv",
+          );
+
+          if (
+            instructionsResult.instructions &&
+            instructionsResult.instructions.length > 0
+          ) {
+            instructionsContentDiv.innerHTML = instructionsResult.instructions
+              .map(
+                (instr) => `
+              <div class="instruction-item">
+                <p><strong>Date:</strong> ${new Date(instr.CREATE_DATE).toLocaleDateString()} by ${instr.CREATE_BY}</p>
+                <p>${instr.INSTRUCTIONS}</p>
+                <hr>
+              </div>
+            `,
+              )
+              .join("");
+          } else {
+            instructionsContentDiv.innerHTML =
+              "<p>No instructions available.</p>";
+          }
+        } catch (error) {
+          console.error("Error loading instructions:", error);
+          document.getElementById("instructionsContentDiv").innerHTML =
+            "<p>Error loading instructions.</p>";
+        }
       });
   }
   getRecords();
@@ -861,7 +925,7 @@ if (saveInstructionsBtn) {
         document.getElementById("add-instructions-dialog").close();
         document.getElementById("instruction-text-textarea").value = "";
         // Refresh instructions display
-        document.getElementById("instructionsBtn").click();
+        document.getElementById("btnViewInstructions").click();
       } else {
         alert("Failed to save instruction.");
       }
@@ -890,6 +954,14 @@ if (editDialog) {
   console.error(
     "Dialog element with attribute 'edit-device-dialog' is missing or not a <dialog>.",
   );
+}
+
+// Event listener for minor location input to convert to uppercase
+const minorLocationInput = document.getElementById("edit-minor-location");
+if (minorLocationInput) {
+  minorLocationInput.addEventListener("input", (e) => {
+    e.target.value = e.target.value.toUpperCase();
+  });
 }
 
 // Event listener for the "Save" button in the edit notes dialog

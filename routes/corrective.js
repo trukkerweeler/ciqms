@@ -873,59 +873,53 @@ router.put("/:id", (req, res) => {
   let queryParams = [];
   const myfield = Object.keys(req.body)[1];
   // console.log("My field: " + myfield);
+  // Normalize request data with defaults
+  const corrId = req.params.id;
+  const modifiedBy = req.body.MODIFIED_BY || "SYSTEM";
+
   switch (myfield) {
-    case "CAUSE_TEXT":
+    case "CAUSE_TEXT": {
       mytable = "CORRECTIVE_CTRL";
-      appended = req.body.CAUSE_TEXT;
-      appended = appended.replace(/<br>/g, "\n");
-      query = `insert into CORRECTIVE_CTRL (CORRECTIVE_ID, CAUSE_TEXT) values (?, ?) on duplicate key update CAUSE_TEXT = ?`;
-      queryParams = [req.params.id, appended, appended];
+      appended = (req.body.CAUSE_TEXT || "").replace(/<br>/g, "\n");
+      query = `INSERT INTO CORRECTIVE_CTRL (CORRECTIVE_ID, CAUSE_TEXT) VALUES (?, ?) 
+               ON DUPLICATE KEY UPDATE CAUSE_TEXT = ?`;
+      queryParams = [corrId, appended, appended];
       break;
-    case "CONTROL_TEXT":
+    }
+    case "CONTROL_TEXT": {
       mytable = "CORRECTIVE_CTRL";
-      appended = req.body.CONTROL_TEXT;
-      appended = appended.replace(/<br>/g, "\n");
-      query = `
-  INSERT INTO CORRECTIVE_CTRL (
-    CORRECTIVE_ID, CONTROL_TEXT, MODIFIED_DATE, CREATE_DATE, CREATE_BY
-  ) VALUES (
-    ?, ?, NOW(), NOW(), ?
-  )
-  ON DUPLICATE KEY UPDATE 
-    CONTROL_TEXT = ?,
-    MODIFIED_DATE = NOW(),
-    CREATE_DATE = IF(CREATE_DATE IS NULL, NOW(), CREATE_DATE),
-    CREATE_BY = IF(CREATE_BY IS NULL OR CREATE_BY = '', ?, CREATE_BY)
-`;
-      queryParams = [
-        req.params.id,
-        appended,
-        req.body.MODIFIED_BY,
-        appended,
-        req.body.MODIFIED_BY,
-      ];
+      appended = (req.body.CONTROL_TEXT || "").replace(/<br>/g, "\n");
+      query = `INSERT INTO CORRECTIVE_CTRL (CORRECTIVE_ID, CONTROL_TEXT, MODIFIED_DATE, CREATE_DATE, CREATE_BY) 
+               VALUES (?, ?, NOW(), NOW(), ?)
+               ON DUPLICATE KEY UPDATE 
+                 CONTROL_TEXT = ?,
+                 MODIFIED_DATE = NOW(),
+                 CREATE_DATE = IF(CREATE_DATE IS NULL, NOW(), CREATE_DATE),
+                 CREATE_BY = IF(CREATE_BY IS NULL OR CREATE_BY = '', ?, CREATE_BY)`;
+      queryParams = [corrId, appended, modifiedBy, appended, modifiedBy];
       break;
-    case "CORRECTION_TEXT":
+    }
+    case "CORRECTION_TEXT": {
       mytable = "CORRECTION";
-      let correctiondate = req.body.CORRECTION_DATE;
-      let actionby = req.body.ACTION_BY;
-      appended = req.body.CORRECTION_TEXT.replace(/<br>/g, "\n");
-      query = `insert into CORRECTION (CORRECTIVE_ID, CORRECTION_DATE, ACTION_BY, CORRECTION_TEXT) values (?, ?, ?, ?) on duplicate key update CORRECTION_TEXT = ?, CORRECTION_DATE = ?, ACTION_BY = ?`;
+      const correctionDate = req.body.CORRECTION_DATE || null;
+      const actionBy = req.body.ACTION_BY || "";
+      appended = (req.body.CORRECTION_TEXT || "").replace(/<br>/g, "\n");
+      query = `INSERT INTO CORRECTION (CORRECTIVE_ID, CORRECTION_DATE, ACTION_BY, CORRECTION_TEXT) 
+               VALUES (?, ?, ?, ?) 
+               ON DUPLICATE KEY UPDATE CORRECTION_TEXT = ?, CORRECTION_DATE = ?, ACTION_BY = ?`;
       queryParams = [
-        req.params.id,
-        correctiondate,
-        actionby,
+        corrId,
+        correctionDate,
+        actionBy,
         appended,
         appended,
-        correctiondate,
-        actionby,
+        correctionDate,
+        actionBy,
       ];
       break;
-    default:
+    }
+    default: {
       mytable = "CORRECTIVE";
-      if (typeof req.body.PROJECT_ID === "undefined") {
-        req.body.PROJECT_ID = "";
-      }
       const assignedTo = req.body.ASSIGNED_TO || "";
       const requestBy = req.body.REQUEST_BY || "";
       const reference = req.body.REFERENCE || "";
@@ -938,8 +932,9 @@ router.put("/:id", (req, res) => {
         reference,
         projectId,
         dueDate,
-        req.params.id,
+        corrId,
       ];
+    }
   }
   // Replace the br with a newline
   try {

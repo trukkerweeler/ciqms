@@ -161,14 +161,6 @@ function displayProjectTable(data) {
   table.className = "data-table";
   table.style.marginBottom = "0";
 
-  // Create header
-  const thead = document.createElement("thead");
-  thead.style.position = "sticky";
-  thead.style.top = "0";
-  thead.style.zIndex = "1";
-
-  const headerRow = document.createElement("tr");
-
   // Get headers from first record, excluding skipped fields
   const headers = [];
   for (let key in data[0]) {
@@ -177,11 +169,53 @@ function displayProjectTable(data) {
     }
   }
 
+  // Create colgroup with saved column widths
+  const colgroup = document.createElement("colgroup");
+  const columnWidths = getProjectColumnWidths(headers.length);
+  columnWidths.forEach((width) => {
+    const col = document.createElement("col");
+    col.style.width = width;
+    colgroup.appendChild(col);
+  });
+  table.appendChild(colgroup);
+
+  // Create header
+  const thead = document.createElement("thead");
+  thead.style.position = "sticky";
+  thead.style.top = "0";
+  thead.style.zIndex = "1";
+
+  const headerRow = document.createElement("tr");
+
   headers.forEach((header, index) => {
     const th = document.createElement("th");
-    th.textContent = header;
-    th.style.cursor = "pointer";
-    th.addEventListener("click", () => sortTable(index));
+    const span = document.createElement("span");
+    span.textContent = header;
+    span.style.display = "block";
+    span.style.cursor = "pointer";
+    span.addEventListener("click", () => sortTable(index));
+    th.appendChild(span);
+
+    // Add resize handle
+    const resizeHandle = document.createElement("div");
+    resizeHandle.className = "column-resize-handle";
+    resizeHandle.style.width = "4px";
+    resizeHandle.style.height = "100%";
+    resizeHandle.style.position = "absolute";
+    resizeHandle.style.right = "0";
+    resizeHandle.style.top = "0";
+    resizeHandle.style.cursor = "col-resize";
+    resizeHandle.style.backgroundColor = "#ccc";
+    resizeHandle.style.userSelect = "none";
+    resizeHandle.addEventListener("mouseenter", () => {
+      resizeHandle.style.backgroundColor = "#0066cc";
+    });
+    resizeHandle.addEventListener("mouseleave", () => {
+      resizeHandle.style.backgroundColor = "#ccc";
+    });
+    th.style.position = "relative";
+    th.appendChild(resizeHandle);
+
     headerRow.appendChild(th);
   });
 
@@ -228,6 +262,9 @@ function displayProjectTable(data) {
   table.appendChild(tbody);
   container.innerHTML = "";
   container.appendChild(table);
+
+  // Initialize column resizing
+  initializeProjectColumnResizing();
 }
 
 function formatFieldName(fieldName) {
@@ -271,13 +308,78 @@ function sortTable(columnIndex) {
 
 function updateSortIndicators(headerCells, activeColumnIndex) {
   headerCells.forEach((th, index) => {
-    // Remove existing sort indicators
-    th.textContent = th.textContent.replace(/ [↑↓]$/, "");
+    // Remove existing sort indicators by removing the span content
+    const span = th.querySelector("span");
+    if (span) {
+      span.textContent = span.textContent.replace(/ [↑↓]$/, "");
 
-    // Add indicator to active column
-    if (index === activeColumnIndex) {
-      const indicator = sortOrder === "asc" ? " ↑" : " ↓";
-      th.textContent += indicator;
+      // Add indicator to active column
+      if (index === activeColumnIndex) {
+        const indicator = sortOrder === "asc" ? " ↑" : " ↓";
+        span.textContent += indicator;
+      }
     }
+  });
+}
+
+// ==================================================
+// Column width management functions
+function getProjectColumnWidths(columnCount) {
+  const saved = localStorage.getItem("project_column_widths");
+  if (saved) {
+    const widths = JSON.parse(saved);
+    if (widths.length === columnCount) {
+      return widths;
+    }
+  }
+  // Default: all columns auto
+  return Array(columnCount).fill("auto");
+}
+
+function saveProjectColumnWidths(widths) {
+  localStorage.setItem("project_column_widths", JSON.stringify(widths));
+}
+
+function initializeProjectColumnResizing() {
+  const table = document.querySelector(".data-table");
+  if (!table) return;
+
+  const headerCells = table.querySelectorAll("thead th");
+  const cols = table.querySelectorAll("colgroup col");
+
+  headerCells.forEach((th, index) => {
+    const handle = th.querySelector(".column-resize-handle");
+    if (!handle) return;
+
+    let isResizing = false;
+    let startX = 0;
+    let startWidth = 0;
+
+    handle.addEventListener("mousedown", (e) => {
+      isResizing = true;
+      startX = e.clientX;
+      startWidth = th.offsetWidth;
+      e.preventDefault();
+    });
+
+    document.addEventListener("mousemove", (e) => {
+      if (!isResizing) return;
+
+      const deltaX = e.clientX - startX;
+      const newWidth = Math.max(50, startWidth + deltaX);
+
+      if (cols[index]) {
+        cols[index].style.width = newWidth + "px";
+      }
+    });
+
+    document.addEventListener("mouseup", () => {
+      if (isResizing) {
+        isResizing = false;
+        // Save column widths to localStorage
+        const widths = Array.from(cols).map((col) => col.style.width || "auto");
+        saveProjectColumnWidths(widths);
+      }
+    });
   });
 }

@@ -445,37 +445,45 @@ fetch(url, { method: "GET" })
         if (!correctionSaveBtn.dataset.listener) {
           correctionSaveBtn.addEventListener("click", async (e) => {
             e.preventDefault();
-            let newactioner = document.getElementById("actionby").value;
-            newactioner = newactioner ? newactioner.toUpperCase() : "";
-            let correctiontext = record[key]["CORRECTION_TEXT"] || "";
-            let newcorrectiontext = document.getElementById(
-              "new-correction-text",
-            ).value;
-            let formatteddate = new Date()
-              .toISOString()
-              .replace("T", " ")
-              .substring(0, 19);
-            newcorrectiontext =
-              user + " - " + formatteddate + "\n " + newcorrectiontext + "\n";
-            let concatText =
-              !correctiontext || correctiontext === ""
-                ? newcorrectiontext
-                : newcorrectiontext + "\n" + correctiontext;
-            let correctiondate =
-              document.getElementById("correctiondate").value;
-            let url = `${apiUrl}/corrective/${caid}`;
-            await fetch(url, {
-              method: "PUT",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({
-                CORRECTION_DATE: correctiondate,
-                CORRECTION_TEXT: concatText,
-                ACTION_BY: newactioner,
-                MODIFIED_BY: user,
-              }),
-            });
-            document.getElementById("correctionDialog").close();
-            await updateAfterSave();
+            try {
+              let newactioner = document.getElementById("actionby").value;
+              newactioner = newactioner ? newactioner.toUpperCase() : "";
+              let correctiontext = record[key]["CORRECTION_TEXT"] || "";
+              let newcorrectiontext = document.getElementById(
+                "new-correction-text",
+              ).value;
+              let formatteddate = new Date()
+                .toISOString()
+                .replace("T", " ")
+                .substring(0, 19);
+              newcorrectiontext =
+                user + " - " + formatteddate + "\n " + newcorrectiontext + "\n";
+              let concatText =
+                !correctiontext || correctiontext === ""
+                  ? newcorrectiontext
+                  : newcorrectiontext + "\n" + correctiontext;
+              let correctiondate =
+                document.getElementById("correctiondate").value;
+              let url = `${apiUrl}/corrective/${caid}`;
+              const response = await fetch(url, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  CORRECTION_DATE: correctiondate,
+                  CORRECTION_TEXT: concatText,
+                  ACTION_BY: newactioner,
+                  MODIFIED_BY: user,
+                }),
+              });
+              if (!response.ok) {
+                throw new Error(`Failed to save: ${response.statusText}`);
+              }
+              document.getElementById("correctionDialog").close();
+              await updateAfterSave();
+            } catch (error) {
+              console.error("Error saving Correction:", error);
+              alert(`Failed to save Correction: ${error.message}`);
+            }
           });
           correctionSaveBtn.dataset.listener = "true";
         }
@@ -526,41 +534,46 @@ fetch(url, { method: "GET" })
           .getElementById("causeSave")
           .addEventListener("click", async (e) => {
             e.preventDefault();
-            // get the values from the form
-            let causetext = record[key]["CAUSE_TEXT"] || "";
-            let newcausetext = document.getElementById("new-cause-text").value;
-            let formatteddate = new Date().toISOString();
-            formatteddate = formatteddate.replace("T", " ").substring(0, 19);
-            // replace the colon
-            // formatteddate = formatteddate.replace(':', '');
-            newcausetext =
-              user + " - " + formatteddate + "\n " + newcausetext + "\n";
-            let concatText = "";
-            // if causetext is empty, just use the newcausetext
-            if (causetext === "" || causetext === null) {
-              concatText = newcausetext;
-            } else {
-              concatText = newcausetext + "\n" + causetext;
-              // console.log(concatText);
+            try {
+              // get the values from the form
+              let causetext = record[key]["CAUSE_TEXT"] || "";
+              let newcausetext =
+                document.getElementById("new-cause-text").value;
+              let formatteddate = new Date().toISOString();
+              formatteddate = formatteddate.replace("T", " ").substring(0, 19);
+              newcausetext =
+                user + " - " + formatteddate + "\n " + newcausetext + "\n";
+              let concatText = "";
+              // if causetext is empty, just use the newcausetext
+              if (causetext === "" || causetext === null) {
+                concatText = newcausetext;
+              } else {
+                concatText = newcausetext + "\n" + causetext;
+              }
+              let causeDate = new Date().toISOString().slice(0, 10);
+              // update the record
+              let url = `${apiUrl}/corrective/${caid}`;
+              const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  CAUSE_DATE: causeDate,
+                  CAUSE_TEXT: concatText,
+                  MODIFIED_BY: user,
+                }),
+              });
+              if (!response.ok) {
+                throw new Error(`Failed to save: ${response.statusText}`);
+              }
+              // close the dialog
+              document.getElementById("causeDialog").close();
+              await updateAfterSave();
+            } catch (error) {
+              console.error("Error saving Cause:", error);
+              alert(`Failed to save Cause: ${error.message}`);
             }
-            // let causetext = document.getElementById('causetext').value;
-            // let causeDate = document.getElementById('causedate').value;
-            let causeDate = new Date().toISOString().slice(0, 10);
-            // update the record
-            let url = `${apiUrl}/corrective/${caid}`;
-            await fetch(url, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                CAUSE_DATE: causeDate, //the date is not being updated - placeholder for uniform route
-                CAUSE_TEXT: concatText,
-              }),
-            });
-            // close the dialog
-            document.getElementById("causeDialog").close();
-            await updateAfterSave();
           });
       });
 
@@ -642,19 +655,28 @@ fetch(url, { method: "GET" })
             let controlDate = new Date().toISOString().slice(0, 10);
             // update the record
             let url = `${apiUrl}/corrective/${caid}`;
-            await fetch(url, {
-              method: "PUT",
-              headers: {
-                "Content-Type": "application/json",
-              },
-              body: JSON.stringify({
-                CORR_ACTION_DATE: controlDate,
-                CONTROL_TEXT: concatText,
-              }),
-            });
-            // close the dialog
-            document.getElementById("controlDialog").close();
-            await updateAfterSave();
+            try {
+              const response = await fetch(url, {
+                method: "PUT",
+                headers: {
+                  "Content-Type": "application/json",
+                },
+                body: JSON.stringify({
+                  CORR_ACTION_DATE: controlDate,
+                  CONTROL_TEXT: concatText,
+                  MODIFIED_BY: user,
+                }),
+              });
+              if (!response.ok) {
+                throw new Error(`Failed to save: ${response.statusText}`);
+              }
+              // close the dialog
+              document.getElementById("controlDialog").close();
+              await updateAfterSave();
+            } catch (error) {
+              console.error("Error saving Systemic Remedy:", error);
+              alert(`Failed to save Systemic Remedy: ${error.message}`);
+            }
           });
       });
 
