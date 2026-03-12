@@ -33,6 +33,44 @@ const apiUrls = {
   ssr: `${apiUrl}/ssr/`,
 };
 
+// Validation helper for username fields (ending with _BY or _TO)
+function validateUsernameField(fieldName, fieldValue) {
+  const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
+
+  // Check for spaces
+  if (fieldValue.includes(" ")) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}"\n\nSpaces are not allowed in username fields.\n\nFormat: First initial + Last name\nExample: TKENT (T=first initial, KENT=last name)`,
+    };
+  }
+
+  // Check if field is empty
+  if (!fieldValue.trim()) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}" is required and cannot be empty.`,
+    };
+  }
+
+  return { isValid: true };
+}
+
+// Validation helper for code fields (Subject, Type, etc.)
+function validateCodeField(fieldName, fieldValue) {
+  const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
+
+  // Check for spaces
+  if (fieldValue.includes(" ")) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}"\n\nSpaces are not allowed in code fields.\n\nPlease check the help file or ask your manager for valid code values.`,
+    };
+  }
+
+  return { isValid: true };
+}
+
 // Wire up cancel button for collect data dialog
 document.addEventListener("click", (e) => {
   if (e.target && e.target.id === "cancelCollData") {
@@ -614,6 +652,37 @@ fetch(url, { method: "GET" })
               MODIFIED_DATE: getDateTime(),
               MODIFIED_BY: user,
             };
+
+            // Validate username fields
+            const assignedToValidation = validateUsernameField(
+              "assigned-to",
+              data.ASSIGNED_TO,
+            );
+            if (!assignedToValidation.isValid) {
+              alert(assignedToValidation.message);
+              return;
+            }
+
+            const requestedByValidation = validateUsernameField(
+              "requested-by",
+              data.REQUESTED_BY,
+            );
+            if (!requestedByValidation.isValid) {
+              alert(requestedByValidation.message);
+              return;
+            }
+
+            // Validate code fields
+            if (data.SUBJECT) {
+              const subjectValidation = validateCodeField(
+                "subject",
+                data.SUBJECT,
+              );
+              if (!subjectValidation.isValid) {
+                alert(subjectValidation.message);
+                return;
+              }
+            }
 
             await fetch(`${apiUrls.input}detail/${iid}`, {
               method: "PUT",
