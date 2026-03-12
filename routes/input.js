@@ -466,7 +466,7 @@ router.put("/:id", (req, res) => {
       appended = mydata.INPUT_TEXT;
       break;
     default:
-      console.log("No match");
+    console.log("No match");
   }
   // Replace the br with a newline
   appended = appended.replace(/<br>/g, "\n");
@@ -494,7 +494,7 @@ router.put("/:id", (req, res) => {
 
       connection.query(query, values, (err, rows, fields) => {
         if (err) {
-          console.log("Failed to query for input : " + err);
+          // console.log("Failed to query for input : " + err);
           res.sendStatus(500);
           connection.end();
           return;
@@ -518,7 +518,7 @@ router.put("/:id", (req, res) => {
           ];
           connection.query(updateQuery, updateValues, (err) => {
             if (err) {
-              console.log("Failed to query for response date update: " + err);
+              // console.log("Failed to query for response date update: " + err);
               res.sendStatus(500);
             }
             connection.end();
@@ -540,7 +540,7 @@ router.put("/:id", (req, res) => {
           ];
           connection.query(updateQuery, updateValues, (err) => {
             if (err) {
-              console.log("Failed to query for followup date update: " + err);
+              // console.log("Failed to query for followup date update: " + err);
               res.sendStatus(500);
             }
             connection.end();
@@ -551,7 +551,7 @@ router.put("/:id", (req, res) => {
       });
     });
   } catch (err) {
-    console.log("Error connecting to Db 312");
+    // console.log("Error connecting to Db 312");
     return;
   }
 });
@@ -582,7 +582,7 @@ router.put("/close/:id", (req, res) => {
 
       connection.query(query, (err, rows, fields) => {
         if (err) {
-          console.log("Failed to query for input : " + err);
+          // console.log("Failed to query for input : " + err);
           res.sendStatus(500);
           return;
         }
@@ -592,7 +592,7 @@ router.put("/close/:id", (req, res) => {
       connection.end();
     });
   } catch (err) {
-    console.log("Error connecting to Db 345");
+    // console.log("Error connecting to Db 345");
     return;
   }
 });
@@ -661,7 +661,7 @@ router.put("/detail/:id", (req, res) => {
       // console.log(query);
       connection.query(query, (err, rows, fields) => {
         if (err) {
-          console.log("Failed to query for input : " + err);
+          // console.log("Failed to query for input : " + err);
           res.sendStatus(500);
           return;
         }
@@ -671,7 +671,7 @@ router.put("/detail/:id", (req, res) => {
       connection.end();
     });
   } catch (err) {
-    console.log("Error connecting to Db INPUT 444");
+    // console.log("Error connecting to Db INPUT 444");
     return;
   }
 });

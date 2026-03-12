@@ -116,6 +116,44 @@ async function updateAfterSave() {
   }
 }
 
+// Validation helper for username fields (ending with _BY or _TO)
+function validateUsernameField(fieldName, fieldValue) {
+  const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
+
+  // Check for spaces
+  if (fieldValue.includes(" ")) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}"\n\nSpaces are not allowed in username fields.\n\nFormat: First initial + Last name\nExample: TKENT (T=first initial, KENT=last name)`,
+    };
+  }
+
+  // Check if field is empty
+  if (!fieldValue.trim()) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}" is required and cannot be empty.`,
+    };
+  }
+
+  return { isValid: true };
+}
+
+// Validation helper for code fields (Subject, Cause, Type, etc.)
+function validateCodeField(fieldName, fieldValue) {
+  const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
+
+  // Check for spaces
+  if (fieldValue.includes(" ")) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}"\n\nSpaces are not allowed in code fields.\n\nPlease check the help file or ask your manager for valid code values.`,
+    };
+  }
+
+  return { isValid: true };
+}
+
 fetch(url, { method: "GET" })
   .then((response) => response.json())
   .then(async (record) => {
@@ -285,6 +323,26 @@ fetch(url, { method: "GET" })
               .value.toUpperCase();
             let project = document.getElementById("project").value;
             let duedate = document.getElementById("duedate").value;
+
+            // Validate username fields
+            const assignedtoValidation = validateUsernameField(
+              "assigned-to",
+              assignedto,
+            );
+            if (!assignedtoValidation.isValid) {
+              alert(assignedtoValidation.message);
+              return;
+            }
+
+            const requestbyValidation = validateUsernameField(
+              "request-by",
+              requestby,
+            );
+            if (!requestbyValidation.isValid) {
+              alert(requestbyValidation.message);
+              return;
+            }
+
             // update the record
             let url = `${apiUrl}/corrective/${caid}`;
             await fetch(url, {
@@ -448,6 +506,17 @@ fetch(url, { method: "GET" })
             try {
               let newactioner = document.getElementById("actionby").value;
               newactioner = newactioner ? newactioner.toUpperCase() : "";
+
+              // Validate ACTION_BY field
+              const actionbyValidation = validateUsernameField(
+                "action-by",
+                newactioner,
+              );
+              if (!actionbyValidation.isValid) {
+                alert(actionbyValidation.message);
+                return;
+              }
+
               let correctiontext = record[key]["CORRECTION_TEXT"] || "";
               let newcorrectiontext = document.getElementById(
                 "new-correction-text",

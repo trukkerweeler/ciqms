@@ -56,6 +56,44 @@ async function fetchCauses() {
   }
 }
 
+// Validation helper for username fields (ending with _BY or _TO)
+function validateUsernameField(fieldName, fieldValue) {
+  const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
+
+  // Check for spaces
+  if (fieldValue.includes(" ")) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}"\n\nSpaces are not allowed in username fields.\n\nFormat: First initial + Last name\nExample: TKENT (T=first initial, KENT=last name)`,
+    };
+  }
+
+  // Check if field is empty
+  if (!fieldValue.trim()) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}" is required and cannot be empty.`,
+    };
+  }
+
+  return { isValid: true };
+}
+
+// Validation helper for code fields (Subject, Cause, Type, etc.)
+function validateCodeField(fieldName, fieldValue) {
+  const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
+
+  // Check for spaces
+  if (fieldValue.includes(" ")) {
+    return {
+      isValid: false,
+      message: `❌ "${fieldDisplayName}"\n\nSpaces are not allowed in code fields.\n\nPlease check the help file or ask your manager for valid code values.`,
+    };
+  }
+
+  return { isValid: true };
+}
+
 const main = document.querySelector("main");
 
 // Function to refresh NCM data from server and re-render
@@ -944,6 +982,54 @@ async function renderNCMDetail(record) {
             data[fieldName] = "";
           }
         });
+
+        // Validate username fields
+        if (data.PEOPLE_ID) {
+          const peopleIdValidation = validateUsernameField(
+            "request-by",
+            data.PEOPLE_ID,
+          );
+          if (!peopleIdValidation.isValid) {
+            alert(peopleIdValidation.message);
+            return;
+          }
+        }
+
+        if (data.ASSIGNED_TO) {
+          const assignedToValidation = validateUsernameField(
+            "assigned-to",
+            data.ASSIGNED_TO,
+          );
+          if (!assignedToValidation.isValid) {
+            alert(assignedToValidation.message);
+            return;
+          }
+        }
+
+        // Validate code fields
+        if (data.NCM_TYPE) {
+          const typeValidation = validateCodeField("type", data.NCM_TYPE);
+          if (!typeValidation.isValid) {
+            alert(typeValidation.message);
+            return;
+          }
+        }
+
+        if (data.SUBJECT) {
+          const subjectValidation = validateCodeField("subject", data.SUBJECT);
+          if (!subjectValidation.isValid) {
+            alert(subjectValidation.message);
+            return;
+          }
+        }
+
+        if (data.CAUSE) {
+          const causeValidation = validateCodeField("cause", data.CAUSE);
+          if (!causeValidation.isValid) {
+            alert(causeValidation.message);
+            return;
+          }
+        }
 
         // Subject length validation
         if (data.SUBJECT && data.SUBJECT.length > 6) {

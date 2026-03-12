@@ -141,17 +141,55 @@ document.addEventListener("DOMContentLoaded", async () => {
         thead.style.zIndex = "10"; // Ensure header stays on top
 
         let headerRow = document.createElement("tr");
-        myFields.forEach((field) => {
+        myFields.forEach((field, index) => {
           let th = document.createElement("th");
+          const span = document.createElement("span");
+          span.style.display = "block";
           if (field === "CALIBRATE_DATE") {
-            th.textContent = "NEXT DUE";
+            span.textContent = "NEXT DUE";
+          } else if (field === "CALIBRATION_ID") {
+            span.textContent = "CAL_ID";
           } else {
-            th.textContent = field.replace(/_/g, " ");
+            span.textContent = field.replace(/_/g, " ");
           }
+          th.appendChild(span);
+
+          // Add resize handle
+          const resizeHandle = document.createElement("div");
+          resizeHandle.style.position = "absolute";
+          resizeHandle.style.right = "0";
+          resizeHandle.style.top = "0";
+          resizeHandle.style.width = "4px";
+          resizeHandle.style.height = "100%";
+          resizeHandle.style.backgroundColor = "#ccc";
+          resizeHandle.style.cursor = "col-resize";
+          resizeHandle.style.userSelect = "none";
+          resizeHandle.addEventListener("mouseenter", () => {
+            resizeHandle.style.backgroundColor = "#0066cc";
+          });
+          resizeHandle.addEventListener("mouseleave", () => {
+            resizeHandle.style.backgroundColor = "#ccc";
+          });
+          th.style.position = "relative";
+          th.appendChild(resizeHandle);
+
           headerRow.appendChild(th);
         });
         thead.appendChild(headerRow);
         table.appendChild(thead);
+
+        // Add colgroup for column width management
+        const colgroup = document.createElement("colgroup");
+        const columnWidths = getCalibrationColumnWidths(myFields.length);
+        columnWidths.forEach((width) => {
+          const col = document.createElement("col");
+          col.style.width = width;
+          colgroup.appendChild(col);
+        });
+        table.insertBefore(colgroup, thead);
+
+        // Initialize column resizing
+        initializeCalibrationColumnResizing(table, myFields.length);
 
         // Create table body
         let tbody = document.createElement("tbody");
@@ -391,3 +429,57 @@ document.addEventListener("DOMContentLoaded", async () => {
       });
   });
 });
+
+// Column width management functions
+function getCalibrationColumnWidths(columnCount) {
+  const saved = localStorage.getItem("calibration_column_widths");
+  if (saved) {
+    try {
+      return JSON.parse(saved);
+    } catch (e) {
+      console.error("Error parsing saved column widths:", e);
+      return Array(columnCount).fill("auto");
+    }
+  }
+  return Array(columnCount).fill("auto");
+}
+
+function saveCalibrationColumnWidths(widths) {
+  localStorage.setItem("calibration_column_widths", JSON.stringify(widths));
+}
+
+function initializeCalibrationColumnResizing(table, columnCount) {
+  const cols = table.querySelectorAll("col");
+  const resizeHandles = table.querySelectorAll("th > div[style*='col-resize']");
+
+  let isResizing = false;
+  let startX = 0;
+  let startWidth = 0;
+  let currentColIndex = 0;
+
+  resizeHandles.forEach((handle, index) => {
+    handle.addEventListener("mousedown", (e) => {
+      isResizing = true;
+      startX = e.clientX;
+      currentColIndex = index;
+      startWidth = cols[currentColIndex].offsetWidth;
+    });
+  });
+
+  document.addEventListener("mousemove", (e) => {
+    if (!isResizing) return;
+    const deltaX = e.clientX - startX;
+    const newWidth = Math.max(50, startWidth + deltaX);
+    if (cols[currentColIndex]) {
+      cols[currentColIndex].style.width = newWidth + "px";
+    }
+  });
+
+  document.addEventListener("mouseup", () => {
+    if (isResizing) {
+      isResizing = false;
+      const widths = Array.from(cols).map((col) => col.style.width || "auto");
+      saveCalibrationColumnWidths(widths);
+    }
+  });
+}

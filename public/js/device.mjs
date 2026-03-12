@@ -539,15 +539,19 @@ async function initializePage() {
 
             if (result.instructions && result.instructions.length > 0) {
               instructionsContent.innerHTML = result.instructions
-                .map(
-                  (instr) => `
+                .map((instr) => {
+                  const cleanedInstructions = instr.INSTRUCTIONS.replace(
+                    /\n\s*\n/g,
+                    "\n",
+                  ).trim();
+                  return `
                 <div class="instruction-item">
                   <p><strong>Date:</strong> ${new Date(instr.CREATE_DATE).toLocaleDateString()} by ${instr.CREATE_BY}</p>
-                  <p>${instr.INSTRUCTIONS}</p>
+                  <p>${cleanedInstructions}</p>
                   <hr>
                 </div>
-              `,
-                )
+              `;
+                })
                 .join("");
             } else {
               instructionsContent.innerHTML =
@@ -670,15 +674,19 @@ async function initializePage() {
             instructionsResult.instructions.length > 0
           ) {
             instructionsContentDiv.innerHTML = instructionsResult.instructions
-              .map(
-                (instr) => `
+              .map((instr) => {
+                const cleanedInstructions = instr.INSTRUCTIONS.replace(
+                  /\n\s*\n/g,
+                  "\n",
+                ).trim();
+                return `
               <div class="instruction-item">
                 <p><strong>Date:</strong> ${new Date(instr.CREATE_DATE).toLocaleDateString()} by ${instr.CREATE_BY}</p>
-                <p>${instr.INSTRUCTIONS}</p>
+                <p>${cleanedInstructions}</p>
                 <hr>
               </div>
-            `,
-              )
+            `;
+              })
               .join("");
           } else {
             instructionsContentDiv.innerHTML =
@@ -910,12 +918,15 @@ if (saveInstructionsBtn) {
     }
 
     try {
+      const cleanedInstructionText = instructionText
+        .replace(/\n\s*\n/g, "\n")
+        .trim();
       const response = await fetch(`${apiUrl}/device/instructions`, {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
           DEVICE_ID: deviceId,
-          INSTRUCTIONS: instructionText,
+          INSTRUCTIONS: cleanedInstructionText,
           CREATE_BY: user,
         }),
       });
