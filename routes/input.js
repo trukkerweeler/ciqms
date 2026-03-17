@@ -466,7 +466,7 @@ router.put("/:id", (req, res) => {
       appended = mydata.INPUT_TEXT;
       break;
     default:
-    console.log("No match");
+      console.log("No match");
   }
   // Replace the br with a newline
   appended = appended.replace(/<br>/g, "\n");
@@ -499,7 +499,12 @@ router.put("/:id", (req, res) => {
           connection.end();
           return;
         }
-        res.json(rows);
+        const response = { data: rows };
+        if (req.capsWarning) {
+          response.warning =
+            "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization.";
+        }
+        res.json(response);
 
         if (myfield === "RESPONSE_TEXT") {
           const updateQuery = `
@@ -665,7 +670,12 @@ router.put("/detail/:id", (req, res) => {
           res.sendStatus(500);
           return;
         }
-        res.json(rows);
+        const response = { data: rows };
+        if (req.capsWarning) {
+          response.warning =
+            "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization.";
+        }
+        res.json(response);
       });
 
       connection.end();

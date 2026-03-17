@@ -33,6 +33,10 @@ const browserMetaPaths = [
   "/browserconfig.xml",
 ];
 
+const capsNotice = require('./middleware/capsNotice');
+app.use(express.json());
+app.use(capsNotice); // Add after body parser
+
 app.use((req, res, next) => {
   const isBrowserMetaRequest = browserMetaPaths.some((path) =>
     req.path.startsWith(path),

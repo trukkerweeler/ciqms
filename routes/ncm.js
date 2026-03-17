@@ -850,7 +850,12 @@ router.put("/:id", (req, res) => {
           res.sendStatus(500);
           return;
         }
-        res.json(rows);
+        const response = { data: rows };
+        if (req.capsWarning) {
+          response.warning = "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization.";
+        }
+        }
+        res.json(response);
       });
 
       connection.end();
@@ -933,7 +938,13 @@ router.put("/details/:id", (req, res) => {
           }
         });
 
-        res.json({ success: true, data: rows });
+        res.json({
+          success: true,
+          data: rows,
+          warning: req.capsWarning
+            ? "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization."
+            : null,
+        });
       });
 
       connection.end();
@@ -977,7 +988,13 @@ router.put("/close/:id", (req, res) => {
           });
           return;
         }
-        res.json({ success: true, data: rows });
+        res.json({
+          success: true,
+          data: rows,
+          warning: req.capsWarning
+            ? "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization."
+            : null,
+        });
       });
 
       connection.end();

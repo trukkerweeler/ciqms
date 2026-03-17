@@ -234,10 +234,12 @@ async function sendEmailNotification(dataJson, nextId, myRequestDate) {
           const errorText = await notifyResponse.text();
           console.error(
             `inputs_notify failed for INPUT_ID ${dataJson.INPUT_ID}:`,
-            errorText
+            errorText,
           );
         } else {
-          console.log(`inputs_notify recorded for INPUT_ID ${dataJson.INPUT_ID}`);
+          console.log(
+            `inputs_notify recorded for INPUT_ID ${dataJson.INPUT_ID}`,
+          );
         }
 
         return response.text();

@@ -805,6 +805,9 @@ async function renderNCMDetail(record) {
         }
 
         const json = await response.json();
+        if (json.warning) {
+          alert(json.warning);
+        }
 
         let dialogToClose;
         switch (fieldname) {
@@ -1066,6 +1069,9 @@ async function renderNCMDetail(record) {
         }
 
         const json = await response.json();
+        if (json.warning) {
+          alert(json.warning);
+        }
         detailDialog.close();
         // refresh the data via AJAX
         await refreshNCMData();
@@ -1124,6 +1130,9 @@ async function renderNCMDetail(record) {
       }
 
       const json = await response.json();
+      if (json.warning) {
+        alert(json.warning);
+      }
 
       // Disable and grey out the button
       closeNCM.disabled = true;

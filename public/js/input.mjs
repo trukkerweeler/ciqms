@@ -423,11 +423,15 @@ fetch(url, { method: "GET" })
               MODIFIED_DATE: getDateTime(),
             };
 
-            await fetch(`${apiUrls.input}${iid}`, {
+            const response = await fetch(`${apiUrls.input}${iid}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ data }),
             });
+            const result = await response.json();
+            if (result.warning) {
+              alert(result.warning);
+            }
 
             responseDialog.close();
             await updateAfterSave();
@@ -475,11 +479,15 @@ fetch(url, { method: "GET" })
               INPUT_TEXT: actionText,
             };
 
-            await fetch(`${apiUrls.input}${iid}`, {
+            const response = await fetch(`${apiUrls.input}${iid}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ data }),
             });
+            const result = await response.json();
+            if (result.warning) {
+              alert(result.warning);
+            }
 
             actionDialog.close();
             await updateAfterSave();
@@ -533,11 +541,15 @@ fetch(url, { method: "GET" })
               MODIFIED_DATE: getDateTime(),
             };
 
-            await fetch(`${apiUrls.input}${iid}`, {
+            const response = await fetch(`${apiUrls.input}${iid}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ data }),
             });
+            const result = await response.json();
+            if (result.warning) {
+              alert(result.warning);
+            }
 
             followUpDialog.close();
             await updateAfterSave();
@@ -684,11 +696,15 @@ fetch(url, { method: "GET" })
               }
             }
 
-            await fetch(`${apiUrls.input}detail/${iid}`, {
+            const response = await fetch(`${apiUrls.input}detail/${iid}`, {
               method: "PUT",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ data }),
             });
+            const result = await response.json();
+            if (result.warning) {
+              alert(result.warning);
+            }
 
             detailDialog.close();
             await updateAfterSave();
