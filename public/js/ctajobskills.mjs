@@ -176,6 +176,23 @@ console.log("[ctajobskills.mjs] Loading...");
       return;
     }
 
+    // Create search filter input
+    const searchContainer = document.createElement("div");
+    searchContainer.style.marginBottom = "15px";
+    const searchInput = document.createElement("input");
+    searchInput.type = "text";
+    searchInput.id = "jobSkillsFilter";
+    searchInput.placeholder =
+      "Search all columns... (type job title, skill name, category, ID, etc.)";
+    searchInput.style.padding = "8px 12px";
+    searchInput.style.width = "100%";
+    searchInput.style.maxWidth = "400px";
+    searchInput.style.borderRadius = "4px";
+    searchInput.style.border = "1px solid #ccc";
+    searchInput.style.fontFamily = "inherit";
+    searchContainer.appendChild(searchInput);
+    container.appendChild(searchContainer);
+
     const table = document.createElement("table");
     table.className = "table table-striped table-bordered table-hover";
 
@@ -216,6 +233,20 @@ console.log("[ctajobskills.mjs] Loading...");
 
     table.appendChild(tbody);
     container.appendChild(table);
+
+    // Setup search filter
+    const filterInput = document.getElementById("jobSkillsFilter");
+    if (filterInput) {
+      filterInput.addEventListener("input", (e) => {
+        const filterText = e.target.value.toLowerCase();
+        const rows = tbody.querySelectorAll("tr");
+
+        rows.forEach((row) => {
+          const text = row.textContent.toLowerCase();
+          row.style.display = text.includes(filterText) ? "" : "none";
+        });
+      });
+    }
   }
 
   async function deleteJobSkill(index) {

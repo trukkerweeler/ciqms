@@ -1046,4 +1046,62 @@ router.put(
   // alert('Put not implemented yet');
 );
 
+// ==================================================
+// Log CORRECTIVE notification to centralized EMAIL_HISTORY table
+router.post("/corrective-notify", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error(
+          "Error connecting to log CORRECTIVE notification: " + err.stack,
+        );
+        res.sendStatus(500);
+        return;
+      }
+      const { CORRECTIVE_ID, ACTION, ASSIGNED_TO } = req.body;
+
+      // Map ACTION to EMAIL_TYPE
+      const emailTypeMap = {
+        A: "ASSIGNMENT",
+        C: "CLOSEOUT",
+        R: "REQUEST",
+        E: "ESCALATION",
+      };
+      const emailType = emailTypeMap[ACTION] || ACTION;
+
+      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, NULL, NOW(), ?, ?, ?)`;
+      const values = [
+        "CORRECTIVE",
+        CORRECTIVE_ID,
+        ASSIGNED_TO,
+        "SENT",
+        emailType,
+        `Corrective Action notification - Action: ${ACTION}`,
+      ];
+
+      connection.query(query, values, (err) => {
+        if (err) {
+          console.log(
+            "Failed to log CORRECTIVE notification to EMAIL_HISTORY: " + err,
+          );
+          res.sendStatus(500);
+          return;
+        }
+        res.sendStatus(200);
+      });
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error logging CORRECTIVE notification: " + err.message);
+    res.sendStatus(500);
+  }
+});
+
 module.exports = router;

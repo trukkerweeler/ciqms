@@ -94,7 +94,7 @@ router.post("/", (req, res) => {
       // console.log('Connected to DB');
 
       const query =
-        "insert into DOCUMENTS (DOCUMENT_ID, NAME, TYPE, SUBJECT, REFERENCE, STATUS, REVISION_LEVEL, ISSUE_DATE, CHECKED_OUT, AUDIT_RESPONSIBLE, CREATE_BY, CREATE_DATE) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
+        "insert into DOCUMENTS (DOCUMENT_ID, NAME, TYPE, SUBJECT, REFERENCE, STATUS, REVISION_LEVEL, ISSUE_DATE, CHECKED_OUT, AUDIT_RESPONSIBLE, EMPLOYEE_ID, AUDIT_STD_INTERVAL, LAST_AUDIT_DATE, NEXT_AUDIT_DATE, CREATE_BY, CREATE_DATE) values (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
       let document_id = req.body.document_id.toUpperCase();
       // console.log(mysql.format(query, [document_id, req.body.document_name, req.body.DOCUMENT_TYPE, req.body.document_name, req.body.reference, req.body.status, req.body.doc_rev, req.body.issue_date, req.body.CHECKED_OUT, req.body.AUDIT_RESPONSIBLE, req.body.CREATE_BY, req.body.CREATE_DATE]));
       connection.query(
@@ -110,6 +110,10 @@ router.post("/", (req, res) => {
           req.body.issue_date,
           req.body.CHECKED_OUT,
           req.body.AUDIT_RESPONSIBLE,
+          req.body.EMPLOYEE_ID || "",
+          req.body.AUDIT_STD_INTERVAL || "",
+          req.body.LAST_AUDIT_DATE || "",
+          req.body.NEXT_AUDIT_DATE || "",
           req.body.CREATE_BY,
           req.body.CREATE_DATE,
         ],
@@ -149,7 +153,7 @@ router.put("/:id", (req, res) => {
       // console.log('Connected to DB');
 
       const query =
-        "update DOCUMENTS set NAME = ?, TYPE = ?, SUBJECT = ?, STATUS = ?, REVISION_LEVEL = ?, ISSUE_DATE = ?, MODIFIED_BY = ?, MODIFIED_DATE = ? where DOCUMENT_ID = ?";
+        "update DOCUMENTS set NAME = ?, TYPE = ?, SUBJECT = ?, STATUS = ?, REVISION_LEVEL = ?, ISSUE_DATE = ?, EMPLOYEE_ID = ?, AUDIT_STD_INTERVAL = ?, LAST_AUDIT_DATE = ?, NEXT_AUDIT_DATE = ?, MODIFIED_BY = ?, MODIFIED_DATE = ? where DOCUMENT_ID = ?";
       connection.query(
         query,
         [
@@ -159,6 +163,10 @@ router.put("/:id", (req, res) => {
           req.body.STATUS.toUpperCase(),
           req.body.REVISION_LEVEL,
           req.body.ISSUE_DATE,
+          req.body.EMPLOYEE_ID || "",
+          req.body.AUDIT_STD_INTERVAL || "",
+          req.body.LAST_AUDIT_DATE || "",
+          req.body.NEXT_AUDIT_DATE || "",
           req.body.MODIFIED_BY,
           req.body.MODIFIED_DATE,
           req.params.id,

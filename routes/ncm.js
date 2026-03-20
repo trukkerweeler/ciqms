@@ -479,10 +479,8 @@ router.post("/email", async (req, res) => {
 });
 
 // ==================================================
-// update NCM_NOTIFY table
+// Log NCM notification to centralized EMAIL_HISTORY table
 router.post("/ncm_notify", (req, res) => {
-  // console.log("post ncm_notify");
-  // console.log(req.body);
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -493,17 +491,35 @@ router.post("/ncm_notify", (req, res) => {
     });
     connection.connect(function (err) {
       if (err) {
-        console.error("Error connecting: " + err.stack);
+        console.error("Error connecting to log NCM notification: " + err.stack);
         return;
       }
-      // console.log('Connected to DB');
-      const query = `INSERT INTO NCM_NOTIFY (NCM_ID, ACTION, NOTIFIED_DATE, ASSIGNED_TO ) VALUES (?, ?, NOW(), ?)`;
-      const values = [req.body.NCM_ID, req.body.ACTION, req.body.ASSIGNED_TO];
-      // console.log(query);
-      // console.log(values);
+      const { NCM_ID, ACTION, ASSIGNED_TO } = req.body;
+
+      // Map ACTION to EMAIL_TYPE
+      const emailTypeMap = {
+        A: "ASSIGNMENT",
+        C: "CLOSEOUT",
+        R: "REQUEST",
+        E: "ESCALATION",
+      };
+      const emailType = emailTypeMap[ACTION] || ACTION;
+
+      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, NULL, NOW(), ?, ?, ?)`;
+      const values = [
+        "NCM",
+        NCM_ID,
+        ASSIGNED_TO,
+        "SENT",
+        emailType,
+        `NCM notification - Action: ${ACTION}`,
+      ];
+
       connection.query(query, values, (err) => {
         if (err) {
-          console.log("Failed to query for ncm notify: " + err);
+          console.log(
+            "Failed to log NCM notification to EMAIL_HISTORY: " + err,
+          );
           res.sendStatus(500);
           return;
         }
@@ -512,8 +528,8 @@ router.post("/ncm_notify", (req, res) => {
       connection.end();
     });
   } catch (err) {
-    console.log("Error connecting to Db 140");
-    return;
+    console.log("Error logging NCM notification: " + err.message);
+    res.sendStatus(500);
   }
 });
 
@@ -852,8 +868,8 @@ router.put("/:id", (req, res) => {
         }
         const response = { data: rows };
         if (req.capsWarning) {
-          response.warning = "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization.";
-        }
+          response.warning =
+            "All caps is considered YELLING in professional communication. Please use normal capitalization.";
         }
         res.json(response);
       });

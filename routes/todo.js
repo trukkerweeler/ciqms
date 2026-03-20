@@ -1,28 +1,26 @@
-
-const express = require('express');
+const express = require("express");
 const router = express.Router();
-const mysql = require('mysql2');
-
+const mysql = require("mysql2");
 
 // ==================================================
 // Get all records
-router.get('/', (req, res) => {
-    // console.log('Fetching all records');
-    try {
-        const connection = mysql.createConnection({
-            host: process.env.DB_HOST,
-            user: process.env.DB_USER,
-            password: process.env.DB_PASS,
-            port: 3306,
-            database: 'quality'
-        });
-        connection.connect(function(err) {
-            if (err) {
-                console.error('Error connecting: ' + err.stack);
-                return;
-            }
-        
-        const query = `SELECT 'PEOPLE_INPUT' AS source_table, PEOPLE_INPUT.INPUT_ID AS record_id, ASSIGNED_TO, INPUT_DATE, DUE_DATE AS DATE_DUE, 'INPUT' AS RECORD_TYPE, pit.INPUT_TEXT AS TODO_TEXT
+router.get("/", (req, res) => {
+  // console.log('Fetching all records');
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+
+      const query = `SELECT 'PEOPLE_INPUT' AS source_table, PEOPLE_INPUT.INPUT_ID AS record_id, ASSIGNED_TO, INPUT_DATE, DUE_DATE AS DATE_DUE, 'INPUT' AS RECORD_TYPE, pit.INPUT_TEXT AS TODO_TEXT
                     FROM PEOPLE_INPUT left join PPL_INPT_TEXT pit on PEOPLE_INPUT.INPUT_ID = pit.INPUT_ID
                     WHERE (CLOSED <> 'Y' OR CLOSED IS NULL)
                     
@@ -52,26 +50,31 @@ router.get('/', (req, res) => {
                     WHERE (VERIFIED_ASSG_TO IS NOT NULL AND VERIFIED_ASSG_TO <> '') 
                     AND (VERIFY_CLOSED <> 'Y' OR VERIFY_CLOSED IS NULL)
                     
+                    UNION ALL
+                    
+                    SELECT 'DOCUMENTS' AS source_table, DOCUMENT_ID AS record_id, EMPLOYEE_ID AS ASSIGNED_TO, LAST_AUDIT_DATE AS INPUT_DATE, NEXT_AUDIT_DATE AS DATE_DUE, 'AUDIT' AS RECORD_TYPE, NAME AS TODO_TEXT
+                    FROM DOCUMENTS 
+                    WHERE (NEXT_AUDIT_DATE IS NOT NULL AND NEXT_AUDIT_DATE < CURDATE())
+                    AND (EMPLOYEE_ID IS NOT NULL AND EMPLOYEE_ID <> '')
+                    AND (STATUS = 'C' OR STATUS IS NULL)
+                    
                     ORDER BY source_table, DATE_DUE;`;
 
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for inputs: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
 
-        connection.query(query, (err, rows, fields) => {
-            if (err) {
-                console.log('Failed to query for inputs: ' + err);
-                res.sendStatus(500);
-                return;
-            }
-            res.json(rows);
-        });
-
-        connection.end();
-        });
-    
-    } catch (err) {
-        console.log('Error connecting to Db');
-        return;
-    }
-
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error connecting to Db");
+    return;
+  }
 });
 
 module.exports = router;

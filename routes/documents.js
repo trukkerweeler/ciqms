@@ -27,7 +27,7 @@ const storage = multer.diskStorage({
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9);
     cb(
       null,
-      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname)
+      file.fieldname + "-" + uniqueSuffix + path.extname(file.originalname),
     );
   },
 });
@@ -141,7 +141,7 @@ router.get("/list", (req, res) => {
         (file) =>
           file.endsWith(".html") ||
           file.endsWith(".docx") ||
-          file.endsWith(".doc")
+          file.endsWith(".doc"),
       )
       .map((file) => {
         const filePath = path.join(uploadsDir, file);
@@ -231,6 +231,9 @@ router.post("/release-notifications", async (req, res) => {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
               },
+              tls: {
+                rejectUnauthorized: false, // Allow self-signed certificates
+              },
             });
 
             // Build recipient header with fallbacks
@@ -260,7 +263,7 @@ router.post("/release-notifications", async (req, res) => {
             connection.query(insertQuery, insertValues, (err) => {
               if (err) {
                 console.log(
-                  `Failed to update DOCUMENTS_NOTIFY for ${DOCUMENT_ID}: ${err}`
+                  `Failed to update DOCUMENTS_NOTIFY for ${DOCUMENT_ID}: ${err}`,
                 );
               }
             });
@@ -268,7 +271,7 @@ router.post("/release-notifications", async (req, res) => {
             processedCount++;
           } catch (emailError) {
             console.log(
-              `Failed to send notification for ${DOCUMENT_ID}: ${emailError}`
+              `Failed to send notification for ${DOCUMENT_ID}: ${emailError}`,
             );
           }
         }

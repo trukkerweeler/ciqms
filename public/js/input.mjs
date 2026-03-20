@@ -706,6 +706,90 @@ fetch(url, { method: "GET" })
               alert(result.warning);
             }
 
+            // Check if ASSIGNED_TO changed and send assignment email
+            const currentAssignedTo = extractText(
+              document.querySelector("#assignedto").textContent,
+              13,
+            );
+            const newAssignedTo = data.ASSIGNED_TO;
+
+            if (
+              currentAssignedTo !== newAssignedTo &&
+              newAssignedTo &&
+              newAssignedTo.trim()
+            ) {
+              // Fetch fresh record to get all details for email
+              const recordResponse = await fetch(url);
+              const records = await recordResponse.json();
+              const rec = records[0];
+
+              const userEmail =
+                userEmails[newAssignedTo] ?? userEmails["DEFAULT"];
+
+              const emailData = {
+                INPUT_ID: iid,
+                SUBJECT: rec.SUBJECT || "",
+                DUE_DATE: rec.DUE_DATE ? rec.DUE_DATE.slice(0, 10) : "",
+                ASSIGNED_TO: newAssignedTo,
+                INPUT_TEXT: rec.INPUT_TEXT || "",
+                ASSIGNED_TO_EMAIL: userEmail,
+              };
+
+              // Send notification email
+              try {
+                console.log(
+                  "Attempting to send email to:",
+                  userEmail,
+                  "for INPUT_ID:",
+                  iid,
+                );
+                console.log("Email endpoint URL:", `${apiUrls.input}email`);
+                console.log("Email data:", emailData);
+
+                const emailResponse = await fetch(`${apiUrls.input}email`, {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify(emailData),
+                });
+
+                console.log("Email response status:", emailResponse.status);
+                const emailResult = await emailResponse.json();
+                console.log("Email response data:", emailResult);
+
+                if (!emailResponse.ok) {
+                  console.error(
+                    "Email send failed with status:",
+                    emailResponse.status,
+                    emailResult,
+                  );
+                } else {
+                  console.log("Email sent successfully");
+                }
+
+                // Log notification in database
+                const notifyResponse = await fetch(
+                  `${apiUrls.input}inputs_notify`,
+                  {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      data: {
+                        INPUT_ID: iid,
+                        ASSIGNED_TO: newAssignedTo,
+                        ACTION: "A",
+                      },
+                    }),
+                  },
+                );
+                const notifyResult = await notifyResponse.json();
+                console.log("inputs_notify response:", notifyResult);
+                console.log("inputs_notify recorded for INPUT_ID", iid);
+              } catch (err) {
+                console.error("Error sending assignment email:", err);
+                console.error("Error stack:", err.stack);
+              }
+            }
+
             detailDialog.close();
             await updateAfterSave();
           });
@@ -760,12 +844,32 @@ fetch(url, { method: "GET" })
               }`,
             };
 
-            // Send email (fire-and-forget)
+            // Send email with detailed logging
+            console.log(
+              "Follow-up email endpoint:",
+              `${apiUrls.input}email/${iid}`,
+            );
+            console.log("Follow-up email data:", emailData);
+
             fetch(`${apiUrls.input}email/${iid}`, {
               method: "POST",
               headers: { "Content-Type": "application/json" },
               body: JSON.stringify({ data: emailData }),
-            }).catch((err) => console.error("Error sending email:", err));
+            })
+              .then((response) => {
+                console.log(
+                  "Follow-up email response status:",
+                  response.status,
+                );
+                return response.json();
+              })
+              .then((result) => {
+                console.log("Follow-up email response data:", result);
+              })
+              .catch((err) => {
+                console.error("Error sending follow-up email:", err);
+                console.error("Error stack:", err.stack);
+              });
 
             // Update notification table
             const notifyData = {

@@ -3,6 +3,53 @@ const router = express.Router();
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 
+// Synchronous helper to resolve username to WORK_EMAIL_ADDRESS
+function resolveEmailAddressSync(recipientEmail, callback) {
+  // If already an email address (contains @), use as-is
+  if (recipientEmail && recipientEmail.includes("@")) {
+    return callback(recipientEmail);
+  }
+
+  // Otherwise, look up the username in PEOPLE table
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("Error connecting to resolve email:", err.stack);
+      return callback(process.env.EMAIL_QM || "tim.kent@ci-aviation.com");
+    }
+
+    connection.query(
+      "SELECT WORK_EMAIL_ADDRESS FROM PEOPLE WHERE PEOPLE_ID = ?",
+      [recipientEmail],
+      (err, rows) => {
+        connection.end();
+
+        if (err || !rows || rows.length === 0) {
+          console.warn(
+            `Could not resolve email for username: ${recipientEmail}`,
+          );
+          return callback(process.env.EMAIL_QM || "tim.kent@ci-aviation.com");
+        }
+
+        const resolvedEmail = rows[0].WORK_EMAIL_ADDRESS;
+        if (!resolvedEmail) {
+          console.warn(`No WORK_EMAIL_ADDRESS for username: ${recipientEmail}`);
+          return callback(process.env.EMAIL_QM || "tim.kent@ci-aviation.com");
+        }
+
+        callback(resolvedEmail);
+      },
+    );
+  });
+}
+
 // GET email history with filters
 router.get("/", (req, res) => {
   const connection = mysql.createConnection({
@@ -93,110 +140,119 @@ router.get("/:id", (req, res) => {
 
 // POST new email record
 router.post("/", (req, res) => {
-  const connection = mysql.createConnection({
-    host: process.env.DB_HOST,
-    user: process.env.DB_USER,
-    password: process.env.DB_PASS,
-    port: 3306,
-    database: "quality",
-  });
+  const {
+    app_module,
+    app_id,
+    recipient_email, // Frontend sends username here
+    subject,
+    email_body,
+    sent_by,
+    email_status = "SENT",
+    email_type,
+    notes,
+  } = req.body;
 
-  connection.connect((err) => {
-    if (err) {
-      console.error("Error connecting:", err.stack);
-      connection.end();
-      return res.sendStatus(500);
-    }
+  // Resolve email address synchronously BEFORE storing
+  resolveEmailAddressSync(recipient_email, (resolvedEmail) => {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
 
-    const {
-      app_module,
-      app_id,
-      recipient_email,
-      subject,
-      email_body,
-      sent_by,
-      email_status = "SENT",
-      email_type,
-      notes,
-    } = req.body;
-
-    const sentDate = new Date().toISOString().slice(0, 19).replace("T", " ");
-
-    const query =
-      "INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, RECIPIENT_EMAIL, SUBJECT, EMAIL_BODY, SENT_BY, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
-
-    connection.query(
-      query,
-      [
-        app_module,
-        app_id,
-        recipient_email,
-        subject,
-        email_body,
-        sent_by,
-        sentDate,
-        email_status,
-        email_type,
-        notes,
-      ],
-      (err, result) => {
-        if (err) {
-          console.error("Insert failed:", err);
-          connection.end();
-          return res.sendStatus(500);
-        }
-
-        const emailId = result.insertId;
+    connection.connect((err) => {
+      if (err) {
+        console.error("Error connecting:", err.stack);
         connection.end();
+        return res.sendStatus(500);
+      }
 
-        // Return immediately
-        res.json({ email_id: emailId, success: true });
+      const sentDate = new Date().toISOString().slice(0, 19).replace("T", " ");
 
-        // Send email via SMTP asynchronously (fire and forget)
-        setImmediate(() => {
-          try {
-            const transporter = nodemailer.createTransport({
-              host: process.env.SMTP_HOST,
-              port: process.env.SMTP_PORT,
-              secure: true,
-              auth: {
-                user: process.env.SMTP_USER,
-                pass: process.env.SMTP_PASS,
-              },
-            });
+      // Store BOTH username (for audit) and resolved email (for sending)
+      const query =
+        "INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SUBJECT, EMAIL_BODY, SENT_BY, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)";
 
-            const bccList = [
-              process.env.EMAIL_QM || "tim.kent@ci-aviation.com",
-            ];
-
-            const mailOptions = {
-              from: process.env.SMTP_USER,
-              to: recipient_email,
-              cc: process.env.EMAIL_QM || "",
-              subject: subject,
-              text: email_body,
-              bcc: bccList,
-            };
-
-            transporter.sendMail(mailOptions, (err, info) => {
-              if (err) {
-                console.error("SMTP Error:", err);
-                // Update email record with error status
-                updateEmailError(emailId, err.message);
-              } else {
-                console.log("Email sent successfully:", info.messageId);
-              }
-            });
-          } catch (emailErr) {
-            console.error("SMTP transport error:", emailErr);
-            // Update email record with error status
-            updateEmailError(emailId, emailErr.message);
+      connection.query(
+        query,
+        [
+          app_module,
+          app_id,
+          recipient_email, // Store the original username for audit trail
+          resolvedEmail, // Store the resolved email address for sending
+          subject,
+          email_body,
+          sent_by,
+          sentDate,
+          email_status,
+          email_type,
+          notes,
+        ],
+        (err, result) => {
+          if (err) {
+            console.error("Insert failed:", err);
+            connection.end();
+            return res.sendStatus(500);
           }
-        });
-      },
-    );
+
+          const emailId = result.insertId;
+          connection.end();
+
+          // Return immediately with success
+          res.json({ email_id: emailId, success: true });
+
+          // Send email asynchronously (email is already resolved)
+          setImmediate(() => {
+            sendEmailAsync(emailId, resolvedEmail, subject, email_body);
+          });
+        },
+      );
+    });
   });
 });
+
+// Helper function to send email asynchronously
+function sendEmailAsync(emailId, recipientEmail, subject, emailBody) {
+  try {
+    const transporter = nodemailer.createTransport({
+      host: process.env.SMTP_HOST,
+      port: process.env.SMTP_PORT,
+      secure: true,
+      auth: {
+        user: process.env.SMTP_USER,
+        pass: process.env.SMTP_PASS,
+      },
+      tls: {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      },
+    });
+
+    const bccList = [process.env.EMAIL_QM || "tim.kent@ci-aviation.com"];
+
+    const mailOptions = {
+      from: process.env.SMTP_USER,
+      to: recipientEmail, // Use already-resolved email
+      cc: process.env.EMAIL_QM || "",
+      subject: subject,
+      text: emailBody,
+      bcc: bccList,
+    };
+
+    transporter.sendMail(mailOptions, (err, info) => {
+      if (err) {
+        console.error("SMTP Error:", err);
+        updateEmailError(emailId, err.message);
+      } else {
+        console.log("Email sent successfully:", info.messageId);
+      }
+    });
+  } catch (emailErr) {
+    console.error("SMTP transport error:", emailErr);
+    updateEmailError(emailId, emailErr.message);
+  }
+}
 
 // Helper function to update email record with error status
 function updateEmailError(emailId, errorMessage) {

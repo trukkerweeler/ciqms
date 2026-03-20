@@ -399,6 +399,24 @@ fetch(url, { method: "GET" })
             record[key]["ASSIGNED_TO"],
             user,
           );
+
+          // Log notification in database (now using centralized EMAIL_HISTORY)
+          const notifyResponse = await fetch(
+            `${apiUrl}/corrective/corrective-notify`,
+            {
+              method: "POST",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({
+                CORRECTIVE_ID: caid,
+                ASSIGNED_TO: record[key]["ASSIGNED_TO"],
+                ACTION: "C", // C for closeout
+              }),
+            },
+          );
+          console.log(
+            "Corrective Action notification recorded in EMAIL_HISTORY for CA",
+            caid,
+          );
         } catch (error) {
           console.error("Error sending closeout email:", error);
           // Don't fail the close operation if email fails

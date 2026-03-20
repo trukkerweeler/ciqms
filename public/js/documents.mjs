@@ -169,7 +169,7 @@ async function handleFormSubmission() {
     const dataJson = {
       document_id: docId,
       document_name: formData.get("document_name"),
-      DOCUMENT_TYPE: getDocType(docId),
+      DOCUMENT_TYPE: (formData.get("document_type") || "").toUpperCase(),
       subject: formData.get("subject") || formData.get("document_name"),
       reference: formData.get("reference") || "",
       status: formData.get("status") || "C",
@@ -177,6 +177,10 @@ async function handleFormSubmission() {
       issue_date: formData.get("issue_date"),
       CHECKED_OUT: "N",
       AUDIT_RESPONSIBLE: "I",
+      EMPLOYEE_ID: formData.get("employee_id") || "",
+      AUDIT_STD_INTERVAL: formData.get("audit_std_interval") || "",
+      LAST_AUDIT_DATE: formData.get("last_audit_date") || "",
+      NEXT_AUDIT_DATE: formData.get("next_audit_date") || "",
       CREATE_BY: user,
       CREATE_DATE: createDate,
     };
@@ -445,6 +449,7 @@ function getHeaderDisplayName(header) {
     DOCUMENT_ID: "Doc ID",
     DOCUMENT_NAME: "Name",
     DOCUMENT_TYPE: "Type",
+    REVISION_LEVEL: "Rev",
     ISSUE_DATE: "Issue Date",
     CREATE_DATE: "Created",
     CREATE_BY: "Created By",

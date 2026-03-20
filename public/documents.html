@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -62,6 +62,20 @@
             />
           </div>
 
+          <div class="form-group">
+            <label for="document_type"
+              >Type <span class="required">*</span></label
+            >
+            <input
+              type="text"
+              name="document_type"
+              id="document_type"
+              placeholder="e.g., JD, SOP, WI"
+              style="text-transform: uppercase"
+              required
+            />
+          </div>
+
           <div class="form-group full-width">
             <label for="document_name"
               >Document Name <span class="required">*</span></label
@@ -109,6 +123,36 @@
               id="reference"
               placeholder="Enter reference including preceding zero"
             />
+          </div>
+
+          <div class="form-group">
+            <label for="employee_id">Assigned to Employee ID</label>
+            <input
+              type="text"
+              name="employee_id"
+              id="employee_id"
+              placeholder="Enter employee ID"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="audit_std_interval">Audit Interval</label>
+            <input
+              type="text"
+              name="audit_std_interval"
+              id="audit_std_interval"
+              placeholder="e.g., 5 Years"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="last_audit_date">Last Audit Date</label>
+            <input type="date" name="last_audit_date" id="last_audit_date" />
+          </div>
+
+          <div class="form-group">
+            <label for="next_audit_date">Next Audit Date</label>
+            <input type="date" name="next_audit_date" id="next_audit_date" />
           </div>
         </div>
 

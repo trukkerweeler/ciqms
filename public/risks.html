@@ -1,0 +1,174 @@
+<!doctype html>
+<html lang="en" style="height: 100%; margin: 0; padding: 0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="js node test page." />
+    <meta name="author" content="This page authored by timokent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Risks (CIQMS)</title>
+  </head>
+  <body
+    style="
+      display: flex;
+      flex-direction: column;
+      height: 100vh;
+      margin: 0;
+      padding: 0;
+      padding-bottom: 60px;
+      box-sizing: border-box;
+    "
+  >
+    <header id="header" style="flex-shrink: 0"></header>
+    <div class="recordsaddrecordheading" style="flex-shrink: 0">
+      <h1>Risk Records</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addInputBtn"
+        title="Add new Risk"
+      >
+        +
+      </button>
+    </div>
+    <div id="subjectFilter" style="flex-shrink: 0">
+      <label for="subject">Filter by Subject:</label>
+      <input type="text" id="subject" />
+
+      <div class="filter-controls">
+        <label class="toggle-switch">
+          <input type="checkbox" id="showClosedToggle" />
+          <span class="slider"></span>
+          <span class="toggle-label">Show Closed Records</span>
+        </label>
+      </div>
+    </div>
+    <main
+      id="main"
+      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
+    >
+      <!-- Add Input Dialog -->
+      <dialog id="addInputDialog" class="dialog">
+        <div class="dialog-header">
+          <h2>Add New Risk</h2>
+        </div>
+        <form id="addInputForm" class="form">
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="INPUT_DATE">Action Date</label>
+              <input
+                type="date"
+                id="INPUT_DATE"
+                name="INPUT_DATE"
+                placeholder="Enter action date"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="DUE_DATE">Due Date</label>
+              <input
+                type="date"
+                id="DUE_DATE"
+                name="DUE_DATE"
+                placeholder="Enter due date"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="PEOPLE_ID">Requestor</label>
+              <input
+                type="text"
+                id="PEOPLE_ID"
+                name="PEOPLE_ID"
+                placeholder="Enter requestor ID"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="ASSIGNED_TO">Assignee</label>
+              <input
+                type="text"
+                id="ASSIGNED_TO"
+                name="ASSIGNED_TO"
+                placeholder="Enter assigned ID"
+                required
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="INPUT_TYPE">Input Type</label>
+              <select name="INPUT_TYPE" id="INPUT_TYPE">
+                <option value="RISK" selected>Risk</option>
+                <option value="REQ">Request</option>
+                <option value="BUY">Purchase</option>
+                <option value="EVAL">Evaluate</option>
+                <option value="FIND">Find</option>
+                <option value="SCH">Schedule</option>
+                <option value="REP">Repair</option>
+                <option value="DATA">Collect Data</option>
+                <option value="OPPR">Opportunity</option>
+                <option value="TRN">Train</option>
+                <option value="TRG">Training</option>
+                <option value="NOTE">Notes</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="SUBJECT" class="required">Subject</label>
+              <input
+                type="text"
+                id="SUBJECT"
+                name="SUBJECT"
+                required
+                placeholder="Enter subject"
+              />
+            </div>
+
+            <div class="form-group full-width">
+              <label for="INPUT_TEXT">Risk Description</label>
+              <textarea
+                id="INPUT_TEXT"
+                name="INPUT_TEXT"
+                placeholder="Enter risk description..."
+                rows="4"
+              ></textarea>
+            </div>
+
+            <div class="form-group">
+              <label for="PROJECT_ID">Project</label>
+              <input
+                type="text"
+                id="PROJECT_ID"
+                name="PROJECT_ID"
+                placeholder="Project ID"
+              />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button id="saveInputBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Risk
+            </button>
+            <button type="button" id="closeAddInputBtn" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <!-- Table container for input data -->
+      <div id="inputTableContainer">
+        <!-- Table will be dynamically generated here -->
+      </div>
+    </main>
+    <footer id="footer" style="flex-shrink: 0"></footer>
+  </body>
+  <script type="module" src="/js/risks.mjs"></script>
+</html>

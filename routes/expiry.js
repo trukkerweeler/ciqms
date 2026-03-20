@@ -110,9 +110,8 @@ router.post("/email", async (req, res) => {
 });
 
 // ==================================================
-// update INPUTS_NOTIFY table
+// Log INPUT notification to centralized EMAIL_HISTORY table
 router.post("/inputs_notify", (req, res) => {
-  // console.log(req.body);
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -123,17 +122,32 @@ router.post("/inputs_notify", (req, res) => {
     });
     connection.connect(function (err) {
       if (err) {
-        console.error("Error connecting: " + err.stack);
+        console.error(
+          "Error connecting to log input notification: " + err.stack,
+        );
         return;
       }
-      // console.log('Connected to DB');
-      const query = `INSERT INTO INPUTS_NOTIFY (INPUT_ID, NOTIFIED_DATE, ASSIGNED_TO, ACTION) VALUES (?, NOW(), ?, ?)`;
-      const values = [req.body.INPUT_ID, req.body.ASSIGNED_TO, req.body.ACTION];
-      // console.log(query);
-      // console.log(values);
+      const { INPUT_ID, ASSIGNED_TO, ACTION } = req.body;
+
+      // Map ACTION to EMAIL_TYPE
+      const emailTypeMap = { A: "ASSIGNMENT", C: "CLOSEOUT", R: "REQUEST" };
+      const emailType = emailTypeMap[ACTION] || ACTION;
+
+      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, NULL, NOW(), ?, ?, ?)`;
+      const values = [
+        "INPUT",
+        INPUT_ID,
+        ASSIGNED_TO,
+        "SENT",
+        emailType,
+        `Input notification (expiry) - Action: ${ACTION}`,
+      ];
+
       connection.query(query, values, (err) => {
         if (err) {
-          console.log("Failed to query for inputs notify: " + err);
+          console.log(
+            "Failed to log INPUT notification to EMAIL_HISTORY: " + err,
+          );
           res.sendStatus(500);
           return;
         }
@@ -142,8 +156,8 @@ router.post("/inputs_notify", (req, res) => {
       connection.end();
     });
   } catch (err) {
-    console.log("Error connecting to Db 214");
-    return;
+    console.log("Error logging INPUT notification: " + err.message);
+    res.sendStatus(500);
   }
 });
 
@@ -303,14 +317,10 @@ router.put("/:id", (req, res) => {
         COMMENT = ?
         WHERE EXPIRATION_ID = ?`;
       let modifiedComment = req.body.COMMENT || "";
-      if (modifiedComment && !modifiedComment.endsWith('\n')) {
-        modifiedComment += '\n';
+      if (modifiedComment && !modifiedComment.endsWith("\n")) {
+        modifiedComment += "\n";
       }
-      const values = [
-        req.body.DISPOSITION,
-        modifiedComment,
-        req.params.id,
-      ];
+      const values = [req.body.DISPOSITION, modifiedComment, req.params.id];
 
       connection.query(query, values, (err, rows, fields) => {
         if (err) {
@@ -328,6 +338,5 @@ router.put("/:id", (req, res) => {
     return;
   }
 });
-
 
 module.exports = router;

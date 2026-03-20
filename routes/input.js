@@ -8,8 +8,9 @@ const nodemailer = require("nodemailer");
 // ==================================================
 // Send email using nodemailer
 router.post("/email/:id", async (req, res) => {
-  // const iid = req.params.id;
-  // console.log(req.body);
+  console.log("Email endpoint (/email/:id) called with:", {
+    id: req.params.id,
+  });
   try {
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -19,7 +20,15 @@ router.post("/email/:id", async (req, res) => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
+      debug: true,
+      logger: true,
+      tls: {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      },
     });
+
+    console.log("Verifying SMTP connection for /email/:id");
+    await transporter.verify();
 
     const { iid, to, from, subject, text } = req.body.data;
     let blindCopy = "<tim.kent@ci-aviation.com>";
@@ -31,12 +40,22 @@ router.post("/email/:id", async (req, res) => {
       bcc: blindCopy,
     };
 
+    console.log("Sending email with options:", mailOptions);
     const info = await transporter.sendMail(mailOptions);
-    // console.log("Email sent:", info.response);
-    res.status(200).send("Email sent successfully");
+    console.log("Email sent successfully:", info.response);
+    res.status(200).json({
+      success: true,
+      message: "Email sent successfully",
+      info: info.response,
+    });
   } catch (error) {
-    console.log("Error sending email:", error);
-    res.status(500).send(error.toString());
+    console.error("Error sending email (/email/:id):", error.message);
+    console.error("Full error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      details: error.toString(),
+    });
   }
 });
 
@@ -134,6 +153,54 @@ router.get("/closed", (req, res) => {
   }
 });
 
+// ==================================================
+// Get records where SUBJECT='RISK' or INPUT_TYPE='RISK'
+router.get("/risks", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+      // console.log('Connected to DB');
+
+      const query = `select pi.INPUT_ID
+        , pi.INPUT_DATE
+        , pi.SUBJECT
+        , pi.ASSIGNED_TO
+        , pi.PROJECT_ID
+        , pit.INPUT_TEXT
+        , pi.DUE_DATE
+        , pi.CLOSED
+        , pi.CLOSED_DATE 
+        from PEOPLE_INPUT pi left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID 
+        where pi.SUBJECT = 'RISK' or pi.INPUT_TYPE = 'RISK' 
+        order by pi.INPUT_ID desc`;
+
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for risk inputs: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
+
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error connecting to Db");
+    return;
+  }
+});
+
 // Get the next ID for a new record
 router.get("/nextId", (req, res) => {
   // res.json('0000005');
@@ -177,11 +244,15 @@ router.get("/nextId", (req, res) => {
 // ==================================================
 // Send email using nodemailer
 router.post("/email", async (req, res) => {
-  // console.log('Email route');
-  // console.log(req.body);
+  console.log("Email route called with:", {
+    to: req.body.ASSIGNED_TO_EMAIL,
+    subject: req.body.SUBJECT,
+    inputId: req.body.INPUT_ID,
+  });
+
   try {
     // SMTP debug flag - set to true to enable detailed SMTP logging
-    const SMTP_DEBUG = false;
+    const SMTP_DEBUG = true;
 
     const transporter = nodemailer.createTransport({
       host: process.env.SMTP_HOST,
@@ -191,31 +262,48 @@ router.post("/email", async (req, res) => {
         user: process.env.SMTP_USER,
         pass: process.env.SMTP_PASS,
       },
-      debug: SMTP_DEBUG, // Enable/disable SMTP debugging
+      debug: SMTP_DEBUG,
+      logger: true, // Enable logger
+      tls: {
+        rejectUnauthorized: false, // Allow self-signed certificates
+      },
     });
 
     // Verify connection configuration
-    // await transporter.verify();
+    console.log("Verifying SMTP connection...");
+    await transporter.verify();
+    console.log("SMTP connection verified successfully");
 
     const mailOptions = {
       to: req.body.ASSIGNED_TO_EMAIL,
       from: process.env.SMTP_FROM,
+      cc: process.env.EMAIL_QM || "tim.kent@ci-aviation.com",
       subject: `Action Item Notification: ${req.body.INPUT_ID} - ${req.body.SUBJECT}`,
       text: `The following action item has been assigned.\nInput Id: ${req.body.INPUT_ID} \nDue Date: ${req.body.DUE_DATE} \nAssigned To: ${req.body.ASSIGNED_TO} \nDescription:\n${req.body.INPUT_TEXT}\n\nPlease log in to the QMS system to view the details and take timely action.\n\nIf you have any questions, please contact the quality manager.`,
     };
 
+    console.log("Sending mail with options:", mailOptions);
     const info = await transporter.sendMail(mailOptions);
-    res.status(200).send("Email sent successfully");
+    console.log("Email sent successfully:", info.response);
+    res.status(200).json({
+      success: true,
+      message: "Email sent successfully",
+      info: info.response,
+    });
   } catch (error) {
-    console.log("Error sending email:", error);
-    res.status(500).send(error.toString());
+    console.error("Error sending email:", error.message);
+    console.error("Full error:", error);
+    res.status(500).json({
+      success: false,
+      error: error.message,
+      details: error.toString(),
+    });
   }
 });
 
 // ==================================================
-// update INPUTS_NOTIFY table
+// Log INPUT notification to centralized EMAIL_HISTORY table
 router.post("/inputs_notify", (req, res) => {
-  // console.log("Inputs Notify:", req.body);
   try {
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -226,20 +314,34 @@ router.post("/inputs_notify", (req, res) => {
     });
     connection.connect(function (err) {
       if (err) {
-        console.error("Error connecting inputs_notify: " + err.stack);
+        console.error(
+          "Error connecting to log input notification: " + err.stack,
+        );
         return;
       }
-      // console.log('Connected to DB');
-      const query = `INSERT INTO INPUTS_NOTIFY (INPUT_ID, NOTIFIED_DATE, ASSIGNED_TO, ACTION) VALUES (?, NOW(), ?, ?)`;
       // Support both direct and nested (data) payloads
       const data = req.body.data ? req.body.data : req.body;
       const { INPUT_ID, ASSIGNED_TO, ACTION } = data;
-      const values = [INPUT_ID, ASSIGNED_TO, ACTION];
-      // console.log(query);
-      // console.log(values);
+
+      // Map ACTION to EMAIL_TYPE
+      const emailTypeMap = { A: "ASSIGNMENT", C: "CLOSEOUT", R: "REQUEST" };
+      const emailType = emailTypeMap[ACTION] || ACTION;
+
+      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, NULL, NOW(), ?, ?, ?)`;
+      const values = [
+        "INPUT",
+        INPUT_ID,
+        ASSIGNED_TO,
+        "SENT",
+        emailType,
+        `Input notification - Action: ${ACTION}`,
+      ];
+
       connection.query(query, values, (err) => {
         if (err) {
-          console.log("Failed to query for inputs notify: " + err);
+          console.log(
+            "Failed to log INPUT notification to EMAIL_HISTORY: " + err,
+          );
           res.sendStatus(500);
           return;
         }
@@ -248,8 +350,8 @@ router.post("/inputs_notify", (req, res) => {
       connection.end();
     });
   } catch (err) {
-    console.log("Error connecting to Db 214");
-    return;
+    console.log("Error logging INPUT notification: " + err.message);
+    res.sendStatus(500);
   }
 });
 

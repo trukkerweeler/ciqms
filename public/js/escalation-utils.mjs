@@ -55,6 +55,30 @@ This is an automated escalation email from the Quality Management System.
       `Manual escalation - ${daysOverdue} days overdue`,
     );
 
+    // Log to notification table based on module
+    try {
+      const apiUrl = await getApiUrl();
+      const notifyEndpoint =
+        appModule.toLowerCase() === "corrective"
+          ? "corrective-notify"
+          : `${appModule.toLowerCase()}-notify`;
+
+      await fetch(`${apiUrl}/${notifyEndpoint}`, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+          [appModule === "CORRECTIVE" ? "CORRECTIVE_ID" : "INPUT_ID"]: appId,
+          NOTIFIED_DATE: new Date().toISOString(),
+          ASSIGNED_TO: assignedTo,
+          ACTION: "E", // E for escalation
+        }),
+      });
+      console.log(`${appModule}_NOTIFY recorded for ${appId}`);
+    } catch (notifyError) {
+      console.error(`Error logging to ${appModule}_NOTIFY:`, notifyError);
+      // Don't throw - email was sent successfully, just notify logging failed
+    }
+
     return true;
   } catch (error) {
     console.error("Error sending escalation email:", error);

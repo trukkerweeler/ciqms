@@ -18,6 +18,10 @@ const FIELD_LIST = [
   "SUBJECT",
   "CTRL_DOC",
   "DIST_DOC",
+  "EMPLOYEE_ID",
+  "AUDIT_STD_INTERVAL",
+  "LAST_AUDIT_DATE",
+  "NEXT_AUDIT_DATE",
 ];
 const EDITABLE_FIELDS = [
   "NAME",
@@ -28,6 +32,10 @@ const EDITABLE_FIELDS = [
   "ISSUE_DATE",
   "CTRL_DOC",
   "DIST_DOC",
+  "EMPLOYEE_ID",
+  "AUDIT_STD_INTERVAL",
+  "LAST_AUDIT_DATE",
+  "NEXT_AUDIT_DATE",
 ];
 
 // Helper functions
@@ -58,6 +66,14 @@ const formatFieldValue = (key, value) => {
       return `Issue Date: ${value.slice(0, 10)}`;
     case "REVISION_LEVEL":
       return `Rev. ${value}`;
+    case "LAST_AUDIT_DATE":
+      return `Last Audit Date: ${value ? value.slice(0, 10) : "—"}`;
+    case "NEXT_AUDIT_DATE":
+      return `Next Audit Date: ${value ? value.slice(0, 10) : "—"}`;
+    case "EMPLOYEE_ID":
+      return `Assigned to: ${value || "—"}`;
+    case "AUDIT_STD_INTERVAL":
+      return `Audit Interval: ${value || "—"}`;
     default:
       return `${key}: ${value}`;
   }
@@ -209,8 +225,14 @@ const renderEditDialog = (record) => {
       const fieldDesc = createElement("label", {}, field);
       detailDialog.appendChild(fieldDesc);
 
+      // Determine input type based on field name
+      let inputType = "text";
+      if (field === "LAST_AUDIT_DATE" || field === "NEXT_AUDIT_DATE") {
+        inputType = "date";
+      }
+
       const formfield = createElement("input", {
-        type: "text",
+        type: inputType,
         id: field,
         className: "field detailedit",
         value: value ?? "",

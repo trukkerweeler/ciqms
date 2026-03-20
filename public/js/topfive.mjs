@@ -24,8 +24,8 @@ async function fetchTopFiveData() {
     }
 
     const data = await response.json();
-    console.log("[topfive.mjs] Received data:", data);
-    console.log("[topfive.mjs] Data length:", data?.length);
+    // console.log("[topfive.mjs] Received data:", data);
+    // console.log("[topfive.mjs] Data length:", data?.length);
 
     // Check if we got an error object instead of array
     if (data && data.error) {
@@ -47,7 +47,7 @@ async function fetchTopFiveData() {
  * Render table with top 5 customers data
  */
 function renderTable(data) {
-  console.log("[topfive.mjs] renderTable called with:", data);
+  // console.log("[topfive.mjs] renderTable called with:", data);
   const container = document.getElementById("topfiveContainer");
   container.innerHTML = "";
 

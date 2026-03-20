@@ -95,6 +95,8 @@ document.addEventListener("DOMContentLoaded", async () => {
                   a.href = `${apiUrl}/dcr.html?id=${row[field]}`;
                 } else if (row["RECORD_TYPE"] === "TODO") {
                   a.href = `${apiUrl}/todo.html?id=${row[field]}`;
+                } else if (row["RECORD_TYPE"] === "AUDIT") {
+                  a.href = `${apiUrl}/document.html?document_id=${row[field]}`;
                 } else {
                   a.href = `${apiUrl}/ncm.html?id=${row[field]}`;
                 }
