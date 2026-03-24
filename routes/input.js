@@ -760,6 +760,7 @@ router.put("/detail/:id", (req, res) => {
         ASSIGNED_TO = '${mydata.ASSIGNED_TO}',
         DUE_DATE = '${mydata.DUE_DATE}',
         SUBJECT = '${mydata.SUBJECT}',
+        INPUT_TYPE = '${mydata.INPUT_TYPE}',
         PROJECT_ID = '${mydata.PROJECT_ID}',
         PEOPLE_ID = '${mydata.REQUESTED_BY}',
         MODIFIED_DATE = '${mydata.MODIFIED_DATE}',

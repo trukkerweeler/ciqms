@@ -11,6 +11,7 @@
       href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
     />
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/todo.css" />
     <link rel="icon" href="images/ci-logo.png" />
     <title>To-Do (CIQMS)</title>
   </head>
@@ -22,6 +23,48 @@
       <input type="text" name="search" id="ASSIGNED_TO" />
       <button type="submit" id="todoButton">Search</button>
     </form>
+
+    <div class="filter-container">
+      <fieldset class="dateRange-filter">
+        <legend>Due Date Range</legend>
+        <label>
+          <input type="radio" name="dateRange" value="overdue" checked />
+          Overdue
+        </label>
+        <label>
+          <input type="radio" name="dateRange" value="30" />
+          +30 Days
+        </label>
+        <label>
+          <input type="radio" name="dateRange" value="60" />
+          +60 Days
+        </label>
+      </fieldset>
+
+      <fieldset class="recordType-filter">
+        <legend>Record Type</legend>
+        <label>
+          <input type="radio" name="recordType" value="all" checked />
+          All
+        </label>
+        <label>
+          <input type="radio" name="recordType" value="INPUT" />
+          Input
+        </label>
+        <label>
+          <input type="radio" name="recordType" value="DCR" />
+          DCR
+        </label>
+        <label>
+          <input type="radio" name="recordType" value="AUDIT" />
+          Audit
+        </label>
+        <label>
+          <input type="radio" name="recordType" value="NCM" />
+          NCM
+        </label>
+      </fieldset>
+    </div>
     <p></p>
 
     <main id="main"></main>

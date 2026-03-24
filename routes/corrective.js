@@ -7,7 +7,8 @@ const path = require("path");
 
 // ==================================================
 // Corrective Action Folder Creation Function
-function createCorrectiveFolder(correctiveId) {
+// Creates folder with CA_ID - CA_TITLE format and copies template
+function createCorrectiveFolder(correctiveId, caTitle = "") {
   try {
     // Get 4-digit current year
     const currentYear = new Date().getFullYear().toString();
@@ -20,26 +21,47 @@ function createCorrectiveFolder(correctiveId) {
       console.log("Corrective Actions year folder created:", caFilesLocation);
     }
 
+    // Build folder name: CA_ID - CA_TITLE (if title exists)
+    let folderName = correctiveId;
+    if (caTitle) {
+      folderName = `${correctiveId} - ${caTitle}`;
+    }
+
     // Create folder for this specific Corrective Action ID
-    const correctiveFolderPath = path.join(caFilesLocation, correctiveId);
+    const correctiveFolderPath = path.join(caFilesLocation, folderName);
 
     if (!fs.existsSync(correctiveFolderPath)) {
       fs.mkdirSync(correctiveFolderPath, { recursive: true });
       console.log(
-        "Corrective Action folder created:",
-        correctiveId,
-        "at",
-        correctiveFolderPath,
+        `Corrective Action folder created: ${correctiveId} at ${correctiveFolderPath}`,
       );
+
+      // Copy template file if it exists
+      const templateSource = path.join(caFilesLocation, "CATemplate.docx");
+      if (fs.existsSync(templateSource)) {
+        const templateDestination = path.join(
+          correctiveFolderPath,
+          `${correctiveId}.docx`,
+        );
+        try {
+          fs.copyFileSync(templateSource, templateDestination);
+          console.log(`Template copied and renamed to: ${correctiveId}.docx`);
+        } catch (copyError) {
+          console.warn(
+            `Could not copy template for ${correctiveId}: ${copyError.message}`,
+          );
+        }
+      } else {
+        console.warn(
+          `CATemplate.docx not found in parent folder: ${templateSource}`,
+        );
+      }
     } else {
       console.log("Corrective Action folder already exists for:", correctiveId);
     }
   } catch (error) {
     console.error(
-      "Error creating Corrective Action folder for",
-      correctiveId,
-      ":",
-      error.message,
+      `Error creating Corrective Action folder for ${correctiveId}: ${error.message}`,
     );
     // Don't throw error - folder creation failure shouldn't break corrective action creation
   }
@@ -47,6 +69,7 @@ function createCorrectiveFolder(correctiveId) {
 
 // ==================================================
 // Function to create folders for all open Corrective Actions (equivalent to makedirectory)
+// Enhanced version that includes CA title and template copying
 function makeCorrectiveFolders() {
   try {
     const currentYear = new Date().getFullYear().toString();
@@ -80,8 +103,9 @@ function makeCorrectiveFolders() {
         return;
       }
 
+      // Modified query to get TITLE as well
       const query =
-        "SELECT CORRECTIVE_ID, CLOSED FROM CORRECTIVE WHERE CLOSED = 'N'";
+        "SELECT CORRECTIVE_ID, TITLE, CLOSED FROM CORRECTIVE WHERE CLOSED = 'N' AND YEAR(CORRECTIVE_DATE) = YEAR(CURDATE())";
 
       connection.query(query, (err, rows) => {
         if (err) {
@@ -95,28 +119,54 @@ function makeCorrectiveFolders() {
 
         rows.forEach((row) => {
           const correctiveId = row.CORRECTIVE_ID;
+          const caTitle = row.TITLE || "";
 
           // Create folder if it doesn't already exist
           if (!hasFolders.includes(correctiveId)) {
             try {
+              // Build folder name: CA_ID - CA_TITLE
+              let folderName = correctiveId;
+              if (caTitle) {
+                folderName = `${correctiveId} - ${caTitle}`;
+              }
+
               const correctiveFolderPath = path.join(
                 caFilesLocation,
-                correctiveId,
+                folderName,
               );
+
+              // Create the folder
               fs.mkdirSync(correctiveFolderPath, { recursive: true });
-              console.log("Corrective Action folder created:", correctiveId);
+              console.log(
+                `Corrective Action folder created: ${correctiveId} at ${correctiveFolderPath}`,
+              );
+
+              // Copy template file if it exists
+              const templateSource = path.join(
+                caFilesLocation,
+                "CATemplate.docx",
+              );
+              if (fs.existsSync(templateSource)) {
+                const templateDestination = path.join(
+                  correctiveFolderPath,
+                  `${correctiveId}.docx`,
+                );
+                fs.copyFileSync(templateSource, templateDestination);
+                console.log(
+                  `Template copied and renamed to: ${correctiveId}.docx`,
+                );
+              } else {
+                console.warn(`CATemplate.docx not found at: ${templateSource}`);
+              }
             } catch (folderError) {
               console.error(
-                "Error creating folder for",
-                correctiveId,
-                ":",
-                folderError.message,
+                `Error creating folder for ${correctiveId}: ${folderError.message}`,
               );
             }
           }
         });
 
-        console.log("makeCorrectiveFolders done");
+        console.log("makeCorrectiveFolders - Done");
         connection.end();
       });
     });
@@ -384,7 +434,7 @@ router.post("/", (req, res) => {
           }
 
           // Create Corrective Action folder after successful database insert
-          createCorrectiveFolder(req.body.CORRECTIVE_ID);
+          createCorrectiveFolder(req.body.CORRECTIVE_ID, req.body.TITLE);
 
           // Create project for the corrective action
           createCAProject(
@@ -392,9 +442,6 @@ router.post("/", (req, res) => {
             req.body.TITLE,
             req.body.ASSIGNED_TO,
           );
-
-          // Send email notification after successful creation
-          sendCorrectiveEmail(req.body);
         },
       );
 
@@ -408,7 +455,7 @@ router.post("/", (req, res) => {
 
 // ==================================================
 // Send email notification for new corrective action
-async function sendCorrectiveEmail(correctiveData) {
+router.post("/email", async (req, res) => {
   try {
     // Get assignee email from PEOPLE table
     const connection = mysql.createConnection({
@@ -422,27 +469,29 @@ async function sendCorrectiveEmail(correctiveData) {
     connection.connect(async function (err) {
       if (err) {
         console.error("Error connecting to DB for email lookup:", err.stack);
+        res.sendStatus(500);
         return;
       }
 
       const emailQuery = `SELECT WORK_EMAIL_ADDRESS FROM PEOPLE WHERE PEOPLE_ID = ?`;
       connection.query(
         emailQuery,
-        [correctiveData.ASSIGNED_TO],
+        [req.body.ASSIGNED_TO],
         async (err, rows) => {
           if (err) {
             console.error("Error querying for assignee email:", err);
             connection.end();
+            res.sendStatus(500);
             return;
           }
 
-          if (rows.length > 0 && rows[0].EMAIL) {
-            const assigneeEmail = rows[0].EMAIL;
+          if (rows.length > 0 && rows[0].WORK_EMAIL_ADDRESS) {
+            const assigneeEmail = rows[0].WORK_EMAIL_ADDRESS;
 
             const transporter = nodemailer.createTransport({
               host: process.env.SMTP_HOST,
               port: process.env.SMTP_PORT,
-              secure: true, // true for 465, false for other ports
+              secure: true,
               auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
@@ -452,30 +501,30 @@ async function sendCorrectiveEmail(correctiveData) {
             const mailOptions = {
               from: process.env.SMTP_FROM,
               to: assigneeEmail,
-              subject: `Corrective Action Notification: ${correctiveData.CORRECTIVE_ID} - ${correctiveData.TITLE}`,
+              subject: `Corrective Action Notification: ${req.body.CORRECTIVE_ID} - ${req.body.TITLE}`,
               text: `The following corrective action has been issued. Please review and take timely action. If you have any questions, please contact the quality manager.\n\n Title: ${
-                correctiveData.TITLE
+                req.body.TITLE
               }\n\n Description:\n${
-                correctiveData.USER_DEFINED_1 || "No description provided"
-              }\n\n Due Date: ${correctiveData.DUE_DATE}\n\n Reference: ${
-                correctiveData.REFERENCE || "N/A"
-              }\n\n Requested By: ${correctiveData.REQUEST_BY}\n\n`,
+                req.body.USER_DEFINED_1 || "No description provided"
+              }\n\n Due Date: ${req.body.DUE_DATE}\n\n Reference: ${
+                req.body.REFERENCE || "N/A"
+              }\n\n Requested By: ${req.body.REQUEST_BY}\n\n`,
             };
 
             try {
               const info = await transporter.sendMail(mailOptions);
               console.log("Corrective action email sent to:", assigneeEmail);
+              res.status(200).send("Email sent successfully");
             } catch (emailError) {
               console.error(
                 "Error sending corrective action email:",
                 emailError,
               );
+              res.sendStatus(500);
             }
           } else {
-            console.log(
-              "No email found for assignee:",
-              correctiveData.ASSIGNED_TO,
-            );
+            console.log("No email found for assignee:", req.body.ASSIGNED_TO);
+            res.status(200).send("Email not sent - no assignee email found");
           }
 
           connection.end();
@@ -483,9 +532,67 @@ async function sendCorrectiveEmail(correctiveData) {
       );
     });
   } catch (error) {
-    console.error("Error in sendCorrectiveEmail:", error);
+    console.error("Error in email endpoint:", error);
+    res.sendStatus(500);
   }
-}
+});
+
+// ==================================================
+// Log Corrective Action notification to centralized EMAIL_HISTORY table
+router.post("/corrective-notify", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error(
+          "Error connecting to log corrective notification: " + err.stack,
+        );
+        return;
+      }
+      const { CORRECTIVE_ID, ACTION, ASSIGNED_TO } = req.body;
+
+      // Map ACTION to EMAIL_TYPE
+      const emailTypeMap = {
+        A: "ASSIGNMENT",
+        C: "CLOSEOUT",
+        R: "REQUEST",
+        E: "ESCALATION",
+      };
+      const emailType = emailTypeMap[ACTION] || ACTION;
+
+      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, NULL, NOW(), ?, ?, ?)`;
+      const values = [
+        "CORRECTIVE",
+        CORRECTIVE_ID,
+        ASSIGNED_TO,
+        "SENT",
+        emailType,
+        `Corrective notification - Action: ${ACTION}`,
+      ];
+
+      connection.query(query, values, (err) => {
+        if (err) {
+          console.log(
+            "Failed to log Corrective notification to EMAIL_HISTORY: " + err,
+          );
+          res.sendStatus(500);
+          return;
+        }
+        res.sendStatus(200);
+      });
+      connection.end();
+    });
+  } catch (err) {
+    console.error("Error in corrective-notify endpoint:", err);
+    res.sendStatus(500);
+  }
+});
 
 // ==================================================
 // Create project for corrective action

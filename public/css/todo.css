@@ -1,0 +1,35 @@
+/* Todo page specific styling */
+
+.filter-container {
+  display: flex;
+  gap: 0.65rem;
+  margin-top: 0.5rem;
+  flex-wrap: wrap;
+  align-items: flex-start;
+}
+
+.filter-container fieldset {
+  padding: 0.33rem 0.5rem;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  flex: 0 1 auto;
+  min-width: fit-content;
+}
+
+.filter-container fieldset legend {
+  padding: 0 0.25rem;
+  font-weight: bold;
+  font-size: 0.9rem;
+}
+
+.filter-container fieldset label {
+  display: inline-block;
+  margin: 0 0.5rem 0.25rem 0;
+  cursor: pointer;
+  font-size: 0.9rem;
+}
+
+.filter-container fieldset label input[type="radio"] {
+  margin-right: 0.25rem;
+  cursor: pointer;
+}

@@ -194,7 +194,39 @@ async function handleFormSubmission() {
     });
 
     if (response.ok) {
-      // Success - close dialog and reload data
+      // Success - send email notification after successful creation
+      try {
+        await fetch(`${url}/email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(dataJson),
+        });
+
+        // Log notification in database
+        await fetch(`${url}/corrective-notify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            CORRECTIVE_ID: dataJson.CORRECTIVE_ID,
+            ASSIGNED_TO: dataJson.ASSIGNED_TO,
+            ACTION: "A", // A for assignment
+          }),
+        });
+
+        console.log(
+          "Corrective action email and notification sent for CA",
+          dataJson.CORRECTIVE_ID,
+        );
+      } catch (emailError) {
+        console.error("Error sending email notification:", emailError);
+        // Don't fail the overall operation if email fails
+      }
+
+      // Close dialog and reload data
       closeDialog();
       await loadCorrectiveData();
       console.log("Corrective record created successfully");

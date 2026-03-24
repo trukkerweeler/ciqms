@@ -8,11 +8,16 @@ console.log("[ctapersonskills.mjs] Loading...");
   const apiUrl = await getApiUrl();
   const url = `${apiUrl}/ctapersonskills`;
   const jobSkillsUrl = `${apiUrl}/ctajobskills`;
-  const peopleUrl = `${apiUrl}/attendance`;
+  const peopleUrl = `${apiUrl}/ctapersonskills/people/active`;
+  const uniqueJobsUrl = `${apiUrl}/ctapersonskills/jobs/unique`;
+  const attendanceSearchUrl = `${apiUrl}/ctapersonskills/search/attendance`;
+
   let personSkillsData = [];
   let jobSkillsData = [];
   let peopleData = [];
   let currentUser = null;
+  let selectedPersonId = null;
+  let selectedJobTitle = null;
 
   // Initialize
   async function initializePersonSkills() {
@@ -30,6 +35,7 @@ console.log("[ctapersonskills.mjs] Loading...");
 
       setupDialogHandlers();
       setupFilterHandlers();
+      setupSearchHandlers();
     } catch (error) {
       console.error("Error initializing person skills:", error);
     }
@@ -88,12 +94,12 @@ console.log("[ctapersonskills.mjs] Loading...");
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
-      // Extract unique PEOPLE_ID values (should be person names or IDs from PERSON field)
-      peopleData = [...new Set(data.map((item) => item.PERSON))].sort();
+      // Store full people data with ID and name
+      peopleData = data || [];
       console.log(
         "[ctapersonskills.mjs] Loaded",
         peopleData.length,
-        "unique people",
+        "active people",
       );
       populatePeopleDropdowns();
     } catch (error) {
@@ -104,10 +110,12 @@ console.log("[ctapersonskills.mjs] Loading...");
   function populateJobSkillDropdown() {
     const select = document.getElementById("jobTitle");
     select.innerHTML = '<option value="">-- Select Job Skill --</option>';
-    jobSkillsData.forEach((skill) => {
+    // Show all unique job titles initially
+    const uniqueSkills = [...new Set(jobSkillsData.map((s) => s.JOB_TITLE))];
+    uniqueSkills.forEach((skill) => {
       const option = document.createElement("option");
-      option.value = skill.jobTitle;
-      option.textContent = skill.jobTitle;
+      option.value = skill;
+      option.textContent = skill;
       select.appendChild(option);
     });
   }
@@ -121,13 +129,13 @@ console.log("[ctapersonskills.mjs] Loading...");
 
     peopleData.forEach((person) => {
       const option1 = document.createElement("option");
-      option1.value = person;
-      option1.textContent = person;
+      option1.value = person.PEOPLE_ID;
+      option1.textContent = person.PEOPLE_ID;
       assignSelect.appendChild(option1);
 
       const option2 = document.createElement("option");
-      option2.value = person;
-      option2.textContent = person;
+      option2.value = person.PEOPLE_ID;
+      option2.textContent = person.PEOPLE_ID;
       filterSelect.appendChild(option2);
     });
   }
@@ -178,21 +186,155 @@ console.log("[ctapersonskills.mjs] Loading...");
     const filterPerson = document.getElementById("filterPerson");
     const filterJob = document.getElementById("filterJob");
 
-    filterPerson.addEventListener("change", applyFilters);
-    filterJob.addEventListener("change", applyFilters);
+    filterPerson.addEventListener("change", () => {
+      selectedPersonId = filterPerson.value;
+      applyFilters();
+      updateSearchButtonState();
+    });
 
-    // Populate job filter dropdown
+    filterJob.addEventListener("change", () => {
+      selectedJobTitle = filterJob.value;
+      applyFilters();
+      updateSearchButtonState();
+    });
+
+    // Populate job filter dropdown with unique job titles
     const filterJobSelect = document.getElementById("filterJob");
     filterJobSelect.innerHTML = '<option value="">All</option>';
-    jobSkillsData.forEach((skill) => {
+    const uniqueSkills = [...new Set(jobSkillsData.map((s) => s.JOB_TITLE))];
+    uniqueSkills.forEach((skill) => {
       const option = document.createElement("option");
-      option.value = skill.jobTitle;
-      option.textContent = skill.jobTitle;
+      option.value = skill;
+      option.textContent = skill;
       filterJobSelect.appendChild(option);
     });
   }
 
+  function setupSearchHandlers() {
+    const searchBtn = document.getElementById("searchAttendanceBtn");
+    if (!searchBtn) {
+      console.warn("[ctapersonskills.mjs] Search button not found");
+      return;
+    }
+
+    searchBtn.addEventListener("click", performAttendanceSearch);
+  }
+
+  function updateSearchButtonState() {
+    const searchBtn = document.getElementById("searchAttendanceBtn");
+    // Enable button only if both person and job skill are selected
+    searchBtn.disabled = !selectedPersonId || !selectedJobTitle;
+  }
+
+  async function performAttendanceSearch() {
+    if (!selectedPersonId || !selectedJobTitle) {
+      alert("Please select both a Person and a Job Skill");
+      return;
+    }
+
+    try {
+      // Hide the person skills table and clear it when searching
+      const personSkillsContainer = document.getElementById(
+        "personSkillsContainer",
+      );
+      personSkillsContainer.innerHTML = "";
+      personSkillsContainer.style.display = "none";
+
+      // selectedPersonId and selectedJobTitle are already set from the filter dropdowns
+      console.log("[ctapersonskills.mjs] Searching attendance for:", {
+        personId: selectedPersonId,
+        jobTitle: selectedJobTitle,
+      });
+
+      const searchUrl = `${attendanceSearchUrl}/${selectedPersonId}/${encodeURIComponent(selectedJobTitle)}`;
+      const response = await fetch(searchUrl, { method: "GET" });
+
+      if (!response.ok) {
+        throw new Error(`HTTP error! status: ${response.status}`);
+      }
+
+      const results = await response.json();
+      renderAttendanceResults(results);
+    } catch (error) {
+      console.error("Error searching attendance:", error);
+      alert("Error searching attendance records. Please try again.");
+    }
+  }
+
+  function renderAttendanceResults(data) {
+    const resultsSection = document.getElementById("attendanceResultsSection");
+    const resultsContainer = document.getElementById(
+      "attendanceResultsContainer",
+    );
+
+    resultsContainer.innerHTML = "";
+
+    if (!data || data.length === 0) {
+      resultsContainer.innerHTML =
+        "<p>No attendance records found for the selected person and skill.</p>";
+      resultsSection.style.display = "block";
+      return;
+    }
+
+    const table = document.createElement("table");
+    table.className = "table table-striped table-bordered table-hover";
+
+    // Header
+    const thead = document.createElement("thead");
+    thead.innerHTML = `
+      <tr>
+        <th>Course ID</th>
+        <th>Date/Time</th>
+        <th>Instructor</th>
+        <th>Minutes</th>
+        <th>Created By</th>
+        <th>Created Date</th>
+        <th>Link</th>
+      </tr>
+    `;
+    table.appendChild(thead);
+
+    // Body
+    const tbody = document.createElement("tbody");
+    data.forEach((item) => {
+      const row = document.createElement("tr");
+      const dateTime = item.DATE_TIME
+        ? new Date(item.DATE_TIME).toLocaleString()
+        : "-";
+      const createdDate = item.CREATED_DATE
+        ? new Date(item.CREATED_DATE).toLocaleDateString()
+        : "-";
+      const linkText = item.CTA_ATTENDANCE_LINK
+        ? `<a href="${item.CTA_ATTENDANCE_LINK}" target="_blank">View</a>`
+        : "-";
+
+      row.innerHTML = `
+        <td>${item.COURSE_ID || ""}</td>
+        <td>${dateTime}</td>
+        <td>${item.INSTRUCTOR || "-"}</td>
+        <td>${item.MINUTES || "-"}</td>
+        <td>${item.CREATE_BY || "-"}</td>
+        <td>${createdDate}</td>
+        <td>${linkText}</td>
+      `;
+      tbody.appendChild(row);
+    });
+    table.appendChild(tbody);
+
+    const wrapper = document.createElement("div");
+    wrapper.className = "table-container";
+    wrapper.style.maxHeight = "calc(80vh - 200px)";
+    wrapper.style.overflowY = "auto";
+    wrapper.appendChild(table);
+    resultsContainer.appendChild(wrapper);
+    resultsSection.style.display = "block";
+  }
+
   function applyFilters() {
+    // Show the person skills container and hide search results when filters change
+    document.getElementById("personSkillsContainer").style.display = "block";
+    document.getElementById("attendanceResultsSection").style.display = "none";
+
     const filterPerson = document.getElementById("filterPerson").value;
     const filterJob = document.getElementById("filterJob").value;
 

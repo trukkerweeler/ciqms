@@ -64,7 +64,16 @@ function renderTable(data) {
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
 
-  const headers = ["Rank", "Customer", "Invoice Count", "Total Amount"];
+  const headers = [
+    "Rank",
+    "Customer",
+    "Address",
+    "City",
+    "State",
+    "Telephone",
+    "Invoice Count",
+    "Total Amount",
+  ];
   headers.forEach((header) => {
     const th = document.createElement("th");
     th.textContent = header;
@@ -88,6 +97,26 @@ function renderTable(data) {
     const customerCell = document.createElement("td");
     customerCell.textContent = item.CUSTOMER || "N/A";
     row.appendChild(customerCell);
+
+    // Address
+    const addressCell = document.createElement("td");
+    addressCell.textContent = item.ADDRESS1 || "N/A";
+    row.appendChild(addressCell);
+
+    // City
+    const cityCell = document.createElement("td");
+    cityCell.textContent = item.CITY || "N/A";
+    row.appendChild(cityCell);
+
+    // State
+    const stateCell = document.createElement("td");
+    stateCell.textContent = item.STATE || "N/A";
+    row.appendChild(stateCell);
+
+    // Telephone
+    const telephoneCell = document.createElement("td");
+    telephoneCell.textContent = item.TELEPHONE || "N/A";
+    row.appendChild(telephoneCell);
 
     // Invoice Count
     const countCell = document.createElement("td");

@@ -108,6 +108,7 @@
           display: flex;
           gap: 10px;
           align-items: center;
+          flex-wrap: wrap;
         "
       >
         <label for="filterPerson" style="font-weight: bold"
@@ -137,6 +138,26 @@
         >
           <option value="">All</option>
         </select>
+
+        <button
+          id="searchAttendanceBtn"
+          class="button primary"
+          style="margin-left: 20px"
+          disabled
+        >
+          Search
+        </button>
+      </div>
+
+      <!-- Attendance Results Section -->
+      <div
+        id="attendanceResultsSection"
+        style="display: none; margin-top: 30px"
+      >
+        <h3>Attendance Records</h3>
+        <div id="attendanceResultsContainer" class="table-container">
+          <!-- Results table will be generated here -->
+        </div>
       </div>
 
       <!-- Person Skills Table -->

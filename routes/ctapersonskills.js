@@ -245,4 +245,163 @@ router.delete("/:id", (req, res) => {
   });
 });
 
+// Get all active people (status != 'I')
+router.get("/people/active", (req, res) => {
+  const connection = getConnection();
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("[ctapersonskills.js] Database connection error:", err);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    const query = `
+      SELECT 
+        PEOPLE_ID,
+        FIRST_NAME,
+        LAST_NAME,
+        STATUS
+      FROM PEOPLE
+      WHERE STATUS != 'I' OR STATUS IS NULL
+      ORDER BY PEOPLE_ID ASC
+    `;
+
+    connection.query(query, (error, results) => {
+      connection.end();
+
+      if (error) {
+        console.error("[ctapersonskills.js] Query error:", error);
+        return res.status(500).json({ error: "Failed to fetch people" });
+      }
+
+      console.log(
+        "[ctapersonskills.js] Retrieved",
+        results.length,
+        "active people",
+      );
+      res.json(results || []);
+    });
+  });
+});
+
+// Get unique job titles from JOB_SKILLS
+router.get("/jobs/unique", (req, res) => {
+  const connection = getConnection();
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("[ctapersonskills.js] Database connection error:", err);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    const query = `
+      SELECT DISTINCT JOB_TITLE
+      FROM JOB_SKILLS
+      ORDER BY JOB_TITLE
+    `;
+
+    connection.query(query, (error, results) => {
+      connection.end();
+
+      if (error) {
+        console.error("[ctapersonskills.js] Query error:", error);
+        return res.status(500).json({ error: "Failed to fetch job titles" });
+      }
+
+      console.log(
+        "[ctapersonskills.js] Retrieved",
+        results.length,
+        "unique job titles",
+      );
+      res.json(results.map((row) => row.JOB_TITLE));
+    });
+  });
+});
+
+// Search attendance records using Person + Job Title matrix
+// Finds all SKILL_IDs for the job title, then searches attendance for person + those courses
+router.get("/search/attendance/:personId/:jobTitle", (req, res) => {
+  const connection = getConnection();
+  const { personId, jobTitle } = req.params;
+
+  if (!personId || !jobTitle) {
+    return res
+      .status(400)
+      .json({ error: "personId and jobTitle are required" });
+  }
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("[ctapersonskills.js] Database connection error:", err);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    // First, get all SKILL_IDs for this JOB_TITLE
+    const skillQuery = `
+      SELECT DISTINCT SKILL_ID
+      FROM JOB_SKILLS
+      WHERE JOB_TITLE = ?
+    `;
+
+    connection.query(skillQuery, [jobTitle], (error, skills) => {
+      if (error) {
+        connection.end();
+        console.error("[ctapersonskills.js] Query error:", error);
+        return res.status(500).json({ error: "Failed to fetch job skills" });
+      }
+
+      if (!skills || skills.length === 0) {
+        connection.end();
+        return res.json([]); // No skills for this job title
+      }
+
+      // Extract course codes from SKILL_IDs (third element after splitting on '-')
+      const courseCodes = skills.map((s) => {
+        const parts = s.SKILL_ID.split("-");
+        return parts.length > 2 ? parts[2] : s.SKILL_ID;
+      });
+
+      // Now query CTA_ATTENDANCE for this person and any of these course codes
+      const placeholders = courseCodes.map(() => "?").join(",");
+      const attendanceQuery = `
+        SELECT 
+          ca.COURSE_ATND_ID,
+          ca.COURSE_ID,
+          ca.DATE_TIME,
+          ca.PEOPLE_ID,
+          ca.INSTRUCTOR,
+          ca.MINUTES,
+          ca.CREATE_BY,
+          ca.CREATED_DATE,
+          cal.CTA_ATTENDANCE_LINK
+        FROM CTA_ATTENDANCE ca
+        LEFT JOIN CTA_ATTENDANCE_LINK cal ON ca.COURSE_ATND_ID = cal.COURSE_ATND_ID
+        WHERE ca.PEOPLE_ID = ? AND ca.COURSE_ID IN (${placeholders})
+        ORDER BY ca.DATE_TIME DESC
+      `;
+
+      const params = [personId, ...courseCodes];
+      connection.query(attendanceQuery, params, (error, results) => {
+        connection.end();
+
+        if (error) {
+          console.error("[ctapersonskills.js] Query error:", error);
+          return res
+            .status(500)
+            .json({ error: "Failed to fetch attendance records" });
+        }
+
+        console.log(
+          "[ctapersonskills.js] Retrieved",
+          results.length,
+          "attendance records for",
+          personId,
+          jobTitle,
+        );
+        res.json(results);
+      });
+    });
+  });
+});
+
 module.exports = router;

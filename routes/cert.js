@@ -41,7 +41,7 @@ router.get("/detail/:id", (req, res) => {
   exec(command, (error, stdout, stderr) => {
     if (error) {
       console.error(
-        `[DETAIL ERROR] Error executing VBScript: ${error.message}`
+        `[DETAIL ERROR] Error executing VBScript: ${error.message}`,
       );
       return res.status(500).send("Error retrieving data.");
     }
@@ -67,7 +67,7 @@ router.get("/detail/:id", (req, res) => {
       res.json(data);
     } catch (parseError) {
       console.error(
-        `Error parsing detail VBScript output: ${parseError.message}`
+        `Error parsing detail VBScript output: ${parseError.message}`,
       );
       console.error(`Raw stdout start: ${stdout.substring(0, 100)}`);
       res.status(500).json({ error: parseError.message });
@@ -111,7 +111,7 @@ router.get("/:id", (req, res) => {
       res.json(data);
     } catch (parseError) {
       console.error(
-        `Error parsing main cert VBScript output: ${parseError.message}`
+        `Error parsing main cert VBScript output: ${parseError.message}`,
       );
       console.error(`Raw stdout start: ${stdout.substring(0, 100)}`);
       res.status(500).json({ error: parseError.message });
@@ -205,7 +205,7 @@ router.get("/swld/:id", (req, res) => {
       // console.log("Raw VBScript output:", stdout); // Log the raw output for debugging
       const sanitizedOutput = stdout.replace(
         /[\u0000-\u001F\u007F-\u009F]/g,
-        ""
+        "",
       ); // Remove control characters
       // console.log("Sanitized output:", sanitizedOutput); // Log the sanitized output for debugging
       const data = JSON.parse(sanitizedOutput);
@@ -255,7 +255,7 @@ router.get("/heat/:id", (req, res) => {
 router.post("/revision/edit", (req, res) => {
   console.log(
     "[REVISION/EDIT REQUEST] Received edit request with body:",
-    req.body
+    req.body,
   );
   const { woNo, section, serialNumber, originalData, notes } = req.body;
   const userName = req.headers["x-user"] || "SYSTEM";
@@ -302,7 +302,7 @@ router.post("/revision/edit", (req, res) => {
 router.post("/revision/delete", (req, res) => {
   console.log(
     "[REVISION/DELETE REQUEST] Received delete request with body:",
-    req.body
+    req.body,
   );
   const { woNo, section, serialNumber, originalData, notes } = req.body;
   const userName = req.headers["x-user"] || "SYSTEM";
@@ -395,7 +395,7 @@ router.get("/customer-addresses/:customerCode", (req, res) => {
   const customerCode = req.params.customerCode.trim();
   console.log(
     "[CUSTOMER_ADDRESSES REQUEST] Received request for customer code:",
-    customerCode
+    customerCode,
   );
 
   const connection = mysql.createConnection({
@@ -497,7 +497,7 @@ router.get("/item-history/:woNumber", (req, res) => {
   const woNumber = req.params.woNumber;
   console.log(
     "[ITEM_HISTORY REQUEST] Received request for WO Number:",
-    woNumber
+    woNumber,
   );
   const vbsFilePath = path.join(__dirname, "itemhistory.vbs");
   const cscriptPath = process.env.SYSTEMROOT + "\\SysWOW64\\cscript.exe";
@@ -539,7 +539,7 @@ router.get("/item-history/:woNumber", (req, res) => {
       res.json(data);
     } catch (parseError) {
       console.error(
-        `Error parsing item history VBScript output: ${parseError.message}`
+        `Error parsing item history VBScript output: ${parseError.message}`,
       );
       console.error(`Raw stdout start: ${stdout.substring(0, 100)}`);
       res.status(500).json({ error: parseError.message });

@@ -289,6 +289,12 @@ fetch(url, { method: "GET" })
         text: `Subject: ${rec["SUBJECT"]}`,
       });
 
+      const elemType = createElement("p", {
+        className: "tbl",
+        id: "type",
+        text: `Type: ${rec["INPUT_TYPE"] || ""}`,
+      });
+
       // Subtitle div with close button
       const divSubTitle = createElement("div", {
         className: "subtitlewithbutton",
@@ -345,6 +351,7 @@ fetch(url, { method: "GET" })
       detailSection.appendChild(reqBy);
       detailSection.appendChild(due_date);
       detailSection.appendChild(elemSubject);
+      detailSection.appendChild(elemType);
 
       // Add to main
       main.appendChild(elemRpt);
@@ -623,6 +630,7 @@ fetch(url, { method: "GET" })
         const projectElem = document.querySelector("#project");
         const requestByElem = document.querySelector("#requestby");
         const subjectElem = document.querySelector("#subject");
+        const typeElem = document.querySelector("#type");
 
         document.querySelector("#ASSIGNED_TO").value = extractText(
           assignedToElem.textContent,
@@ -644,6 +652,10 @@ fetch(url, { method: "GET" })
           subjectElem.textContent,
           9,
         );
+        document.querySelector("#INPUT_TYPE").value = extractText(
+          typeElem.textContent,
+          6,
+        );
 
         document.querySelector("#cancelEdit").addEventListener("click", () => {
           detailDialog.close();
@@ -661,6 +673,7 @@ fetch(url, { method: "GET" })
               PROJECT_ID: document.querySelector("#PROJECT_ID").value,
               REQUESTED_BY: document.querySelector("#REQUESTED_BY").value,
               SUBJECT: document.querySelector("#SUBJECT").value,
+              INPUT_TYPE: document.querySelector("#INPUT_TYPE").value,
               MODIFIED_DATE: getDateTime(),
               MODIFIED_BY: user,
             };
