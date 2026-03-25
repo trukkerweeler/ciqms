@@ -1,6 +1,6 @@
 {
   "name": "ciqms",
-  "version": "1.0.20260302",
+  "version": "1.0.20260324",
   "description": "",
   "main": "server.js",
   "scripts": {

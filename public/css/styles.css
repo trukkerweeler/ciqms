@@ -183,7 +183,7 @@ html {
   position: absolute;
   background-color: darkgray;
   min-width: 160px;
-  z-index: 9999;
+  z-index: 10000;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   top: calc(100% + 8px);
@@ -201,10 +201,18 @@ html {
   margin: 0;
 }
 
+.submenu .submenu {
+  top: 0;
+  left: 100%;
+  margin-left: 8px;
+  transform: translateX(-10px);
+}
+
 .submenu li {
   width: 100%;
   margin: 0;
   padding: 0;
+  position: relative;
 }
 
 .submenu a {
@@ -232,6 +240,13 @@ html {
   visibility: visible !important;
   opacity: 1 !important;
   transform: translateY(0) !important;
+  display: flex !important;
+}
+
+.submenu li:hover > .submenu {
+  visibility: visible !important;
+  opacity: 1 !important;
+  transform: translateX(0) !important;
   display: flex !important;
 }
 

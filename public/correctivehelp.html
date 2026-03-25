@@ -1,0 +1,153 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Corrective Action Help & Reference Guide"
+    />
+    <meta name="author" content="Quality Management System" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Corrective Action Help & Reference Guide</title>
+    <style>
+      main {
+        max-width: 900px;
+        margin: 2rem auto;
+        padding: 0 1rem;
+      }
+      section {
+        margin-bottom: 2.5rem;
+        padding: 1.5rem;
+        background-color: #f9f9f9;
+        border-left: 4px solid #0066cc;
+        border-radius: 4px;
+      }
+      .dialogTitle {
+        color: #0066cc;
+        margin-top: 0;
+        margin-bottom: 1rem;
+        font-size: 1.3em;
+        font-weight: 600;
+      }
+      ul {
+        margin: 1rem 0;
+        padding-left: 1.5rem;
+      }
+      li {
+        margin-bottom: 0.75rem;
+        line-height: 1.6;
+      }
+      .codeinstrns {
+        margin: 0.5rem 0 0.75rem 0;
+        padding-left: 1rem;
+        color: #555;
+        font-size: 0.95em;
+        border-left: 2px solid #ddd;
+        padding-left: 0.75rem;
+      }
+      p {
+        line-height: 1.7;
+        color: #333;
+        margin-bottom: 1rem;
+      }
+      strong {
+        color: #0066cc;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <main id="main">
+      <section id="correctionHelp">
+        <h2 class="dialogTitle">✏️ Correction</h2>
+        <p>
+          Describe the specific corrective action(s) taken to address the
+          identified problem and prevent recurrence. The correction should 
+          be stated in past tense and reflect the completion (it's done) date.
+        </p>
+        <!-- <ul>
+          <li>
+            <strong>[CORRECTION CODE]</strong> – [Description of correction]
+            <p class="codeinstrns">
+              [Detailed guidance on when to use this correction type]
+            </p>
+          </li>
+          <li>
+            <strong>[CORRECTION CODE]</strong> – [Description of correction]
+            <p class="codeinstrns">
+              [Detailed guidance on when to use this correction type]
+            </p>
+          </li>
+          <li>
+            <strong>[CORRECTION CODE]</strong> – [Description of correction]
+            <p class="codeinstrns">
+              [Detailed guidance on when to use this correction type]
+            </p>
+          </li>
+        </ul> -->
+      </section>
+
+      <section id="causeHelp">
+        <h2 class="dialogTitle">🔍 Cause</h2>
+        <p>
+          Identify and document the root cause of the problem that led to the
+          corrective action. Use of 5-Why analysis or other root cause analysis techniques is encouraged to
+          ensure a thorough understanding of the underlying issue. There is a form in \\Common\Quality that 
+          should be used to document the 5-Why analysis. The root cause cannot be a restatement of the 
+           problem. It should be a specific cause that can be addressed through corrective action.
+        </p>
+        <!-- <ul>
+          <li>
+            <strong>[CAUSE CODE]</strong> – [Description of cause category]
+            <p class="codeinstrns">[Guidance on identifying this cause]</p>
+          </li>
+          <li>
+            <strong>[CAUSE CODE]</strong> – [Description of cause category]
+            <p class="codeinstrns">[Guidance on identifying this cause]</p>
+          </li>
+          <li>
+            <strong>[CAUSE CODE]</strong> – [Description of cause category]
+            <p class="codeinstrns">[Guidance on identifying this cause]</p>
+          </li>
+        </ul> -->
+      </section>
+
+      <section id="systemicHelp">
+        <h2 class="dialogTitle">🌐 Systemic</h2>
+        <p>
+          Document any systemic or organization-wide implications of this
+          corrective action. Identify whether this issue affects other areas or
+          processes. Systemic action shall prevent recurrence of the problem across 
+          the organization, not just in the specific instance. If systemic implications 
+        are identified, additional actions may be required to address the broader 
+        impact and ensure that similar issues do not arise in other areas.
+        </p>
+        <!-- <ul>
+          <li>
+            <strong>[SYSTEMIC CODE]</strong> – [Description of systemic impact]
+            <p class="codeinstrns">[Guidance on assessing systemic impact]</p>
+          </li>
+          <li>
+            <strong>[SYSTEMIC CODE]</strong> – [Description of systemic impact]
+            <p class="codeinstrns">[Guidance on assessing systemic impact]</p>
+          </li>
+          <li>
+            <strong>[SYSTEMIC CODE]</strong> – [Description of systemic impact]
+            <p class="codeinstrns">[Guidance on assessing systemic impact]</p>
+          </li>
+        </ul>  -->
+      </section>
+    </main>
+
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/correctivehelp.mjs"></script>
+</html>

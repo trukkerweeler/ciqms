@@ -750,7 +750,7 @@ async function renderNCMDetail(record) {
             let previoustext4 = document.querySelector("#notetext").innerHTML;
             let newtextNote = document.querySelector("#newtextNote").value;
             if (newtextNote.length === 0) {
-              alert("Not saving, no note text.");
+              alert("Please enter note text or use the Cancel button.");
               break;
             } else {
               let compositetext4 =
