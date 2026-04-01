@@ -280,14 +280,16 @@ function formatNumber(val) {
  * Helper: Format number with specific precision based on significant digits
  */
 function formatNumberWithPrecision(val, sigDigs) {
-  if (!val) return "-";
-  if (typeof val === "number") {
-    // If significant digits is specified, format to that precision
-    if (sigDigs && sigDigs > 0) {
-      return val.toFixed(sigDigs);
-    }
-    // Otherwise, use default formatting (6 decimals with trailing zeros removed)
-    return val.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
+  if (val === null || val === undefined || val === "") return "-";
+  if (typeof val !== "number") return val;
+  if (val === 0) return "0";
+
+  // If significant digits is specified, format to that precision
+  if (sigDigs && sigDigs > 0) {
+    return val.toPrecision(sigDigs);
+  }
+  // Otherwise, use default formatting (6 decimals with trailing zeros removed)
+  return val.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
   }
   return val;
 }
@@ -663,7 +665,7 @@ export async function saveCharacteristic() {
         return;
       }
 
-      closeModal();
+      closeCharModal();
       await loadCharacteristics();
       return;
     } else if (!response.ok) {
@@ -672,7 +674,7 @@ export async function saveCharacteristic() {
       return;
     }
 
-    closeModal();
+    closeCharModal();
     await loadCharacteristics();
   } catch (error) {
     showErrorBox(`Error: ${error.message}`);

@@ -1,0 +1,263 @@
+<!doctype html>
+<html lang="en" style="height: 100%; margin: 0; padding: 0">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Inspection Plans</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/inspplans.css" />
+    <link rel="icon" href="./images/ci-logo.png" />
+    <style>
+      body {
+        display: flex;
+        flex-direction: column;
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+      header {
+        flex-shrink: 0;
+      }
+      nav {
+        flex-shrink: 0;
+      }
+      #main-content {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+      }
+      .section {
+        display: flex;
+        flex-direction: column;
+        flex: 1;
+        overflow: hidden;
+      }
+      .page-header-div {
+        flex-shrink: 0;
+        padding: 8px 12px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        background: #f8f9fa;
+        border-bottom: 1px solid #ddd;
+      }
+      .page-header-div h1 {
+        margin: 0;
+        font-size: 18px;
+        font-weight: 600;
+      }
+      #inspplans-container {
+        flex: 1;
+        overflow: auto;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        font-size: 12px;
+      }
+      table thead {
+        position: sticky;
+        top: 0;
+        background: #2c3e50;
+        z-index: 10;
+      }
+      table th {
+        padding: 8px 12px;
+        text-align: left;
+        font-weight: 600;
+        border-bottom: 2px solid #1a252f;
+        background: #2c3e50;
+        color: white;
+      }
+      table td {
+        padding: 8px 12px;
+        border-bottom: 1px solid #eee;
+      }
+      table tbody tr:hover {
+        background: #f0f0f0;
+      }
+      .empty-message {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        height: 100%;
+        color: #999;
+        font-size: 13px;
+      }
+      .btn-add {
+        padding: 6px 12px;
+        font-size: 12px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-weight: 600;
+        background-color: #007bff;
+        color: white;
+        transition: all 0.15s;
+      }
+      .btn-add:hover {
+        background-color: #0056b3;
+      }
+      .plan-id-link {
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .plan-id-link:hover .badge-id {
+        background-color: #0056b3;
+      }
+      .filter-section {
+        flex-shrink: 0;
+        padding: 12px 16px;
+        background: white;
+        border-bottom: 1px solid #ddd;
+        display: flex;
+        gap: 12px;
+        align-items: center;
+      }
+      .filter-section label {
+        font-weight: 600;
+        font-size: 12px;
+        color: #333;
+      }
+      .filter-section input {
+        padding: 6px 10px;
+        font-size: 12px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        width: 200px;
+      }
+      .filter-section input:focus {
+        outline: none;
+        border-color: #007bff;
+        box-shadow: 0 0 0 2px rgba(0, 123, 255, 0.1);
+      }
+      .filter-section .btn-clear {
+        padding: 6px 10px;
+        font-size: 11px;
+        border: 1px solid #ccc;
+        background: #f8f9fa;
+        border-radius: 3px;
+        cursor: pointer;
+        color: #666;
+      }
+      .filter-section .btn-clear:hover {
+        background: #e9ecef;
+      }
+    </style>
+  </head>
+  <body>
+    <header id="header"></header>
+    <nav></nav>
+    <main id="main-content">
+      <section class="section">
+        <div class="page-header-div">
+          <h1>Inspection Plans</h1>
+          <button id="btnAddInspPlan" class="btn-add" style="margin-left: auto">
+            + New Plan
+          </button>
+        </div>
+
+        <div class="filter-section">
+          <label for="filter-product-id">Filter by Product ID:</label>
+          <input
+            type="text"
+            id="filter-product-id"
+            placeholder="Enter Product ID..."
+          />
+          <button class="btn-clear" onclick="clearFilter()">Clear</button>
+        </div>
+
+        <div id="inspplans-container"></div>
+      </section>
+
+      <dialog id="inspplan-dialog" class="dialog">
+        <form id="create-inspplan-form">
+          <h2>Create Inspection Plan</h2>
+
+          <div id="step-indicators">
+            <div class="step-indicator active" id="step1-indicator">
+              Step 1: Plan Selection
+            </div>
+            <div class="step-indicator" id="step2-indicator">
+              Step 2: Characteristics
+            </div>
+          </div>
+
+          <!-- STEP 1: Plan Lookup -->
+          <div id="step1-content">
+            <p style="font-size: 12px; color: #666; margin: 0 0 12px 0">
+              <strong>Plan ID:</strong>
+              <span
+                id="generated-plan-id"
+                style="font-weight: bold; color: #007bff"
+                >Will be auto-generated</span
+              >
+            </p>
+
+            <label for="product-id">Product ID:</label>
+            <input
+              type="text"
+              id="product-id"
+              name="PRODUCT_ID"
+              style="text-transform: uppercase"
+              required
+            />
+
+            <label for="operation-no">Operation No:</label>
+            <input
+              type="text"
+              id="operation-no"
+              name="OPERATION_NO"
+              style="text-transform: uppercase"
+              required
+            />
+
+            <label for="product-rev-level">Product Rev Level:</label>
+            <input
+              type="text"
+              id="product-rev-level"
+              name="PRODUCT_REV_LEVEL"
+              style="text-transform: uppercase"
+              required
+            />
+
+            <label for="plan-name">Plan Name:</label>
+            <input
+              type="text"
+              id="plan-name"
+              name="PLAN_NAME"
+              placeholder="e.g., Initial Inspection"
+            />
+
+            <button type="button" id="load-plan-btn">Load Plan</button>
+          </div>
+
+          <!-- STEP 2: Characteristic Selection -->
+          <div id="step2-content" style="display: none">
+            <div id="characteristics-section">
+              <label>Select Characteristics to Inspect:</label>
+              <div id="characteristics-list"></div>
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button
+              type="submit"
+              class="btn btn-primary"
+              id="create-btn"
+              style="display: none"
+            >
+              Create Plan
+            </button>
+            <button type="button" id="cancel-inspplan" class="btn btn-cancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="js/inspplans.mjs"></script>
+</html>
