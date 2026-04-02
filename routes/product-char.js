@@ -100,6 +100,32 @@ router.get("/search/:query", (req, res) => {
   });
 });
 
+// GET /product-char/types - Get all characteristic types from PRD_CHAR_TYPE table
+router.get("/types", (req, res) => {
+  const connection = createDbConnection();
+  connection.connect((err) => {
+    if (err) {
+      res.status(500).json({ error: "Database connection failed" });
+      return;
+    }
+
+    const query =
+      "SELECT PRD_CHAR_TYPE, DESCRIPTION FROM PRD_CHAR_TYPE ORDER BY PRD_CHAR_TYPE";
+    connection.query(query, (err, rows) => {
+      connection.end();
+
+      if (err) {
+        res
+          .status(500)
+          .json({ error: "Failed to retrieve characteristic types" });
+        return;
+      }
+
+      res.json(rows || []);
+    });
+  });
+});
+
 // GET /product-char/:productId - Get all characteristics for a product
 router.get("/:productId", (req, res) => {
   const connection = createDbConnection();

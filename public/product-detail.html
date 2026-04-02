@@ -458,12 +458,14 @@
           <div class="section-title">Details</div>
           <div class="grid-3">
             <div class="form-group">
-              <label>Name</label>
-              <input type="text" id="NAME" maxlength="60" />
+              <label>Name <span class="req">*</span></label>
+              <input type="text" id="NAME" maxlength="60" required />
             </div>
             <div class="form-group">
               <label>Type</label>
-              <input type="text" id="TYPE" maxlength="16" />
+              <select id="TYPE">
+                <option value="">--</option>
+              </select>
             </div>
             <div class="form-group">
               <label>Units</label>
@@ -660,7 +662,9 @@
 
           <div class="form-group">
             <label>Type</label>
-            <input type="text" id="editCharTYPE" maxlength="16" />
+            <select id="editCharTYPE">
+              <option value="">--</option>
+            </select>
           </div>
 
           <div class="form-group">

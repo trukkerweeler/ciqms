@@ -13,6 +13,7 @@ const CHAR_API_URL = "/product-char";
 let currentProductId = null;
 let currentProduct = null;
 let allCharacteristics = [];
+let allCharacteristicTypes = [];
 let editingCharacteristic = null;
 
 /**
@@ -75,6 +76,7 @@ export async function initialize() {
   // Load product and characteristics
   await loadProduct();
   await loadCharacteristics();
+  await loadCharacteristicTypes();
 }
 
 /**
@@ -194,6 +196,58 @@ async function loadCharacteristics() {
 }
 
 /**
+ * Load characteristic types from PRD_CHAR_TYPE table
+ */
+async function loadCharacteristicTypes() {
+  try {
+    const response = await fetch(`${CHAR_API_URL}/types`);
+
+    if (!response.ok) {
+      console.error("Failed to load characteristic types");
+      allCharacteristicTypes = [];
+      return;
+    }
+
+    allCharacteristicTypes = (await response.json()) || [];
+  } catch (error) {
+    console.error("Error loading characteristic types:", error);
+    allCharacteristicTypes = [];
+  }
+}
+
+/**
+ * Populate TYPE dropdown with characteristic types
+ */
+function populateTypeSelects() {
+  const typeSelects = [
+    document.getElementById("TYPE"),
+    document.getElementById("editCharTYPE"),
+  ];
+
+  for (const select of typeSelects) {
+    if (!select) continue;
+
+    // Keep the empty option and add type options
+    const currentValue = select.value;
+    select.innerHTML = '<option value="">--</option>';
+
+    if (allCharacteristicTypes.length > 0) {
+      allCharacteristicTypes.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type.PRD_CHAR_TYPE;
+        option.textContent = `${type.PRD_CHAR_TYPE}${type.DESCRIPTION ? " - " + type.DESCRIPTION : ""}`;
+        select.appendChild(option);
+      });
+    }
+
+    // Restore the previous value if it exists
+    if (currentValue) {
+      select.value = currentValue;
+    }
+  }
+}
+
+/**
  * Render characteristics table
  */
 function renderCharacteristics() {
@@ -290,8 +344,6 @@ function formatNumberWithPrecision(val, sigDigs) {
   }
   // Otherwise, use default formatting (6 decimals with trailing zeros removed)
   return val.toFixed(6).replace(/0+$/, "").replace(/\.$/, "");
-  }
-  return val;
 }
 
 /**
@@ -420,6 +472,18 @@ export async function openCharModal() {
   modal.classList.add("open");
 
   document.getElementById("PRODUCT_ID").value = currentProductId;
+
+  // Set current date as default issue date
+  const today = new Date();
+  const todayString = today.toISOString().split("T")[0];
+  document.getElementById("ISSUE_DATE").value = todayString;
+
+  // Set default status to Active
+  document.getElementById("STATUS").value = "A";
+
+  // Populate TYPE dropdown
+  populateTypeSelects();
+
   document.getElementById("REVISION_LEVEL").focus();
 }
 
@@ -438,6 +502,9 @@ export async function openEditCharModal(characteristic) {
   editCharErrorBox.classList.remove("show");
   editCharBackdrop.classList.add("open");
   editCharModal.classList.add("open");
+
+  // Populate TYPE dropdown
+  populateTypeSelects();
 
   // Pre-fill with current characteristic data
   document.getElementById("editCharPRODUCT_ID").value =
@@ -581,6 +648,12 @@ export async function saveCharacteristic() {
 
   if (!revisionLevel) {
     showErrorBox("Revision Level is required");
+    return;
+  }
+
+  const name = (document.getElementById("NAME").value || "").trim();
+  if (!name) {
+    showErrorBox("Name is required");
     return;
   }
 

@@ -33,6 +33,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   await loadNcmData();
   await loadSubjects(); // Load subjects for the dropdown
   await loadCauses(); // Load causes for the dropdown
+  await loadNCMTypes(); // Load NCM types for the dropdown
 });
 
 function setupEventListeners() {
@@ -721,6 +722,65 @@ function getHardcodedCauses() {
     "Supplier quality",
     "Handling damage",
     "Documentation error",
+  ];
+}
+
+// Function to fetch NCM Types from the server for the dropdown
+async function loadNCMTypes() {
+  try {
+    const ncmTypesUrl = `${apiUrl}/ncm-type`;
+    const response = await fetch(ncmTypesUrl, { method: "GET" });
+
+    if (!response.ok) {
+      console.error("Response not ok:", response.status, response.statusText);
+      populateNCMTypeDropdown(getHardcodedNCMTypes());
+      return;
+    }
+
+    const ncmTypes = await response.json();
+
+    if (ncmTypes.length === 0) {
+      populateNCMTypeDropdown(getHardcodedNCMTypes());
+      return;
+    }
+
+    populateNCMTypeDropdown(ncmTypes);
+  } catch (error) {
+    console.error("Error fetching NCM types:", error);
+    populateNCMTypeDropdown(getHardcodedNCMTypes());
+  }
+}
+
+function populateNCMTypeDropdown(ncmTypes) {
+  const dropdown = document.getElementById("NCM_TYPE");
+  if (!dropdown) return;
+
+  // Clear existing options except the first one
+  while (dropdown.children.length > 1) {
+    dropdown.removeChild(dropdown.lastChild);
+  }
+
+  // Add NCM type options
+  ncmTypes.forEach((ncmType) => {
+    const option = document.createElement("option");
+    option.value = ncmType.NCM_TYPE || ncmType;
+    option.textContent = ncmType.DESCRIPTION
+      ? `${ncmType.NCM_TYPE} - ${ncmType.DESCRIPTION}`
+      : ncmType.NCM_TYPE || ncmType;
+    dropdown.appendChild(option);
+  });
+}
+
+function getHardcodedNCMTypes() {
+  return [
+    {
+      NCM_TYPE: "VPP",
+      DESCRIPTION: "Verification of Purchased Product (Receiving Inspection)",
+    },
+    { NCM_TYPE: "WIP", DESCRIPTION: "Work In Process (Traveler)" },
+    { NCM_TYPE: "FIN", DESCRIPTION: "Final Inspection" },
+    { NCM_TYPE: "RET", DESCRIPTION: "Returns incl. Complaints" },
+    { NCM_TYPE: "CAL", DESCRIPTION: "Calibration" },
   ];
 }
 

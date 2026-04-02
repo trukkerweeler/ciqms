@@ -3,15 +3,15 @@
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>OP Code Maintenance</title>
+    <title>NCM Type Maintenance</title>
     <link rel="stylesheet" href="css/styles.css" />
-    <link rel="stylesheet" href="css/opcodemaint.css" />
+    <link rel="stylesheet" href="css/ncm-type-maint.css" />
   </head>
   <body>
     <header id="header"></header>
 
     <div class="page-header">
-      <h1>OP Code Maintenance</h1>
+      <h1>NCM Type Maintenance</h1>
       <div class="toolbar">
         <button class="btn-sm btn-add" id="btnAdd">+ Add</button>
       </div>
@@ -21,7 +21,7 @@
       <div class="content">
         <!-- Table Panel -->
         <div class="table-panel">
-          <div class="table-header">All OP Codes</div>
+          <div class="table-header">All NCM Types</div>
           <div id="tableContainer" style="flex: 1; overflow: auto">
             <div class="empty-message">Loading...</div>
           </div>
@@ -33,25 +33,25 @@
     <div class="modal-backdrop" id="backdrop" onclick="closeModal()"></div>
     <div class="modal" id="modal">
       <div class="modal-header">
-        <span id="formTitle">Add New OP Code</span>
+        <span id="formTitle">Add New NCM Type</span>
         <button class="modal-close" onclick="closeModal()">&times;</button>
       </div>
       <div class="modal-body">
         <div id="errorMessage" class="alert alert-error"></div>
         <div id="successMessage" class="alert alert-success"></div>
 
-        <form id="opcodeForm">
+        <form id="ncmTypeForm">
           <div class="form-group">
-            <label for="opcode">
-              OP Code <span class="required">*</span>
+            <label for="ncm_type">
+              NCM Type <span class="required">*</span>
             </label>
             <input
               type="text"
-              id="opcode"
-              name="opcode"
+              id="ncm_type"
+              name="ncm_type"
               maxlength="16"
-              placeholder="e.g., ASSEMBLY"
               required
+              placeholder="e.g., CRITICAL"
             />
           </div>
 
@@ -60,16 +60,8 @@
             <textarea
               id="description"
               name="description"
+              maxlength="40"
               placeholder="Brief description"
-            ></textarea>
-          </div>
-
-          <div class="form-group">
-            <label for="comments">Comments</label>
-            <textarea
-              id="comments"
-              name="comments"
-              placeholder="Additional comments"
             ></textarea>
           </div>
         </form>
@@ -88,7 +80,7 @@
         </button>
         <button
           type="submit"
-          form="opcodeForm"
+          form="ncmTypeForm"
           class="btn btn-primary"
           id="saveButton"
         >
@@ -99,5 +91,5 @@
 
     <footer id="footer"></footer>
   </body>
-  <script type="module" src="/js/opcodemaint.mjs"></script>
+  <script type="module" src="/js/ncm-type-maint.mjs"></script>
 </html>
