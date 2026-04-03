@@ -172,7 +172,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     addCollBtn.type = "submit";
     addCollBtn.classList.add("btn", "btn-plus");
     addCollBtn.id = "btnAddColl";
-    addCollBtn.textContent = "+ Add Collect";
+    addCollBtn.textContent = "+ Add";
     addCollBtn.setAttribute("title", "Click to add a new collect");
 
     addCollBtn.addEventListener("click", (e) => {

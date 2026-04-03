@@ -97,6 +97,16 @@ async function updateAfterSave() {
     );
   }
 
+  const correctionDateElem = document.querySelector("#correctiondate-display");
+  if (correctionDateElem) {
+    if (rec["CORRECTION_DATE"]) {
+      correctionDateElem.innerHTML =
+        "Correction Date:" + " " + rec["CORRECTION_DATE"].substring(0, 10);
+    } else {
+      correctionDateElem.innerHTML = "Correction Date:" + " " + "";
+    }
+  }
+
   const actionerElem = document.querySelector("#actioner");
   if (actionerElem) {
     const actioner = rec["ACTION_BY"] ? rec["ACTION_BY"].toUpperCase() : "";
@@ -475,7 +485,7 @@ fetch(url, { method: "GET" })
         "<br>",
       );
       const correctionDate = document.createElement("p");
-      // correctionDate.setAttribute('class', 'tbl');
+      correctionDate.setAttribute("id", "correctiondate-display");
       correctionDate.setAttribute("class", "actiondate");
       if (record[key]["CORRECTION_DATE"]) {
         correctionDate.innerHTML =

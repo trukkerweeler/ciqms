@@ -789,6 +789,9 @@ fetch(url, { method: "GET" })
                       data: {
                         INPUT_ID: iid,
                         ASSIGNED_TO: newAssignedTo,
+                        RECIPIENT_EMAIL: userEmail,
+                        SUBJECT: emailData.SUBJECT,
+                        BODY: emailData.INPUT_TEXT,
                         ACTION: "A",
                       },
                     }),

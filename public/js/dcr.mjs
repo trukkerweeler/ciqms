@@ -224,6 +224,11 @@ fetch(url, { method: "GET" })
         const closeDialog = document.querySelector("#closeDialog");
         closeDialog.showModal();
 
+        // Set both dates to current date
+        const today = new Date().toISOString().split("T")[0];
+        document.querySelector("#decisiondate").value = today;
+        document.querySelector("#docnewrevdate").value = today;
+
         // Listen for the cancel button click
         const cancelClose = document.querySelector("#btnCloseClose");
         cancelClose.addEventListener("click", async (event) => {

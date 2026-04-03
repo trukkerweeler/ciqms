@@ -321,20 +321,27 @@ router.post("/inputs_notify", (req, res) => {
       }
       // Support both direct and nested (data) payloads
       const data = req.body.data ? req.body.data : req.body;
-      const { INPUT_ID, ASSIGNED_TO, ACTION } = data;
+      const { INPUT_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SUBJECT, BODY, ACTION } =
+        data;
 
       // Map ACTION to EMAIL_TYPE
       const emailTypeMap = { A: "ASSIGNMENT", C: "CLOSEOUT", R: "REQUEST" };
       const emailType = emailTypeMap[ACTION] || ACTION;
 
-      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, NULL, NOW(), ?, ?, ?)`;
+      const emailNotes =
+        SUBJECT && BODY
+          ? `Subject: ${SUBJECT}\n\nBody: ${BODY}`
+          : `Input notification - Action: ${ACTION}`;
+
+      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)`;
       const values = [
         "INPUT",
         INPUT_ID,
         ASSIGNED_TO,
+        RECIPIENT_EMAIL || null,
         "SENT",
         emailType,
-        `Input notification - Action: ${ACTION}`,
+        emailNotes,
       ];
 
       connection.query(query, values, (err) => {

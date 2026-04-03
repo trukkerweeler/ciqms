@@ -1,0 +1,90 @@
+/* Collects Page Styles */
+
+body {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
+header {
+  flex-shrink: 0;
+}
+
+nav {
+  flex-shrink: 0;
+}
+
+#main-content {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.section {
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  overflow: hidden;
+}
+
+.page-header-div {
+  flex-shrink: 0;
+  padding: 2px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+#column-controls {
+  margin-left: auto;
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+#prod-plan-container {
+  flex: 1;
+  overflow: auto;
+}
+
+#create-product-plan-form {
+  padding: 12px !important;
+  gap: 6px;
+}
+
+#create-product-plan-form h2 {
+  margin: 0 0 8px 0 !important;
+  padding: 0 !important;
+  font-size: 1.1rem;
+}
+
+#create-product-plan-form label {
+  margin: 0 0 2px 0 !important;
+  padding: 0 !important;
+  font-size: 0.9rem;
+}
+
+#create-product-plan-form input,
+#create-product-plan-form select {
+  margin: 0 0 6px 0 !important;
+  padding: 4px 6px !important;
+  font-size: 0.9rem;
+}
+
+#create-product-plan-form .dialog-actions {
+  margin: 8px 0 0 0 !important;
+  padding: 0 !important;
+  gap: 8px;
+}
+
+/* Input styles for uppercase text */
+#product-id,
+#product-rev-level,
+#po-number,
+#lot-number,
+#assigned-to {
+  text-transform: uppercase;
+}
