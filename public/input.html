@@ -135,6 +135,48 @@
         </button>
       </form>
     </dialog>
+    <dialog id="collectDataDialog01TE" class="editDialog">
+      <div class="dialogTitle">Temperature Data Collection</div>
+      <div id="collectDataDisplay01TE" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectForm01TE">
+        <label for="PERCENT_VALUE">Percent:</label>
+        <input
+          type="text"
+          id="PERCENT_VALUE"
+          name="PERCENT_VALUE"
+          placeholder="Enter percent value"
+        />
+        <label for="FAHRENHEIT_VALUE">Fahrenheit:</label>
+        <input
+          type="text"
+          id="FAHRENHEIT_VALUE"
+          name="FAHRENHEIT_VALUE"
+          placeholder="Enter Fahrenheit value"
+        />
+        <label for="SAMPLE_DATE_01TE">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_01TE"
+          name="SAMPLE_DATE_01TE"
+          required
+        />
+        <button
+          class="btnDialog"
+          id="cancelCollData01TE"
+          type="submit"
+          formmethod="dialog"
+        >
+          Cancel
+        </button>
+        <button
+          class="btnDialog dialogSaveBtn"
+          id="saveCollData01TE"
+          type="submit"
+        >
+          Save
+        </button>
+      </form>
+    </dialog>
     <dialog id="collectDataDialog2" class="editDialog">
       <div class="dialogTitle">Supplier Data Collection</div>
       <form class="dialogForm" id="collectForm2">

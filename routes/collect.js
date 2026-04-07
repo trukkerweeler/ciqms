@@ -145,10 +145,10 @@ router.post("/prod-plan-data", (req, res) => {
       ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
       const values = [
-        PRODUCT_ID,
-        PRODUCT_REV_LEVEL,
-        OPERATION_NO,
-        COLLECTION_DATE,
+        PRODUCT_ID || null,
+        PRODUCT_REV_LEVEL || null,
+        OPERATION_NO || null,
+        COLLECTION_DATE || null,
         PO_NUMBER || null,
         LOT_NUMBER || null,
         LOT_SIZE || null,
@@ -157,37 +157,46 @@ router.post("/prod-plan-data", (req, res) => {
         ACCEPTED || null,
         REJECTED || null,
         NCM_ID || null,
-        CREATE_BY,
-        CREATE_DATE,
+        CREATE_BY || null,
+        CREATE_DATE || null,
       ];
 
       connection.query(query, values, (err, result) => {
         if (err) {
           console.error("Error inserting PRODUCT_PLAN_DATA: " + err);
-          res.sendStatus(500);
-        } else {
-          // Return the full saved record so frontend can display it immediately
-          res.json({
-            success: true,
-            record: {
-              PRODUCT_COLLECT_ID: result.insertId,
-              PRODUCT_ID,
-              PRODUCT_REV_LEVEL,
-              OPERATION_NO,
-              COLLECTION_DATE,
-              PO_NUMBER,
-              LOT_NUMBER,
-              LOT_SIZE,
-              ASSIGNED_TO,
-              DUE_DATE,
-              ACCEPTED,
-              REJECTED,
-              NCM_ID,
-              CREATE_BY,
-              CREATE_DATE,
-            },
+          res.status(500).json({
+            success: false,
+            error: "Failed to insert record: " + err.message,
           });
+          connection.end();
+          return;
         }
+
+        // Get the auto-generated ID
+        const PRODUCT_COLLECT_ID = result.insertId.toString().padStart(7, "0");
+
+        // Return the full saved record so frontend can display it immediately
+        res.json({
+          success: true,
+          record: {
+            PRODUCT_COLLECT_ID,
+            PRODUCT_ID,
+            PRODUCT_REV_LEVEL,
+            OPERATION_NO,
+            COLLECTION_DATE,
+            PO_NUMBER,
+            LOT_NUMBER,
+            LOT_SIZE,
+            ASSIGNED_TO,
+            DUE_DATE,
+            ACCEPTED,
+            REJECTED,
+            NCM_ID,
+            CREATE_BY,
+            CREATE_DATE,
+          },
+        });
+
         connection.end();
       });
     });

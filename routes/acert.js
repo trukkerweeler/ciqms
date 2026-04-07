@@ -17,6 +17,17 @@ function getDbConnection() {
   });
 }
 
+// Shared DB connection function for quality database
+function getQualityDbConnection() {
+  return mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "quality",
+  });
+}
+
 // Get all distinct SERIAL_NUMBERs in lineage for a given JOB (excluding PRODUCT_LINE = 'HW')
 router.get("/lineage/:job", async (req, res) => {
   try {
@@ -133,6 +144,129 @@ router.post("/process", async (req, res) => {
         connection.end();
       } catch {}
     }
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==================================================
+// POST 01TE temperature data collection
+router.post("/:iid", (req, res) => {
+  try {
+    const connection = getQualityDbConnection();
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+
+      let key = Object.keys(req.body)[0];
+      const iid = req.params.iid;
+      const percent = req.body[key].PERCENT;
+      const fahrenheit = req.body[key].FAHRENHEIT;
+
+      let insertCount = 0;
+      let errorOccurred = false;
+
+      // Only insert PERCENT entry if provided
+      if (percent) {
+        const percentQuery = `INSERT INTO EIGHTYFIVETWELVE (INPUT_ID, UNIT, VALUE) 
+          VALUES ('${iid}', 'Percent', '${percent}')`;
+
+        connection.query(percentQuery, (err, rows, fields) => {
+          if (err) {
+            console.log(
+              "Failed to insert Percent into EIGHTYFIVETWELVE: " + err,
+            );
+            errorOccurred = true;
+          }
+          insertCount++;
+          checkCompletion();
+        });
+      } else {
+        insertCount++;
+      }
+
+      // Only insert FAHRENHEIT entry if provided
+      if (fahrenheit) {
+        const fahrenheitQuery = `INSERT INTO EIGHTYFIVETWELVE (INPUT_ID, UNIT, VALUE) 
+          VALUES ('${iid}', 'F', '${fahrenheit}')`;
+
+        connection.query(fahrenheitQuery, (err, rows, fields) => {
+          if (err) {
+            console.log(
+              "Failed to insert Fahrenheit into EIGHTYFIVETWELVE: " + err,
+            );
+            errorOccurred = true;
+          }
+          insertCount++;
+          checkCompletion();
+        });
+      } else {
+        insertCount++;
+      }
+
+      function checkCompletion() {
+        if (insertCount === 2) {
+          try {
+            if (connection && connection.end) connection.end();
+          } catch {}
+          if (errorOccurred) {
+            res.sendStatus(500);
+          } else {
+            res.json({ success: true });
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.log("Error connecting to Db (acert POST)");
+    res.status(500).json({ error: err.message });
+  }
+});
+
+// ==================================================
+// GET 01TE temperature data
+router.get("/temp-data/:iid", (req, res) => {
+  try {
+    const connection = getQualityDbConnection();
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+
+      const iid = req.params.iid;
+      const query = `SELECT UNIT, VALUE FROM EIGHTYFIVETWELVE WHERE INPUT_ID = '${iid}'`;
+
+      connection.query(query, (err, rows, fields) => {
+        try {
+          if (connection && connection.end) connection.end();
+        } catch {}
+        if (err) {
+          console.log("Failed to query EIGHTYFIVETWELVE: " + err);
+          res.sendStatus(500);
+          return;
+        }
+
+        // Transform rows into object with percent and fahrenheit properties
+        const result = {
+          percent: null,
+          fahrenheit: null,
+        };
+
+        rows.forEach((row) => {
+          if (row.UNIT === "Percent") {
+            result.percent = row.VALUE;
+          } else if (row.UNIT === "Fahrenheit" || row.UNIT === "F") {
+            result.fahrenheit = row.VALUE;
+          }
+        });
+
+        res.json(result);
+      });
+    });
+  } catch (err) {
+    console.log("Error connecting to Db (acert temp-data)");
     res.status(500).json({ error: err.message });
   }
 });

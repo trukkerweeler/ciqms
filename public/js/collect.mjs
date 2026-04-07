@@ -85,6 +85,11 @@ function disableCloseButton() {
 // Helper function to update DOM after AJAX save
 async function updateAfterSave() {
   const response = await fetch(url, { method: "GET" });
+  if (!response.ok) {
+    throw new Error(
+      `Failed to fetch corrective record: ${response.status} ${response.statusText}`,
+    );
+  }
   const record = await response.json();
   const rec = record[0];
 
@@ -117,7 +122,14 @@ async function updateAfterSave() {
 }
 
 fetch(url, { method: "GET" })
-  .then((response) => response.json())
+  .then((response) => {
+    if (!response.ok) {
+      throw new Error(
+        `Failed to fetch corrective record: ${response.status} ${response.statusText}`,
+      );
+    }
+    return response.json();
+  })
   .then(async (record) => {
     // console.log(record);
     let caid = record[0]["CORRECTIVE_ID"];

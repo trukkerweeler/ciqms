@@ -512,6 +512,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         return;
       }
 
+      if (!data.COLLECTION_DATE) {
+        alert("Collection Date is required.");
+        return;
+      }
+
       // Validate ASSIGNED_TO field - no spaces allowed
       if (data.ASSIGNED_TO && data.ASSIGNED_TO.includes(" ")) {
         alert(
@@ -595,7 +600,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
         body: JSON.stringify(data),
       })
-        .then((response) => response.json())
+        .then((response) => {
+          if (!response.ok) {
+            throw new Error(
+              `Failed to create record: ${response.status} ${response.statusText}`,
+            );
+          }
+          return response.json();
+        })
         .then((result) => {
           if (result.success && result.record) {
             // Close the dialog
@@ -613,7 +625,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             getRecords();
           } else {
             console.error("Error creating record:", result);
-            alert("Error saving record. Please try again.");
+            const errorMsg =
+              result.error || "Error saving record. Please try again.";
+            alert(errorMsg);
           }
         })
         .catch((error) => {

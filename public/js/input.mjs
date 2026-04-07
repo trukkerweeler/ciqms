@@ -31,7 +31,11 @@ const apiUrls = {
   input: `${apiUrl}/input/`,
   csr: `${apiUrl}/csr/`,
   ssr: `${apiUrl}/ssr/`,
+  acert: `${apiUrl}/acert/`,
 };
+
+// Store current record subject for context
+let currentSubject = "";
 
 // Validation helper for username fields (ending with _BY or _TO)
 function validateUsernameField(fieldName, fieldValue) {
@@ -77,6 +81,10 @@ document.addEventListener("click", (e) => {
     const dlg = document.getElementById("collectDataDialog");
     if (dlg) dlg.close();
   }
+  if (e.target && e.target.id === "cancelCollData01TE") {
+    const dlg = document.getElementById("collectDataDialog01TE");
+    if (dlg) dlg.close();
+  }
 });
 // Handle save for collect data dialog and POST to /csr/:iid
 document.addEventListener("submit", async (e) => {
@@ -107,17 +115,102 @@ document.addEventListener("submit", async (e) => {
       });
       if (!res.ok) throw new Error("Failed to save data");
       if (dlg) dlg.close();
+      alert("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for 01TE collect data dialog
+  if (e.target && e.target.id === "collectForm01TE") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog01TE");
+    const form = e.target;
+    try {
+      const percent = form.PERCENT_VALUE.value.trim();
+      const fahrenheit = form.FAHRENHEIT_VALUE.value.trim();
+
+      // Require at least one value
+      if (!percent && !fahrenheit) {
+        alert("Please enter either a Percent or Fahrenheit value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        PERCENT: percent || null,
+        FAHRENHEIT: fahrenheit || null,
+      };
+      const url = `${apiUrls.acert}${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      alert("Data saved successfully");
     } catch (err) {
       alert("Error saving data: " + err.message);
     }
   }
 });
 // Show collect data dialog when Collect button is clicked
-document.addEventListener("click", (e) => {
+document.addEventListener("click", async (e) => {
   if (e.target && e.target.id === "btnCollData") {
     e.preventDefault();
-    const dlg = document.getElementById("collectDataDialog");
-    if (dlg) dlg.showModal();
+
+    // Show appropriate dialog based on subject
+    if (currentSubject === "01TE") {
+      const dlg = document.getElementById("collectDataDialog01TE");
+      if (dlg) {
+        // Fetch and display existing temperature data
+        const tempData = await fetch01TETemperatureData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplay01TE",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && (tempData.percent || tempData.fahrenheit)) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.percent) {
+              const percentP = document.createElement("p");
+              percentP.style.margin = "5px 0";
+              percentP.textContent = `Percent: ${tempData.percent}`;
+              dataContainer.appendChild(percentP);
+            }
+
+            if (tempData.fahrenheit) {
+              const fahrenheitP = document.createElement("p");
+              fahrenheitP.style.margin = "5px 0";
+              fahrenheitP.textContent = `Fahrenheit: ${tempData.fahrenheit}`;
+              dataContainer.appendChild(fahrenheitP);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else {
+      // Default to CSR collect dialog for all other subjects
+      const dlg = document.getElementById("collectDataDialog");
+      if (dlg) dlg.showModal();
+    }
   }
 });
 
@@ -127,6 +220,18 @@ const main = document.querySelector("main");
 // Clear main element
 while (main.firstChild) {
   main.removeChild(main.firstChild);
+}
+
+// Helper function to fetch 01TE temperature data
+async function fetch01TETemperatureData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching temperature data:", err);
+    return null;
+  }
 }
 
 // Helper function to update DOM after AJAX save
@@ -191,6 +296,9 @@ fetch(url, { method: "GET" })
   .then(async (record) => {
     for (const key in record) {
       const rec = record[key];
+
+      // Store the current subject for use in collect dialog
+      currentSubject = rec["SUBJECT"] || "";
 
       // Create detail section
       const detailSection = createElement("section", {
