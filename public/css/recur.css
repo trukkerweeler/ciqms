@@ -1,0 +1,64 @@
+/* Recurring Inputs Table Styling */
+
+.table-container .data-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+.table-container .data-table thead th,
+.table-container .data-table tbody td {
+  padding: 12px;
+  text-align: left;
+  border: 1px solid #ddd;
+  word-wrap: break-word;
+  overflow-wrap: break-word;
+}
+
+.table-container .data-table thead th {
+  background-color: #333;
+  color: #fff;
+  font-weight: bold;
+}
+
+.table-container .data-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+/* Column widths for recurring inputs table */
+.table-container .data-table thead th:nth-child(1),
+.table-container .data-table tbody td:nth-child(1) {
+  width: 150px !important;
+  min-width: 150px;
+}
+
+.table-container .data-table thead th:nth-child(2),
+.table-container .data-table tbody td:nth-child(2) {
+  width: 120px !important;
+  min-width: 120px;
+}
+
+.table-container .data-table thead th:nth-child(3),
+.table-container .data-table tbody td:nth-child(3) {
+  width: 140px !important;
+  min-width: 140px;
+}
+
+.table-container .data-table thead th:nth-child(4),
+.table-container .data-table tbody td:nth-child(4) {
+  width: 120px !important;
+  min-width: 120px;
+}
+
+.table-container .data-table thead th:nth-child(5),
+.table-container .data-table tbody td:nth-child(5) {
+  width: 100px !important;
+  min-width: 100px;
+}
+
+.table-container .data-table thead th:nth-child(6),
+.table-container .data-table tbody td:nth-child(6) {
+  width: 80px !important;
+  min-width: 80px;
+  text-align: center;
+}

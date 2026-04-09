@@ -52,7 +52,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /**
- * Load corrective data from the server and display it in a table
+ * Load corrective data from the server and display it in ./a table
  */
 async function loadCorrectiveData() {
   try {

@@ -13,7 +13,7 @@ function createCorrectiveFolder(correctiveId, caTitle = "") {
     // Get 4-digit current year
     const currentYear = new Date().getFullYear().toString();
 
-    const caFilesLocation = `K:\\Quality - Records\\10200 - Corrective Actions\\${currentYear}`;
+    const caFilesLocation = `\\\\fs1\\Common\\Quality - Records\\10200 - Corrective Actions\\${currentYear}`;
 
     // Check if the year folder exists, if not create it
     if (!fs.existsSync(caFilesLocation)) {
