@@ -84,7 +84,7 @@ document.addEventListener("DOMContentLoaded", async () => {
         closeButton.setAttribute("class", "close-button");
 
         // Disable and grey out the close button if already closed
-        if (record[0].CLOSED === "Y" || record[0].CLOSED_DATE) {
+        if (record[0].PROJECT_CLOSED === "Y") {
           closeButton.disabled = true;
           closeButton.style.opacity = "0.5";
           closeButton.style.cursor = "not-allowed";
@@ -99,16 +99,30 @@ document.addEventListener("DOMContentLoaded", async () => {
           e.preventDefault();
           const closeUrl = `${apiUrl}/project/close/${projectId}`;
           fetch(closeUrl, { method: "PUT" })
-            // if the response is 200, reload the page
+            // if the response is 200, disable the button and show success
             .then((response) => {
               if (response.status === 200) {
-                // Disable and grey out the button before reload
+                // Immediately disable and grey out the button
                 closeButton.disabled = true;
                 closeButton.style.opacity = "0.5";
                 closeButton.style.cursor = "not-allowed";
                 closeButton.style.backgroundColor = "#e0e0e0";
+                closeButton.style.pointerEvents = "none";
                 closeButton.title = "This project is already closed";
-                location.reload();
+                closeButton.textContent = "Project Closed ✓";
+
+                // Show a success message
+                const successMsg = document.createElement("p");
+                successMsg.textContent = "Project closed successfully!";
+                successMsg.style.color = "green";
+                successMsg.style.fontWeight = "bold";
+                successMsg.style.marginTop = "10px";
+                descriptionSection.appendChild(successMsg);
+
+                // Reload after a brief delay so user sees the feedback
+                setTimeout(() => {
+                  location.reload();
+                }, 2000);
               }
 
               // if the response is 500, display an error message
@@ -117,6 +131,14 @@ document.addEventListener("DOMContentLoaded", async () => {
                 message.textContent = "Error closing project " + projectId;
                 main.appendChild(message);
               }
+            })
+            .catch((error) => {
+              console.error("Error closing project:", error);
+              const errorMsg = document.createElement("p");
+              errorMsg.textContent = "Error closing project. Please try again.";
+              errorMsg.style.color = "red";
+              errorMsg.style.fontWeight = "bold";
+              descriptionSection.appendChild(errorMsg);
             });
         });
       }

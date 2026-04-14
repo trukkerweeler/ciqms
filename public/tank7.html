@@ -1,0 +1,106 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Tank 7 Trend Report" />
+    <meta name="author" content="CI QMS" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>Tank 7 Trend</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <div class="recordsaddrecordheading">
+        <h1>Tank 7 Trend Report</h1>
+        <p
+          id="tank-info"
+          style="color: #666; font-size: 0.95em; margin-top: 5px"
+        ></p>
+      </div>
+
+      <div
+        style="
+          margin-top: 20px;
+          padding: 20px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        "
+      >
+        <h2 style="margin-top: 0; color: #2c3e50">Temperature Trend (°F)</h2>
+        <div
+          id="tempStatusBanner"
+          style="
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+          "
+        ></div>
+        <div style="position: relative; height: 400px; margin-bottom: 10px">
+          <canvas id="temperatureChart"></canvas>
+        </div>
+        <p style="color: #666; font-size: 0.9em">
+          Temperature measurements with control limits (LCL: 120°F, UCL: 160°F)
+        </p>
+      </div>
+
+      <div
+        style="
+          margin-top: 20px;
+          padding: 20px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        "
+      >
+        <h2 style="margin-top: 0; color: #2c3e50">Concentration Trend (%)</h2>
+        <div
+          id="percentStatusBanner"
+          style="
+            padding: 12px;
+            margin-bottom: 15px;
+            border-radius: 4px;
+            font-weight: bold;
+            text-align: center;
+          "
+        ></div>
+        <div style="position: relative; height: 400px; margin-bottom: 10px">
+          <canvas id="percentChart"></canvas>
+        </div>
+        <p style="color: #666; font-size: 0.9em">
+          Percent measurements with control limits (LCL: 10%, UCL: 25%)
+        </p>
+      </div>
+
+      <div style="margin-top: 20px; text-align: center">
+        <a
+          href="reports-chem.html"
+          class="btn"
+          style="
+            padding: 0.75rem 1.5rem;
+            background: #2c3e50;
+            color: white;
+            text-decoration: none;
+            border-radius: 4px;
+            display: inline-block;
+          "
+        >
+          Back to Tank Reports
+        </a>
+      </div>
+    </main>
+    <footer id="footer"></footer>
+
+    <script type="module" src="/js/tank.mjs"></script>
+  </body>
+</html>

@@ -34,6 +34,11 @@
       "h2": "Open Document Change Request Trend (13 Months)",
       "a": "Go to Open DCR Trend Report",
       "html": "dcrrptopen13.html"
+    },
+    {
+      "h2": "Chemical Tank Trends",
+      "a": "Go to Chemical Tank Trend Reports",
+      "html": "reports-chem.html"
     }
   ]
 }

@@ -39,7 +39,7 @@ This corrective action has been closed. Thank you for your attention to this mat
 This is an automated notification from the Quality Management System.`,
         sent_by: closedBy,
         email_status: "SENT",
-        email_type: "CLOSEOUT",
+        email_type: "C",
         notes: `Automatic closeout email for CA ${caId}`,
       }),
     });

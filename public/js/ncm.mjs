@@ -56,6 +56,18 @@ async function fetchCauses() {
   }
 }
 
+async function fetchNCMTypes() {
+  try {
+    const typesUrl = `${apiUrl}/ncm-type/`;
+    const response = await fetch(typesUrl, { method: "GET" });
+    const types = await response.json();
+    return types;
+  } catch (error) {
+    console.error("Error fetching NCM types:", error);
+    return [];
+  }
+}
+
 // Validation helper for username fields (ending with _BY or _TO)
 function validateUsernameField(fieldName, fieldValue) {
   const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
@@ -101,7 +113,11 @@ async function refreshNCMData() {
   try {
     const response = await fetch(url, { method: "GET" });
     const record = await response.json();
-    renderNCMDetail(record);
+    // Pre-fetch subjects, causes, and NCM types for display mapping
+    const subjects = await fetchSubjects();
+    const causes = await fetchCauses();
+    const ncmTypes = await fetchNCMTypes();
+    renderNCMDetail(record, subjects, causes, ncmTypes);
   } catch (error) {
     console.error("Error refreshing NCM data:", error);
     alert("Error refreshing data. Please try again.");
@@ -109,7 +125,30 @@ async function refreshNCMData() {
 }
 
 // Function to render NCM detail
-async function renderNCMDetail(record) {
+async function renderNCMDetail(
+  record,
+  subjects = [],
+  causes = [],
+  ncmTypes = [],
+) {
+  // Create a map of subject codes to descriptions for easy lookup
+  const subjectMap = {};
+  subjects.forEach((subj) => {
+    subjectMap[subj.SUBJECT] = subj.DESCRIPTION;
+  });
+
+  // Create a map of cause codes to descriptions for easy lookup
+  const causeMap = {};
+  causes.forEach((cause) => {
+    causeMap[cause.CAUSE] = cause.DESCRIPTION;
+  });
+
+  // Create a map of NCM type codes to descriptions for easy lookup
+  const ncmTypeMap = {};
+  ncmTypes.forEach((type) => {
+    ncmTypeMap[type.NCM_TYPE] = type.DESCRIPTION;
+  });
+
   // Delete the child nodes of the main element
   while (main.firstChild) {
     main.removeChild(main.firstChild);
@@ -193,8 +232,22 @@ async function renderNCMDetail(record) {
       due_date.setAttribute("class", "tbl");
 
       const ncmType = document.createElement("p");
-      ncmType.textContent = "Type:" + " " + record[key]["NCM_TYPE"];
       ncmType.setAttribute("class", "tbl");
+      if (
+        record[key]["NCM_TYPE"] === null ||
+        record[key]["NCM_TYPE"] === "" ||
+        record[key]["NCM_TYPE"] === undefined
+      ) {
+        ncmType.textContent = "Type:" + " --";
+      } else {
+        const typeCode = record[key]["NCM_TYPE"];
+        const typeDesc = ncmTypeMap[typeCode] || "";
+        if (typeDesc) {
+          ncmType.textContent = "Type:" + " " + typeCode + " - " + typeDesc;
+        } else {
+          ncmType.textContent = "Type:" + " " + typeCode;
+        }
+      }
 
       const subject = document.createElement("p");
       subject.setAttribute("class", "tbl");
@@ -205,7 +258,14 @@ async function renderNCMDetail(record) {
       ) {
         subject.textContent = "Subject:" + " --";
       } else {
-        subject.textContent = "Subject:" + " " + record[key]["SUBJECT"];
+        const subjectCode = record[key]["SUBJECT"];
+        const subjectDesc = subjectMap[subjectCode] || "";
+        if (subjectDesc) {
+          subject.textContent =
+            "Subject:" + " " + subjectCode + " - " + subjectDesc;
+        } else {
+          subject.textContent = "Subject:" + " " + subjectCode;
+        }
       }
 
       const cause = document.createElement("p");
@@ -217,7 +277,13 @@ async function renderNCMDetail(record) {
       ) {
         cause.textContent = "Cause:" + " --";
       } else {
-        cause.textContent = "Cause:" + " " + record[key]["CAUSE"];
+        const causeCode = record[key]["CAUSE"];
+        const causeDesc = causeMap[causeCode] || "";
+        if (causeDesc) {
+          cause.textContent = "Cause:" + " " + causeCode + " - " + causeDesc;
+        } else {
+          cause.textContent = "Cause:" + " " + causeCode;
+        }
       }
 
       const productId = document.createElement("p");

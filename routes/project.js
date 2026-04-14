@@ -75,6 +75,8 @@ router.get("/:id", (req, res) => {
         , p.NAME
         , p.LEADER
         , p.PROJECT_TYPE
+        , p.CLOSED as PROJECT_CLOSED
+        , p.CLOSED_DATE as PROJECT_CLOSED_DATE
         , pd.DESCRIPTION
         FROM quality.PEOPLE_INPUT pi left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID
         left join PPL_INPT_FLUP pif on pi.INPUT_ID = pif.INPUT_ID
