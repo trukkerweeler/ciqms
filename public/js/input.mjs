@@ -37,6 +37,48 @@ const apiUrls = {
 // Store current record subject for context
 let currentSubject = "";
 
+// Helper function to show timed notification banner
+function showNotification(message, duration = 3000) {
+  const banner = document.createElement("div");
+  banner.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: #4caf50;
+    color: white;
+    padding: 16px 24px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 14px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+  `;
+  banner.textContent = message;
+  document.body.appendChild(banner);
+
+  // Add keyframe animation
+  if (!document.querySelector("style[data-notification]")) {
+    const style = document.createElement("style");
+    style.setAttribute("data-notification", "true");
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  setTimeout(() => {
+    banner.style.animation = "slideOut 0.3s ease-out";
+    setTimeout(() => banner.remove(), 300);
+  }, duration);
+}
+
 // Validation helper for username fields (ending with _BY or _TO)
 function validateUsernameField(fieldName, fieldValue) {
   const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
@@ -85,6 +127,38 @@ document.addEventListener("click", (e) => {
     const dlg = document.getElementById("collectDataDialog01TE");
     if (dlg) dlg.close();
   }
+  if (e.target && e.target.id === "cancelCollData03TE") {
+    const dlg = document.getElementById("collectDataDialog03TE");
+    if (dlg) dlg.close();
+  }
+  if (e.target && e.target.id === "cancelCollData05TE") {
+    const dlg = document.getElementById("collectDataDialog05TE");
+    if (dlg) dlg.close();
+  }
+  if (e.target && e.target.id === "cancelCollData07TE") {
+    const dlg = document.getElementById("collectDataDialog07TE");
+    if (dlg) dlg.close();
+  }
+  if (e.target && e.target.id === "cancelCollData08TE") {
+    const dlg = document.getElementById("collectDataDialog08TE");
+    if (dlg) dlg.close();
+  }
+  if (e.target && e.target.id === "cancelCollData11PH") {
+    const dlg = document.getElementById("collectDataDialog11PH");
+    if (dlg) dlg.close();
+  }
+  if (e.target && e.target.id === "cancelCollData13TE") {
+    const dlg = document.getElementById("collectDataDialog13TE");
+    if (dlg) dlg.close();
+  }
+  if (e.target && e.target.id === "cancelCollDataQTPH") {
+    const dlg = document.getElementById("collectDataDialogQTPH");
+    if (dlg) dlg.close();
+  }
+  if (e.target && e.target.id === "cancelCollDataQTPC") {
+    const dlg = document.getElementById("collectDataDialogQTPC");
+    if (dlg) dlg.close();
+  }
 });
 // Handle save for collect data dialog and POST to /csr/:iid
 document.addEventListener("submit", async (e) => {
@@ -115,7 +189,213 @@ document.addEventListener("submit", async (e) => {
       });
       if (!res.ok) throw new Error("Failed to save data");
       if (dlg) dlg.close();
-      alert("Data saved successfully");
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for 07TE collect data dialog
+  if (e.target && e.target.id === "collectForm07TE") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog07TE");
+    const form = e.target;
+    try {
+      const fahrenheit = form.FAHRENHEIT_VALUE_07TE.value.trim();
+
+      // Require Fahrenheit value
+      if (!fahrenheit) {
+        alert("Please enter a Fahrenheit value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        FAHRENHEIT: fahrenheit || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for 13TE collect data dialog
+  if (e.target && e.target.id === "collectForm13TE") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog13TE");
+    const form = e.target;
+    try {
+      const ph = form.PH_VALUE_13TE.value.trim();
+
+      // Require pH value
+      if (!ph) {
+        alert("Please enter a pH value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        PH: ph || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for 08TE collect data dialog
+  if (e.target && e.target.id === "collectForm08TE") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog08TE");
+    const form = e.target;
+    try {
+      const ph = form.PH_VALUE.value.trim();
+      const fahrenheit = form.FAHRENHEIT_VALUE_08TE.value.trim();
+
+      // Require at least one value
+      if (!ph && !fahrenheit) {
+        alert("Please enter either a pH or Fahrenheit value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        PH: ph || null,
+        FAHRENHEIT: fahrenheit || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for 11PH collect data dialog
+  if (e.target && e.target.id === "collectForm11PH") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog11PH");
+    const form = e.target;
+    try {
+      const ph = form.PH_VALUE_11PH.value.trim();
+
+      // Require pH value
+      if (!ph) {
+        alert("Please enter a pH value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        PH: ph || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for QTPH collect data dialog
+  if (e.target && e.target.id === "collectFormQTPH") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialogQTPH");
+    const form = e.target;
+    try {
+      const ph = form.PH_VALUE_QTPH.value.trim();
+
+      // Require pH value
+      if (!ph) {
+        alert("Please enter a pH value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        PH: ph || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for QTPC collect data dialog
+  if (e.target && e.target.id === "collectFormQTPC") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialogQTPC");
+    const form = e.target;
+    try {
+      const seconds = form.SECONDS_VALUE_QTPC.value.trim();
+
+      // Require seconds value
+      if (!seconds) {
+        alert("Please enter a time value in seconds");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        SECONDS: seconds || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
     } catch (err) {
       alert("Error saving data: " + err.message);
     }
@@ -141,7 +421,7 @@ document.addEventListener("submit", async (e) => {
         PERCENT: percent || null,
         FAHRENHEIT: fahrenheit || null,
       };
-      const url = `${apiUrls.acert}${iid}`;
+      const url = `${apiUrls.input}collect/${iid}`;
       const body = {};
       body["data"] = data;
       const res = await fetch(url, {
@@ -151,7 +431,75 @@ document.addEventListener("submit", async (e) => {
       });
       if (!res.ok) throw new Error("Failed to save data");
       if (dlg) dlg.close();
-      alert("Data saved successfully");
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for 05TE collect data dialog
+  if (e.target && e.target.id === "collectForm05TE") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog05TE");
+    const form = e.target;
+    try {
+      const fahrenheit = form.FAHRENHEIT_VALUE_05TE.value.trim();
+
+      // Require Fahrenheit value
+      if (!fahrenheit) {
+        alert("Please enter a Fahrenheit value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        FAHRENHEIT: fahrenheit || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
+    } catch (err) {
+      alert("Error saving data: " + err.message);
+    }
+  }
+
+  // Handle save for 03TE collect data dialog
+  if (e.target && e.target.id === "collectForm03TE") {
+    e.preventDefault();
+    const dlg = document.getElementById("collectDataDialog03TE");
+    const form = e.target;
+    try {
+      const fahrenheit = form.FAHRENHEIT_VALUE_03TE.value.trim();
+
+      // Require Fahrenheit value
+      if (!fahrenheit) {
+        alert("Please enter a Fahrenheit value");
+        return;
+      }
+
+      const data = {
+        INPUT_ID: iid,
+        FAHRENHEIT: fahrenheit || null,
+      };
+      const url = `${apiUrls.input}collect/${iid}`;
+      const body = {};
+      body["data"] = data;
+      const res = await fetch(url, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(body),
+      });
+      if (!res.ok) throw new Error("Failed to save data");
+      if (dlg) dlg.close();
+      showNotification("Data saved successfully");
     } catch (err) {
       alert("Error saving data: " + err.message);
     }
@@ -206,6 +554,301 @@ document.addEventListener("click", async (e) => {
 
         dlg.showModal();
       }
+    } else if (currentSubject === "03TE") {
+      const dlg = document.getElementById("collectDataDialog03TE");
+      if (dlg) {
+        // Fetch and display existing temperature data
+        const tempData = await fetch03TETemperatureData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplay03TE",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && tempData.fahrenheit) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.fahrenheit) {
+              const fahrenheitP = document.createElement("p");
+              fahrenheitP.style.margin = "5px 0";
+              fahrenheitP.textContent = `Fahrenheit: ${tempData.fahrenheit}`;
+              dataContainer.appendChild(fahrenheitP);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else if (currentSubject === "05TE") {
+      const dlg = document.getElementById("collectDataDialog05TE");
+      if (dlg) {
+        // Fetch and display existing temperature data
+        const tempData = await fetch05TETemperatureData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplay05TE",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && tempData.fahrenheit) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.fahrenheit) {
+              const fahrenheitP = document.createElement("p");
+              fahrenheitP.style.margin = "5px 0";
+              fahrenheitP.textContent = `Fahrenheit: ${tempData.fahrenheit}`;
+              dataContainer.appendChild(fahrenheitP);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else if (currentSubject === "07TE") {
+      const dlg = document.getElementById("collectDataDialog07TE");
+      if (dlg) {
+        // Fetch and display existing temperature data
+        const tempData = await fetch07TETemperatureData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplay07TE",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && tempData.fahrenheit) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.fahrenheit) {
+              const fahrenheitItem = document.createElement("div");
+              fahrenheitItem.textContent = `Fahrenheit: ${tempData.fahrenheit}°F`;
+              fahrenheitItem.style.marginTop = "5px";
+              dataContainer.appendChild(fahrenheitItem);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else if (currentSubject === "08TE") {
+      const dlg = document.getElementById("collectDataDialog08TE");
+      if (dlg) {
+        // Fetch and display existing pH and temperature data
+        const tempData = await fetch08TETemperatureData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplay08TE",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && (tempData.PH || tempData.fahrenheit)) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.PH) {
+              const phP = document.createElement("p");
+              phP.style.margin = "5px 0";
+              phP.textContent = `pH: ${tempData.PH}`;
+              dataContainer.appendChild(phP);
+            }
+
+            if (tempData.fahrenheit) {
+              const fahrenheitP = document.createElement("p");
+              fahrenheitP.style.margin = "5px 0";
+              fahrenheitP.textContent = `Fahrenheit: ${tempData.fahrenheit}`;
+              dataContainer.appendChild(fahrenheitP);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else if (currentSubject === "11PH") {
+      const dlg = document.getElementById("collectDataDialog11PH");
+      if (dlg) {
+        // Fetch and display existing pH data
+        const tempData = await fetch11PHData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplay11PH",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && tempData.ph) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.ph) {
+              const phP = document.createElement("p");
+              phP.style.margin = "5px 0";
+              phP.textContent = `pH: ${tempData.ph}`;
+              dataContainer.appendChild(phP);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else if (currentSubject === "13TE") {
+      const dlg = document.getElementById("collectDataDialog13TE");
+      if (dlg) {
+        // Fetch and display existing pH data
+        const phData = await fetch13TEpHData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplay13TE",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (phData && phData.ph) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (phData.ph) {
+              const phItem = document.createElement("div");
+              phItem.textContent = `pH: ${phData.ph}`;
+              phItem.style.marginTop = "5px";
+              dataContainer.appendChild(phItem);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else if (currentSubject === "QTPH") {
+      const dlg = document.getElementById("collectDataDialogQTPH");
+      if (dlg) {
+        // Fetch and display existing pH data
+        const tempData = await fetchQTPHData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplayQTPH",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && tempData.ph) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.ph) {
+              const phP = document.createElement("p");
+              phP.style.margin = "5px 0";
+              phP.textContent = `pH: ${tempData.ph}`;
+              dataContainer.appendChild(phP);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
+    } else if (currentSubject === "QTPC") {
+      const dlg = document.getElementById("collectDataDialogQTPC");
+      if (dlg) {
+        // Fetch and display existing seconds data
+        const tempData = await fetchQTPCData(iid);
+        const dataDisplayDiv = document.getElementById(
+          "collectDataDisplayQTPC",
+        );
+        if (dataDisplayDiv) {
+          // Clear existing display
+          dataDisplayDiv.innerHTML = "";
+
+          if (tempData && tempData.seconds) {
+            const dataContainer = document.createElement("div");
+            dataContainer.style.padding = "10px";
+            dataContainer.style.backgroundColor = "#f5f5f5";
+            dataContainer.style.borderRadius = "4px";
+            dataContainer.style.marginBottom = "10px";
+
+            const title = document.createElement("strong");
+            title.textContent = "Previously Collected Data:";
+            dataContainer.appendChild(title);
+
+            if (tempData.seconds) {
+              const secondsP = document.createElement("p");
+              secondsP.style.margin = "5px 0";
+              secondsP.textContent = `Seconds: ${tempData.seconds}`;
+              dataContainer.appendChild(secondsP);
+            }
+
+            dataDisplayDiv.appendChild(dataContainer);
+          }
+        }
+
+        dlg.showModal();
+      }
     } else {
       // Default to CSR collect dialog for all other subjects
       const dlg = document.getElementById("collectDataDialog");
@@ -222,6 +865,18 @@ while (main.firstChild) {
   main.removeChild(main.firstChild);
 }
 
+// Helper function to fetch 11PH data
+async function fetch11PHData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching pH data:", err);
+    return null;
+  }
+}
+
 // Helper function to fetch 01TE temperature data
 async function fetch01TETemperatureData(inputId) {
   try {
@@ -230,6 +885,90 @@ async function fetch01TETemperatureData(inputId) {
     return await response.json();
   } catch (err) {
     console.error("Error fetching temperature data:", err);
+    return null;
+  }
+}
+
+// Helper function to fetch 03TE temperature data
+async function fetch03TETemperatureData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching temperature data:", err);
+    return null;
+  }
+}
+
+// Helper function to fetch 05TE temperature data
+async function fetch05TETemperatureData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching temperature data:", err);
+    return null;
+  }
+}
+
+// Helper function to fetch 07TE temperature data
+async function fetch07TETemperatureData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching temperature data:", err);
+    return null;
+  }
+}
+
+// Helper function to fetch 13TE pH data
+async function fetch13TEpHData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}ph-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching pH data:", err);
+    return null;
+  }
+}
+
+// Helper function to fetch 08TE pH and temperature data
+async function fetch08TETemperatureData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching pH and temperature data:", err);
+    return null;
+  }
+}
+
+// Helper function to fetch QTPH data
+async function fetchQTPHData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching Tank Q pH data:", err);
+    return null;
+  }
+}
+
+// Helper function to fetch QTPC data
+async function fetchQTPCData(inputId) {
+  try {
+    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    if (!response.ok) return null;
+    return await response.json();
+  } catch (err) {
+    console.error("Error fetching Tank Q seconds data:", err);
     return null;
   }
 }

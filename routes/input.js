@@ -796,4 +796,126 @@ router.put("/detail/:id", (req, res) => {
   }
 });
 
+// ==================================================
+// POST measurement data collection (01TE, 08TE, QTPC, QTPH)
+// Handles Percent, Fahrenheit, pH, and Seconds values
+// ==================================================
+router.post("/collect/:iid", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+
+      let key = Object.keys(req.body)[0];
+      const iid = req.params.iid;
+      const percent = req.body[key].PERCENT;
+      const fahrenheit = req.body[key].FAHRENHEIT;
+      const ph = req.body[key].PH;
+      const seconds = req.body[key].SECONDS;
+
+      let insertCount = 0;
+      let errorOccurred = false;
+
+      // Only insert PERCENT entry if provided
+      if (percent) {
+        const percentQuery = `INSERT INTO EIGHTYFIVETWELVE (INPUT_ID, UNIT, VALUE) 
+          VALUES ('${iid}', 'Percent', '${percent}')`;
+
+        connection.query(percentQuery, (err, rows, fields) => {
+          if (err) {
+            console.log(
+              "Failed to insert Percent into EIGHTYFIVETWELVE: " + err,
+            );
+            errorOccurred = true;
+          }
+          insertCount++;
+          checkCompletion();
+        });
+      } else {
+        insertCount++;
+      }
+
+      // Only insert FAHRENHEIT entry if provided
+      if (fahrenheit) {
+        const fahrenheitQuery = `INSERT INTO EIGHTYFIVETWELVE (INPUT_ID, UNIT, VALUE) 
+          VALUES ('${iid}', 'F', '${fahrenheit}')`;
+
+        connection.query(fahrenheitQuery, (err, rows, fields) => {
+          if (err) {
+            console.log(
+              "Failed to insert Fahrenheit into EIGHTYFIVETWELVE: " + err,
+            );
+            errorOccurred = true;
+          }
+          insertCount++;
+          checkCompletion();
+        });
+      } else {
+        insertCount++;
+      }
+
+      // Only insert PH entry if provided
+      if (ph) {
+        const phQuery = `INSERT INTO EIGHTYFIVETWELVE (INPUT_ID, UNIT, VALUE) 
+          VALUES ('${iid}', 'pH', '${ph}')`;
+
+        connection.query(phQuery, (err, rows, fields) => {
+          if (err) {
+            console.log("Failed to insert pH into EIGHTYFIVETWELVE: " + err);
+            errorOccurred = true;
+          }
+          insertCount++;
+          checkCompletion();
+        });
+      } else {
+        insertCount++;
+      }
+
+      // Only insert SECONDS entry if provided
+      if (seconds) {
+        const secondsQuery = `INSERT INTO EIGHTYFIVETWELVE (INPUT_ID, UNIT, VALUE) 
+          VALUES ('${iid}', 'Seconds', '${seconds}')`;
+
+        connection.query(secondsQuery, (err, rows, fields) => {
+          if (err) {
+            console.log(
+              "Failed to insert Seconds into EIGHTYFIVETWELVE: " + err,
+            );
+            errorOccurred = true;
+          }
+          insertCount++;
+          checkCompletion();
+        });
+      } else {
+        insertCount++;
+      }
+
+      function checkCompletion() {
+        if (insertCount === 4) {
+          try {
+            if (connection && connection.end) connection.end();
+          } catch {}
+          if (errorOccurred) {
+            res.sendStatus(500);
+          } else {
+            res.json({ success: true });
+          }
+        }
+      }
+    });
+  } catch (err) {
+    console.log("Error connecting to Db (input collect)");
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

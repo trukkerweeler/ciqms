@@ -9,8 +9,9 @@ const TANKS = [
   { tankNumber: 5, subject: "05TE", displayName: "Tank 5" },
   { tankNumber: 7, subject: "07TE", displayName: "Tank 7" },
   { tankNumber: 8, subject: "08TE", displayName: "Tank 8" },
-  { tankNumber: 11, subject: "11TE", displayName: "Tank 11" },
+  { tankNumber: 11, subject: "11PH", displayName: "Tank 11" },
   { tankNumber: 13, subject: "13TE", displayName: "Tank 13" },
+  { tankNumber: "Q", subject: "QTPH, QTPC", displayName: "Quench Tank" },
 ];
 
 // HTML template for each tank card

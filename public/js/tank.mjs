@@ -2,26 +2,168 @@ import { loadHeaderFooter, getApiUrl } from "./utils.mjs";
 
 loadHeaderFooter();
 
-// Tank configuration - maps tank numbers to their subject codes
+// Centralized tank configuration - eliminates all conditional logic
 const TANK_CONFIG = {
-  1: "01TE",
-  3: "03TE",
-  5: "05TE",
-  7: "07TE",
-  8: "08TE",
-  11: "11TE",
-  13: "13TE",
+  1: {
+    code: "01TE",
+    charts: [
+      {
+        name: "Temperature",
+        unit: "°F",
+        dataField: "fahrenheitData",
+        lcl: 120,
+        ucl: 160,
+        min: 110,
+        max: 170,
+        color: "#000000",
+      },
+      {
+        name: "Concentration",
+        unit: "%",
+        dataField: "percentData",
+        lcl: 10,
+        ucl: 25,
+        min: 5,
+        max: 30,
+        color: "#1e88e5",
+      },
+    ],
+  },
+  3: {
+    code: "03TE",
+    charts: [
+      {
+        name: "Temperature",
+        unit: "°F",
+        dataField: "fahrenheitData",
+        lcl: 60,
+        ucl: 95,
+        min: 55,
+        max: 105,
+        color: "#000000",
+      },
+    ],
+  },
+  5: {
+    code: "05TE",
+    charts: [
+      {
+        name: "Temperature",
+        unit: "°F",
+        dataField: "fahrenheitData",
+        lcl: 60,
+        ucl: 95,
+        min: 55,
+        max: 105,
+        color: "#000000",
+      },
+    ],
+  },
+  7: {
+    code: "07TE",
+    charts: [
+      {
+        name: "Temperature",
+        unit: "°F",
+        dataField: "fahrenheitData",
+        lcl: 70,
+        ucl: 90,
+        min: 65,
+        max: 95,
+        color: "#000000",
+      },
+    ],
+  },
+  8: {
+    code: "08TE",
+    charts: [
+      {
+        name: "Fahrenheit",
+        unit: "°F",
+        dataField: "fahrenheitData",
+        lcl: 60,
+        ucl: 110,
+        min: 50,
+        max: 120,
+        color: "#000000",
+      },
+      {
+        name: "pH",
+        unit: "pH",
+        dataField: "phData",
+        lcl: 1.5,
+        ucl: 2.1,
+        min: 1,
+        max: 2.5,
+        color: "#27ae60",
+      },
+    ],
+  },
+  11: {
+    code: "11PH",
+    charts: [
+      {
+        name: "pH",
+        unit: "pH",
+        dataField: "phData",
+        lcl: 3.6,
+        ucl: 4.0,
+        min: 3.0,
+        max: 4.5,
+        color: "#27ae60",
+      },
+    ],
+  },
+  13: {
+    code: "13TE",
+    charts: [
+      {
+        name: "pH",
+        unit: "pH",
+        dataField: "phData",
+        lcl: 1.8,
+        ucl: 2.2,
+        min: 1.5,
+        max: 2.5,
+        color: "#27ae60",
+      },
+    ],
+  },
+  Q: {
+    codes: ["QTPH", "QTPC"],
+    charts: [
+      {
+        name: "pH",
+        unit: "pH",
+        dataField: "phData",
+        lcl: 7.5,
+        ucl: 9.2,
+        min: 7.0,
+        max: 9.5,
+        color: "#27ae60",
+      },
+      {
+        name: "Time",
+        unit: "Seconds",
+        dataField: "secondsData",
+        lcl: 15,
+        ucl: 18,
+        min: 14,
+        max: 19,
+        color: "#e74c3c",
+      },
+    ],
+  },
 };
 
-// Control limits for charts
-const TEMP_LCL = 120;
-const TEMP_UCL = 160;
-const PERCENT_LCL = 10;
-const PERCENT_UCL = 25;
-
-// Detect tank number from the current page filename
+// Detect tank number or letter from the current page filename
 function getTankNumber() {
   const pathname = window.location.pathname;
+  // Try matching tankQ.html first
+  if (pathname.includes("tankQ.html")) {
+    return "Q";
+  }
+  // Then try matching tank1.html, tank3.html, etc.
   const match = pathname.match(/tank(\d+)\.html/);
   if (match) {
     return parseInt(match[1]);
@@ -29,26 +171,25 @@ function getTankNumber() {
   return 1;
 }
 
-// Get the tank number and subject
+// Get the tank number and configuration
 const tankNumber = getTankNumber();
-const subject = TANK_CONFIG[tankNumber];
+const tankConfig = TANK_CONFIG[tankNumber];
 
-if (!subject) {
+if (!tankConfig) {
   console.error(`No configuration found for tank ${tankNumber}`);
 }
 
 window.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = await getApiUrl();
-  const tempCanvas = document.getElementById("temperatureChart");
-  const percentCanvas = document.getElementById("percentChart");
   const infoPanel = document.getElementById("tank-info");
-  const tempBanner = document.getElementById("tempStatusBanner");
-  const percentBanner = document.getElementById("percentStatusBanner");
 
   try {
-    // Fetch tank info
+    // Fetch tank info - use first code if multiple codes exist
+    const infoCode = Array.isArray(tankConfig.codes)
+      ? tankConfig.codes[0]
+      : tankConfig.code;
     const infoResponse = await fetch(
-      `${apiUrl}/chem-tank/tank-info/${subject}`,
+      `${apiUrl}/chem-tank/tank-info/${infoCode}`,
     );
     if (infoResponse.ok) {
       const info = await infoResponse.json();
@@ -61,8 +202,17 @@ window.addEventListener("DOMContentLoaded", async () => {
       }
     }
 
-    // Fetch trend data
-    const response = await fetch(`${apiUrl}/chem-tank/trend-data/${subject}`);
+    // Fetch trend data - handle both single code and multiple codes
+    let trendUrl;
+    if (Array.isArray(tankConfig.codes)) {
+      // For Tank Q with multiple codes, fetch all at once
+      trendUrl = `${apiUrl}/chem-tank/trend-data-multi/${tankConfig.codes.join(",")}`;
+    } else {
+      // For other tanks with single code
+      trendUrl = `${apiUrl}/chem-tank/trend-data/${tankConfig.code}`;
+    }
+
+    const response = await fetch(trendUrl);
     if (!response.ok) {
       const errorData = await response.json();
       throw new Error(
@@ -72,6 +222,18 @@ window.addEventListener("DOMContentLoaded", async () => {
 
     const data = await response.json();
 
+    // console.log("API Response from trend-data:", {
+    //   hasLabels: !!data.labels,
+    //   labelsLength: data.labels?.length,
+    //   hasPercentData: !!data.percentData,
+    //   hasFahrenheitData: !!data.fahrenheitData,
+    //   hasPhData: !!data.phData,
+    //   hasSecondsData: !!data.secondsData,
+    //   allKeys: Object.keys(data),
+    //   samplePhData: data.phData?.slice(0, 3),
+    //   sampleSecondsData: data.secondsData?.slice(0, 3),
+    // });
+
     if (!data.labels || data.labels.length === 0) {
       if (infoPanel.textContent === "") {
         infoPanel.textContent = "No data available for this tank.";
@@ -79,252 +241,196 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
-    // Analyze data to identify out of limit readings
-    const tempOutOfLimit = data.fahrenheitData.map(
-      (val) => val !== null && (val < TEMP_LCL || val > TEMP_UCL),
-    );
-    const percentOutOfLimit = data.percentData.map(
-      (val) => val !== null && (val < PERCENT_LCL || val > PERCENT_UCL),
-    );
+    // Render charts for each tank configuration
+    tankConfig.charts.forEach((chartConfig, chartIndex) => {
+      const canvasId = chartIndex === 0 ? "temperatureChart" : "percentChart";
+      const bannerId =
+        chartIndex === 0 ? "tempStatusBanner" : "percentStatusBanner";
+      const canvas = document.getElementById(canvasId);
+      const banner = document.getElementById(bannerId);
 
-    const tempOutCount = tempOutOfLimit.filter((x) => x).length;
-    const percentOutCount = percentOutOfLimit.filter((x) => x).length;
-
-    // Get latest non-null values (search backwards from end)
-    let latestTemp = null;
-    for (let i = data.fahrenheitData.length - 1; i >= 0; i--) {
-      if (data.fahrenheitData[i] !== null) {
-        latestTemp = data.fahrenheitData[i];
-        break;
+      if (!canvas) {
+        console.warn(`Canvas ${canvasId} not found`);
+        return;
       }
-    }
 
-    let latestPercent = null;
-    for (let i = data.percentData.length - 1; i >= 0; i--) {
-      if (data.percentData[i] !== null) {
-        latestPercent = data.percentData[i];
-        break;
+      // Get data for this chart
+      const chartDataField = data[chartConfig.dataField];
+      if (!chartDataField) {
+        console.warn(`Data field ${chartConfig.dataField} not found`);
+        return;
       }
-    }
 
-    // Update status banners
-    updateStatusBanner(
-      tempBanner,
-      latestTemp,
-      TEMP_LCL,
-      TEMP_UCL,
-      "°F",
-      tempOutCount,
-      data.labels.length,
-    );
-    updateStatusBanner(
-      percentBanner,
-      latestPercent,
-      PERCENT_LCL,
-      PERCENT_UCL,
-      "%",
-      percentOutCount,
-      data.labels.length,
-    );
+      // Debug logging
+      //   console.log(`Chart ${chartIndex} (${chartConfig.name}):`, {
+      //     dataField: chartConfig.dataField,
+      //     dataLength: chartDataField.length,
+      //     nonNullCount: chartDataField.filter((v) => v !== null).length,
+      //     sampleData: chartDataField.slice(0, 3),
+      //     min: chartConfig.min,
+      //     max: chartConfig.max,
+      //   });
 
-    // Create TEMPERATURE chart with control limits and out-of-limit highlighting
-    new Chart(tempCanvas, {
-      type: "line",
-      data: {
-        labels: data.labels,
-        datasets: [
-          {
-            label: "Temperature (°F)",
-            data: data.fahrenheitData.map((val, i) =>
-              tempOutOfLimit[i] ? null : val,
-            ),
-            borderColor: "#000000",
-            backgroundColor: "rgba(0, 0, 0, 0.05)",
-            borderWidth: 2.5,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 5,
-            pointBackgroundColor: "#000000",
-            pointBorderColor: "#fff",
-            pointBorderWidth: 2,
-            pointHoverRadius: 7,
-            spanGaps: true,
-          },
-          {
-            label: "Out of Limits",
-            data: data.fahrenheitData.map((val, i) =>
-              tempOutOfLimit[i] ? val : null,
-            ),
-            borderColor: "#e74c3c",
-            backgroundColor: "rgba(231, 76, 60, 0.2)",
-            borderWidth: 2.5,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 7,
-            pointBackgroundColor: "#e74c3c",
-            pointBorderColor: "#fff",
-            pointBorderWidth: 2,
-            pointHoverRadius: 8,
-            spanGaps: true,
-          },
-          {
-            label: "UCL (160°F)",
-            data: Array(data.labels.length).fill(TEMP_UCL),
-            borderColor: "#e74c3c",
-            borderWidth: 2,
-            borderDash: [5, 5],
-            fill: false,
-            pointRadius: 0,
-            pointHoverRadius: 0,
-            tension: 0,
-          },
-          {
-            label: "LCL (120°F)",
-            data: Array(data.labels.length).fill(TEMP_LCL),
-            borderColor: "#e74c3c",
-            borderWidth: 2,
-            borderDash: [5, 5],
-            fill: false,
-            pointRadius: 0,
-            pointHoverRadius: 0,
-            tension: 0,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            position: "top",
-          },
-          title: {
-            display: false,
-          },
-        },
-        scales: {
-          y: {
-            type: "linear",
-            beginAtZero: false,
-            min: 110,
-            max: 170,
-            title: {
-              display: true,
-              text: "Temperature (°F)",
-            },
-          },
-          x: {
-            title: {
-              display: true,
-              text: "Date",
-            },
-          },
-        },
-      },
-    });
+      // Identify out of limit readings
+      const outOfLimit = chartDataField.map(
+        (val) =>
+          val !== null && (val < chartConfig.lcl || val > chartConfig.ucl),
+      );
+      const outCount = outOfLimit.filter((x) => x).length;
 
-    // Create PERCENT chart with control limits and out-of-limit highlighting
-    new Chart(percentCanvas, {
-      type: "line",
-      data: {
-        labels: data.labels,
-        datasets: [
-          {
-            label: "Concentration (%)",
-            data: data.percentData.map((val, i) =>
-              percentOutOfLimit[i] ? null : val,
-            ),
-            borderColor: "#1e88e5",
-            backgroundColor: "rgba(30, 136, 229, 0.05)",
-            borderWidth: 2.5,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 5,
-            pointBackgroundColor: "#1e88e5",
-            pointBorderColor: "#fff",
-            pointBorderWidth: 2,
-            pointHoverRadius: 7,
-            spanGaps: true,
-          },
-          {
-            label: "Out of Limits",
-            data: data.percentData.map((val, i) =>
-              percentOutOfLimit[i] ? val : null,
-            ),
-            borderColor: "#e74c3c",
-            backgroundColor: "rgba(231, 76, 60, 0.2)",
-            borderWidth: 2.5,
-            fill: false,
-            tension: 0.4,
-            pointRadius: 7,
-            pointBackgroundColor: "#e74c3c",
-            pointBorderColor: "#fff",
-            pointBorderWidth: 2,
-            pointHoverRadius: 8,
-            spanGaps: true,
-          },
-          {
-            label: "UCL (25%)",
-            data: Array(data.labels.length).fill(PERCENT_UCL),
-            borderColor: "#e74c3c",
-            borderWidth: 2,
-            borderDash: [5, 5],
-            fill: false,
-            pointRadius: 0,
-            pointHoverRadius: 0,
-            tension: 0,
-          },
-          {
-            label: "LCL (10%)",
-            data: Array(data.labels.length).fill(PERCENT_LCL),
-            borderColor: "#e74c3c",
-            borderWidth: 2,
-            borderDash: [5, 5],
-            fill: false,
-            pointRadius: 0,
-            pointHoverRadius: 0,
-            tension: 0,
-          },
-        ],
-      },
-      options: {
-        responsive: true,
-        maintainAspectRatio: false,
-        plugins: {
-          legend: {
-            display: true,
-            position: "top",
-          },
-          title: {
-            display: false,
-          },
+      // Get latest non-null value
+      let latestValue = null;
+      for (let i = chartDataField.length - 1; i >= 0; i--) {
+        if (chartDataField[i] !== null) {
+          latestValue = chartDataField[i];
+          break;
+        }
+      }
+
+      // Update status banner
+      updateStatusBanner(
+        banner,
+        latestValue,
+        chartConfig.lcl,
+        chartConfig.ucl,
+        chartConfig.unit,
+        outCount,
+        chartDataField.filter((v) => v !== null).length,
+      );
+
+      // Create chart
+      new Chart(canvas, {
+        type: "line",
+        data: {
+          labels: data.labels,
+          datasets: [
+            {
+              label: chartConfig.name,
+              data: chartDataField.map((val, i) =>
+                outOfLimit[i] ? null : val,
+              ),
+              borderColor: chartConfig.color,
+              backgroundColor:
+                "rgba(" + hexToRgb(chartConfig.color).join(",") + ", 0.05)",
+              borderWidth: 2.5,
+              fill: false,
+              tension: 0.4,
+              pointRadius: 5,
+              pointBackgroundColor: chartConfig.color,
+              pointBorderColor: "#fff",
+              pointBorderWidth: 2,
+              pointHoverRadius: 7,
+              spanGaps: true,
+            },
+            {
+              label: "Out of Limits",
+              data: chartDataField.map((val, i) =>
+                outOfLimit[i] ? val : null,
+              ),
+              borderColor: "#e74c3c",
+              backgroundColor: "rgba(231, 76, 60, 0.2)",
+              borderWidth: 2.5,
+              fill: false,
+              tension: 0.4,
+              pointRadius: 7,
+              pointBackgroundColor: "#e74c3c",
+              pointBorderColor: "#fff",
+              pointBorderWidth: 2,
+              pointHoverRadius: 8,
+              spanGaps: true,
+            },
+            {
+              label: `UCL (${chartConfig.ucl}${chartConfig.unit})`,
+              data: Array(data.labels.length).fill(chartConfig.ucl),
+              borderColor: "#e74c3c",
+              borderWidth: 2,
+              borderDash: [5, 5],
+              fill: false,
+              pointRadius: 0,
+              pointHoverRadius: 0,
+              tension: 0,
+            },
+            {
+              label: `LCL (${chartConfig.lcl}${chartConfig.unit})`,
+              data: Array(data.labels.length).fill(chartConfig.lcl),
+              borderColor: "#e74c3c",
+              borderWidth: 2,
+              borderDash: [5, 5],
+              fill: false,
+              pointRadius: 0,
+              pointHoverRadius: 0,
+              tension: 0,
+            },
+          ],
         },
-        scales: {
-          y: {
-            type: "linear",
-            beginAtZero: false,
-            min: 5,
-            max: 30,
-            title: {
+        options: {
+          responsive: true,
+          maintainAspectRatio: false,
+          plugins: {
+            legend: {
               display: true,
-              text: "Concentration (%)",
+              position: "top",
+            },
+            title: {
+              display: false,
             },
           },
-          x: {
-            title: {
-              display: true,
-              text: "Date",
+          scales: {
+            y: {
+              type: "linear",
+              position: "left",
+              beginAtZero: false,
+              min: chartConfig.min,
+              max: chartConfig.max,
+              title: {
+                display: true,
+                text: `${chartConfig.name} (${chartConfig.unit})`,
+                font: { size: 12, weight: "bold" },
+              },
+              ticks: {
+                stepSize:
+                  chartConfig.max - chartConfig.min < 5
+                    ? (chartConfig.max - chartConfig.min) / 4
+                    : undefined,
+                callback: function (value) {
+                  return value.toFixed(2);
+                },
+              },
+              grid: {
+                display: true,
+                drawBorder: true,
+              },
+            },
+            x: {
+              title: {
+                display: true,
+                text: "Date",
+              },
+              grid: {
+                display: true,
+              },
             },
           },
         },
-      },
+      });
     });
   } catch (err) {
     console.error("Error loading tank data:", err);
     infoPanel.textContent = `Error: ${err.message}`;
   }
 });
+
+// Helper to convert hex color to RGB for rgba
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result
+    ? [
+        parseInt(result[1], 16),
+        parseInt(result[2], 16),
+        parseInt(result[3], 16),
+      ]
+    : [0, 0, 0];
+}
 
 // Helper function to update status banners with color-coded status
 function updateStatusBanner(

@@ -80,6 +80,7 @@ router.get("/trend-data/:subject", (req, res) => {
                 date: dateObj, // Keep for chronological sorting
                 percent: null,
                 fahrenheit: null,
+                ph: null,
               };
             }
 
@@ -87,6 +88,8 @@ router.get("/trend-data/:subject", (req, res) => {
               dataByDateMap[dateStr].percent = parseFloat(row.VALUE);
             } else if (row.UNIT === "F" || row.UNIT === "Fahrenheit") {
               dataByDateMap[dateStr].fahrenheit = parseFloat(row.VALUE);
+            } else if (row.UNIT === "pH") {
+              dataByDateMap[dateStr].ph = parseFloat(row.VALUE);
             }
           }
         });
@@ -99,11 +102,13 @@ router.get("/trend-data/:subject", (req, res) => {
         const labels = sortedEntries.map(([dateStr]) => dateStr);
         const percentData = sortedEntries.map(([, data]) => data.percent);
         const fahrenheitData = sortedEntries.map(([, data]) => data.fahrenheit);
+        const phData = sortedEntries.map(([, data]) => data.ph);
 
         res.json({
           labels,
           percentData,
           fahrenheitData,
+          phData,
           dataCount: rows.length,
         });
       });
@@ -163,6 +168,101 @@ router.get("/tank-info/:subject", (req, res) => {
         } else {
           res.json(rows[0]);
         }
+      });
+    });
+  } catch (err) {
+    console.error("Error connecting to database:", err);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+/**
+ * GET /chem-tank/trend-data-multi/:subjects
+ * Returns trend data for multiple chemical tank subjects (comma-separated)
+ * Used for Tank Q which has both QTPH and QTPC
+ *
+ * Example: /chem-tank/trend-data-multi/QTPH,QTPC
+ * Returns: { labels: [...dates], phData: [...], secondsData: [...] }
+ */
+router.get("/trend-data-multi/:subjects", (req, res) => {
+  try {
+    const connection = getQualityDbConnection();
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      const subjectsStr = req.params.subjects; // e.g., "QTPH,QTPC"
+      const subjects = subjectsStr.split(",").map((s) => s.trim());
+
+      // Query to get trend data for all subjects
+      const placeholders = subjects.map(() => "?").join(",");
+      const query = `
+        SELECT 
+          pi.INPUT_ID,
+          pi.INPUT_DATE,
+          pi.SUBJECT,
+          et.UNIT,
+          et.VALUE
+        FROM PEOPLE_INPUT pi
+        LEFT JOIN EIGHTYFIVETWELVE et ON pi.INPUT_ID = et.INPUT_ID
+        WHERE pi.SUBJECT IN (${placeholders})
+          AND pi.INPUT_DATE >= DATE_FORMAT(NOW(), '%Y-%m-01') - INTERVAL 11 MONTH
+        ORDER BY pi.INPUT_DATE ASC
+      `;
+
+      connection.query(query, subjects, (err, rows) => {
+        try {
+          if (connection && connection.end) connection.end();
+        } catch {}
+
+        if (err) {
+          console.error("Failed to query tank trend data: " + err);
+          res.status(500).json({ error: "Query failed" });
+          return;
+        }
+
+        // Process rows to organize by date and separate different unit types
+        const dataByDateMap = {}; // Maps formatted string to { date: Date object, data }
+
+        rows.forEach((row) => {
+          const dateObj = row.INPUT_DATE ? new Date(row.INPUT_DATE) : null;
+          const dateStr = dateObj ? dateObj.toLocaleDateString("en-US") : null;
+
+          if (dateStr) {
+            if (!dataByDateMap[dateStr]) {
+              dataByDateMap[dateStr] = {
+                date: dateObj,
+                ph: null,
+                seconds: null,
+              };
+            }
+
+            if (row.UNIT === "pH") {
+              dataByDateMap[dateStr].ph = parseFloat(row.VALUE);
+            } else if (row.UNIT === "Seconds") {
+              dataByDateMap[dateStr].seconds = parseFloat(row.VALUE);
+            }
+          }
+        });
+
+        // Sort by actual date object (chronologically), then extract labels in order
+        const sortedEntries = Object.entries(dataByDateMap).sort(
+          ([, a], [, b]) => a.date - b.date,
+        );
+
+        const labels = sortedEntries.map(([dateStr]) => dateStr);
+        const phData = sortedEntries.map(([, data]) => data.ph);
+        const secondsData = sortedEntries.map(([, data]) => data.seconds);
+
+        res.json({
+          labels,
+          phData,
+          secondsData,
+          dataCount: rows.length,
+        });
       });
     });
   } catch (err) {

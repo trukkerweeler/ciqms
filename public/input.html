@@ -136,6 +136,27 @@
       </form>
     </dialog>
     <dialog id="collectDataDialog01TE" class="editDialog">
+      <style>
+        #collectForm01TE {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectForm01TE .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectForm01TE .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectForm01TE label {
+          text-align: right;
+        }
+      </style>
       <div class="dialogTitle">Temperature Data Collection</div>
       <div id="collectDataDisplay01TE" style="margin-bottom: 15px"></div>
       <form class="dialogForm" id="collectForm01TE">
@@ -160,21 +181,494 @@
           name="SAMPLE_DATE_01TE"
           required
         />
-        <button
-          class="btnDialog"
-          id="cancelCollData01TE"
-          type="submit"
-          formmethod="dialog"
-        >
-          Cancel
-        </button>
-        <button
-          class="btnDialog dialogSaveBtn"
-          id="saveCollData01TE"
-          type="submit"
-        >
-          Save
-        </button>
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollData01TE"
+            type="button"
+            onclick="document.getElementById('collectDataDialog01TE').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollData01TE"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialog03TE" class="editDialog">
+      <style>
+        #collectForm03TE {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectForm03TE .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectForm03TE .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectForm03TE label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">Temperature Data Collection</div>
+      <div id="collectDataDisplay03TE" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectForm03TE">
+        <label for="FAHRENHEIT_VALUE_03TE">Fahrenheit:</label>
+        <input
+          type="text"
+          id="FAHRENHEIT_VALUE_03TE"
+          name="FAHRENHEIT_VALUE_03TE"
+          placeholder="Enter Fahrenheit value"
+        />
+        <label for="SAMPLE_DATE_03TE">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_03TE"
+          name="SAMPLE_DATE_03TE"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollData03TE"
+            type="button"
+            onclick="document.getElementById('collectDataDialog03TE').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollData03TE"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialog05TE" class="editDialog">
+      <style>
+        #collectForm05TE {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectForm05TE .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectForm05TE .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectForm05TE label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">Tank 5 Temperature Data Collection</div>
+      <div id="collectDataDisplay05TE" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectForm05TE">
+        <label for="FAHRENHEIT_VALUE_05TE">Fahrenheit:</label>
+        <input
+          type="text"
+          id="FAHRENHEIT_VALUE_05TE"
+          name="FAHRENHEIT_VALUE_05TE"
+          placeholder="Enter Fahrenheit value"
+        />
+        <label for="SAMPLE_DATE_05TE">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_05TE"
+          name="SAMPLE_DATE_05TE"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollData05TE"
+            type="button"
+            onclick="document.getElementById('collectDataDialog05TE').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollData05TE"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialog07TE" class="editDialog">
+      <style>
+        #collectForm07TE {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectForm07TE .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectForm07TE .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectForm07TE label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">Tank 7 Temperature Data Collection</div>
+      <div id="collectDataDisplay07TE" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectForm07TE">
+        <label for="FAHRENHEIT_VALUE_07TE">Fahrenheit:</label>
+        <input
+          type="text"
+          id="FAHRENHEIT_VALUE_07TE"
+          name="FAHRENHEIT_VALUE_07TE"
+          placeholder="Enter Fahrenheit value"
+        />
+        <label for="SAMPLE_DATE_07TE">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_07TE"
+          name="SAMPLE_DATE_07TE"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollData07TE"
+            type="button"
+            onclick="document.getElementById('collectDataDialog07TE').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollData07TE"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialog08TE" class="editDialog">
+      <style>
+        #collectForm08TE {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectForm08TE .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectForm08TE .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectForm08TE label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">Temperature and pH Data Collection</div>
+      <div id="collectDataDisplay08TE" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectForm08TE">
+        <label for="PH_VALUE">pH:</label>
+        <input
+          type="text"
+          id="PH_VALUE"
+          name="PH_VALUE"
+          placeholder="Enter pH value"
+        />
+        <label for="FAHRENHEIT_VALUE_08TE">Fahrenheit:</label>
+        <input
+          type="text"
+          id="FAHRENHEIT_VALUE_08TE"
+          name="FAHRENHEIT_VALUE_08TE"
+          placeholder="Enter Fahrenheit value"
+        />
+        <label for="SAMPLE_DATE_08TE">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_08TE"
+          name="SAMPLE_DATE_08TE"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollData08TE"
+            type="button"
+            onclick="document.getElementById('collectDataDialog08TE').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollData08TE"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialog11PH" class="editDialog">
+      <style>
+        #collectForm11PH {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectForm11PH .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectForm11PH .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectForm11PH label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">pH Data Collection</div>
+      <div id="collectDataDisplay11PH" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectForm11PH">
+        <label for="PH_VALUE_11PH">pH:</label>
+        <input
+          type="text"
+          id="PH_VALUE_11PH"
+          name="PH_VALUE_11PH"
+          placeholder="Enter pH value"
+        />
+        <label for="SAMPLE_DATE_11PH">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_11PH"
+          name="SAMPLE_DATE_11PH"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollData11PH"
+            type="button"
+            onclick="document.getElementById('collectDataDialog11PH').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollData11PH"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialog13TE" class="editDialog">
+      <style>
+        #collectForm13TE {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectForm13TE .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectForm13TE .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectForm13TE label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">Tank 13 pH Data Collection</div>
+      <div id="collectDataDisplay13TE" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectForm13TE">
+        <label for="PH_VALUE_13TE">pH:</label>
+        <input
+          type="text"
+          id="PH_VALUE_13TE"
+          name="PH_VALUE_13TE"
+          placeholder="Enter pH value"
+        />
+        <label for="SAMPLE_DATE_13TE">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_13TE"
+          name="SAMPLE_DATE_13TE"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollData13TE"
+            type="button"
+            onclick="document.getElementById('collectDataDialog13TE').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollData13TE"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialogQTPH" class="editDialog">
+      <style>
+        #collectFormQTPH {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectFormQTPH .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectFormQTPH .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectFormQTPH label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">Tank Q pH Data Collection</div>
+      <div id="collectDataDisplayQTPH" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectFormQTPH">
+        <label for="PH_VALUE_QTPH">pH:</label>
+        <input
+          type="text"
+          id="PH_VALUE_QTPH"
+          name="PH_VALUE_QTPH"
+          placeholder="Enter pH value"
+        />
+        <label for="SAMPLE_DATE_QTPH">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_QTPH"
+          name="SAMPLE_DATE_QTPH"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollDataQTPH"
+            type="button"
+            onclick="document.getElementById('collectDataDialogQTPH').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollDataQTPH"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
+      </form>
+    </dialog>
+    <dialog id="collectDataDialogQTPC" class="editDialog">
+      <style>
+        #collectFormQTPC {
+          display: grid;
+          grid-template-columns: 120px 1fr;
+          gap: 10px;
+          align-items: center;
+        }
+        #collectFormQTPC .btnContainer {
+          grid-column: 1 / 3;
+          display: flex;
+          gap: 10px;
+          justify-content: flex-start;
+        }
+        #collectFormQTPC .btnDialog {
+          display: inline-block;
+          width: auto;
+        }
+        #collectFormQTPC label {
+          text-align: right;
+        }
+      </style>
+      <div class="dialogTitle">Tank Q Time Data Collection</div>
+      <div id="collectDataDisplayQTPC" style="margin-bottom: 15px"></div>
+      <form class="dialogForm" id="collectFormQTPC">
+        <label for="SECONDS_VALUE_QTPC">Seconds:</label>
+        <input
+          type="text"
+          id="SECONDS_VALUE_QTPC"
+          name="SECONDS_VALUE_QTPC"
+          placeholder="Enter time in seconds"
+        />
+        <label for="SAMPLE_DATE_QTPC">Date:</label>
+        <input
+          type="date"
+          id="SAMPLE_DATE_QTPC"
+          name="SAMPLE_DATE_QTPC"
+          required
+        />
+        <div class="btnContainer">
+          <button
+            class="btnDialog"
+            id="cancelCollDataQTPC"
+            type="button"
+            onclick="document.getElementById('collectDataDialogQTPC').close()"
+          >
+            Cancel
+          </button>
+          <button
+            class="btnDialog dialogSaveBtn"
+            id="saveCollDataQTPC"
+            type="submit"
+          >
+            Save
+          </button>
+        </div>
       </form>
     </dialog>
     <dialog id="collectDataDialog2" class="editDialog">
