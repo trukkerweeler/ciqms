@@ -1,0 +1,451 @@
+/* Main Content Styles - Semantic CSS */
+
+/* ============================================
+   Main Container Layout
+   ============================================ */
+main {
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+}
+
+/* ============================================
+   Page Heading Section
+   ============================================ */
+.page-heading {
+  display: grid;
+  grid-template-columns: 1fr 1fr 1fr;
+  margin: 0 0.5rem;
+  background-color: var(--background-color);
+  padding: 1rem 0;
+}
+
+.page-heading h1 {
+  margin: 0;
+  font-size: 1.8rem;
+  color: #000;
+  grid-column: 1 / 2;
+  align-self: center;
+}
+
+.page-heading h2 {
+  margin: 0.5rem 0 0 0;
+  font-size: 1rem;
+  color: #000;
+  font-weight: normal;
+}
+
+.page-heading .addrecordheadingbutton {
+  grid-column-start: 3;
+  justify-self: end;
+  align-self: center;
+  margin-right: 1rem;
+}
+
+/* ============================================
+   Card Grid Container
+   ============================================ */
+.card-grid {
+  width: 100%;
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 1.5rem;
+  padding: 2rem;
+  box-sizing: border-box;
+}
+
+/* ============================================
+   Card Component
+   ============================================ */
+.card {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  background: white;
+  border: 1px solid #e0e0e0;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  overflow: hidden;
+}
+
+.card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.15);
+}
+
+.card__header {
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  color: white;
+  padding: 1rem;
+  font-weight: bold;
+  font-size: 1.1rem;
+  border-bottom: 1px solid rgba(0, 0, 0, 0.1);
+}
+
+.card__header-title {
+  margin: 0;
+  font-size: 1.25rem;
+}
+
+.card__body {
+  padding: 1rem;
+  flex-grow: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.card__description {
+  color: #666;
+  margin: 0 0 0.5rem 0;
+  line-height: 1.4;
+}
+
+.card__meta {
+  font-size: 0.85rem;
+  color: #999;
+  margin: 0.5rem 0 0 0;
+}
+
+.card__footer {
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-top: 1px solid #e0e0e0;
+  text-align: center;
+}
+
+/* ============================================
+   Button Styles
+   ============================================ */
+.button {
+  display: inline-block;
+  padding: 0.5rem 1.5rem;
+  background: linear-gradient(135deg, #2c3e50 0%, #3498db 100%);
+  color: white;
+  text-decoration: none;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 500;
+  transition:
+    transform 0.2s ease,
+    box-shadow 0.2s ease;
+  cursor: pointer;
+}
+
+.button:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+  color: white;
+  text-decoration: none;
+}
+
+.button:active {
+  transform: translateY(0);
+}
+
+/* ============================================
+   Responsive Behavior
+   ============================================ */
+@media (max-width: 1200px) {
+  .card-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+}
+
+@media (max-width: 768px) {
+  .card-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 1rem;
+    padding: 1rem;
+  }
+
+  .page-heading {
+    padding: 1.5rem;
+  }
+
+  .page-heading h1 {
+    font-size: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .card-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-heading {
+    padding: 1rem;
+  }
+
+  .page-heading h1 {
+    font-size: 1.25rem;
+  }
+
+  .card__header {
+    font-size: 1rem;
+  }
+}
+
+/* ============================================
+   Print Styles
+   ============================================ */
+@media print {
+  .page-heading {
+    background-color: white;
+    border: none;
+  }
+
+  .card {
+    border: 1px solid #000;
+    page-break-inside: avoid;
+  }
+}
+
+/* ============================================
+   Expiry Management Styles
+   ============================================ */
+
+/* ============================================
+   Table Container Layout
+   ============================================ */
+.expiryTableContainer {
+  width: 100%;
+  padding: 1.5rem;
+  box-sizing: border-box;
+  overflow-x: auto;
+}
+
+/* ============================================
+   Data Table Styling
+   ============================================ */
+.expiryDataTable {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  background-color: var(--secondary-color);
+  box-shadow: var(--shadow);
+  border: 2px solid var(--border-color-dark);
+}
+
+/* ============================================
+   Table Header Row
+   ============================================ */
+.expiryDataTable thead {
+  background-color: var(--background-color);
+  color: var(--text-color-light);
+}
+
+.expiryDataTable thead tr {
+  display: table-row;
+}
+
+.expiryDataTable th {
+  padding: 0.75rem 0.5rem;
+  text-align: center;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  user-select: none;
+  transition: background-color 0.2s ease;
+  border-right: 1px solid rgba(255, 255, 255, 0.2);
+  word-wrap: break-word;
+}
+
+.expiryDataTable th:hover {
+  background-color: rgba(0, 0, 0, 0.1);
+}
+
+.expiryDataTable th:last-child {
+  border-right: none;
+}
+
+/* ============================================
+   Table Body Row Styling
+   ============================================ */
+.expiryDataTable tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.expiryDataTable tbody tr:nth-child(even) {
+  background-color: var(--tertiary-color);
+}
+
+.expiryDataTable tbody tr:hover {
+  background-color: #e8e8e8;
+}
+
+/* ============================================
+   Table Cell Styling
+   ============================================ */
+.expiryDataTable td {
+  padding: 0.65rem 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+  border-right: 1px solid #e0e0e0;
+  vertical-align: middle;
+}
+
+.expiryDataTable td:last-child {
+  border-right: none;
+}
+
+/* ============================================
+   Semantic Column Classes
+   ============================================ */
+.col-id {
+  width: 7%;
+  text-align: center;
+  font-weight: 600;
+}
+
+.col-product-id {
+  width: 8%;
+  text-align: center;
+  font-weight: 500;
+}
+
+.col-description {
+  width: 18%;
+  text-align: left;
+  word-wrap: break-word;
+  word-break: break-word;
+  max-width: 200px;
+  overflow-wrap: break-word;
+}
+
+.col-expiry-date {
+  width: 9%;
+  text-align: center;
+}
+
+.col-lot-number {
+  width: 8%;
+  text-align: center;
+}
+
+.col-po-number {
+  width: 8%;
+  text-align: center;
+}
+
+.col-received-date {
+  width: 9%;
+  text-align: center;
+}
+
+.col-mfg-date {
+  width: 9%;
+  text-align: center;
+}
+
+.col-disposition {
+  width: 8%;
+  text-align: center;
+  font-weight: 500;
+}
+
+.col-comment {
+  width: 11%;
+  text-align: left;
+  max-width: 120px;
+  overflow-wrap: break-word;
+}
+
+.col-actions {
+  width: 7%;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* ============================================
+   Row Status Indicators
+   ============================================ */
+.expiryDataTable tbody tr.scrap-row {
+  background-color: #ffebee;
+}
+
+.expiryDataTable tbody tr.scrap-row:hover {
+  background-color: #ffcdd2;
+}
+
+.expiryDataTable tbody tr.use-row {
+  background-color: #f1f8e9;
+}
+
+.expiryDataTable tbody tr.use-row:hover {
+  background-color: #dcedc8;
+}
+
+/* ============================================
+   Action Buttons in Table
+   ============================================ */
+.expiryDataTable .btn-secondary {
+  padding: 0.4rem 0.8rem;
+  font-size: 0.75rem;
+  white-space: nowrap;
+  border: 1px solid #999;
+  background-color: #f0f0f0;
+  color: #333;
+  border-radius: 3px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.expiryDataTable .btn-secondary:hover {
+  background-color: #e0e0e0;
+  border-color: #666;
+}
+
+.expiryDataTable .btn-secondary .btn-icon {
+  margin-right: 0.3rem;
+}
+
+/* ============================================
+   Empty State
+   ============================================ */
+.expiryEmptyState {
+  padding: 2rem;
+  text-align: center;
+  color: #666;
+  font-size: 1rem;
+}
+
+/* ============================================
+   Responsive Design
+   ============================================ */
+@media (max-width: 1200px) {
+  .col-comment {
+    width: 9%;
+    max-width: 100px;
+  }
+
+  .col-description {
+    width: 15%;
+    max-width: 150px;
+  }
+}
+
+@media (max-width: 768px) {
+  .expiryTableContainer {
+    padding: 1rem;
+  }
+
+  .expiryDataTable th,
+  .expiryDataTable td {
+    padding: 0.5rem 0.3rem;
+    font-size: 0.75rem;
+  }
+
+  .col-comment {
+    display: none;
+  }
+
+  .expiryDataTable .btn-secondary {
+    padding: 0.3rem 0.5rem;
+    font-size: 0.65rem;
+  }
+}

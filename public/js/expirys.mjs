@@ -172,35 +172,37 @@ function displayExpiryTable(data) {
   if (!container) return;
 
   if (!data || data.length === 0) {
-    container.innerHTML = "<p>No expiry records found.</p>";
+    container.innerHTML =
+      '<p class="expiryEmptyState">No expiry records found.</p>';
     return;
   }
 
   const table = document.createElement("table");
-  table.className = "data-table";
+  table.className = "expiryDataTable";
 
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
 
-  const headers = [
-    "ID",
-    "Product ID",
-    "Description",
-    "Expiry Date",
-    "Lot #",
-    "PO #",
-    "Received Date",
-    "Mfg Date",
-    "Disposition",
-    "Comment",
-    "Actions",
+  const headerConfig = [
+    { label: "ID", columnClass: "col-id" },
+    { label: "Product ID", columnClass: "col-product-id" },
+    { label: "Description", columnClass: "col-description" },
+    { label: "Expiry Date", columnClass: "col-expiry-date" },
+    { label: "Lot #", columnClass: "col-lot-number" },
+    { label: "PO #", columnClass: "col-po-number" },
+    { label: "Received Date", columnClass: "col-received-date" },
+    { label: "Mfg Date", columnClass: "col-mfg-date" },
+    { label: "Disposition", columnClass: "col-disposition" },
+    { label: "Comment", columnClass: "col-comment" },
+    { label: "Actions", columnClass: "col-actions" },
   ];
 
-  headers.forEach((header, index) => {
+  headerConfig.forEach((config, index) => {
     const th = document.createElement("th");
-    th.textContent = header;
+    th.className = config.columnClass;
+    th.textContent = config.label;
 
-    if (header !== "Actions") {
+    if (config.label !== "Actions") {
       th.style.cursor = "pointer";
       th.addEventListener("click", () => sortTable(index));
     }
@@ -223,25 +225,61 @@ function displayExpiryTable(data) {
       row.classList.add("use-row");
     }
 
-    row.innerHTML = `
-      <td>${item.EXPIRATION_ID || ""}</td>
-      <td>${item.PRODUCT_ID || ""}</td>
-      <td>${item.DESCRIPTION || ""}</td>
-      <td>${item.EXPIRY_DATE ? formatDate(item.EXPIRY_DATE) : ""}</td>
-      <td>${item.LOT || ""}</td>
-      <td>${item.PO || ""}</td>
-      <td>${item.RECV_DATE ? formatDate(item.RECV_DATE) : ""}</td>
-      <td>${item.MFG_DATE ? formatDate(item.MFG_DATE) : ""}</td>
-      <td>${item.DISPOSITION || ""}</td>
-      <td>${item.COMMENT || ""}</td>
-      <td>
-        <button type="button" class="btn-secondary" onclick="editDisposition('${
-          item.EXPIRATION_ID
-        }')">
+    const cells = [
+      {
+        content: item.EXPIRATION_ID || "",
+        class: "col-id",
+      },
+      {
+        content: item.PRODUCT_ID || "",
+        class: "col-product-id",
+      },
+      {
+        content: item.DESCRIPTION || "",
+        class: "col-description",
+      },
+      {
+        content: item.EXPIRY_DATE ? formatDate(item.EXPIRY_DATE) : "",
+        class: "col-expiry-date",
+      },
+      {
+        content: item.LOT || "",
+        class: "col-lot-number",
+      },
+      {
+        content: item.PO || "",
+        class: "col-po-number",
+      },
+      {
+        content: item.RECV_DATE ? formatDate(item.RECV_DATE) : "",
+        class: "col-received-date",
+      },
+      {
+        content: item.MFG_DATE ? formatDate(item.MFG_DATE) : "",
+        class: "col-mfg-date",
+      },
+      {
+        content: item.DISPOSITION || "",
+        class: "col-disposition",
+      },
+      {
+        content: item.COMMENT || "",
+        class: "col-comment",
+      },
+      {
+        content: `<button type="button" class="btn-secondary" onclick="editDisposition('${item.EXPIRATION_ID}')">
           <span class="btn-icon">✏️</span> Edit
-        </button>
-      </td>
-    `;
+        </button>`,
+        class: "col-actions",
+      },
+    ];
+
+    cells.forEach((cellData) => {
+      const td = document.createElement("td");
+      td.className = cellData.class;
+      td.innerHTML = cellData.content;
+      row.appendChild(td);
+    });
 
     tbody.appendChild(row);
   });

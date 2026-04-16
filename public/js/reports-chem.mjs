@@ -16,16 +16,16 @@ const TANKS = [
 
 // HTML template for each tank card
 const tankCardTemplate = `
-<div class="tank-card report-card">
-  <div class="card-header">
-    <h3 class="card-title">{{displayName}}</h3>
+<div class="card">
+  <div class="card__header">
+    <h3 class="card__header-title">{{displayName}}</h3>
   </div>
-  <div class="card-body">
-    <p class="card-description">View trend data for {{displayName}}</p>
-    <p class="card-meta" style="font-size: 0.85em; color: #999;">Subject: {{subject}}</p>
+  <div class="card__body">
+    <p class="card__description">View trend data for {{displayName}}</p>
+    <p class="card__meta">Subject: {{subject}}</p>
   </div>
-  <div class="card-footer">
-    <a class="card-link btn" href="tank{{tankNumber}}.html">View Trend</a>
+  <div class="card__footer">
+    <a class="button" href="tank{{tankNumber}}.html">View Trend</a>
   </div>
 </div>
 `;
@@ -35,14 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Create a container for tank cards
   const cardsContainer = document.createElement("div");
-  cardsContainer.id = "tanks-container";
-  cardsContainer.style.display = "grid";
-  cardsContainer.style.gridTemplateColumns =
-    "repeat(auto-fit, minmax(300px, 1fr))";
-  cardsContainer.style.gap = "1.5rem";
-  cardsContainer.style.padding = "2rem";
-  cardsContainer.style.maxWidth = "1200px";
-  cardsContainer.style.margin = "0 auto";
+  cardsContainer.className = "card-grid";
 
   // Render each tank card
   TANKS.forEach((tank) => {
