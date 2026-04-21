@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="CTA Attendance Year-over-Year Trend Comparison"
+    />
+    <meta name="author" content="CI QMS" />
+    <link rel="stylesheet" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>CTA Attendance YoY</title>
+    <style>
+      .chart-container {
+        position: relative;
+        height: 400px;
+        margin-bottom: 20px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <h1>CTA Attendance Year-over-Year Trends</h1>
+
+      <!-- Chart -->
+      <div class="chart-container">
+        <canvas id="yoyChart"></canvas>
+      </div>
+
+      <p style="margin-top: 20px; color: #666; font-size: 0.9em">
+        This report shows CTA attendance trends over the last 5 years, including
+        both attendance record counts and total training minutes delivered.
+      </p>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/ctayoy.mjs"></script>
+</html>

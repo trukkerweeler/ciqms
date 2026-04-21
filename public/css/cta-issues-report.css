@@ -1,0 +1,475 @@
+/* CTA Issues Report - Professional Report Styling with Training Theme */
+
+:root {
+  --primary-color: #5b3a70;
+  --accent-color: #8e5fa0;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --light-bg: #f4f0f8;
+  --border-color: #bdc3c7;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.report-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 2rem;
+}
+
+.report-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.report-header {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--accent-color) 100%
+  );
+  color: white;
+  padding: 2.5rem;
+  border-bottom: 4px solid var(--primary-color);
+}
+
+.report-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.report-subtitle {
+  margin: 0.25rem 0 1rem 0;
+  font-size: 0.95rem;
+  opacity: 0.95;
+  font-weight: 300;
+}
+
+.report-timestamp {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 0.5rem;
+}
+
+.report-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: var(--light-bg);
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-color);
+}
+
+.filter-group input {
+  padding: 0.75rem;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition: border-color 0.3s;
+}
+
+.filter-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(142, 95, 160, 0.1);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 0.75rem;
+}
+
+.action-btn {
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: nowrap;
+}
+
+.print-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.print-btn:hover {
+  background-color: #4a2a59;
+  box-shadow: var(--shadow);
+}
+
+.export-btn {
+  background-color: var(--accent-color);
+  color: white;
+}
+
+.export-btn:hover {
+  background-color: #7a4d8a;
+  box-shadow: var(--shadow);
+}
+
+.btn-icon {
+  font-size: 1.1rem;
+}
+
+.table-wrapper {
+  padding: 1.5rem;
+  overflow-x: auto;
+}
+
+.cta-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 1.1rem;
+  background-color: white;
+}
+
+.cta-table thead {
+  background-color: var(--primary-color);
+  color: white;
+  position: sticky;
+  top: 0;
+}
+
+.cta-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--accent-color);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.cta-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s;
+}
+
+.cta-table tbody tr:hover {
+  background-color: #f9f6fc;
+}
+
+.cta-table td {
+  padding: 0.85rem 1rem;
+  vertical-align: top;
+}
+
+.cta-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.truncate-text {
+  max-width: 400px;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  cursor: help;
+}
+
+.status-overdue {
+  color: #e74c3c;
+  font-weight: 700;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.status-due-soon {
+  color: #f39c12;
+  font-weight: 600;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.status-on-track {
+  color: #27ae60;
+  font-weight: 600;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.status-completed {
+  color: #7f8c8d;
+  font-weight: 500;
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.no-data-message {
+  text-align: center;
+  padding: 2rem;
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+.no-data-message.error {
+  color: #e74c3c;
+}
+
+.report-footer {
+  padding: 1.5rem;
+  background-color: var(--light-bg);
+  border-top: 1px solid var(--border-color);
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 0.85rem;
+}
+
+.report-footer p {
+  margin: 0;
+}
+
+/* Print Styles */
+@media print {
+  body {
+    background-color: white;
+    padding: 0;
+  }
+
+  .report-main {
+    padding: 0;
+    background-color: white;
+  }
+
+  .report-container {
+    max-width: 100%;
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .report-header {
+    page-break-after: avoid;
+  }
+
+  .report-filters {
+    display: none;
+  }
+
+  .table-wrapper {
+    padding: 0;
+  }
+
+  .cta-table {
+    font-size: 0.95rem;
+    width: 100%;
+    border-collapse: collapse;
+  }
+
+  .cta-table thead {
+    display: table-header-group;
+    page-break-inside: avoid;
+  }
+
+  .cta-table tbody tr {
+    page-break-inside: avoid;
+  }
+
+  .cta-table th,
+  .cta-table td {
+    padding: 0.4rem 0.5rem;
+    word-wrap: break-word;
+    overflow-wrap: break-word;
+  }
+
+  .cta-table th {
+    background-color: #5b3a70 !important;
+    color: white !important;
+    font-weight: 600 !important;
+    border-bottom: 2px solid #8e5fa0 !important;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  /* Set specific column widths for print */
+  .cta-table th:nth-child(1),
+  .cta-table td:nth-child(1) {
+    width: 80px;
+  }
+
+  .cta-table th:nth-child(2),
+  .cta-table td:nth-child(2) {
+    width: 100px;
+  }
+
+  .cta-table th:nth-child(3),
+  .cta-table td:nth-child(3) {
+    width: 100px;
+  }
+
+  .cta-table th:nth-child(4),
+  .cta-table td:nth-child(4) {
+    width: 80px;
+  }
+
+  .cta-table th:nth-child(5),
+  .cta-table td:nth-child(5) {
+    width: 120px;
+  }
+
+  .cta-table th:nth-child(6),
+  .cta-table td:nth-child(6) {
+    width: 100px;
+  }
+
+  .cta-table th:nth-child(7),
+  .cta-table td:nth-child(7) {
+    width: 250px;
+  }
+
+  .cta-table th:nth-child(8),
+  .cta-table td:nth-child(8) {
+    width: 100px;
+    max-width: 100px;
+  }
+
+  .report-footer {
+    display: none;
+  }
+
+  #header,
+  #footer {
+    display: none;
+  }
+
+  main {
+    margin: 0;
+    padding: 0;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .report-container {
+    max-width: calc(100vw - 2rem);
+  }
+
+  .cta-table th,
+  .cta-table td {
+    padding: 0.75rem 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .truncate-text {
+    max-width: 200px;
+  }
+}
+
+@media (max-width: 768px) {
+  .report-main {
+    padding: 1rem;
+  }
+
+  .report-header {
+    padding: 1.5rem;
+  }
+
+  .report-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .report-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    min-width: 100%;
+  }
+
+  .filter-actions {
+    justify-content: space-between;
+  }
+
+  .action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .table-wrapper {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .cta-table {
+    font-size: 0.8rem;
+  }
+
+  .cta-table th,
+  .cta-table td {
+    padding: 0.6rem 0.4rem;
+  }
+
+  .truncate-text {
+    max-width: 150px;
+  }
+
+  .cta-table th {
+    white-space: nowrap;
+  }
+}
+
+@media (max-width: 480px) {
+  .report-header {
+    padding: 1rem;
+  }
+
+  .report-header h1 {
+    font-size: 1.25rem;
+  }
+
+  .report-subtitle {
+    font-size: 0.85rem;
+  }
+
+  .cta-table {
+    font-size: 0.75rem;
+  }
+
+  .cta-table th,
+  .cta-table td {
+    padding: 0.5rem 0.3rem;
+  }
+
+  .truncate-text {
+    max-width: 100px;
+  }
+
+  .action-btn {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-icon {
+    font-size: 1rem;
+  }
+}

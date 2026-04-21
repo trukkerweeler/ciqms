@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="CTA Issues Report" />
+    <meta name="author" content="CIQMS" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/cta-issues-report.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>CTA Issues Report</title>
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <main id="main" class="report-main">
+      <div class="report-container">
+        <div class="report-header">
+          <h1>CTA Issues Report</h1>
+          <p class="report-subtitle">
+            Corrective Training Action Issues (2025)
+          </p>
+          <div class="report-timestamp" id="reportTimestamp"></div>
+        </div>
+
+        <div class="report-filters">
+          <div class="filter-group">
+            <label for="searchInput">Search CTAs:</label>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search by subject, ID, assignee, or training requirement..."
+            />
+          </div>
+          <div class="filter-actions">
+            <button id="printBtn" class="action-btn print-btn">
+              <span class="btn-icon">🖨️</span> Print
+            </button>
+            <button id="exportBtn" class="action-btn export-btn">
+              <span class="btn-icon">📥</span> Export
+            </button>
+          </div>
+        </div>
+
+        <div id="ctaTableContainer" class="table-wrapper">
+          <!-- Table will be generated here -->
+        </div>
+
+        <div class="report-footer">
+          <p>
+            This is an automatically generated report. Report data is read-only.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/cta-issues.mjs"></script>
+</html>

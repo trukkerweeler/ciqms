@@ -1,0 +1,58 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="SYSDOC Issues Report" />
+    <meta name="author" content="CIQMS" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/sysdoc-issues-report.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>SYSDOC Issues Report</title>
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <main id="main" class="report-main">
+      <div class="report-container">
+        <div class="report-header">
+          <h1>Documentation Issues Report</h1>
+          <p class="report-subtitle">
+            System Document Management Issues (Current Year and Later)
+          </p>
+          <div class="report-timestamp" id="reportTimestamp"></div>
+        </div>
+
+        <div class="report-filters">
+          <div class="filter-group">
+            <label for="searchInput">Search SYSDOC Issues:</label>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search by subject, ID, assignee, or document requirement..."
+            />
+          </div>
+          <div class="filter-actions">
+            <button id="printBtn" class="action-btn print-btn">
+              <span class="btn-icon">🖨️</span> Print
+            </button>
+            <button id="exportBtn" class="action-btn export-btn">
+              <span class="btn-icon">📥</span> Export
+            </button>
+          </div>
+        </div>
+
+        <div id="sysdocTableContainer" class="table-wrapper"></div>
+      </div>
+    </main>
+
+    <footer id="footer"></footer>
+
+    <script type="module" src="/js/sysdoc-issues.mjs"></script>
+  </body>
+</html>

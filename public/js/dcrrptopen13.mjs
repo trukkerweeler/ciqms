@@ -46,7 +46,22 @@ window.addEventListener("DOMContentLoaded", async () => {
             yAxisID: "y",
           },
           {
-            label: "Average Age (Days)",
+            label: "Closed Document Change Requests",
+            data: data.closedCounts,
+            borderColor: "#4caf50",
+            backgroundColor: "rgba(76, 175, 80, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 5,
+            pointBackgroundColor: "#4caf50",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            pointHoverRadius: 7,
+            yAxisID: "y",
+          },
+          {
+            label: "Average Age of Open DCRs (Days)",
             data: data.aging,
             borderColor: "#ff6b35",
             backgroundColor: "rgba(255, 107, 53, 0.1)",
@@ -81,7 +96,7 @@ window.addEventListener("DOMContentLoaded", async () => {
             beginAtZero: true,
             title: {
               display: true,
-              text: "Count of Open Document Change Requests",
+              text: "Count of Document Change Requests",
             },
           },
           y1: {

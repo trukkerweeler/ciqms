@@ -12,18 +12,20 @@ loadHeaderFooter();
 
 // Configuration - will be set in DOM Loaded
 let url = "";
+let apiUrl = "";
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let userEmail; // Will be set in initialization
 let config; // Will be set in initialization
 
 document.addEventListener("DOMContentLoaded", async function () {
-  const apiUrl = await getApiUrl();
+  apiUrl = await getApiUrl();
   url = `${apiUrl}/input/risks`;
   user = await getSessionUser();
   userEmail = users[user];
   config = await getConfig();
   setupEventListeners();
+  await loadInputTypeOptions();
   await loadInputData();
 });
 
@@ -85,6 +87,47 @@ function setupEventListeners() {
         }
       });
     });
+  }
+}
+
+// Load INPUT_TYPE options from API
+async function loadInputTypeOptions() {
+  try {
+    const inputTypeSelect = document.getElementById("INPUT_TYPE");
+    if (!inputTypeSelect) return;
+
+    const response = await fetch(`${apiUrl}/inputtype`);
+    if (!response.ok) {
+      console.error("Failed to load input types");
+      return;
+    }
+
+    const inputTypes = await response.json();
+
+    // Keep the first placeholder option
+    const placeholderOption = inputTypeSelect.querySelector('option[value=""]');
+    inputTypeSelect.innerHTML = "";
+
+    if (placeholderOption) {
+      inputTypeSelect.appendChild(placeholderOption);
+    } else {
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "-- Select Input Type --";
+      inputTypeSelect.appendChild(defaultOption);
+    }
+
+    // Add all input type options
+    inputTypes.forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type.INPUT_TYPE;
+      option.textContent = `${type.INPUT_TYPE}${
+        type.DESCRIPTION ? " - " + type.DESCRIPTION : ""
+      }`;
+      inputTypeSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading input types:", error);
   }
 }
 

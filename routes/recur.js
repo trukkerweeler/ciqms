@@ -132,7 +132,7 @@ router.get("/", (req, res) => {
       }
 
       const query =
-        'SELECT RECUR_ID, INPUT_ID, ASSIGNED_TO, FREQUENCY, SUBJECT, STATUS FROM PPL_INPT_RCUR WHERE STATUS = "A" ORDER BY SUBJECT ASC';
+        'SELECT r.RECUR_ID, r.INPUT_ID, r.ASSIGNED_TO, r.FREQUENCY, r.SUBJECT, r.STATUS, p.INPUT_TYPE FROM PPL_INPT_RCUR r LEFT JOIN PEOPLE_INPUT p ON r.INPUT_ID = p.INPUT_ID WHERE r.STATUS = "A" ORDER BY r.SUBJECT ASC';
       connection.query(query, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for recurrence: " + err);

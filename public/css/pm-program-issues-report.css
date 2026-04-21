@@ -1,0 +1,352 @@
+/* PM Program Issues Report - Professional Report Styling */
+
+:root {
+  --primary-color: #2c3e50;
+  --accent-color: #3498db;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --light-bg: #ecf0f1;
+  --border-color: #bdc3c7;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.report-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 2rem;
+}
+
+.report-container {
+  max-width: 1400px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.report-header {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--accent-color) 100%
+  );
+  color: white;
+  padding: 2.5rem;
+  border-bottom: 4px solid var(--primary-color);
+}
+
+.report-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.report-subtitle {
+  margin: 0 0 1rem 0;
+  font-size: 1rem;
+  opacity: 0.95;
+  font-weight: 300;
+}
+
+.report-timestamp {
+  font-size: 0.85rem;
+  opacity: 0.8;
+  font-style: italic;
+}
+
+.report-filters {
+  display: flex;
+  gap: 1.5rem;
+  padding: 1.5rem 2rem;
+  background-color: var(--light-bg);
+  border-bottom: 1px solid var(--border-color);
+  align-items: center;
+  flex-wrap: wrap;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex: 1;
+  min-width: 300px;
+}
+
+.filter-group label {
+  font-weight: 600;
+  color: var(--primary-color);
+  white-space: nowrap;
+}
+
+.filter-group input {
+  flex: 1;
+  padding: 0.6rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  transition:
+    border-color 0.3s ease,
+    box-shadow 0.3s ease;
+}
+
+.filter-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(52, 152, 219, 0.1);
+}
+
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.6rem 1.2rem;
+  background-color: white;
+  border: 2px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.9rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  color: var(--primary-color);
+}
+
+.action-btn:hover {
+  background-color: var(--primary-color);
+  color: white;
+  border-color: var(--primary-color);
+  box-shadow: var(--shadow);
+}
+
+.action-btn .btn-icon {
+  font-size: 1.1rem;
+}
+
+.table-wrapper {
+  padding: 2rem;
+  overflow-x: auto;
+}
+
+.issues-table {
+  width: 100%;
+  border-collapse: collapse;
+  border-spacing: 0;
+  font-size: 1.1rem !important;
+}
+
+.issues-table thead {
+  background-color: var(--primary-color);
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.issues-table thead th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--accent-color);
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.issues-table tbody tr {
+  border-bottom: 1px solid var(--light-bg);
+  transition: background-color 0.2s ease;
+}
+
+.issues-table tbody tr:hover {
+  background-color: #f9fafb;
+}
+
+.issues-table tbody tr:nth-child(even) {
+  background-color: #fafbfc;
+}
+
+.issues-table tbody td {
+  padding: 1rem;
+  vertical-align: top;
+  font-size: 1.1rem !important;
+}
+
+.issues-table tbody td:first-child {
+  font-weight: 600;
+  color: var(--accent-color);
+}
+
+.status-overdue {
+  color: var(--danger-color);
+  font-weight: 600;
+}
+
+.status-due-soon {
+  color: var(--warning-color);
+  font-weight: 600;
+}
+
+.status-on-track {
+  color: var(--success-color);
+  font-weight: 600;
+}
+
+.truncate-text {
+  max-width: 300px;
+  word-wrap: break-word;
+  white-space: normal;
+  overflow-wrap: break-word;
+  text-align: left;
+}
+
+.truncate-text:hover {
+  cursor: pointer;
+}
+
+.no-data-message {
+  padding: 3rem 2rem;
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1.1rem;
+}
+
+.report-footer {
+  background-color: var(--light-bg);
+  border-top: 1px solid var(--border-color);
+  padding: 1.5rem 2rem;
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 0.85rem;
+}
+
+.report-footer p {
+  margin: 0;
+}
+
+/* Print Styles */
+@media print {
+  .report-main {
+    padding: 0;
+    background: none;
+  }
+
+  .report-container {
+    box-shadow: none;
+    border-radius: 0;
+  }
+
+  .report-filters {
+    display: none !important;
+  }
+
+  .action-btn {
+    display: none !important;
+  }
+
+  .issues-table {
+    font-size: 0.85rem;
+  }
+
+  .issues-table thead {
+    background-color: var(--primary-color) !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .issues-table thead th {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .issues-table thead th:nth-child(6),
+  .issues-table thead th:last-child {
+    background-color: var(--primary-color) !important;
+    color: white !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .issues-table tbody tr:nth-child(even) {
+    background-color: #f9f9f9 !important;
+    -webkit-print-color-adjust: exact;
+    print-color-adjust: exact;
+  }
+
+  .issues-table tbody td {
+    padding: 0.5rem;
+  }
+
+  body {
+    margin: 0;
+    padding: 0;
+  }
+
+  header,
+  footer {
+    display: none !important;
+  }
+}
+
+/* Responsive Design */
+@media (max-width: 1200px) {
+  .report-filters {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .filter-group {
+    min-width: auto;
+  }
+
+  .filter-actions {
+    justify-content: flex-start;
+  }
+}
+
+@media (max-width: 768px) {
+  .report-main {
+    padding: 1rem;
+  }
+
+  .report-header {
+    padding: 1.5rem;
+  }
+
+  .report-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .table-wrapper {
+    padding: 1rem;
+    overflow-x: auto;
+  }
+
+  .issues-table {
+    font-size: 0.85rem;
+  }
+
+  .issues-table thead th,
+  .issues-table tbody td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .truncate-text {
+    max-width: 150px;
+  }
+
+  .filter-group input {
+    font-size: 16px; /* Prevents zoom on iOS */
+  }
+}

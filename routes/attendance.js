@@ -329,5 +329,52 @@ router.post("/retry-move-file", (req, res) => {
 });
 
 // ==================================================
+// Year-over-Year Trend Report (Yearly Totals)
+router.get("/yoy-data", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return res.sendStatus(500);
+      }
+
+      const query = `
+        SELECT 
+          YEAR(DATE_TIME) AS year,
+          COUNT(*) AS count,
+          SUM(MINUTES) AS total_minutes
+        FROM CTA_ATTENDANCE
+        WHERE DATE_TIME IS NOT NULL
+        AND YEAR(DATE_TIME) >= YEAR(NOW()) - 4
+        GROUP BY YEAR(DATE_TIME)
+        ORDER BY YEAR(DATE_TIME)
+      `;
+
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for YoY CTA attendance data: " + err);
+          res.sendStatus(500);
+          connection.end();
+          return;
+        }
+
+        res.json(rows);
+        connection.end();
+      });
+    });
+  } catch (error) {
+    console.error("Error in CTA YoY endpoint:", error);
+    res.status(500).json({ error: "Server error" });
+  }
+});
+
+// ==================================================
 // Get a single record
 module.exports = router;

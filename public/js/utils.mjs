@@ -94,9 +94,37 @@ export function renderWithTemplate2(
 export async function loadReports(data) {
   const main = document.querySelector("main");
   const reportsTemplate = await loadTemplate("/partials/report.html");
+
+  // Create a wrapper grid container
+  const gridWrapper = document.createElement("div");
+  gridWrapper.className = "card-grid";
+
   for (const report of data) {
-    renderWithTemplate2(reportsTemplate, main, report);
+    if (report.group) {
+      // Create a section for grouped reports
+      const section = document.createElement("div");
+      section.className = "report-group";
+
+      const groupHeader = document.createElement("h2");
+      groupHeader.className = "group-header";
+      groupHeader.textContent = report.group;
+      section.appendChild(groupHeader);
+
+      const groupGrid = document.createElement("div");
+      groupGrid.className = "group-grid";
+
+      for (const item of report.items) {
+        renderWithTemplate2(reportsTemplate, groupGrid, item);
+      }
+
+      section.appendChild(groupGrid);
+      gridWrapper.appendChild(section);
+    } else {
+      renderWithTemplate2(reportsTemplate, gridWrapper, report);
+    }
   }
+
+  main.appendChild(gridWrapper);
 }
 
 export async function loadHeaderFooter() {

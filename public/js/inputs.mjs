@@ -12,18 +12,20 @@ loadHeaderFooter();
 
 // Configuration - will be set in DOM Loaded
 let url = "";
+let apiUrl = "";
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let userEmail; // Will be set in initialization
 let config; // Will be set in initialization
 
 document.addEventListener("DOMContentLoaded", async function () {
-  const apiUrl = await getApiUrl();
+  apiUrl = await getApiUrl();
   url = `${apiUrl}/input`;
   user = await getSessionUser();
   userEmail = users[user];
   config = await getConfig();
   setupEventListeners();
+  await loadInputTypeOptions();
   await loadInputData();
 });
 
@@ -86,6 +88,74 @@ function setupEventListeners() {
       });
     });
   }
+
+  // Subject field change listener to toggle Part No requirement
+  const subjectField = document.getElementById("SUBJECT");
+  if (subjectField) {
+    subjectField.addEventListener("change", () => {
+      const partNoField = document.getElementById("USER_DEFINED_2");
+      if (partNoField) {
+        if (subjectField.value.toUpperCase() === "PCPS") {
+          partNoField.setAttribute("required", "required");
+          const label = partNoField
+            .closest(".form-group")
+            ?.querySelector("label");
+          if (label && !label.classList.contains("required")) {
+            label.classList.add("required");
+          }
+        } else {
+          partNoField.removeAttribute("required");
+          const label = partNoField
+            .closest(".form-group")
+            ?.querySelector("label");
+          if (label) {
+            label.classList.remove("required");
+          }
+        }
+      }
+    });
+  }
+}
+
+// Load INPUT_TYPE options from API
+async function loadInputTypeOptions() {
+  try {
+    const inputTypeSelect = document.getElementById("INPUT_TYPE");
+    if (!inputTypeSelect) return;
+
+    const response = await fetch(`${apiUrl}/inputtype`);
+    if (!response.ok) {
+      console.error("Failed to load input types");
+      return;
+    }
+
+    const inputTypes = await response.json();
+
+    // Keep the first placeholder option
+    const placeholderOption = inputTypeSelect.querySelector('option[value=""]');
+    inputTypeSelect.innerHTML = "";
+
+    if (placeholderOption) {
+      inputTypeSelect.appendChild(placeholderOption);
+    } else {
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "-- Select Input Type --";
+      inputTypeSelect.appendChild(defaultOption);
+    }
+
+    // Add all input type options
+    inputTypes.forEach((type) => {
+      const option = document.createElement("option");
+      option.value = type.INPUT_TYPE;
+      option.textContent = `${type.INPUT_TYPE}${
+        type.DESCRIPTION ? " - " + type.DESCRIPTION : ""
+      }`;
+      inputTypeSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading input types:", error);
+  }
 }
 
 async function openAddInputDialog() {
@@ -146,6 +216,10 @@ async function saveInput(event) {
         case "SUBJECT":
         case "PROJECT_ID":
           dataJson[field] = value ? value.toUpperCase() : value;
+          break;
+        case "USER_DEFINED_2":
+          // Keep USER_DEFINED_2 (Part No) as-is without forcing uppercase
+          dataJson[field] = value;
           break;
         default:
           if (field.endsWith("_DATE")) {

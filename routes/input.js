@@ -60,6 +60,115 @@ router.post("/email/:id", async (req, res) => {
 });
 
 // ==================================================
+// Get CTA Issues Report Data
+// ==================================================
+router.get("/ctaissues", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting to database: " + err.stack);
+        res.sendStatus(500);
+        return;
+      }
+
+      const query = `SELECT 
+        pi.INPUT_ID,
+        pi.INPUT_DATE,
+        pi.SUBJECT,
+        pi.ASSIGNED_TO,
+        pi.DUE_DATE,
+        pi.CLOSED,
+        pi.CLOSED_DATE,
+        rq.INPUT_TEXT AS REQUEST_TEXT,
+        re.RESPONSE_TEXT
+      FROM PEOPLE_INPUT pi
+      LEFT JOIN PPL_INPT_TEXT rq ON pi.INPUT_ID = rq.INPUT_ID
+      LEFT JOIN PPL_INPT_RSPN re ON pi.INPUT_ID = re.INPUT_ID
+      WHERE pi.SUBJECT LIKE '%CTA%'
+        AND (YEAR(pi.CLOSED_DATE) = 2025 OR pi.CLOSED_DATE IS NULL)
+      ORDER BY pi.CLOSED_DATE, pi.SUBJECT`;
+
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for CTA issues: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
+
+      connection.end();
+    });
+  } catch (error) {
+    console.error("Error in CTA report endpoint:", error);
+    res.sendStatus(500);
+  }
+});
+
+// ==================================================
+// Get SYSDOC Issues Report Data
+// ==================================================
+router.get("/sysdocissues", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting to database: " + err.stack);
+        res.sendStatus(500);
+        return;
+      }
+
+      const query = `SELECT 
+        pi.INPUT_ID,
+        pi.INPUT_DATE,
+        pi.SUBJECT,
+        pi.ASSIGNED_TO,
+        pi.DUE_DATE,
+        pi.CLOSED,
+        pi.CLOSED_DATE,
+        rq.INPUT_TEXT AS REQUEST_TEXT,
+        re.RESPONSE_TEXT
+      FROM PEOPLE_INPUT pi
+      LEFT JOIN PPL_INPT_TEXT rq ON pi.INPUT_ID = rq.INPUT_ID
+      LEFT JOIN PPL_INPT_RSPN re ON pi.INPUT_ID = re.INPUT_ID
+      WHERE pi.SUBJECT LIKE '%DOC%'
+        AND pi.SUBJECT NOT LIKE '%MM'
+        AND (pi.CLOSED_DATE >= DATE_FORMAT(DATE_SUB(CURDATE(), INTERVAL 1 YEAR), '%Y-01-01') OR pi.CLOSED_DATE IS NULL)
+      ORDER BY pi.CLOSED_DATE DESC, pi.INPUT_DATE DESC`;
+
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for SYSDOC issues: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
+
+      connection.end();
+    });
+  } catch (error) {
+    console.error("Error in SYSDOC report endpoint:", error);
+    res.sendStatus(500);
+  }
+});
+
+// ==================================================
 // Get all records
 router.get("/", (req, res) => {
   try {
@@ -379,8 +488,8 @@ router.post("/", (req, res) => {
         return;
       }
       const query = `INSERT INTO PEOPLE_INPUT (
-                INPUT_ID, INPUT_DATE, PEOPLE_ID, ASSIGNED_TO, DUE_DATE, INPUT_TYPE, SUBJECT, PROJECT_ID, CLOSED, CREATE_DATE, CREATE_BY
-            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
+                INPUT_ID, INPUT_DATE, PEOPLE_ID, ASSIGNED_TO, DUE_DATE, INPUT_TYPE, SUBJECT, PROJECT_ID, CLOSED, CREATE_DATE, CREATE_BY, USER_DEFINED_2
+            ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`;
 
       const values = [
         req.body.INPUT_ID,
@@ -394,6 +503,7 @@ router.post("/", (req, res) => {
         req.body.CLOSED,
         req.body.CREATE_DATE,
         req.body.CREATE_BY,
+        req.body.USER_DEFINED_2 || null,
       ];
 
       connection.query(query, values, (err, rows, fields) => {
@@ -474,6 +584,230 @@ router.put("/incrementId", (req, res) => {
     console.log("Error connecting to Db 318");
     return;
   }
+});
+
+// ==================================================
+// Get open repairs - filtered for project 8511, type REP, not closed, excluding recurring
+router.get("/openrepairs", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+
+      const query = `select pi.INPUT_ID
+        , pi.INPUT_DATE
+        , pi.SUBJECT
+        , pi.ASSIGNED_TO
+        , pi.PROJECT_ID
+        , pit.INPUT_TEXT
+        , pi.DUE_DATE
+        , pi.CLOSED
+        , pi.CLOSED_DATE 
+        , pi.INPUT_TYPE
+        from PEOPLE_INPUT pi 
+        left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID 
+        left join PPL_INPT_RCUR pirc on pi.USER_DEFINED_2 = pirc.RECUR_ID
+        where pi.PROJECT_ID = '8511' 
+        and pi.INPUT_TYPE = 'REP' 
+        and pi.CLOSED = 'N'
+        and pirc.RECUR_ID is null
+        order by pi.INPUT_DATE asc`;
+
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for open repairs: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
+
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error connecting to Db (open repairs)");
+    return;
+  }
+});
+
+// ==================================================
+// Get PM program issues - filtered for project 8511, excluding REP type, recurring, and specific subjects
+router.get("/pmprogramissues", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.sendStatus(500);
+        return;
+      }
+
+      const query = `select pi.INPUT_ID
+        , pi.INPUT_DATE
+        , pi.SUBJECT
+        , pi.ASSIGNED_TO
+        , pi.PROJECT_ID
+        , pit.INPUT_TEXT
+        , pi.DUE_DATE
+        , pi.CLOSED
+        , pi.CLOSED_DATE 
+        , pi.INPUT_TYPE
+        from PEOPLE_INPUT pi 
+        left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID 
+        left join PPL_INPT_RCUR pir on pi.SUBJECT = pir.SUBJECT
+        where pi.PROJECT_ID like '8511%' 
+        and pi.CLOSED = 'N'
+        and pi.SUBJECT not in ('5S', '6S', '99X')
+        and pi.INPUT_TYPE <> 'REP'
+        and pir.SUBJECT is null
+        order by pi.INPUT_DATE asc`;
+
+      connection.query(query, (err, rows, fields) => {
+        if (err) {
+          console.log("Failed to query for PM program issues: " + err);
+          res.sendStatus(500);
+          return;
+        }
+        res.json(rows);
+      });
+
+      connection.end();
+    });
+  } catch (err) {
+    console.log("Error connecting to Db (PM program issues)");
+    res.sendStatus(500);
+    return;
+  }
+});
+
+// ==================================================
+// PM Management Review: Custom date range for Expired and No Entries
+// ==================================================
+router.get("/pm-mgmt-review", (req, res) => {
+  const { startDate, endDate } = req.query;
+
+  if (!startDate || !endDate) {
+    return res
+      .status(400)
+      .json({ error: "startDate and endDate query parameters required" });
+  }
+
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "",
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("❌ DB connection failed:", err.stack);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    try {
+      // Generate monthly breakdowns between start and end dates
+      const months = [];
+      const start = new Date(startDate);
+      const end = new Date(endDate);
+
+      // Start from the first day of start month
+      const current = new Date(start.getFullYear(), start.getMonth(), 1);
+
+      while (current <= end) {
+        const monthStart = new Date(
+          current.getFullYear(),
+          current.getMonth(),
+          1,
+        );
+        const monthEnd = new Date(
+          current.getFullYear(),
+          current.getMonth() + 1,
+          0,
+        );
+
+        // Don't include months beyond the end date
+        if (monthStart > end) break;
+
+        const monthName = monthStart.toLocaleDateString("en-US", {
+          month: "short",
+          year: "numeric",
+        });
+        const monthStartStr = monthStart.toISOString().split("T")[0];
+        const monthEndStr = monthEnd.toISOString().split("T")[0];
+
+        months.push({
+          monthName,
+          monthStart: monthStartStr,
+          monthEnd: monthEndStr,
+        });
+
+        current.setMonth(current.getMonth() + 1);
+      }
+
+      // Build UNION query for each month
+      const queries = months
+        .map(
+          (m) =>
+            `SELECT '${m.monthName}' as month_name, 
+                    SUM(CASE WHEN re.RESPONSE_TEXT REGEXP 'expired' THEN 1 ELSE 0 END) as expired_count,
+                    SUM(CASE WHEN re.RESPONSE_TEXT REGEXP 'no ent' THEN 1 ELSE 0 END) as no_entries_count
+             FROM PEOPLE_INPUT pi 
+             LEFT JOIN PPL_INPT_RCUR pir ON pi.SUBJECT = pir.SUBJECT
+             LEFT JOIN PPL_INPT_RSPN re ON pi.INPUT_ID = re.INPUT_ID
+             WHERE pir.STATUS = 'A' 
+             AND pir.SUBJECT REGEXP 'PM[0-9]{2}'
+             AND pi.INPUT_DATE BETWEEN '${m.monthStart}' AND '${m.monthEnd}'`,
+        )
+        .join(" UNION ALL ");
+
+      if (!queries || queries.length === 0) {
+        console.error("❌ No queries generated for date range");
+        return res.json({ labels: [], expired: [], no_entries: [] });
+      }
+
+      console.log("📊 Executing PM review query for", months.length, "months");
+
+      connection.query(queries, (err, rows) => {
+        if (err) {
+          console.error("❌ Query failed:", err);
+          res.status(500).json({ error: "Query execution failed" });
+        } else {
+          console.log("📊 Query returned", rows ? rows.length : 0, "rows");
+          const labels = rows.map((row) => row.month_name);
+          const expired = rows.map((row) => row.expired_count || 0);
+          const no_entries = rows.map((row) => row.no_entries_count || 0);
+          console.log("📊 Returning data:", {
+            labelsCount: labels.length,
+            expiredCount: expired.length,
+            no_entriesCount: no_entries.length,
+          });
+          res.json({ labels, expired, no_entries });
+        }
+        connection.end();
+      });
+    } catch (error) {
+      console.error("❌ Error in PM mgmt review endpoint:", error);
+      res.status(500).json({ error: "Server error" });
+      connection.end();
+    }
+  });
 });
 
 // ==================================================

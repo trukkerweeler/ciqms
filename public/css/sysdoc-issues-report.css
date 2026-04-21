@@ -1,0 +1,371 @@
+/* SYSDOC Issues Report - Professional Report Styling with Document Management Theme */
+
+:root {
+  --primary-color: #1a472a;
+  --accent-color: #2d6a47;
+  --success-color: #27ae60;
+  --warning-color: #f39c12;
+  --danger-color: #e74c3c;
+  --light-bg: #f0f5f2;
+  --border-color: #bdc3c7;
+  --shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.report-main {
+  display: flex;
+  flex-direction: column;
+  min-height: 100vh;
+  background-color: #f5f7fa;
+  padding: 2rem;
+}
+
+.report-container {
+  max-width: 1600px;
+  margin: 0 auto;
+  background: white;
+  border-radius: 8px;
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+}
+
+.report-header {
+  background: linear-gradient(
+    135deg,
+    var(--primary-color) 0%,
+    var(--accent-color) 100%
+  );
+  color: white;
+  padding: 2.5rem;
+  border-bottom: 4px solid var(--primary-color);
+}
+
+.report-header h1 {
+  margin: 0 0 0.5rem 0;
+  font-size: 2rem;
+  font-weight: bold;
+  letter-spacing: 0.5px;
+}
+
+.report-subtitle {
+  margin: 0.25rem 0 1rem 0;
+  font-size: 0.95rem;
+  opacity: 0.95;
+  font-weight: 300;
+}
+
+.report-timestamp {
+  font-size: 0.85rem;
+  opacity: 0.85;
+  margin-top: 0.5rem;
+}
+
+.report-filters {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 1.5rem;
+  background-color: var(--light-bg);
+  border-bottom: 1px solid var(--border-color);
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.filter-group {
+  flex: 1;
+  min-width: 300px;
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.filter-group label {
+  font-size: 0.9rem;
+  font-weight: 600;
+  color: var(--primary-color);
+  letter-spacing: 0.3px;
+}
+
+.filter-group input {
+  padding: 0.75rem 1rem;
+  border: 1px solid var(--border-color);
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  transition: all 0.3s ease;
+}
+
+.filter-group input:focus {
+  outline: none;
+  border-color: var(--accent-color);
+  box-shadow: 0 0 0 3px rgba(45, 106, 71, 0.1);
+  background-color: #fafbfa;
+}
+
+.filter-actions {
+  display: flex;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.action-btn {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.75rem 1.25rem;
+  border: none;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  letter-spacing: 0.3px;
+}
+
+.print-btn {
+  background-color: var(--primary-color);
+  color: white;
+}
+
+.print-btn:hover {
+  background-color: var(--accent-color);
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.export-btn {
+  background-color: var(--success-color);
+  color: white;
+}
+
+.export-btn:hover {
+  background-color: #229954;
+  box-shadow: var(--shadow);
+  transform: translateY(-2px);
+}
+
+.table-wrapper {
+  overflow-x: auto;
+  padding: 1rem;
+}
+
+.sysdoc-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  table-layout: fixed;
+}
+
+.sysdoc-table thead {
+  position: sticky;
+  top: 0;
+  z-index: 10;
+}
+
+.sysdoc-table th {
+  background-color: var(--primary-color);
+  color: white;
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 1.1rem;
+  letter-spacing: 0.5px;
+  border-bottom: 2px solid var(--accent-color);
+  -webkit-print-color-adjust: exact;
+  print-color-adjust: exact;
+}
+
+.sysdoc-table tbody tr {
+  border-bottom: 1px solid var(--border-color);
+  transition: background-color 0.2s ease;
+}
+
+.sysdoc-table tbody tr:hover {
+  background-color: #f9f9f9;
+}
+
+.sysdoc-table tbody tr:nth-child(even) {
+  background-color: #fafbfa;
+}
+
+.sysdoc-table td {
+  padding: 0.5rem 0.75rem;
+  font-size: 1.1rem;
+  color: #2c3e50;
+}
+
+.no-data-message {
+  padding: 2rem;
+  text-align: center;
+  color: #7f8c8d;
+  font-size: 1rem;
+}
+
+.no-data-message.error {
+  color: #e74c3c;
+  font-weight: 600;
+}
+
+/* Print styles */
+@media print {
+  body {
+    background-color: white;
+  }
+
+  .report-main {
+    padding: 0;
+  }
+
+  .report-container {
+    max-width: 100%;
+    border-radius: 0;
+    box-shadow: none;
+  }
+
+  .report-filters {
+    display: none;
+  }
+
+  .report-header {
+    padding: 1.5rem;
+    border-bottom: 2px solid var(--primary-color);
+  }
+
+  .report-header h1 {
+    font-size: 1.5rem;
+    margin-bottom: 0.25rem;
+  }
+
+  .report-subtitle {
+    margin: 0.1rem 0 0.5rem 0;
+    font-size: 0.9rem;
+  }
+
+  .report-timestamp {
+    font-size: 0.8rem;
+    margin-top: 0.25rem;
+  }
+
+  .table-wrapper {
+    padding: 0;
+    overflow-x: visible;
+  }
+
+  .sysdoc-table {
+    width: 100%;
+  }
+
+  .sysdoc-table thead {
+    position: static !important;
+    display: table-header-group;
+  }
+
+  .sysdoc-table th {
+    background-color: var(--primary-color);
+    color: white;
+    -webkit-print-color-adjust: exact !important;
+    print-color-adjust: exact !important;
+  }
+
+  .sysdoc-table tbody tr {
+    page-break-inside: avoid;
+  }
+
+  .sysdoc-table td {
+    page-break-inside: avoid;
+    font-size: 0.95rem;
+  }
+
+  /* Increase column widths in print mode to prevent overlap */
+  .sysdoc-table th:nth-child(1),
+  .sysdoc-table td:nth-child(1) {
+    width: 60px !important;
+  }
+
+  .sysdoc-table th:nth-child(2),
+  .sysdoc-table td:nth-child(2) {
+    width: 85px !important;
+  }
+
+  .sysdoc-table th:nth-child(6),
+  .sysdoc-table td:nth-child(6) {
+    width: 85px !important;
+  }
+
+  /* Shrink Closed Date column on print */
+  .sysdoc-table th:nth-child(7),
+  .sysdoc-table td:nth-child(7) {
+    width: 80px !important;
+    padding: 0.4rem 0.3rem !important;
+    font-size: 0.85rem !important;
+  }
+
+  header,
+  footer {
+    display: none;
+  }
+}
+
+/* Responsive design */
+@media (max-width: 1200px) {
+  .report-container {
+    max-width: 100%;
+  }
+
+  .sysdoc-table th,
+  .sysdoc-table td {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.95rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .report-main {
+    padding: 1rem;
+  }
+
+  .report-header {
+    padding: 1.5rem;
+  }
+
+  .report-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .report-filters {
+    flex-direction: column;
+    gap: 1rem;
+  }
+
+  .filter-group {
+    min-width: 100%;
+  }
+
+  .filter-actions {
+    width: 100%;
+  }
+
+  .action-btn {
+    flex: 1;
+    justify-content: center;
+  }
+
+  .table-wrapper {
+    padding: 0;
+    overflow-x: auto;
+  }
+
+  .sysdoc-table {
+    font-size: 0.9rem;
+  }
+
+  .sysdoc-table th,
+  .sysdoc-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .btn-icon {
+    display: none;
+  }
+}

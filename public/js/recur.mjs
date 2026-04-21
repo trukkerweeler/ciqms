@@ -48,6 +48,30 @@ class RecurringInputManager {
       }
     });
 
+    // Filter functionality - searches all columns
+    const subjectFilter = document.querySelector("#subjectFilter input");
+    if (subjectFilter) {
+      subjectFilter.addEventListener("keyup", (event) => {
+        const filter = event.target.value.toLowerCase();
+        const rows = document.querySelectorAll("tbody tr");
+
+        rows.forEach((row) => {
+          const cells = row.querySelectorAll("td");
+          let rowMatches = false;
+
+          // Check if any cell in the row contains the filter text
+          cells.forEach((cell) => {
+            const cellText = cell.textContent.toLowerCase();
+            if (cellText.includes(filter)) {
+              rowMatches = true;
+            }
+          });
+
+          row.style.display = rowMatches ? "" : "none";
+        });
+      });
+    }
+
     // Handle ESC key
     document.addEventListener("keydown", (e) => {
       if (e.key === "Escape" && this.addDialog.open) {
@@ -156,6 +180,7 @@ class RecurringInputManager {
                         <th>Assigned To</th>
                         <th>Frequency</th>
                         <th>Subject</th>
+                        <th>Input Type</th>
                         <th>Status</th>
                         <th>Actions</th>
                     </tr>
@@ -172,13 +197,14 @@ class RecurringInputManager {
                     <td>${recur.ASSIGNED_TO || ""}</td>
                     <td>${frequencyText}</td>
                     <td>${recur.SUBJECT || ""}</td>
+                    <td>${recur.INPUT_TYPE || ""}</td>
                     <td>${recur.STATUS || ""}</td>
                     <td>
                         <button class="btn btn-secondary btn-sm" onclick="recurManager.inactivateRecurringInput('${
                           recur.INPUT_ID
                         }', '${
-        recur.ASSIGNED_TO
-      }')" title="Inactivate recurring input">
+                          recur.ASSIGNED_TO
+                        }')" title="Inactivate recurring input">
                             <span class="btn-icon">⏸</span>
                         </button>
                     </td>
@@ -197,7 +223,7 @@ class RecurringInputManager {
   async inactivateRecurringInput(inputId, assignedTo) {
     if (
       !confirm(
-        `Are you sure you want to inactivate the recurring input for ${inputId} assigned to ${assignedTo}?`
+        `Are you sure you want to inactivate the recurring input for ${inputId} assigned to ${assignedTo}?`,
       )
     ) {
       return;

@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Input Type Maintenance</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/ncm-type-maint.css" />
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <div class="page-header">
+      <h1>Input Type Maintenance</h1>
+      <div class="toolbar">
+        <button class="btn-sm btn-add" id="btnAdd">+ Add</button>
+      </div>
+    </div>
+
+    <main>
+      <div class="content">
+        <!-- Table Panel -->
+        <div class="table-panel">
+          <div class="table-header">All Input Types</div>
+          <div id="tableContainer" style="flex: 1; overflow: auto">
+            <div class="empty-message">Loading...</div>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <!-- Modal for Add/Edit Form -->
+    <div class="modal-backdrop" id="backdrop" onclick="closeModal()"></div>
+    <div class="modal" id="modal">
+      <div class="modal-header">
+        <span id="formTitle">Add New Input Type</span>
+        <button class="modal-close" onclick="closeModal()">&times;</button>
+      </div>
+      <div class="modal-body">
+        <div id="errorMessage" class="alert alert-error"></div>
+        <div id="successMessage" class="alert alert-success"></div>
+
+        <form id="inputTypeForm">
+          <div class="form-group">
+            <label for="input_type">
+              Input Type <span class="required">*</span>
+            </label>
+            <input
+              type="text"
+              id="input_type"
+              name="input_type"
+              maxlength="16"
+              required
+              placeholder="e.g., REQ, BUY, EVAL"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="description">Description</label>
+            <textarea
+              id="description"
+              name="description"
+              maxlength="40"
+              placeholder="Brief description"
+            ></textarea>
+          </div>
+        </form>
+      </div>
+      <div class="modal-footer">
+        <button type="button" class="btn btn-secondary" onclick="closeModal()">
+          Cancel
+        </button>
+        <button
+          type="button"
+          class="btn btn-danger"
+          id="deleteButton"
+          style="display: none"
+        >
+          Delete
+        </button>
+        <button
+          type="submit"
+          form="inputTypeForm"
+          class="btn btn-primary"
+          id="saveButton"
+        >
+          Save
+        </button>
+      </div>
+    </div>
+
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/input-type-maint.mjs"></script>
+</html>

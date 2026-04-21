@@ -50,7 +50,7 @@ router.get("/trend-open-13months", (req, res) => {
       }
 
       // Build UNION query for each month
-      // Also calculate average age in days for open DCRs
+      // Also calculate average age in days for open DCRs and count closed DCRs
       const queries = months
         .map(
           (m) =>
@@ -58,19 +58,38 @@ router.get("/trend-open-13months", (req, res) => {
         )
         .join(" UNION ALL ");
 
-      connection.query(queries, (err, rows) => {
+      const closedQueries = months
+        .map(
+          (m) =>
+            `SELECT '${m.monthName}' as month_name, COUNT(*) as closed_count FROM DOCM_CHNG_RQST WHERE CLOSED_DATE IS NOT NULL AND CLOSED_DATE >= '${m.monthStart}' AND CLOSED_DATE <= '${m.LDOM}'`,
+        )
+        .join(" UNION ALL ");
+
+      connection.query(queries, (err, openRows) => {
         if (err) {
           console.error("❌ Query failed:", err);
           res
             .status(500)
             .json({ error: `Query execution failed: ${err.message}` });
         } else {
-          const labels = rows.map((row) => row.month_name);
-          const counts = rows.map((row) => row.count);
-          const aging = rows.map((row) => row.avg_age || 0);
-          res.json({ labels, counts, aging });
+          connection.query(closedQueries, (err, closedRows) => {
+            if (err) {
+              console.error("❌ Closed query failed:", err);
+              res.status(500).json({
+                error: `Closed query execution failed: ${err.message}`,
+              });
+            } else {
+              const labels = openRows.map((row) => row.month_name);
+              const counts = openRows.map((row) => row.count);
+              const aging = openRows.map((row) => row.avg_age || 0);
+              const closedCounts = closedRows.map(
+                (row) => row.closed_count || 0,
+              );
+              res.json({ labels, counts, aging, closedCounts });
+            }
+            connection.end();
+          });
         }
-        connection.end();
       });
     } catch (error) {
       console.error("❌ Error in trend endpoint:", error);
