@@ -66,19 +66,43 @@
       ]
     },
     {
-      "h2": "Opportunities for Improvement",
+      "group": "Quality Trends",
+      "items": [
+        {
+          "h2": "Open Corrective Action Trend (13 Months)",
+          "a": "Go to Open Corrective Action Trend Report",
+          "html": "carptopen13.html"
+        },
+        {
+          "h2": "Open NCM Trend (13 Months)",
+          "a": "Go to Open NCM Trend Report",
+          "html": "ncmrptopen13.html"
+        },
+        {
+          "h2": "Open Document Change Request Trend (13 Months)",
+          "a": "Go to Open DCR Trend Report",
+          "html": "dcrrptopen13.html"
+        }
+      ]
+    },
+    {
+      "group": "Supplier Performance",
+      "items": [
+        {
+          "h2": "Supplier Performance Scorecard",
+          "a": "Go to Supplier Performance Scorecard",
+          "html": "supplier-scorecard.html"
+        },
+        {
+          "h2": "Top 5 Customers",
+          "a": "Go to Top 5 Customers Report",
+          "html": "topfive.html"
+        }
+      ]
+    },
+    {
       "a": "Go to OFI Report",
       "html": "report-ofi.html"
-    },
-    {
-      "h2": "Open NCM Trend (13 Months)",
-      "a": "Go to Open NCM Trend Report",
-      "html": "ncmrptopen13.html"
-    },
-    {
-      "h2": "Open Document Change Request Trend (13 Months)",
-      "a": "Go to Open DCR Trend Report",
-      "html": "dcrrptopen13.html"
     },
     {
       "h2": "Chemical Tank Trends",

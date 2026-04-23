@@ -1,0 +1,249 @@
+/* Supplier Scorecard Styles */
+
+.recordsaddrecordheading h1 {
+  grid-column: 1 / -1;
+}
+
+.scorecard-section {
+  margin: 2rem 0.5rem;
+  padding: 2rem;
+  background: #fafbfa;
+  border-radius: 8px;
+  border: 1px solid #e0e0e0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+}
+
+.scorecard-section h2 {
+  margin: 0 0 1.5rem 0;
+  font-size: 1.4rem;
+  color: #1a472a;
+  border-bottom: 2px solid #2d6a47;
+  padding-bottom: 0.5rem;
+}
+
+.table-container {
+  overflow-x: auto;
+  background: white;
+  border-radius: 6px;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+}
+
+.data-table thead {
+  background-color: #1a472a;
+  color: white;
+  position: sticky;
+  top: 0;
+  z-index: 5;
+}
+
+.data-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  font-size: 0.95rem;
+  letter-spacing: 0.3px;
+  border-bottom: 2px solid #2d6a47;
+}
+
+.data-table tbody tr {
+  border-bottom: 1px solid #e0e0e0;
+  transition: background-color 0.2s ease;
+}
+
+.data-table tbody tr:hover {
+  background-color: #f0f5f2;
+}
+
+.data-table tbody tr:nth-child(even) {
+  background-color: #fafbfa;
+}
+
+.data-table td {
+  padding: 0.75rem 1rem;
+  font-size: 0.95rem;
+  color: #2c3e50;
+}
+
+/* Column-specific widths for better spacing */
+.data-table th:nth-child(1),
+.data-table td:nth-child(1) {
+  width: 60px !important;
+  min-width: 60px !important;
+}
+
+.data-table th:nth-child(2),
+.data-table td:nth-child(2) {
+  width: 110px !important;
+  min-width: 110px !important;
+}
+
+.data-table th:nth-child(3),
+.data-table td:nth-child(3) {
+  width: 130px !important;
+  min-width: 130px !important;
+}
+
+.data-table th:nth-child(4),
+.data-table td:nth-child(4) {
+  width: 90px !important;
+  min-width: 90px !important;
+}
+
+.data-table th:nth-child(5),
+.data-table td:nth-child(5) {
+  width: 90px !important;
+  min-width: 90px !important;
+}
+
+.data-table th:nth-child(6),
+.data-table td:nth-child(6) {
+  width: 100px !important;
+  min-width: 100px !important;
+}
+
+.data-table th:nth-child(7),
+.data-table td:nth-child(7) {
+  width: 80px !important;
+  min-width: 80px !important;
+  max-width: 80px !important;
+}
+
+.data-table td.numeric {
+  text-align: right;
+  font-family: "Courier New", monospace;
+}
+
+.data-table td.score {
+  font-weight: 600;
+  color: #1a472a;
+}
+
+/* Supplier Selection Section */
+.supplier-selection {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 2rem;
+  padding: 1.5rem;
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+}
+
+.supplier-selection label {
+  font-weight: 600;
+  color: #1a472a;
+  min-width: 150px;
+}
+
+.supplier-selection select {
+  flex: 1;
+  max-width: 400px;
+  padding: 0.75rem;
+  border: 1px solid #bdc3c7;
+  border-radius: 4px;
+  font-size: 0.95rem;
+  font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+  background-color: white;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.supplier-selection select:hover {
+  border-color: #2d6a47;
+  box-shadow: 0 0 0 3px rgba(45, 106, 71, 0.05);
+}
+
+.supplier-selection select:focus {
+  outline: none;
+  border-color: #2d6a47;
+  box-shadow: 0 0 0 3px rgba(45, 106, 71, 0.1);
+  background-color: #fafbfa;
+}
+
+/* Chart Styles */
+.chart-wrapper {
+  background: white;
+  border-radius: 6px;
+  border: 1px solid #e0e0e0;
+  padding: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
+}
+
+.chart-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 300px;
+  color: #7f8c8d;
+  font-size: 1rem;
+  font-style: italic;
+  background: #f9f9f9;
+  border-radius: 4px;
+  border: 2px dashed #bdc3c7;
+}
+
+#chartDisplay {
+  position: relative;
+  height: 400px;
+}
+
+#chartDisplay.active {
+  display: block !important;
+}
+
+#chartDisplay.active ~ #chartPlaceholder {
+  display: none;
+}
+
+/* Error and Loading States */
+.error {
+  color: #e74c3c;
+  padding: 1rem;
+  background: #fee;
+  border: 1px solid #f99;
+  border-radius: 4px;
+  margin: 1rem 0;
+}
+
+.loading {
+  color: #7f8c8d;
+  padding: 1rem;
+  text-align: center;
+}
+
+/* Responsive Design */
+@media (max-width: 1024px) {
+  .supplier-selection {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .supplier-selection select {
+    max-width: 100%;
+    width: 100%;
+  }
+}
+
+@media (max-width: 768px) {
+  .scorecard-section {
+    margin: 1rem 0;
+    padding: 1rem;
+  }
+
+  .data-table th,
+  .data-table td {
+    padding: 0.5rem;
+    font-size: 0.85rem;
+  }
+
+  .scorecard-section h2 {
+    font-size: 1.2rem;
+  }
+}

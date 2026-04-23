@@ -1,0 +1,65 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Supplier Performance Scorecard - Top 10 Suppliers and Delivery Trends"
+    />
+    <meta name="author" content="Tim Kent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/supplier-scorecard.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>Supplier Performance Scorecard</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <div class="recordsaddrecordheading">
+        <h1>Supplier Performance Scorecard</h1>
+      </div>
+
+      <!-- Top 10 Suppliers Table -->
+      <section class="scorecard-section">
+        <h2>Top 10 Suppliers (2025)</h2>
+        <div id="topSuppliersContainer" class="table-container">
+          <p class="loading">
+            Loading supplier data from database (this may take a minute)...
+          </p>
+        </div>
+      </section>
+
+      <!-- Supplier Selection and Trend Chart -->
+      <section class="scorecard-section">
+        <h2>Supplier Delivery Performance Trend</h2>
+        <div class="supplier-selection">
+          <label for="supplierSelect">Select Supplier:</label>
+          <select id="supplierSelect">
+            <option value="">-- Choose a supplier --</option>
+          </select>
+        </div>
+
+        <div id="chartContainer" class="chart-wrapper">
+          <div
+            style="position: relative; height: 400px; display: none"
+            id="chartDisplay"
+          >
+            <canvas id="supplierTrendChart"></canvas>
+          </div>
+          <div id="chartPlaceholder" class="chart-placeholder">
+            Select a supplier to view delivery performance trend
+          </div>
+        </div>
+      </section>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/supplier-scorecard.mjs"></script>
+</html>

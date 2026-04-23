@@ -2,8 +2,6 @@
 // dotenv.config();
 
 // VERSION: 3.0 - WITH DYNAMIC API URL AND DEBUG LOGS
-console.log("[utils.mjs] Version 3.0 loaded with dynamic API URL support");
-
 // Cache the API URL after first fetch
 let cachedApiUrl = null;
 
@@ -15,7 +13,6 @@ let cachedApiUrl = null;
  */
 export async function getApiUrl() {
   if (cachedApiUrl) {
-    console.log("[getApiUrl] Returning cached URL:", cachedApiUrl);
     return cachedApiUrl;
   }
 
@@ -25,7 +22,6 @@ export async function getApiUrl() {
     if (response.ok) {
       const config = await response.json();
       cachedApiUrl = config.apiUrl;
-      console.log("[getApiUrl] Got API URL from server:", cachedApiUrl);
       return cachedApiUrl;
     }
   } catch (err) {
@@ -39,11 +35,9 @@ export async function getApiUrl() {
   ) {
     const port = myport();
     cachedApiUrl = `http://localhost:${port}`;
-    console.log("[getApiUrl] Using localhost fallback:", cachedApiUrl);
   } else {
     // Fallback for other environments - assume same host
     cachedApiUrl = `http://${window.location.hostname}:3004`;
-    console.log("[getApiUrl] Using network host fallback:", cachedApiUrl);
   }
 
   return cachedApiUrl;
@@ -281,7 +275,7 @@ export function getFormFields(myform) {
     case "csr":
       data = ["CUSTOMER_ID", "UNIT", "VALUE"];
       for (entryfield in data) {
-        console.log(entryfield);
+        // Debug: iterate through fields
       }
     case "output":
       return [
@@ -579,13 +573,12 @@ export function fetchAndParseXML(filePath, searchKey, searchValue) {
       for (let i = 0; i < elements.length; i++) {
         if (elements[i].textContent === searchValue) {
           found = true;
-          console.log("Match found:", elements[i].parentNode.outerHTML);
           break;
         }
       }
 
       if (!found) {
-        console.log("No matching data found in the XML file.");
+        // No matching data found in the XML file
       }
     })
     .catch((error) => {
@@ -779,7 +772,6 @@ export async function getDetails(
 
 // Render a section as an HTML table using the provided data and title
 export function renderTableFromArray(data, title) {
-  console.log("Data to render:", data);
   if (!Array.isArray(data) || !data.length) return "";
 
   // Determine if we need to add the Specification column
