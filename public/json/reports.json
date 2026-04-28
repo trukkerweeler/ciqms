@@ -66,6 +66,21 @@
       ]
     },
     {
+      "group": "Internal Audit",
+      "items": [
+        {
+          "h2": "IA Report",
+          "a": "Go to Internal Audit Report",
+          "html": "ia-report.html"
+        },
+        {
+          "h2": "IA Dashboard",
+          "a": "Go to Internal Audit Dashboard",
+          "html": "ia-dashboard.html"
+        }
+      ]
+    },
+    {
       "group": "Quality Trends",
       "items": [
         {
@@ -108,6 +123,16 @@
       "h2": "Chemical Tank Trends",
       "a": "Go to Chemical Tank Trend Reports",
       "html": "reports-chem.html"
+    },
+    {
+      "group": "System Configuration",
+      "items": [
+        {
+          "h2": "Product Characteristic Type Maintenance",
+          "a": "Go to Product Characteristic Type Maintenance",
+          "html": "prd-char-type.html"
+        }
+      ]
     }
   ]
 }

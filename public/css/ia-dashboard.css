@@ -1,0 +1,285 @@
+/* IA Dashboard Page Styles */
+
+* {
+  box-sizing: border-box;
+}
+
+html,
+body {
+  margin: 0;
+  padding: 0;
+  height: 100%;
+}
+
+body {
+  display: flex;
+  flex-direction: column;
+  font-size: 13px;
+  font-family:
+    system-ui,
+    -apple-system,
+    sans-serif;
+}
+
+header {
+  flex-shrink: 0;
+}
+
+main {
+  flex: 1;
+  overflow: auto;
+  display: flex;
+  flex-direction: column;
+}
+
+.page-header {
+  padding: 16px;
+  background: #f8f9fa;
+  border-bottom: 1px solid #ddd;
+  flex-shrink: 0;
+}
+
+.page-header h1 {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 600;
+  color: #333;
+}
+
+.content {
+  padding: 16px;
+  flex: 1;
+  overflow: auto;
+}
+
+/* Filters Panel */
+.filters-panel {
+  display: flex;
+  gap: 12px;
+  margin-bottom: 24px;
+  padding: 12px 16px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.filter-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.filter-group label {
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.filter-group select {
+  padding: 6px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 13px;
+  background: white;
+  min-width: 150px;
+}
+
+/* Dashboard Section */
+.dashboard-section {
+  margin-bottom: 24px;
+  background: #fff;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  padding: 16px;
+}
+
+.dashboard-section h2 {
+  margin: 0 0 16px 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: #333;
+  border-bottom: 2px solid #007bff;
+  padding-bottom: 8px;
+}
+
+/* Counts Grid */
+.counts-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+}
+
+.count-card {
+  padding: 16px;
+  background: #f0f7ff;
+  border: 2px solid #007bff;
+  border-radius: 4px;
+  text-align: center;
+}
+
+.count-card.car {
+  background: #fff5f5;
+  border-color: #dc3545;
+}
+
+.count-card.ofi {
+  background: #fffbf0;
+  border-color: #fd7e14;
+}
+
+.count-card.dcr {
+  background: #f0fff5;
+  border-color: #198754;
+}
+
+.count-label {
+  font-size: 12px;
+  font-weight: 500;
+  color: #666;
+  text-transform: uppercase;
+  margin-bottom: 8px;
+}
+
+.count-value {
+  font-size: 32px;
+  font-weight: bold;
+  color: #333;
+}
+
+/* Tables */
+.table-container {
+  overflow-x: auto;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 12px;
+}
+
+table thead {
+  background: #f5f5f5;
+  font-weight: 600;
+  color: #333;
+}
+
+table th {
+  padding: 10px 12px;
+  text-align: left;
+  border-bottom: 2px solid #ddd;
+}
+
+table td {
+  padding: 10px 12px;
+  border-bottom: 1px solid #f0f0f0;
+}
+
+table tbody tr:hover {
+  background: #f9f9f9;
+}
+
+.observation-cell {
+  max-width: 300px;
+  word-wrap: break-word;
+  white-space: normal;
+}
+
+/* Badge */
+.badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  white-space: nowrap;
+}
+
+.badge-car {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.badge-ofi {
+  background: #fff3cd;
+  color: #856404;
+  border: 1px solid #ffeaa7;
+}
+
+.badge-dcr {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Alerts */
+.alert {
+  padding: 12px 16px;
+  border-radius: 4px;
+  margin-bottom: 16px;
+}
+
+.alert-info {
+  background: #d1ecf1;
+  color: #0c5460;
+  border: 1px solid #bee5eb;
+}
+
+.alert-error {
+  background: #f8d7da;
+  color: #721c24;
+  border: 1px solid #f5c6cb;
+}
+
+.alert-success {
+  background: #d4edda;
+  color: #155724;
+  border: 1px solid #c3e6cb;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .filters-panel {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .filter-group {
+    width: 100%;
+  }
+
+  .filter-group select {
+    width: 100%;
+  }
+
+  .counts-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  table {
+    font-size: 11px;
+  }
+
+  table th,
+  table td {
+    padding: 8px;
+  }
+}
+
+@media (max-width: 480px) {
+  .counts-grid {
+    grid-template-columns: 1fr;
+  }
+
+  .page-header h1 {
+    font-size: 18px;
+  }
+
+  .dashboard-section {
+    padding: 12px;
+  }
+}

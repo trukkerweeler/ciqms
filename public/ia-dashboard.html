@@ -1,0 +1,140 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>IA Dashboard</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/ia-dashboard.css" />
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <div class="page-header">
+      <h1>Internal Audit Dashboard</h1>
+    </div>
+
+    <main>
+      <div class="content">
+        <!-- Filters -->
+        <div class="filters-panel">
+          <div class="filter-group">
+            <label for="yearFilter">Year:</label>
+            <select id="yearFilter"></select>
+          </div>
+          <div class="filter-group">
+            <label for="subjectFilter">Subject:</label>
+            <select id="subjectFilter">
+              <option value="">All Subjects</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="clauseFilter">Clause:</label>
+            <select id="clauseFilter">
+              <option value="">All Clauses</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- No Data Message -->
+        <div id="noDataMessage" class="alert alert-info" style="display: none">
+          No IA findings available for the selected period.
+        </div>
+
+        <!-- Section 1: Finding Counts -->
+        <div id="countsSection" class="dashboard-section">
+          <h2>Finding Counts</h2>
+          <div class="counts-grid">
+            <div class="count-card">
+              <div class="count-label">Total Findings</div>
+              <div class="count-value" id="totalCount">-</div>
+            </div>
+            <div class="count-card car">
+              <div class="count-label">CAR</div>
+              <div class="count-value" id="carCount">-</div>
+            </div>
+            <div class="count-card ofi">
+              <div class="count-label">OFI</div>
+              <div class="count-value" id="ofiCount">-</div>
+            </div>
+            <div class="count-card dcr">
+              <div class="count-label">DCR</div>
+              <div class="count-value" id="dcrCount">-</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Section 2: Findings by Clause -->
+        <div id="byClauseSection" class="dashboard-section">
+          <h2>Findings by Clause</h2>
+          <div class="table-container">
+            <table id="byClauseTable">
+              <thead>
+                <tr>
+                  <th>Clause</th>
+                  <th>Total</th>
+                  <th>CAR</th>
+                  <th>OFI</th>
+                  <th>DCR</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="5" style="text-align: center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 3: Repeat Findings -->
+        <div id="repeatSection" class="dashboard-section">
+          <h2>Repeat Findings</h2>
+          <div class="table-container">
+            <table id="repeatTable">
+              <thead>
+                <tr>
+                  <th>Clause</th>
+                  <th>Occurrences</th>
+                  <th>Finding Count</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="3" style="text-align: center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+
+        <!-- Section 4: Raw Findings Table -->
+        <div id="rawSection" class="dashboard-section">
+          <h2>All Findings</h2>
+          <div class="table-container">
+            <table id="rawTable">
+              <thead>
+                <tr>
+                  <th>Scheduled Date</th>
+                  <th>Subject</th>
+                  <th>Reference</th>
+                  <th>Finding Type</th>
+                  <th>Finding Code</th>
+                  <th>Observation</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td colspan="6" style="text-align: center">Loading...</td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/ia-dashboard.mjs"></script>
+</html>

@@ -1,0 +1,81 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Internal Audit Report - Age at Closure and YoY Findings"
+    />
+    <meta name="author" content="CI QMS" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>IA Report</title>
+    <style>
+      .chart-container {
+        position: relative;
+        height: 400px;
+        margin-bottom: 30px;
+        padding: 20px;
+        background: #f9f9f9;
+        border-radius: 8px;
+        border: 1px solid #e0e0e0;
+      }
+
+      .report-header {
+        margin-bottom: 30px;
+      }
+
+      .report-header h1 {
+        margin: 0 0 10px 0;
+      }
+
+      .report-info {
+        font-size: 0.9em;
+        color: #666;
+        margin: 10px 0;
+      }
+
+      main {
+        max-width: 1400px;
+        margin: 0 auto;
+        padding: 20px;
+      }
+    </style>
+  </head>
+
+  <body>
+    <header id="header"></header>
+
+    <main id="main">
+      <div class="report-header">
+        <h1>Internal Audit Report</h1>
+        <div class="report-info">
+          Showing data for the previous 2 calendar years
+        </div>
+      </div>
+
+      <!-- Chart 1: IA Age at Closure -->
+      <div class="chart-container">
+        <canvas id="ageAtClosureChart"></canvas>
+      </div>
+
+      <!-- Chart 2: CAR, OFI, DCR Year-over-Year -->
+      <div class="chart-container">
+        <canvas id="yoyFindingsChart"></canvas>
+      </div>
+
+      <p style="margin-top: 40px; color: #666; font-size: 0.9em">
+        Chart 1: Days between scheduled date and completion date for closed
+        audits<br />
+        Chart 2: Count of findings by type for the previous 2 calendar years
+      </p>
+    </main>
+
+    <footer id="footer"></footer>
+  </body>
+
+  <script type="module" src="/js/ia-report.mjs"></script>
+</html>
