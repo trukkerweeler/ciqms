@@ -1,10 +1,10 @@
 {
   "name": "ciqms",
-  "version": "1.0.20260401",
+  "version": "1.0.20260501",
   "description": "",
   "main": "server.js",
   "scripts": {
-    "dev": "node --env-file=.env server.js",
+    "dev": "nodemon --env-file=.env server.js",
     "test-history": "node --env-file=.env test-item-history.js"
   },
   "keywords": [],

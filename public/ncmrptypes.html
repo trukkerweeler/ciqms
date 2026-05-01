@@ -1,0 +1,104 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="NCM Types Report" />
+    <meta name="author" content="CI QMS" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <style>
+      @media print {
+        #timeperiod-selection {
+          display: none;
+        }
+      }
+    </style>
+    <title>NCM Types</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <div class="recordsaddrecordheading">
+        <h1>NCM Types</h1>
+      </div>
+
+      <div
+        style="
+          margin-top: 20px;
+          padding: 20px;
+          background: #f9f9f9;
+          border-radius: 8px;
+          border: 1px solid #e0e0e0;
+        "
+      >
+        <!-- Time Period Selection Form -->
+        <div
+          id="timeperiod-selection"
+          style="
+            margin-bottom: 20px;
+            padding: 15px;
+            background: #fff;
+            border-radius: 6px;
+          "
+        >
+          <label style="display: block; margin-bottom: 10px; font-weight: bold"
+            >Select Time Period:</label
+          >
+          <div style="display: flex; gap: 15px; margin-bottom: 15px">
+            <label style="display: flex; align-items: center; gap: 8px">
+              <input
+                type="radio"
+                id="periodRolling"
+                name="timePeriod"
+                value="rolling"
+                checked
+              />
+              12 Months Rolling
+            </label>
+            <label style="display: flex; align-items: center; gap: 8px">
+              <input
+                type="radio"
+                id="periodCalendar"
+                name="timePeriod"
+                value="calendar"
+              />
+              Previous Calendar Year
+            </label>
+          </div>
+        </div>
+
+        <!-- Chart Container -->
+        <div
+          style="
+            position: relative;
+            height: 400px;
+            max-width: 600px;
+            margin: 0 auto;
+          "
+        >
+          <canvas id="ncmTypePieChart"></canvas>
+        </div>
+        <p
+          style="
+            margin-top: 20px;
+            color: #666;
+            font-size: 0.9em;
+            text-align: center;
+          "
+        >
+          This Pareto chart shows the distribution of nonconformances by type,
+          with cumulative percentage.
+        </p>
+      </div>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/ncm-type-pareto.mjs"></script>
+</html>

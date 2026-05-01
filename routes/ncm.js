@@ -8,7 +8,198 @@ let test = false;
 
 // Debug flag - enable with DEBUG_NCM=true
 const DEBUG_NCM = process.env.DEBUG_NCM === "false";
-// ...existing code...
+
+// ==================================================
+// Get Open NCM Trend - Last 13 Months
+router.get("/trend-open-13months", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      // Generate last 13 months
+      const today = new Date();
+      const months = [];
+      const dateRanges = [];
+
+      for (let i = 12; i >= 0; i--) {
+        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
+        const monthName = date.toLocaleDateString("en-US", {
+          year: "numeric",
+          month: "short",
+        });
+        months.push(monthName);
+
+        // First day of current month
+        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
+        // First day of next month (exclusive end date)
+        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 1);
+
+        const startStr = firstDay.toISOString().split("T")[0];
+        const endStr = lastDay.toISOString().split("T")[0];
+
+        dateRanges.push({ start: startStr, end: endStr });
+      }
+
+      // Build query with UNION for each month
+      // For each month, count NCMs that were OPEN as of the last day of that month
+      // Also calculate average age in days for open NCMs
+      const queries = dateRanges.map(
+        (range) =>
+          `SELECT '${range.start}' as month_start, COUNT(*) as count, ROUND(COALESCE(AVG(DATEDIFF('${range.end}', NCM_DATE)), 0), 0) as avg_age FROM NONCONFORMANCE WHERE NCM_DATE <= '${range.end}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${range.end}')`,
+      );
+
+      const query = queries.join(" UNION ALL ") + " ORDER BY month_start ASC;";
+
+      connection.query(query, (err, rows) => {
+        if (err) {
+          console.error("Failed to query for open NCM trend:", err);
+          res.status(500).json({ error: "Query failed", details: err.message });
+          connection.end();
+          return;
+        }
+
+        if (!rows || rows.length === 0) {
+          res.json({
+            labels: months,
+            counts: months.map(() => 0),
+            aging: months.map(() => 0),
+          });
+          connection.end();
+          return;
+        }
+
+        // Extract counts and aging from result
+        const counts = rows.map((row) => row.count || 0);
+        const aging = rows.map((row) => row.avg_age || 0);
+
+        res.json({
+          labels: months,
+          counts: counts,
+          aging: aging,
+        });
+        connection.end();
+      });
+    });
+  } catch (err) {
+    console.error("Error in trend endpoint:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+});
+
+// ==================================================
+// Pie chart data: NCM records by NCM_TYPE
+router.get("/types-pie", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      // Get period parameter: 'rolling' or 'calendar'
+      const period = req.query.period || "rolling";
+      let query;
+
+      if (period === "calendar") {
+        // Previous calendar year
+        const prevYear = new Date().getFullYear() - 1;
+        const yearStart = `${prevYear}-01-01`;
+        const yearEnd = `${prevYear}-12-31`;
+        query = `SELECT NCM_TYPE, COUNT(*) as count FROM NONCONFORMANCE WHERE NCM_DATE >= '${yearStart}' AND NCM_DATE <= '${yearEnd}' GROUP BY NCM_TYPE ORDER BY count DESC`;
+      } else {
+        // Last 12 months (rolling)
+        query = `SELECT NCM_TYPE, COUNT(*) as count FROM NONCONFORMANCE WHERE NCM_DATE >= DATE_SUB(NOW(), INTERVAL 12 MONTH) GROUP BY NCM_TYPE ORDER BY count DESC`;
+      }
+      connection.query(query, (err, rows) => {
+        if (err) {
+          console.error("Failed to query for NCM_TYPE pie:", err);
+          res.status(500).json({ error: "Query failed", details: err.message });
+          connection.end();
+          return;
+        }
+        const labels = rows.map((r) => r.NCM_TYPE || "(none)");
+        const counts = rows.map((r) => r.count);
+        res.json({ labels, counts });
+        connection.end();
+      });
+    });
+  } catch (err) {
+    console.error("Error in types-pie endpoint:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+});
+
+// ==================================================
+// Pie chart data: NCM records by SUBJECT
+router.get("/subjects-pie", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        res.status(500).json({ error: "Database connection failed" });
+        return;
+      }
+
+      // Get period parameter: 'rolling' or 'calendar'
+      const period = req.query.period || "rolling";
+      let query;
+
+      if (period === "calendar") {
+        // Previous calendar year
+        const prevYear = new Date().getFullYear() - 1;
+        const yearStart = `${prevYear}-01-01`;
+        const yearEnd = `${prevYear}-12-31`;
+        query = `SELECT SUBJECT, COUNT(*) as count FROM NONCONFORMANCE WHERE NCM_DATE >= '${yearStart}' AND NCM_DATE <= '${yearEnd}' GROUP BY SUBJECT ORDER BY count DESC`;
+      } else {
+        // Last 12 months (rolling)
+        query = `SELECT SUBJECT, COUNT(*) as count FROM NONCONFORMANCE WHERE NCM_DATE >= DATE_SUB(NOW(), INTERVAL 12 MONTH) GROUP BY SUBJECT ORDER BY count DESC`;
+      }
+
+      connection.query(query, (err, rows) => {
+        if (err) {
+          console.error("Failed to query for SUBJECT pie:", err);
+          res.status(500).json({ error: "Query failed", details: err.message });
+          connection.end();
+          return;
+        }
+        const labels = rows.map((r) => r.SUBJECT || "(none)");
+        const counts = rows.map((r) => r.count);
+        res.json({ labels, counts });
+        connection.end();
+      });
+    });
+  } catch (err) {
+    console.error("Error in subjects-pie endpoint:", err);
+    res.status(500).json({ error: "Server error", details: err.message });
+  }
+});
+
 // ==================================================
 // Get all closed records
 router.get("/closed", (req, res) => {
@@ -171,94 +362,6 @@ function makeNcmFolders() {
     console.error("Error in makeNcmFolders:", error.message);
   }
 }
-
-// ==================================================
-// Get Open NCM Trend - Last 13 Months
-router.get("/trend-open-13months", (req, res) => {
-  try {
-    const connection = mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      port: 3306,
-      database: "quality",
-    });
-    connection.connect(function (err) {
-      if (err) {
-        console.error("Error connecting: " + err.stack);
-        res.status(500).json({ error: "Database connection failed" });
-        return;
-      }
-
-      // Generate last 13 months
-      const today = new Date();
-      const months = [];
-      const dateRanges = [];
-
-      for (let i = 12; i >= 0; i--) {
-        const date = new Date(today.getFullYear(), today.getMonth() - i, 1);
-        const monthName = date.toLocaleDateString("en-US", {
-          year: "numeric",
-          month: "short",
-        });
-        months.push(monthName);
-
-        // First day of current month
-        const firstDay = new Date(date.getFullYear(), date.getMonth(), 1);
-        // First day of next month (exclusive end date)
-        const lastDay = new Date(date.getFullYear(), date.getMonth() + 1, 1);
-
-        const startStr = firstDay.toISOString().split("T")[0];
-        const endStr = lastDay.toISOString().split("T")[0];
-
-        dateRanges.push({ start: startStr, end: endStr });
-      }
-
-      // Build query with UNION for each month
-      // For each month, count NCMs that were OPEN as of the last day of that month
-      // Also calculate average age in days for open NCMs
-      const queries = dateRanges.map(
-        (range) =>
-          `SELECT '${range.start}' as month_start, COUNT(*) as count, ROUND(COALESCE(AVG(DATEDIFF('${range.end}', NCM_DATE)), 0), 0) as avg_age FROM NONCONFORMANCE WHERE NCM_DATE <= '${range.end}' AND (CLOSED_DATE IS NULL OR CLOSED_DATE > '${range.end}')`,
-      );
-
-      const query = queries.join(" UNION ALL ") + " ORDER BY month_start ASC;";
-
-      connection.query(query, (err, rows) => {
-        if (err) {
-          console.error("Failed to query for open NCM trend:", err);
-          res.status(500).json({ error: "Query failed", details: err.message });
-          connection.end();
-          return;
-        }
-
-        if (!rows || rows.length === 0) {
-          res.json({
-            labels: months,
-            counts: months.map(() => 0),
-            aging: months.map(() => 0),
-          });
-          connection.end();
-          return;
-        }
-
-        // Extract counts and aging from result
-        const counts = rows.map((row) => row.count || 0);
-        const aging = rows.map((row) => row.avg_age || 0);
-
-        res.json({
-          labels: months,
-          counts: counts,
-          aging: aging,
-        });
-        connection.end();
-      });
-    });
-  } catch (err) {
-    console.error("Error in trend endpoint:", err);
-    res.status(500).json({ error: "Server error", details: err.message });
-  }
-});
 
 // ==================================================
 // Get all records

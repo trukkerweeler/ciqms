@@ -25,9 +25,25 @@ document.addEventListener("DOMContentLoaded", async function () {
   userEmail = users[user];
   config = await getConfig();
   setupEventListeners();
+  setupMRFlagVisibility();
   await loadInputTypeOptions();
   await loadInputData();
 });
+
+// Check if current user is authorized to set Management Review flag
+function isUserAuthorizedForMR() {
+  // Check if user is TKENT or authorized quality manager
+  // Currently checking for TKENT; expand when role-based access is available
+  return user === "TKENT";
+}
+
+// Setup visibility of MR flag based on user authorization
+function setupMRFlagVisibility() {
+  const mrFlagContainer = document.getElementById("mrFlagContainer");
+  if (mrFlagContainer && isUserAuthorizedForMR()) {
+    mrFlagContainer.style.display = ""; // Show for authorized users
+  }
+}
 
 function setupEventListeners() {
   // Add Input button
@@ -181,6 +197,12 @@ async function openAddInputDialog() {
     // Set requestor to current user
     document.getElementById("PEOPLE_ID").value = user || "";
 
+    // Reset MR flag checkbox
+    const mrCheckbox = document.getElementById("USER_DEFINED_1");
+    if (mrCheckbox) {
+      mrCheckbox.checked = false;
+    }
+
     dialog.showModal();
   }
 }
@@ -220,6 +242,10 @@ async function saveInput(event) {
         case "USER_DEFINED_2":
           // Keep USER_DEFINED_2 (Part No) as-is without forcing uppercase
           dataJson[field] = value;
+          break;
+        case "USER_DEFINED_1":
+          // MR flag checkbox: if checked, set to 'MR', else set to empty
+          dataJson[field] = value ? "MR" : "";
           break;
         default:
           if (field.endsWith("_DATE")) {

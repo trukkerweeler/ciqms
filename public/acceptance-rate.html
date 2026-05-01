@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Outsourced Product/Services Acceptance Rate Report"
+    />
+    <meta name="author" content="Quality Management System" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/acceptance-rate.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Acceptance Rate Report</title>
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <main id="main">
+      <div class="recordsaddrecordheading">
+        <h1>Inspection Results</h1>
+      </div>
+
+      <!-- Report Type Selection -->
+      <div id="report-type-selector" class="report-type-selector">
+        <label>
+          <input type="radio" name="reportType" value="vpp" checked />
+          Receiving inspection (VPP)
+        </label>
+        <label>
+          <input type="radio" name="reportType" value="fin" />
+          Final inspection (FIN - Jobs Closed)
+        </label>
+      </div>
+
+      <div id="acceptance-rate-container" class="chart-container">
+        <div id="chart-placeholder" class="loading">Loading report...</div>
+      </div>
+
+      <div id="data-table-container" class="table-container">
+        <table id="acceptance-data-table" class="data-table">
+          <thead>
+            <tr>
+              <th>Month</th>
+              <th>Total Receipts</th>
+              <th id="ncm-header">VPP NCMs</th>
+              <th>Acceptance Rate (%)</th>
+            </tr>
+          </thead>
+          <tbody id="table-body">
+            <!-- Populated by JavaScript -->
+          </tbody>
+        </table>
+      </div>
+
+      <div id="error-message" class="error" style="display: none"></div>
+    </main>
+
+    <footer id="footer"></footer>
+
+    <!-- Chart.js library for line chart -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+
+    <script type="module" src="/js/acceptance-rate.mjs"></script>
+  </body>
+</html>

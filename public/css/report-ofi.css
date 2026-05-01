@@ -1,0 +1,57 @@
+/* OFI Report - Specific Styles */
+
+#subjectFilter {
+  margin: 20px 0;
+  padding: 10px;
+  background-color: #f9f9f9;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  display: block !important;
+}
+
+#subjectFilter label {
+  margin-right: 10px;
+  font-weight: 500;
+  display: inline-block !important;
+}
+
+#yearfilter {
+  padding: 8px 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 1rem;
+  display: inline-block !important;
+}
+
+#yearfilter:focus {
+  outline: none;
+  border-color: #4caf50;
+  box-shadow: 0 0 5px rgba(76, 175, 80, 0.3);
+}
+
+/* Override entryform visibility in this report */
+#subjectFilter .entryform {
+  display: inline-block !important;
+}
+
+/* Print Styles - Override global styles.css */
+@media print {
+  #subjectFilter {
+    display: block !important;
+  }
+
+  #subjectFilter label {
+    display: inline-block !important;
+  }
+
+  #yearfilter {
+    display: inline-block !important;
+    border: 1px solid #000;
+    padding: 8px 12px;
+    margin: 0 10px;
+  }
+
+  #subjectFilter .entryform {
+    display: inline-block !important;
+  }
+}

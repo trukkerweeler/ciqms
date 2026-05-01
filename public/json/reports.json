@@ -94,6 +94,16 @@
           "html": "ncmrptopen13.html"
         },
         {
+          "h2": "NCM Types",
+          "a": "Go to NCM Types Report",
+          "html": "ncmrptypes.html"
+        },
+        {
+          "h2": "NCM Subjects",
+          "a": "Go to NCM Subjects Report",
+          "html": "ncmrptsubject.html"
+        },
+        {
           "h2": "Open Document Change Request Trend (13 Months)",
           "a": "Go to Open DCR Trend Report",
           "html": "dcrrptopen13.html"
@@ -103,6 +113,11 @@
     {
       "group": "Supplier Performance",
       "items": [
+        {
+          "h2": "Outsourced Product/Services - Acceptance Rate",
+          "a": "Go to Acceptance Rate Report",
+          "html": "acceptance-rate.html"
+        },
         {
           "h2": "Supplier Performance Scorecard",
           "a": "Go to Supplier Performance Scorecard",
@@ -116,13 +131,29 @@
       ]
     },
     {
-      "a": "Go to OFI Report",
-      "html": "report-ofi.html"
+      "group": "Management Review",
+      "items": [
+        {
+          "h2": "OFI Report",
+          "a": "Go to OFI Report",
+          "html": "report-ofi.html"
+        },
+        {
+          "h2": "Management Review Actions",
+          "a": "Go to Management Review Actions Report",
+          "html": "report-mr.html"
+        }
+      ]
     },
     {
-      "h2": "Chemical Tank Trends",
-      "a": "Go to Chemical Tank Trend Reports",
-      "html": "reports-chem.html"
+      "group": "Special Processes",
+      "items": [
+        {
+          "h2": "Chemical Tank Trends",
+          "a": "Go to Chemical Tank Trend Reports",
+          "html": "reports-chem.html"
+        }
+      ]
     },
     {
       "group": "System Configuration",

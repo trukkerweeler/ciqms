@@ -16,6 +16,7 @@ let url = "";
 let sortOrder = "asc";
 let user; // Will be set in initialization
 let config; // Will be set in initialization
+let allNcmData = []; // Store all NCM data for filtering
 
 document.addEventListener("DOMContentLoaded", async function () {
   apiUrl = await getApiUrl();
@@ -27,13 +28,27 @@ document.addEventListener("DOMContentLoaded", async function () {
   const showClosedToggle = document.getElementById("showClosedToggle");
   if (showClosedToggle) {
     showClosedToggle.addEventListener("change", () => {
-      loadNcmData();
+      applyFilters();
+    });
+  }
+  // Add event listeners for NCM Type and Subject filters
+  const filterNCMType = document.getElementById("filterNCMType");
+  if (filterNCMType) {
+    filterNCMType.addEventListener("change", () => {
+      applyFilters();
+    });
+  }
+  const filterSubject = document.getElementById("filterSubject");
+  if (filterSubject) {
+    filterSubject.addEventListener("change", () => {
+      applyFilters();
     });
   }
   await loadNcmData();
   await loadSubjects(); // Load subjects for the dropdown
   await loadCauses(); // Load causes for the dropdown
   await loadNCMTypes(); // Load NCM types for the dropdown
+  await populateFilterDropdowns(); // Populate filter dropdowns
 });
 
 function setupEventListeners() {
@@ -55,6 +70,33 @@ function setupEventListeners() {
   const saveNcmBtn = document.getElementById("saveNcmBtn");
   if (saveNcmBtn) {
     saveNcmBtn.addEventListener("click", saveNcm);
+  }
+
+  // NCM Type change listener for CAL validation hint
+  const ncmTypeSelect = document.getElementById("NCM_TYPE");
+  if (ncmTypeSelect) {
+    ncmTypeSelect.addEventListener("change", (e) => {
+      if (e.target.value === "CAL") {
+        // Show helper text for CAL type
+        const subjectGroup = document.querySelector('label[for="SUBJECT"]');
+        if (subjectGroup && !document.getElementById("calHint")) {
+          const hint = document.createElement("small");
+          hint.id = "calHint";
+          hint.style.display = "block";
+          hint.style.color = "#0066cc";
+          hint.style.fontSize = "0.85em";
+          hint.style.marginTop = "0.25rem";
+          hint.innerHTML = "💡 For CAL type: Use EOL, OOT, or OTHER";
+          subjectGroup.parentElement.appendChild(hint);
+        }
+      } else {
+        // Remove hint if switching away from CAL
+        const hint = document.getElementById("calHint");
+        if (hint) {
+          hint.remove();
+        }
+      }
+    });
   }
 
   // Close button for RET reminder dialog
@@ -212,6 +254,27 @@ async function saveNcm(event) {
       return;
     }
 
+    // CAL type subject code validation
+    if (dataJson.NCM_TYPE === "CAL") {
+      const validCalSubjects = ["EOL", "OOT", "OTHER"];
+      const enteredSubject = dataJson.SUBJECT
+        ? dataJson.SUBJECT.toUpperCase()
+        : "";
+
+      if (enteredSubject && !validCalSubjects.includes(enteredSubject)) {
+        const proceed = confirm(
+          `⚠️ Warning: For CAL (Calibration) type NCMs, the recommended subject codes are:\n• EOL (End of Life)\n• OOT (Out of Tolerance)\n• OTHER\n\nYou entered: "${enteredSubject}"\n\nPlease refer to the help file for proper codes.\n\nClick OK to continue anyway, or Cancel to return and select the correct code.`,
+        );
+
+        if (!proceed) {
+          window.open("/ncmhelp.html", "_blank");
+          const subjectField = document.querySelector("#SUBJECT");
+          if (subjectField) subjectField.focus();
+          return;
+        }
+      }
+    }
+
     const response = await fetch(url, {
       method: "POST",
       headers: {
@@ -240,23 +303,83 @@ async function saveNcm(event) {
 
 async function loadNcmData() {
   try {
-    const showClosedToggle = document.getElementById("showClosedToggle");
-    const closedNOnly = showClosedToggle ? showClosedToggle.checked : false;
     // Always fetch all records
     const response = await fetch(url);
     if (!response.ok) {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
-    let data = await response.json();
-    // If toggle is checked, filter to CLOSED === 'N' (open only)
-    if (closedNOnly) {
-      data = data.filter((item) => item.CLOSED === "N");
-    }
-    displayNcmTable(data);
+    allNcmData = await response.json();
+    applyFilters();
   } catch (error) {
     console.error("Error loading NCM data:", error);
     document.getElementById("ncmTableContainer").innerHTML =
       '<p class="error">Failed to load NCM data. Please refresh the page.</p>';
+  }
+}
+
+function applyFilters() {
+  const showClosedToggle = document.getElementById("showClosedToggle");
+  const closedNOnly = showClosedToggle ? showClosedToggle.checked : false;
+  const filterNCMType = document.getElementById("filterNCMType");
+  const selectedNCMType = filterNCMType ? filterNCMType.value : "";
+  const filterSubject = document.getElementById("filterSubject");
+  const selectedSubject = filterSubject ? filterSubject.value : "";
+
+  let filteredData = allNcmData;
+
+  // Filter by closed status
+  if (closedNOnly) {
+    filteredData = filteredData.filter((item) => item.CLOSED === "N");
+  }
+
+  // Filter by NCM Type
+  if (selectedNCMType) {
+    filteredData = filteredData.filter(
+      (item) => item.NCM_TYPE === selectedNCMType,
+    );
+  }
+
+  // Filter by Subject
+  if (selectedSubject) {
+    filteredData = filteredData.filter(
+      (item) => item.SUBJECT === selectedSubject,
+    );
+  }
+
+  displayNcmTable(filteredData);
+}
+
+async function populateFilterDropdowns() {
+  try {
+    // Get unique NCM Types
+    const ncmTypes = [
+      ...new Set(allNcmData.map((item) => item.NCM_TYPE).filter(Boolean)),
+    ].sort();
+    const filterNCMType = document.getElementById("filterNCMType");
+    if (filterNCMType && ncmTypes.length > 0) {
+      ncmTypes.forEach((type) => {
+        const option = document.createElement("option");
+        option.value = type;
+        option.textContent = type;
+        filterNCMType.appendChild(option);
+      });
+    }
+
+    // Get unique Subjects
+    const subjects = [
+      ...new Set(allNcmData.map((item) => item.SUBJECT).filter(Boolean)),
+    ].sort();
+    const filterSubject = document.getElementById("filterSubject");
+    if (filterSubject && subjects.length > 0) {
+      subjects.forEach((subject) => {
+        const option = document.createElement("option");
+        option.value = subject;
+        option.textContent = subject;
+        filterSubject.appendChild(option);
+      });
+    }
+  } catch (error) {
+    console.error("Error populating filter dropdowns:", error);
   }
 }
 
