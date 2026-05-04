@@ -1,0 +1,90 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Infrastructure Report" />
+    <meta name="author" content="CIQMS" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/infrastructure-report.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Infrastructure Report</title>
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <main id="main" class="report-main">
+      <div class="report-container">
+        <div class="report-header">
+          <h1>Infrastructure Report</h1>
+          <p class="report-subtitle">Infrastructure Project Actions</p>
+          <div class="report-timestamp" id="reportTimestamp"></div>
+        </div>
+
+        <div class="report-summary">
+          <div class="summary-card">
+            <div class="summary-label">Open Actions</div>
+            <div class="summary-value" id="openCount">-</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Average Age (Days)</div>
+            <div class="summary-value" id="averageAge">-</div>
+          </div>
+          <div class="summary-card">
+            <div class="summary-label">Closed This Year</div>
+            <div class="summary-value" id="yearlyCount">-</div>
+          </div>
+        </div>
+
+        <div class="report-filters">
+          <div class="filter-group">
+            <label for="yearSelector">Year:</label>
+            <select id="yearSelector">
+              <option value="2025" selected>2025</option>
+              <option value="2024">2024</option>
+              <option value="2023">2023</option>
+              <option value="2022">2022</option>
+              <option value="2021">2021</option>
+              <option value="2020">2020</option>
+            </select>
+          </div>
+          <div class="filter-group">
+            <label for="searchInput">Search Actions:</label>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search by ID, subject, or assignee..."
+            />
+          </div>
+          <div class="filter-actions">
+            <button id="printBtn" class="action-btn print-btn">
+              <span class="btn-icon">🖨️</span> Print
+            </button>
+            <button id="exportBtn" class="action-btn export-btn">
+              <span class="btn-icon">📥</span> Export
+            </button>
+          </div>
+        </div>
+
+        <div id="infrastructureTableContainer" class="table-wrapper">
+          <!-- Table will be generated here -->
+        </div>
+
+        <div class="report-footer">
+          <p>
+            This is an automatically generated report. Recurring actions are
+            excluded.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/infrastructure-report.mjs"></script>
+</html>

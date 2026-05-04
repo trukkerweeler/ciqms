@@ -26,6 +26,16 @@
       ]
     },
     {
+      "group": "Infrastructure",
+      "items": [
+        {
+          "h2": "Infrastructure Report",
+          "a": "Go to Infrastructure Report",
+          "html": "infrastructure-report.html"
+        }
+      ]
+    },
+    {
       "group": "Competency & Training - Awareness",
       "items": [
         {

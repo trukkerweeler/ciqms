@@ -243,10 +243,6 @@ async function saveInput(event) {
           // Keep USER_DEFINED_2 (Part No) as-is without forcing uppercase
           dataJson[field] = value;
           break;
-        case "USER_DEFINED_1":
-          // MR flag checkbox: if checked, set to 'MR', else set to empty
-          dataJson[field] = value ? "MR" : "";
-          break;
         default:
           if (field.endsWith("_DATE")) {
             dataJson[field] = value ? value.slice(0, 10) : value;
@@ -255,6 +251,10 @@ async function saveInput(event) {
           }
       }
     }
+
+    // Explicitly handle MR checkbox (checked property, not FormData value)
+    const mrCheckbox = document.getElementById("USER_DEFINED_1");
+    dataJson["USER_DEFINED_1"] = mrCheckbox && mrCheckbox.checked ? "MR" : "";
 
     const response = await fetch(url, {
       method: "POST",

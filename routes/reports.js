@@ -192,8 +192,8 @@ router.get("/mr", (req, res) => {
         return;
       }
 
-      // Query for all INPUT records where USER_DEFINED_1 = 'MR', capture all INPUT_TYPE values
-      const query = `SELECT pi.INPUT_DATE, pi.INPUT_ID, pi.PEOPLE_ID, pi.SUBJECT, pi.INPUT_TYPE, pit.INPUT_TEXT, pi.CLOSED from PEOPLE_INPUT pi left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID WHERE pi.USER_DEFINED_1 = 'MR' ORDER BY pi.INPUT_ID DESC;`;
+      // Query for all INPUT records where USER_DEFINED_1 = 'MR', including CLOSED_DATE for filtering
+      const query = `SELECT pi.INPUT_DATE, pi.INPUT_ID, pi.ASSIGNED_TO, pi.SUBJECT, pi.INPUT_TYPE AS TYPE, pit.INPUT_TEXT, pi.CLOSED AS CLSD, pi.CLOSED_DATE from PEOPLE_INPUT pi left join PPL_INPT_TEXT pit on pi.INPUT_ID = pit.INPUT_ID WHERE pi.USER_DEFINED_1 = 'MR' ORDER BY pi.INPUT_ID DESC;`;
       connection.query(query, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for MR reports: " + err);
