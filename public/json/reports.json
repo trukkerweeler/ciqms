@@ -61,7 +61,7 @@
       ]
     },
     {
-      "group": "Compliance & Documentation",
+      "group": "Documentation",
       "items": [
         {
           "h2": "SYSDOC Issues",
@@ -104,19 +104,14 @@
           "html": "ncmrptopen13.html"
         },
         {
-          "h2": "NCM Types",
-          "a": "Go to NCM Types Report",
+          "h2": "NCM Types Trend",
+          "a": "Go to NCM Types Trend Report",
           "html": "ncmrptypes.html"
         },
         {
-          "h2": "NCM Subjects",
-          "a": "Go to NCM Subjects Report",
+          "h2": "NCM Subject Trend",
+          "a": "Go to NCM Subject Trend Report",
           "html": "ncmrptsubject.html"
-        },
-        {
-          "h2": "Open Document Change Request Trend (13 Months)",
-          "a": "Go to Open DCR Trend Report",
-          "html": "dcrrptopen13.html"
         }
       ]
     },
@@ -132,11 +127,6 @@
           "h2": "Supplier Performance Scorecard",
           "a": "Go to Supplier Performance Scorecard",
           "html": "supplier-scorecard.html"
-        },
-        {
-          "h2": "Top 5 Customers",
-          "a": "Go to Top 5 Customers Report",
-          "html": "topfive.html"
         }
       ]
     },
@@ -166,12 +156,12 @@
       ]
     },
     {
-      "group": "System Configuration",
+      "group": "Customer",
       "items": [
         {
-          "h2": "Product Characteristic Type Maintenance",
-          "a": "Go to Product Characteristic Type Maintenance",
-          "html": "prd-char-type.html"
+          "h2": "Top 5 Customers",
+          "a": "Go to Top 5 Customers Report",
+          "html": "topfive.html"
         }
       ]
     }

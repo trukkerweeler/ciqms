@@ -40,7 +40,7 @@ router.get("/trend-data/:subject", (req, res) => {
 
       const subject = req.params.subject; // e.g., "01TE"
 
-      // Query to get trend data for the last 13 months
+      // Query to get trend data for the last 12 months
       // Joins PEOPLE_INPUT (which has the INPUT_ID and INPUT_DATE)
       // with EIGHTYFIVETWELVE (which has the UNIT and VALUE)
       const query = `
@@ -52,7 +52,7 @@ router.get("/trend-data/:subject", (req, res) => {
         FROM PEOPLE_INPUT pi
         LEFT JOIN EIGHTYFIVETWELVE et ON pi.INPUT_ID = et.INPUT_ID
         WHERE pi.SUBJECT = ? 
-          AND pi.INPUT_DATE >= DATE_FORMAT(NOW(), '%Y-%m-01') - INTERVAL 11 MONTH
+          AND pi.INPUT_DATE >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
         ORDER BY pi.INPUT_DATE ASC
       `;
 
@@ -197,7 +197,7 @@ router.get("/trend-data-multi/:subjects", (req, res) => {
       const subjectsStr = req.params.subjects; // e.g., "QTPH,QTPC"
       const subjects = subjectsStr.split(",").map((s) => s.trim());
 
-      // Query to get trend data for all subjects
+      // Query to get trend data for all subjects (last 12 months)
       const placeholders = subjects.map(() => "?").join(",");
       const query = `
         SELECT 
@@ -209,7 +209,7 @@ router.get("/trend-data-multi/:subjects", (req, res) => {
         FROM PEOPLE_INPUT pi
         LEFT JOIN EIGHTYFIVETWELVE et ON pi.INPUT_ID = et.INPUT_ID
         WHERE pi.SUBJECT IN (${placeholders})
-          AND pi.INPUT_DATE >= DATE_FORMAT(NOW(), '%Y-%m-01') - INTERVAL 11 MONTH
+          AND pi.INPUT_DATE >= DATE_SUB(CURDATE(), INTERVAL 12 MONTH)
         ORDER BY pi.INPUT_DATE ASC
       `;
 

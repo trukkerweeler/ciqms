@@ -1,9 +1,11 @@
-import { getApiUrl } from "./utils.mjs";
+import { getApiUrl, loadHeaderFooter } from "./utils.mjs";
 
 const port = null; // no longer used
 let url = "";
 
 let allData = [];
+
+loadHeaderFooter();
 
 // Fetch data once
 async function fetchData() {

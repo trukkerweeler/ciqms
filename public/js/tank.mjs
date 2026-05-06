@@ -139,7 +139,7 @@ const TANK_CONFIG = {
         lcl: 7.5,
         ucl: 9.2,
         min: 7.0,
-        max: 9.5,
+        max: 10.5,
         color: "#27ae60",
       },
       {
@@ -306,34 +306,16 @@ window.addEventListener("DOMContentLoaded", async () => {
           datasets: [
             {
               label: chartConfig.name,
-              data: chartDataField.map((val, i) =>
-                outOfLimit[i] ? null : val,
-              ),
+              data: chartDataField,
               borderColor: chartConfig.color,
               backgroundColor:
                 "rgba(" + hexToRgb(chartConfig.color).join(",") + ", 0.05)",
               borderWidth: 2.5,
               fill: false,
               tension: 0.4,
-              pointRadius: 5,
-              pointBackgroundColor: chartConfig.color,
-              pointBorderColor: "#fff",
-              pointBorderWidth: 2,
-              pointHoverRadius: 7,
-              spanGaps: true,
-            },
-            {
-              label: "Out of Limits",
-              data: chartDataField.map((val, i) =>
-                outOfLimit[i] ? val : null,
-              ),
-              borderColor: "#e74c3c",
-              backgroundColor: "rgba(231, 76, 60, 0.2)",
-              borderWidth: 2.5,
-              fill: false,
-              tension: 0.4,
-              pointRadius: 7,
-              pointBackgroundColor: "#e74c3c",
+              pointRadius: (context) => (outOfLimit[context.dataIndex] ? 7 : 5),
+              pointBackgroundColor: (context) =>
+                outOfLimit[context.dataIndex] ? "#e74c3c" : chartConfig.color,
               pointBorderColor: "#fff",
               pointBorderWidth: 2,
               pointHoverRadius: 8,
