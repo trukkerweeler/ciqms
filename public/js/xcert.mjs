@@ -339,6 +339,7 @@ async function handleGenerateCert() {
       // This gives us the correct "Top Assembly Number" rather than mixing in child parts
       const part = inventoryRow.PART.trim();
       const partDescription = woData[0]?.PART_DESCRIPTION || "";
+      const childPart = woData[0]?.PART || part;
 
       // Collect unique PO numbers (vendor POs) from operations, tracking SOURCE_WO for each
       // Include any REFERENCE value that's not empty and not a known text label
@@ -385,13 +386,13 @@ async function handleGenerateCert() {
       if (vendorPOsMap.size > 0) {
         let itemNum = 1;
         vendorPOsMap.forEach((sourceWO, po) => {
-          operationsTableRows += `<tr><td>${itemNum}</td><td>${part.trim()}</td><td>${po}</td><td>${inventoryRow.QUANTITY}</td><td>${sourceWO}</td></tr>`;
+          operationsTableRows += `<tr><td>${itemNum}</td><td>${childPart.trim()}</td><td>${po}</td><td>${inventoryRow.QUANTITY}</td><td>${sourceWO}</td></tr>`;
           itemNum++;
         });
       } else {
         // At least one row if no POs
         const baseSourceWO = woData[0]?.SOURCE_WO || `${job}-${suffix}`;
-        operationsTableRows = `<tr><td>1</td><td>${part.trim()}</td><td>-</td><td>${inventoryRow.QUANTITY}</td><td>${baseSourceWO}</td></tr>`;
+        operationsTableRows = `<tr><td>1</td><td>${childPart.trim()}</td><td>-</td><td>${inventoryRow.QUANTITY}</td><td>${baseSourceWO}</td></tr>`;
       }
 
       // Build Certificate of Processing HTML
