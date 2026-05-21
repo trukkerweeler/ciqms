@@ -160,8 +160,6 @@ If conn.State = 1 Then
           "AND vih.SERIAL_NUMBER = '" & childSerialNum & "' " & _
         "LEFT JOIN V_ROUTER_LINE vrl ON vjo.ROUTER = vrl.ROUTER AND vjo.ROUTER_SEQ = vrl.LINE_ROUTER " & _
         "LEFT JOIN V_JOB_DETAIL vjd ON vjd.JOB = vjo.JOB AND vjd.SUFFIX = vjo.SUFFIX " & _
-          "AND CAST(vjd.SEQ AS CHAR(6)) BETWEEN CAST(vjo.ROUTER_SEQ AS CHAR(6)) " & _
-          "AND CAST((CAST(vjo.ROUTER_SEQ AS INTEGER) + 99) AS CHAR(6)) " & _
         "WHERE jh.JOB = " & childJobNum & " AND jh.SUFFIX = '" & childSuffixStr & "' " & _
         "AND vih.QUANTITY IS NOT NULL AND vjo.LMO IN ('L','O') " & _
         "AND vjo.SEQ < '990000' AND vjo.OPERATION <> '' " & _
@@ -170,21 +168,24 @@ If conn.State = 1 Then
       
       WScript.StdErr.Write "DEBUG CHILD OP QUERY: " & childQuery & vbCrLf
       
-      rs.Open childQuery, conn, 3, 1
-      If Err.Number = 0 And Not rs.EOF Then
-        rs.MoveFirst
-        While Not rs.EOF
+      Dim childRs
+      Set childRs = CreateObject("ADODB.Recordset")
+      childRs.Open childQuery, conn, 3, 1
+      If Err.Number = 0 And Not childRs.EOF Then
+        childRs.MoveFirst
+        While Not childRs.EOF
           Dim resRow
           Set resRow = CreateObject("Scripting.Dictionary")
           Dim fld
-          For Each fld In rs.Fields
+          For Each fld In childRs.Fields
             resRow.Add fld.Name, fld.Value
           Next
           allData.Add allData.Count, resRow
-          rs.MoveNext
+          childRs.MoveNext
         Wend
       End If
-      rs.Close
+      If childRs.State = 1 Then childRs.Close
+      Set childRs = Nothing
       Err.Clear
     Next
     
