@@ -298,11 +298,12 @@ async function handleGenerateCert() {
 
       const job = inventoryRow.JOB;
       const suffix = inventoryRow.SUFFIX;
+      const codeTransaction = inventoryRow.CODE_TRANSACTION || "J55";
       const date = inventoryRow.DATE_HISTORY;
       const time = inventoryRow.INV_HIST_TIME;
 
       console.log(
-        `Processing transaction: ${date} ${time} (Job: ${job}, Suffix: ${suffix})`,
+        `Processing transaction: ${date} ${time} (Job: ${job}, Suffix: ${suffix}, Code: ${codeTransaction})`,
       );
 
       // Query special process operations only
@@ -313,6 +314,7 @@ async function handleGenerateCert() {
           baseWorkorder: job,
           suffix: suffix,
           operationCodes: allOperationCodes,
+          codeTransaction: codeTransaction,
         }),
       });
 
@@ -355,9 +357,9 @@ async function handleGenerateCert() {
         console.error(`Error fetching description for part ${part}:`, error);
       }
 
-      // Collect unique PO numbers (vendor POs) from operations, tracking SOURCE_WO for each
+      // Collect unique PO numbers (vendor POs) from operations, tracking SOURCE_WO and QUANTITY for each
       // Include any REFERENCE value that's not empty and not a known text label
-      const vendorPOsMap = new Map(); // Map of PO → SOURCE_WO
+      const vendorPOsMap = new Map(); // Map of PO → { SOURCE_WO, QUANTITY }
       const excludedLabels = [
         "LABOR INPUT",
         "LABOR",
@@ -370,12 +372,15 @@ async function handleGenerateCert() {
         // Include if not empty and not an excluded label
         if (ref && !excludedLabels.includes(ref)) {
           const originalRef = (op.REFERENCE || "").trim();
-          // Store mapping of PO to SOURCE_WO (keep first occurrence if duplicate)
+          // Store mapping of PO to { SOURCE_WO, QUANTITY } (keep first occurrence if duplicate)
           if (!vendorPOsMap.has(originalRef)) {
-            vendorPOsMap.set(originalRef, op.SOURCE_WO);
+            vendorPOsMap.set(originalRef, {
+              SOURCE_WO: op.SOURCE_WO,
+              QUANTITY: op.QUANTITY,
+            });
           }
           console.log(
-            `Added REFERENCE/PO: ${originalRef} from ${op.SOURCE_WO}`,
+            `Added REFERENCE/PO: ${originalRef} from ${op.SOURCE_WO} (Qty: ${op.QUANTITY})`,
           );
         } else if (ref) {
           console.log(`Skipped REFERENCE (known label): ${op.REFERENCE}`);
@@ -404,8 +409,8 @@ async function handleGenerateCert() {
 
       if (vendorPOsMap.size > 0) {
         let itemNum = 1;
-        vendorPOsMap.forEach((sourceWO, po) => {
-          operationsTableRows += `<tr><td>${itemNum}</td><td>${childPartDisplay}</td><td>${po}</td><td>${inventoryRow.QUANTITY}</td><td>${sourceWO}</td></tr>`;
+        vendorPOsMap.forEach((poData, po) => {
+          operationsTableRows += `<tr><td>${itemNum}</td><td>${childPartDisplay}</td><td>${po}</td><td>${poData.QUANTITY}</td><td>${poData.SOURCE_WO}</td></tr>`;
           itemNum++;
         });
       } else {

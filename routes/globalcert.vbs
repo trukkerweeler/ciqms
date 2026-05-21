@@ -48,7 +48,7 @@ Set conn = CreateObject("ADODB.Connection")
 Set rs = CreateObject("ADODB.Recordset")
 
 ' get the arguments from the command line
-Dim baseWorkorder, baseSuffix, operationCodesStr, test: test = True
+Dim baseWorkorder, baseSuffix, operationCodesStr, codeTransaction, test: test = True
 If WScript.Arguments.Count > 0 Then
   baseWorkorder = WScript.Arguments(0)
   If WScript.Arguments.Count > 1 Then
@@ -57,13 +57,17 @@ If WScript.Arguments.Count > 0 Then
   If WScript.Arguments.Count > 2 Then
     operationCodesStr = WScript.Arguments(2)
   End If
+  If WScript.Arguments.Count > 3 Then
+    codeTransaction = WScript.Arguments(3)
+  End If
 Else
   If test Then
     baseWorkorder = "122429" ' Example for testing
     baseSuffix = "001" ' Example suffix
     operationCodesStr = "6061,D172" ' Example operations
+    codeTransaction = "J55" ' Example transaction code
   Else
-    MsgBox "Usage: globalcert.vbs <baseWorkorder> <suffix> <operationCodes>"
+    MsgBox "Usage: globalcert.vbs <baseWorkorder> <suffix> <operationCodes> <codeTransaction>"
     WScript.Quit
   End If
 End If
@@ -93,189 +97,90 @@ If conn.State = 1 Then
     operationFilter = " AND vjo.OPERATION IN (" & opList & ")"
   End If
   
-  ' Step 1: Query base work order operations - SOPHISTICATED JOIN using ROUTER_SEQ range for specs
-  ' NEW APPROACH: Use vjd.SEQ BETWEEN vjo.ROUTER_SEQ AND vjo.ROUTER_SEQ + 99 to find context-aware specs
-  sqlQuery = "SELECT DISTINCT " & _
-    "vjo.SEQ, " & _
-    "vjo.OPERATION, " & _
-    "vjo.ROUTER_SEQ, " & _
-    "vrl.DESC_RT_LINE, " & _
-    "vjo.DATE_COMPLETED, " & _
-    "vjo.UNITS_COMPLETE, " & _
-    "COALESCE(vrl.PART_WC_OUTSIDE, '') AS PART_WC_OUTSIDE, " & _
-    "jh.PART, " & _
-    "jh.PART_DESCRIPTION, " & _
-    "COALESCE(vjd.REFERENCE, '') AS REFERENCE, " & _
-    "'" & baseWorkorder & "-" & baseSuffix & "' AS SOURCE_WO " & _
-    "FROM JOB_HEADER jh " & _
-    "LEFT JOIN V_JOB_OPERATIONS vjo ON jh.JOB = vjo.JOB AND jh.SUFFIX = vjo.SUFFIX " & _
-    "LEFT JOIN V_ROUTER_LINE vrl ON vjo.ROUTER = vrl.ROUTER AND vjo.ROUTER_SEQ = vrl.LINE_ROUTER " & _
-    "LEFT JOIN V_JOB_DETAIL vjd ON vjd.JOB = vjo.JOB AND vjd.SUFFIX = vjo.SUFFIX AND CAST(vjd.SEQ AS CHAR(6)) BETWEEN CAST(vjo.ROUTER_SEQ AS CHAR(6)) AND CAST((CAST(vjo.ROUTER_SEQ AS INTEGER) + 99) AS CHAR(6)) " & _
-    "WHERE jh.JOB = " & CLng(baseWorkorder) & " " & _
-    "AND jh.SUFFIX = '" & baseSuffix & "' " & _
-    "AND vjo.LMO IN ('L','O') " & _
-    "AND vjo.SEQ < '990000' " & _
-    "AND vjo.OPERATION <> '' " & _
-    operationFilter & " " & _
-    "ORDER BY vjo.SEQ"
+  ' Extract child workorders from inventory FIRST
+  Dim childWorkorders, childIdx, childArray, childJobNum, childSuffixStr, childWOName, dictEnum, keyIdx, childSerialNum, childQuery, serialNum, dashPos, childJobStr, childExtractQuery, finalUnionQuery, dictCounter
+  Set childWorkorders = CreateObject("Scripting.Dictionary")
+  dictCounter = 0
   
-  WScript.StdErr.Write "DEBUG SQL BASE (NEW): " & sqlQuery & vbCrLf
-
-  ' OLD QUERY (COMMENTED OUT - REVERT HERE IF NEEDED):
-  ' sqlQuery = "SELECT DISTINCT " & _
-  '   "vjo.SEQ, " & _
-  '   "vjo.OPERATION, " & _
-  '   "vjo.ROUTER_SEQ, " & _
-  '   "vrl.DESC_RT_LINE, " & _
-  '   "vjo.DATE_COMPLETED, " & _
-  '   "vjo.UNITS_COMPLETE, " & _
-  '   "COALESCE(vrl.PART_WC_OUTSIDE, '') AS PART_WC_OUTSIDE, " & _
-  '   "jh.PART, " & _
-  '   "jh.PART_DESCRIPTION, " & _
-  '   "COALESCE(vjd.REFERENCE, '') AS REFERENCE, " & _
-  '   "'" & baseWorkorder & "-" & baseSuffix & "' AS SOURCE_WO " & _
-  '   "FROM JOB_HEADER jh " & _
-  '   "LEFT JOIN V_JOB_OPERATIONS vjo ON jh.JOB = vjo.JOB AND jh.SUFFIX = vjo.SUFFIX " & _
-  '   "LEFT JOIN V_ROUTER_LINE vrl ON vjo.ROUTER = vrl.ROUTER AND vjo.ROUTER_SEQ = vrl.LINE_ROUTER " & _
-  '   "LEFT JOIN V_JOB_DETAIL vjd ON vjd.JOB = vjo.JOB AND vjd.SUFFIX = vjo.SUFFIX AND vjd.SEQ = vjo.SEQ " & _
-  '   "WHERE jh.JOB = " & CLng(baseWorkorder) & " " & _
-  '   "AND jh.SUFFIX = '" & baseSuffix & "' " & _
-  '   "AND vjo.LMO IN ('L','O') " & _
-  '   "AND vjo.SEQ < '990000' " & _
-  '   "AND vjo.OPERATION <> '' " & _
-  '   operationFilter & " " & _
-  '   "ORDER BY vjo.SEQ"
-
-  rs.Open sqlQuery, conn, 3, 1 ' 3 = adOpenStatic, 1 = adLockReadOnly
-  If Err.Number <> 0 Then
-    WScript.StdErr.Write "ERROR BASE QUERY: " & Err.Description & vbCrLf
-    Err.Clear
-    WScript.StdOut.Write "{""baseWorkorder"":""" & baseWorkorder & """,""data"":[]}"
-  Else
-    ' Collect base results
-    Dim allData, baseResults, childWorkorders
-    Set allData = CreateObject("Scripting.Dictionary")
-    Set baseResults = CreateObject("ADODB.Recordset")
-    Set childWorkorders = CreateObject("Scripting.Dictionary")
-    
-    ' Copy base results into memory
-    If Not rs.EOF Then
-      baseResults.CursorLocation = 3 ' Client-side
-      rs.MoveFirst
-      While Not rs.EOF
-        Dim baseRow
-        Set baseRow = CreateObject("Scripting.Dictionary")
-        Dim fld
-        For Each fld In rs.Fields
-          baseRow.Add fld.Name, fld.Value
-        Next
-        allData.Add allData.Count, baseRow
-        rs.MoveNext
-      Wend
-    End If
-    rs.Close
-    
-    ' Step 2: Find child work orders from V_ITEM_HISTORY
-    Dim childQuery
-    childQuery = "SELECT DISTINCT SERIAL_NUMBER FROM V_ITEM_HISTORY " & _
-      "WHERE JOB = " & CLng(baseWorkorder) & " " & _
-      "AND SERIAL_NUMBER <> '' " & _
-      "AND SERIAL_NUMBER LIKE '%-___' " & _
-      "AND SERIAL_NUMBER <> '" & baseWorkorder & "-000'"
-    
-    WScript.StdErr.Write "DEBUG CHILD QUERY: " & childQuery & vbCrLf
-    
-    rs.Open childQuery, conn, 3, 1
-    If Err.Number = 0 And Not rs.EOF Then
-      rs.MoveFirst
-      While Not rs.EOF
-        Dim childWOStr, childJob, childSuffix
-        childWOStr = Trim(rs("SERIAL_NUMBER").Value)
-        ' Parse "122429-001" into job and suffix
-        Dim dashPos
-        dashPos = InStr(childWOStr, "-")
-        If dashPos > 0 Then
-          childJob = CLng(Left(childWOStr, dashPos - 1))
-          childSuffix = Mid(childWOStr, dashPos + 1)  ' Keep as string
-          childWorkorders.Add childWorkorders.Count, Array(childJob, childSuffix, childWOStr)
-          WScript.StdErr.Write "Found child WO: " & childWOStr & " (Job: " & childJob & ", Suffix: " & childSuffix & ")" & vbCrLf
+  childExtractQuery = "SELECT DISTINCT SERIAL_NUMBER FROM V_ITEM_HISTORY " & _
+    "WHERE JOB = " & CLng(baseWorkorder) & " " & _
+    "AND SUFFIX = '000' " & _
+    "AND SERIAL_NUMBER <> '' " & _
+    "AND SERIAL_NUMBER LIKE '%-___' " & _
+    "AND CODE_TRANSACTION = '" & codeTransaction & "' " & _
+    "AND SEQUENCE = 990000"
+  
+  WScript.StdErr.Write "DEBUG CHILD EXTRACT: " & childExtractQuery & vbCrLf
+  
+  rs.Open childExtractQuery, conn, 3, 1
+  If Not rs.EOF Then
+    rs.MoveFirst
+    While Not rs.EOF
+      serialNum = Trim(rs("SERIAL_NUMBER"))
+      dashPos = InStr(serialNum, "-")
+      If dashPos > 0 Then
+        childJobStr = Left(serialNum, dashPos - 1)
+        childSuffixStr = Mid(serialNum, dashPos + 1, 3)
+        childJobNum = CLng(childJobStr)
+        If Not childWorkorders.Exists(dictCounter) Then
+          ' Store: [jobNum, suffix, serialNum]
+          childWorkorders.Add dictCounter, Array(childJobNum, childSuffixStr, serialNum)
+          dictCounter = dictCounter + 1
+          WScript.StdErr.Write "Found child WO: " & serialNum & " (Job: " & childJobNum & ", Suffix: " & childSuffixStr & ")" & vbCrLf
         End If
-        rs.MoveNext
-      Wend
-    End If
-    rs.Close
-    
-    ' Step 3: Query operations for each child work order
-    Dim childIdx
+      End If
+      rs.MoveNext
+    Wend
+  End If
+  rs.Close
+  
+  
+  ' Build combined result array with child operations
+  Dim allData
+  Set allData = CreateObject("Scripting.Dictionary")
+  childIdx = 0
+  
+  ' Execute queries for each child work order separately (avoids timeout with large UNION queries)
+  If childWorkorders.Count > 0 Then
     For childIdx = 0 To childWorkorders.Count - 1
-      Dim childArray, childJobNum, childSuffixStr, childWOName
       childArray = childWorkorders.Item(childIdx)
       childJobNum = childArray(0)
-      childSuffixStr = childArray(1)  ' Already a string
-      childWOName = childArray(2)
+      childSuffixStr = childArray(1)
+      childSerialNum = childArray(2)  ' SERIAL_NUMBER now stored in array
       
-      Dim childOpQuery
-      ' NEW APPROACH: Use vjd.SEQ BETWEEN vjo.ROUTER_SEQ AND vjo.ROUTER_SEQ + 99 for context-aware specs
-      childOpQuery = "SELECT DISTINCT " & _
-        "vjo.SEQ, " & _
-        "vjo.OPERATION, " & _
-        "vjo.ROUTER_SEQ, " & _
-        "vrl.DESC_RT_LINE, " & _
-        "vjo.DATE_COMPLETED, " & _
-        "vjo.UNITS_COMPLETE, " & _
-        "COALESCE(vrl.PART_WC_OUTSIDE, '') AS PART_WC_OUTSIDE, " & _
-        "jh.PART, " & _
-        "jh.PART_DESCRIPTION, " & _
-        "COALESCE(vjd.REFERENCE, '') AS REFERENCE, " & _
-        "'" & childWOName & "' AS SOURCE_WO " & _
+      childQuery = "SELECT DISTINCT " & _
+        "vjo.SEQ, vjo.OPERATION, vjo.ROUTER_SEQ, vrl.DESC_RT_LINE, vjo.DATE_COMPLETED, " & _
+        "ABS(vih.QUANTITY) AS QUANTITY, COALESCE(vjd.REFERENCE, '') AS REFERENCE, " & _
+        "vrl.PART_WC_OUTSIDE, jh.PART, jh.PART_DESCRIPTION, " & _
+        "vih.SERIAL_NUMBER AS SOURCE_WO " & _
         "FROM JOB_HEADER jh " & _
         "LEFT JOIN V_JOB_OPERATIONS vjo ON jh.JOB = vjo.JOB AND jh.SUFFIX = vjo.SUFFIX " & _
+        "LEFT JOIN V_ITEM_HISTORY vih ON vih.JOB = " & CLng(baseWorkorder) & " AND vih.SUFFIX = '000' " & _
+          "AND vih.SEQUENCE = 990000 AND vih.CODE_TRANSACTION = '" & codeTransaction & "' " & _
+          "AND vih.SERIAL_NUMBER = '" & childSerialNum & "' " & _
         "LEFT JOIN V_ROUTER_LINE vrl ON vjo.ROUTER = vrl.ROUTER AND vjo.ROUTER_SEQ = vrl.LINE_ROUTER " & _
-        "LEFT JOIN V_JOB_DETAIL vjd ON vjd.JOB = vjo.JOB AND vjd.SUFFIX = vjo.SUFFIX AND CAST(vjd.SEQ AS CHAR(6)) BETWEEN CAST(vjo.ROUTER_SEQ AS CHAR(6)) AND CAST((CAST(vjo.ROUTER_SEQ AS INTEGER) + 99) AS CHAR(6)) " & _
-        "WHERE jh.JOB = " & childJobNum & " " & _
-        "AND jh.SUFFIX = '" & childSuffixStr & "' " & _
-        "AND vjo.LMO IN ('L','O') " & _
-        "AND vjo.SEQ < '990000' " & _
-        "AND vjo.OPERATION <> '' " & _
+        "LEFT JOIN V_JOB_DETAIL vjd ON vjd.JOB = vjo.JOB AND vjd.SUFFIX = vjo.SUFFIX " & _
+          "AND CAST(vjd.SEQ AS CHAR(6)) BETWEEN CAST(vjo.ROUTER_SEQ AS CHAR(6)) " & _
+          "AND CAST((CAST(vjo.ROUTER_SEQ AS INTEGER) + 99) AS CHAR(6)) " & _
+        "WHERE jh.JOB = " & childJobNum & " AND jh.SUFFIX = '" & childSuffixStr & "' " & _
+        "AND vih.QUANTITY IS NOT NULL AND vjo.LMO IN ('L','O') " & _
+        "AND vjo.SEQ < '990000' AND vjo.OPERATION <> '' " & _
         operationFilter & " " & _
         "ORDER BY vjo.SEQ"
       
-      ' OLD QUERY (COMMENTED OUT - REVERT HERE IF NEEDED):
-      ' childOpQuery = "SELECT DISTINCT " & _
-      '   "vjo.SEQ, " & _
-      '   "vjo.OPERATION, " & _
-      '   "vjo.ROUTER_SEQ, " & _
-      '   "vrl.DESC_RT_LINE, " & _
-      '   "vjo.DATE_COMPLETED, " & _
-      '   "vjo.UNITS_COMPLETE, " & _
-      '   "COALESCE(vrl.PART_WC_OUTSIDE, '') AS PART_WC_OUTSIDE, " & _
-      '   "jh.PART, " & _
-      '   "jh.PART_DESCRIPTION, " & _
-      '   "COALESCE(vjd.REFERENCE, '') AS REFERENCE, " & _
-      '   "'" & childWOName & "' AS SOURCE_WO " & _
-      '   "FROM JOB_HEADER jh " & _
-      '   "LEFT JOIN V_JOB_OPERATIONS vjo ON jh.JOB = vjo.JOB AND jh.SUFFIX = vjo.SUFFIX " & _
-      '   "LEFT JOIN V_ROUTER_LINE vrl ON vjo.ROUTER = vrl.ROUTER AND vjo.ROUTER_SEQ = vrl.LINE_ROUTER " & _
-      '   "LEFT JOIN V_JOB_DETAIL vjd ON vjd.JOB = vjo.JOB AND vjd.SUFFIX = vjo.SUFFIX AND vjd.SEQ = vjo.SEQ " & _
-      '   "WHERE jh.JOB = " & childJobNum & " " & _
-      '   "AND jh.SUFFIX = '" & childSuffixStr & "' " & _
-      '   "AND vjo.LMO IN ('L','O') " & _
-      '   "AND vjo.SEQ < '990000' " & _
-      '   "AND vjo.OPERATION <> '' " & _
-      '   operationFilter & " " & _
-      '   "ORDER BY vjo.SEQ"
+      WScript.StdErr.Write "DEBUG CHILD OP QUERY: " & childQuery & vbCrLf
       
-      WScript.StdErr.Write "DEBUG CHILD OP QUERY (NEW): " & childOpQuery & vbCrLf
-      
-      rs.Open childOpQuery, conn, 3, 1
+      rs.Open childQuery, conn, 3, 1
       If Err.Number = 0 And Not rs.EOF Then
         rs.MoveFirst
         While Not rs.EOF
-          Set baseRow = CreateObject("Scripting.Dictionary")
+          Dim resRow
+          Set resRow = CreateObject("Scripting.Dictionary")
+          Dim fld
           For Each fld In rs.Fields
-            baseRow.Add fld.Name, fld.Value
+            resRow.Add fld.Name, fld.Value
           Next
-          allData.Add allData.Count, baseRow
+          allData.Add allData.Count, resRow
           rs.MoveNext
         Wend
       End If
@@ -289,6 +194,9 @@ If conn.State = 1 Then
     Else
       WScript.StdOut.Write "{""baseWorkorder"":""" & baseWorkorder & """,""data"":[]}"
     End If
+  Else
+    ' No child workorders found
+    WScript.StdOut.Write "{""baseWorkorder"":""" & baseWorkorder & """,""data"":[]}"
   End If
   On Error GoTo 0
 End If

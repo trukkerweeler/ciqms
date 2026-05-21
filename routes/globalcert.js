@@ -5,12 +5,18 @@ const path = require("path");
 const router = express.Router();
 
 // POST /globalcert/process
-// Body: { baseWorkorder: "123456", suffix: "000", operationCodes: ["D172"] or [] }
+// Body: { baseWorkorder: "123456", suffix: "000", operationCodes: ["D172"] or [], codeTransaction: "J55" }
 router.post("/process", (req, res) => {
-  const { baseWorkorder, suffix, operationCodes } = req.body;
-  if (!baseWorkorder || !suffix || !Array.isArray(operationCodes)) {
+  const { baseWorkorder, suffix, operationCodes, codeTransaction } = req.body;
+  if (
+    !baseWorkorder ||
+    !suffix ||
+    !Array.isArray(operationCodes) ||
+    !codeTransaction
+  ) {
     return res.status(400).json({
-      error: "Missing baseWorkorder, suffix, or operationCodes (must be array)",
+      error:
+        "Missing baseWorkorder, suffix, operationCodes (must be array), or codeTransaction",
     });
   }
   if (!/^\d{6}$/.test(baseWorkorder)) {
@@ -25,12 +31,19 @@ router.post("/process", (req, res) => {
     ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
     : "C:/Windows/SysWOW64/cscript.exe";
 
-  // Pass baseWorkorder, suffix, and operationCodes as comma-separated string (empty string if no codes)
+  // Pass baseWorkorder, suffix, operationCodes, and codeTransaction
   const operationCodesStr = operationCodes.join(",");
 
   execFile(
     cscript32,
-    ["//Nologo", vbsPath, baseWorkorder, suffix, operationCodesStr],
+    [
+      "//Nologo",
+      vbsPath,
+      baseWorkorder,
+      suffix,
+      operationCodesStr,
+      codeTransaction,
+    ],
     { windowsHide: true },
     (err, stdout, stderr) => {
       console.log("globalcert VBS stderr:", stderr);
