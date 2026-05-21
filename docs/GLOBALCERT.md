@@ -1,8 +1,8 @@
-# XCert Workorder Lookup
+# GlobalCert Workorder Lookup
 
 ## Overview
 
-**XCert** (Extended Certificate Workorder Lookup) is a certification system that generates certificates based on **inventory transactions** rather than workorder lookups. It queries the inventory history for a job/suffix, allows users to select transactions, then retrieves manufacturing operations from the base work order and all discovered child work orders.
+**GlobalCert** (Global Certificate Workorder Lookup) is a certification system that generates certificates based on **inventory transactions** rather than workorder lookups. It queries the inventory history for a job/suffix, allows users to select transactions, then retrieves manufacturing operations from the base work order and all discovered child work orders.
 
 **Primary Databases**:
 
@@ -20,22 +20,22 @@
 ### Component Stack
 
 ```
-User Browser (XCert Certificate Generator)
+User Browser (GlobalCert Certificate Generator)
      ↓
-HTML Frontend (xcert.html)
+HTML Frontend (globalcert.html)
      ↓
-ES6 Module (xcert.mjs) — 3-step workflow
+ES6 Module (globalcert.mjs) — 3-step workflow
      ├─ Step 1: Fetch inventory transactions
      ├─ Step 2: Select transactions (with checkboxes)
      └─ Step 3: Generate certificate with operations
      ↓
-Express API Routes (routes/xcert.js)
-     ├─ GET /xcert/inventory-hist — Spawns xcert-inventory-hist.vbs
-     └─ POST /xcert/process — Spawns xcert.vbs
+Express API Routes (routes/globalcert.js)
+     ├─ GET /globalcert/inventory-hist — Spawns globalcert-inventory-hist.vbs
+     └─ POST /globalcert/process — Spawns globalcert.vbs
      ↓
 VBScript Helpers
-     ├─ xcert-inventory-hist.vbs — Queries V_ITEM_HISTORY (Pervasive)
-     └─ xcert.vbs — Queries operations from base + children (Global)
+     ├─ globalcert-inventory-hist.vbs — Queries V_ITEM_HISTORY (Pervasive)
+     └─ globalcert.vbs — Queries operations from base + children (Global)
      ↓
 Databases (ODBC DSN)
      ├─ Pervasive (Inventory History)
@@ -54,7 +54,7 @@ User enters:
 - **Suffix**: 3-digit zero-padded (e.g., 000)
 - **Transaction Code**: Usually "J52" for in-transactions (optional, defaults to J52)
 
-Frontend calls: **GET /xcert/inventory-hist?job=122473&suffix=000&codeTransaction=J52**
+Frontend calls: **GET /globalcert/inventory-hist?job=122473&suffix=000&codeTransaction=J52**
 
 **Response**: List of inventory transactions with date, time, part, quantity
 
@@ -88,7 +88,7 @@ For each selected transaction:
 
 ### 1. Frontend Page
 
-**File**: [public/xcert.html](../public/xcert.html)
+**File**: [public/globalcert.html](../public/globalcert.html)
 
 **Purpose**: 3-step inventory-based certificate workflow interface.
 
@@ -111,13 +111,13 @@ For each selected transaction:
 
 - Certificate output container with transaction details and operations table
 
-**Styling**: [public/css/xcert.css](../public/css/xcert.css)
+**Styling**: [public/css/globalcert.css](../public/css/globalcert.css)
 
 ---
 
 ### 2. Frontend Module
 
-**File**: [public/js/xcert.mjs](../public/js/xcert.mjs)
+**File**: [public/js/globalcert.mjs](../public/js/globalcert.mjs)
 
 **Purpose**: Handle 3-step workflow, API communication, and certificate rendering.
 
@@ -133,7 +133,7 @@ inventoryForm.addEventListener("submit", async (e) => { ... })
 ```
 
 - Validates job (numeric), suffix (3 digits)
-- Fetches `/xcert/inventory-hist` with query parameters
+- Fetches `/globalcert/inventory-hist` with query parameters
 - Builds table with checkboxes
 - Auto-selects single row
 - Adds Select All / Deselect All / Generate Certificate buttons
@@ -153,7 +153,7 @@ async function handleGenerateCert()
 ```
 
 - Iterates each selected transaction
-- Calls `POST /xcert/process` with: baseWorkorder (job), suffix, operationCodes (empty array)
+- Calls `POST /globalcert/process` with: baseWorkorder (job), suffix, operationCodes (empty array)
 - Receives operations from base + child WOs
 - Groups by SOURCE_WO
 - Renders single table with all operations
@@ -182,11 +182,11 @@ Table:
 
 ### 3. Express Route Handlers
 
-**File**: [routes/xcert.js](../routes/xcert.js)
+**File**: [routes/globalcert.js](../routes/globalcert.js)
 
 **Database**: Pervasive (inventory-hist) + Global (operations)
 
-#### Endpoint 1: GET /xcert/inventory-hist
+#### Endpoint 1: GET /globalcert/inventory-hist
 
 **Query Parameters**:
 
@@ -202,7 +202,7 @@ if (!/^\d+$/.test(job)) return 400 { error: "Invalid job number" }
 if (!/^\d{3}$/.test(suffix)) return 400 { error: "Invalid suffix (must be 3 digits)" }
 ```
 
-**Spawn**: 32-bit cscript executes `xcert-inventory-hist.vbs`
+**Spawn**: 32-bit cscript executes `globalcert-inventory-hist.vbs`
 
 **Response** (200):
 
@@ -223,7 +223,7 @@ if (!/^\d{3}$/.test(suffix)) return 400 { error: "Invalid suffix (must be 3 digi
 }
 ```
 
-#### Endpoint 2: POST /xcert/process
+#### Endpoint 2: POST /globalcert/process
 
 **Request Body**:
 
@@ -246,7 +246,7 @@ if (!/^\d{3}$/.test(suffix))
   return 400 { error: "Invalid suffix (must be 3 digits)" }
 ```
 
-**Spawn**: 32-bit cscript executes `xcert.vbs` with arguments: [baseWorkorder, suffix, operationCodesStr]
+**Spawn**: 32-bit cscript executes `globalcert.vbs` with arguments: [baseWorkorder, suffix, operationCodesStr]
 
 **Response** (200):
 
@@ -304,7 +304,7 @@ if (!/^\d{3}$/.test(suffix))
 
 ### 1. Inventory History Query
 
-**File**: [routes/xcert-inventory-hist.vbs](../routes/xcert-inventory-hist.vbs)
+**File**: [routes/globalcert-inventory-hist.vbs](../routes/globalcert-inventory-hist.vbs)
 
 **Purpose**: Query V_ITEM_HISTORY for inventory transactions
 
@@ -329,7 +329,7 @@ ORDER BY DATE_HISTORY
 
 ### 2. Process Operations Query
 
-**File**: [routes/xcert.vbs](../routes/xcert.vbs)
+**File**: [routes/globalcert.vbs](../routes/globalcert.vbs)
 
 **Purpose**: Query manufacturing operations from base + child work orders with PO discovery
 
@@ -449,7 +449,7 @@ ORDER BY DATE_HISTORY
 
 ## Special Manufacturing Processes
 
-XCert filters operations to only the 6 special manufacturing processes (matching ACERT):
+GlobalCert filters operations to only the 6 special manufacturing processes (matching ACERT):
 
 | Process | Label          | Operation Codes    |
 | ------- | -------------- | ------------------ |
@@ -465,7 +465,7 @@ All other operations are filtered out, ensuring the certificate only shows the r
 **Spawn Configuration**:
 
 ```javascript
-const vbsPath = path.join(__dirname, "xcert.vbs");
+const vbsPath = path.join(__dirname, "globalcert.vbs");
 const cscript32 = path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe");
 
 execFile(cscript32, ["//Nologo", vbsPath, baseWorkorder], { windowsHide: true }, ...)
@@ -481,7 +481,7 @@ execFile(cscript32, ["//Nologo", vbsPath, baseWorkorder], { windowsHide: true },
 
 #### Endpoint
 
-**GET /xcert**
+**GET /globalcert**
 
 **Query Parameters**:
 
@@ -498,368 +498,5 @@ if (!/^\d{6}$/.test(baseWorkorder)) {
 **Response Success** (200):
 
 ```json
-{
-  "baseWorkorder": "122419",
-  "data": [
-    {
-      "ROUTER": "PART_ID ABC",
-      "JOB": 122419,
-      "SUFFIX": 1,
-      "REFERENCE": "REF_001",
-      "DATE_COMPLETED": "2026-05-14"
-    },
-    {
-      "ROUTER": "PART_ID ABC",
-      "JOB": 122419,
-      "SUFFIX": 2,
-      "REFERENCE": "REF_002",
-      "DATE_COMPLETED": "2026-05-15"
-    }
-  ]
-}
-```
-
-**Response Fields**:
-
-- `baseWorkorder` - The workorder queried (for logging/verification)
-- `data` - Array of result records
-
-**Error Responses**:
-
-- 400: Invalid workorder format
-- 500: VBScript execution error or JSON parsing failure
-
-**Error Details** (500):
-
-```json
-{
-  "error": "VBS execution failed | Failed to parse VBS output",
-  "details": "[stderr output]",
-  "raw": "[stdout output]",
-  "stderr": "[stderr output]"
-}
-```
-
----
-
-## VBScript Helper
-
-**File**: [routes/xcert.vbs](../routes/xcert.vbs)
-
-### Implementation Overview
-
-The VBScript helper handles:
-
-1. **Environment Configuration** - Reads `.env` file for ODBC DSN, UID, PWD
-2. **Computer Detection** - Special path handling for `QUALITY-MGR` machine
-3. **ADODB Connection** - Connects via ODBC DSN with credentials
-4. **SQL Query Execution** - Queries Global database views
-5. **JSON Formatting** - Converts recordset to JSON output
-6. **Error Handling** - Logs errors to stderr, returns empty array on failure
-
-### Environment Variables
-
-XCert reads from `.env` file:
 
 ```
-GLOBAL_DSN=<odbc_dsn_name>
-GLOBAL_UID=<database_user>
-GLOBAL_PWD=<database_password>
-```
-
-**File Lookup Logic**:
-
-1. If machine name = `QUALITY-MGR`: Look in `Documents\CIQMS1\env`
-2. Otherwise: Look in `Documents\CIQMS\env`
-3. Fallback: Look for `.env` in parent directory
-
-### SQL Query
-
-The VBScript queries Global database using views with optional operation filtering:
-
-```sql
-SELECT DISTINCT
-  vrl.ROUTER, vjo.JOB, vjo.SUFFIX, vjd.REFERENCE,
-  vjo.DATE_COMPLETED, vrl.OPERATION, vjo.DESCRIPTION
-FROM V_ITEM_HISTORY vih
-JOIN V_ROUTER_LINE vrl ON vrl.ROUTER = vih.PART
-JOIN V_JOB_OPERATIONS vjo ON CAST(vjo.ROUTER_SEQ AS INTEGER)
-  BETWEEN CAST(vrl.LINE_ROUTER AS INTEGER)
-  AND CAST(vrl.LINE_ROUTER AS INTEGER) + 99
-JOIN V_JOB_DETAIL vjd ON vjd.JOB = vjo.JOB
-  AND vjd.SUFFIX = vjo.SUFFIX AND vjd.SEQ = vjo.SEQ
-WHERE vih.JOB = [baseWorkorder]
-  AND vih.SERIAL_NUMBER LIKE '______-___'
-  AND vjo.JOB = CAST(SUBSTRING(vih.SERIAL_NUMBER, 1, 6) AS INTEGER)
-  AND vjo.SUFFIX = CAST(SUBSTRING(vih.SERIAL_NUMBER, 8, 3) AS INTEGER)
-  AND vjd.REFERENCE IS NOT NULL
-  AND vrl.OPERATION IN ([operationCodes])  -- Added when filtering
-```
-
-**Query Behavior**: Filters by operation codes when provided via POST request. Returns matching operations and their references.
-
-**Views Used** (not raw tables):
-
-- `V_ITEM_HISTORY` - Item history view
-- `V_ROUTER_LINE` - Router line view
-- `V_JOB_OPERATIONS` - Job operations view
-- `V_JOB_DETAIL` - Job detail view
-
-### Key Functions
-
-#### RecordsetToJSON(rs)
-
-Converts ADODB Recordset to JSON array:
-
-```json
-[
-  {"ROUTER": "...", "JOB": 122419, ...},
-  {"ROUTER": "...", "JOB": 122419, ...}
-]
-```
-
-#### ToJSONValue(val)
-
-Formats individual field values:
-
-- NULL → `null`
-- Other → `"escaped_string"`
-
-#### EscapeJSON(str)
-
-Escapes special characters for JSON:
-
-- `\` → `\\`
-- `"` → `""`
-- `/` → `\/`
-- Newlines, tabs, control characters escaped
-
-### Error Handling
-
-| Error                         | Behavior                     |
-| ----------------------------- | ---------------------------- |
-| `.env` file not found         | Shows MsgBox, exits          |
-| DSN/UID/PWD missing in `.env` | Shows MsgBox, exits          |
-| ODBC connection fails         | Shows MsgBox, exits          |
-| SQL query fails               | Logs to stderr, outputs `[]` |
-| No records found              | Outputs `[]`                 |
-
-### Debugging
-
-SQL query logged to stderr for troubleshooting:
-
-```
-DEBUG SQL: SELECT DISTINCT ... WHERE vih.JOB = 122419 ...
-```
-
-**To debug manually**:
-
-```powershell
-C:\Windows\SysWOW64\cscript.exe xcert.vbs 122419 2>&1
-```
-
----
-
-## Database Tables Used
-
-### Global Database (via ODBC)
-
-| Table            | Purpose                   | Key Fields                             |
-| ---------------- | ------------------------- | -------------------------------------- |
-| `ITEM_HISTORY`   | Item history records      | JOB, SERIAL_NUMBER, PART               |
-| `ROUTER_LINE`    | Router operation mappings | ROUTER, OPERATION, LINE_ROUTER         |
-| `JOB_OPERATIONS` | Job operation details     | JOB, SUFFIX, OPERATION, DATE_COMPLETED |
-| `JOB_DETAIL`     | Job detail records        | JOB, SUFFIX, REFERENCE                 |
-
-_(Actual tables depend on VBScript query implementation)_
-
----
-
-## Configuration
-
-### ODBC DSN Setup
-
-XCert requires a 32-bit ODBC DSN for the Global database.
-
-**Steps** (Windows):
-
-1. Open **ODBC Data Source Administrator** (32-bit version):
-   - Run: `C:\Windows\SysWOW64\odbcad32.exe`
-2. Go to **System DSN** tab
-3. Click **Add**
-4. Select appropriate driver (e.g., MySQL ODBC 8.0 Driver)
-5. Configure connection:
-   - **Data Source Name**: `GlobalDatabase` (or name used in xcert.vbs)
-   - **Server**: Database host
-   - **Database**: `global`
-   - **Port**: 3306
-   - Test connection before saving
-
-### VBScript Path
-
-Currently expects: `routes/xcert.vbs`
-
-If file location changes, update in `routes/xcert.js`:
-
-```javascript
-const vbsPath = path.join(__dirname, "xcert.vbs"); // ← Change path here
-```
-
----
-
-## Usage Flow
-
-### 1. User Interaction
-
-```
-User enters workorder: 122419
-      ↓
-Click "Query" button
-      ↓
-Form validation (6 digits)
-      ↓
-Show "Working..." indicator
-```
-
-### 2. Backend Process
-
-```
-Express receives: GET /xcert?baseWorkorder=122419
-      ↓
-Spawns 32-bit cscript.exe with xcert.vbs
-      ↓
-VBScript executes:
-  - Connect to Global via ODBC
-  - Query for JOB = 122419
-  - Output JSON array
-      ↓
-Express captures stdout
-      ↓
-Parse JSON and return to frontend
-```
-
-### 3. Results Display
-
-```
-Table with columns: Part | JOB | SUFFIX | REFERENCE | DATE_COMPLETED
-Row 1: PART_123 | 122419 | 001 | REF_001 | 2026-05-14
-Row 2: PART_124 | 122419 | 002 | REF_002 | 2026-05-15
-```
-
----
-
-## Performance & Deployment
-
-### Process Overhead
-
-- **Cold Start**: ~500-800ms (VBScript initialization + ODBC connection)
-- **Subsequent**: ~200-400ms (same overhead per request)
-- **Bottleneck**: ODBC connection and network latency to Global
-
-### 32-bit ODBC Requirement
-
-⚠️ **Critical**: Must use 32-bit cscript.exe (`SysWOW64\cscript.exe`)
-
-**Why**:
-
-- ODBC drivers often available only in 32-bit versions
-- 64-bit Node.js cannot spawn 64-bit ODBC connections reliably
-- 32-bit cscript bypasses this limitation
-
-**Verification**:
-
-```powershell
-# Check 32-bit ODBC driver installed
-Get-Item "C:\Windows\SysWOW64\odbcad32.exe"
-```
-
-### Windows Deployment
-
-XCert is **Windows-only** due to VBScript + ODBC dependency.
-
-For cross-platform support, consider:
-
-1. Rewriting VBScript in Node.js using mysql2 (like ACert)
-2. Using Linux ODBC drivers (limited support)
-3. Keeping as Windows-specific tool
-
----
-
-## Troubleshooting
-
-### "VBS execution failed" Error
-
-**Cause**: VBScript crashed or couldn't connect to database
-
-**Debug**:
-
-1. Test VBScript manually:
-   ```powershell
-   C:\Windows\SysWOW64\cscript.exe routes\xcert.vbs 122419
-   ```
-2. Check stderr output in Express logs
-3. Verify ODBC DSN exists:
-   ```powershell
-   C:\Windows\SysWOW64\odbcad32.exe  # Check System DSN list
-   ```
-
-### "Failed to parse VBS output" Error
-
-**Cause**: VBScript output is not valid JSON
-
-**Solutions**:
-
-1. Ensure VBScript outputs only JSON to stdout
-2. No console.log or other text before JSON
-3. Check for special characters requiring escaping
-
-### "Invalid baseWorkorder" Error
-
-**Cause**: Input validation failed
-
-**Solution**: Enter exactly 6 digits
-
-### "No results found"
-
-**Cause**: Workorder doesn't exist in Global database
-
-**Debug**:
-
-1. Verify workorder in Global using direct query
-2. Check JOB table directly for workorder number
-3. Verify VBScript query logic
-
----
-
-## Comparison: ACert vs XCert
-
-| Aspect          | ACert              | XCert                      |
-| --------------- | ------------------ | -------------------------- |
-| **Connection**  | Direct MySQL       | VBScript + ODBC            |
-| **Database**    | Global (MySQL)     | Global (ODBC)              |
-| **Platform**    | Cross-platform     | Windows-only               |
-| **Setup**       | `.env` credentials | ODBC DSN + VBScript        |
-| **Speed**       | Fast (~200-400ms)  | Moderate (~500-800ms)      |
-| **Reliability** | High (native)      | Medium (VBScript overhead) |
-| **Use Case**    | Primary lookup     | Legacy/specialty queries   |
-
----
-
-## Development Notes
-
-- **Process-Based Filtering**: Now uses same 6 process types as ACert (HEAT, SWLD, FWLD, PASS, CHEM, PAINT)
-- **Operation Codes**: Configurable in xcert.mjs - edit `processes` array to change operations per process
-- **Multiple Queries**: Frontend makes separate POST request for each process type
-- **DSN Configuration**: Ensure ODBC DSN matches `GLOBAL_DSN` value in `.env`
-- **Computer-Specific Paths**: Script detects `QUALITY-MGR` machine and uses `CIQMS1` folder instead of `CIQMS`
-- **Debug Mode**: Set `test = True` in VBScript for offline testing with example workorder
-- **Stderr Logging**: SQL query logged to stderr—check Express console output for debugging
-
----
-
-## Related Documentation
-
-- [GLOBAL_DATABASE_PAGES.md](GLOBAL_DATABASE_PAGES.md) — General global database patterns
-- [ACERT.md](ACERT.md) — ACert (direct MySQL alternative)
-- [xcert.html](../public/xcert.html) — Main page
-- [xcert.mjs](../public/js/xcert.mjs) — Frontend logic

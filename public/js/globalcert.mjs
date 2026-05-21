@@ -1,4 +1,4 @@
-// xcert.mjs - Certificate of Processing generation from inventory history
+// globalcert.mjs - Certificate of Processing generation from inventory history
 
 const inventoryForm = document.getElementById("inventory-form");
 const inventoryResults = document.getElementById("inventory-results");
@@ -91,7 +91,7 @@ inventoryForm.addEventListener("submit", async (e) => {
       codeTransaction: "J52",
     });
 
-    const res = await fetch(`/xcert/inventory-hist?${params}`);
+    const res = await fetch(`/globalcert/inventory-hist?${params}`);
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || "Failed to fetch inventory");
@@ -306,7 +306,7 @@ async function handleGenerateCert() {
       );
 
       // Query special process operations only
-      const res = await fetch("/xcert/process", {
+      const res = await fetch("/globalcert/process", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
@@ -528,17 +528,17 @@ function formatInventoryDate(dateStr) {
 
 // Helper function: Get process name from operation code
 function getProcessName(operation) {
-  const processMap = {
+  const operationNames = {
     HEAT: "HEAT TREATMENT",
     D172: "SPOT WELD",
     FUSION: "FUSION WELD",
     D171: "FUSION WELD",
     PASSM2: "PASSIVATION",
     PASST6: "PASSIVATION",
-    FT1C1A: "CHEMICAL",
-    "23377A": "PAINT",
-    PAINT2: "PAINT",
     BLAN1: "PASSIVATION",
+    FT1C1A: "SALT SPRAY",
+    "23377A": "PASSIVATION",
+    PAINT2: "PAINT",
   };
-  return processMap[operation] || operation || "OTHER";
+  return operationNames[operation] || operation || "OTHER";
 }
