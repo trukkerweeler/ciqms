@@ -338,8 +338,22 @@ async function handleGenerateCert() {
       // Use PART from inventory transaction (from JOB_HEADER for the base work order)
       // This gives us the correct "Top Assembly Number" rather than mixing in child parts
       const part = inventoryRow.PART.trim();
-      const partDescription = woData[0]?.PART_DESCRIPTION || "";
       const childPart = woData[0]?.PART || part;
+      const childPartDescription = woData[0]?.PART_DESCRIPTION || "";
+
+      // Fetch Top Assembly description from INVENTORY_MASTER
+      let topAssemblyDescription = "";
+      try {
+        const descRes = await fetch(
+          `/globalcert/part-description?part=${encodeURIComponent(part)}`,
+        );
+        if (descRes.ok) {
+          const descData = await descRes.json();
+          topAssemblyDescription = descData.description || "";
+        }
+      } catch (error) {
+        console.error(`Error fetching description for part ${part}:`, error);
+      }
 
       // Collect unique PO numbers (vendor POs) from operations, tracking SOURCE_WO for each
       // Include any REFERENCE value that's not empty and not a known text label
@@ -382,22 +396,32 @@ async function handleGenerateCert() {
       const qaUser = document.getElementById("qaUser").value || "QA User";
 
       // Build operations table rows (only rows with data)
+      // Include childPart with its description in parentheses
       let operationsTableRows = "";
+      const childPartDisplay = childPartDescription
+        ? `${childPart.trim()} (${childPartDescription.trim()})`
+        : childPart.trim();
+
       if (vendorPOsMap.size > 0) {
         let itemNum = 1;
         vendorPOsMap.forEach((sourceWO, po) => {
-          operationsTableRows += `<tr><td>${itemNum}</td><td>${childPart.trim()}</td><td>${po}</td><td>${inventoryRow.QUANTITY}</td><td>${sourceWO}</td></tr>`;
+          operationsTableRows += `<tr><td>${itemNum}</td><td>${childPartDisplay}</td><td>${po}</td><td>${inventoryRow.QUANTITY}</td><td>${sourceWO}</td></tr>`;
           itemNum++;
         });
       } else {
         // At least one row if no POs
         const baseSourceWO = woData[0]?.SOURCE_WO || `${job}-${suffix}`;
-        operationsTableRows = `<tr><td>1</td><td>${childPart.trim()}</td><td>-</td><td>${inventoryRow.QUANTITY}</td><td>${baseSourceWO}</td></tr>`;
+        operationsTableRows = `<tr><td>1</td><td>${childPartDisplay}</td><td>-</td><td>${inventoryRow.QUANTITY}</td><td>${baseSourceWO}</td></tr>`;
       }
 
       // Build Certificate of Processing HTML
       const certDiv = document.createElement("div");
       certDiv.className = "coc-certificate";
+
+      // Format header Part Number/Description with Top Assembly + description
+      const topAssemblyDisplay = topAssemblyDescription
+        ? `${part.trim()} (${topAssemblyDescription.trim()})`
+        : part.trim();
       certDiv.innerHTML = `
         <div class="coc-container">
           <!-- Header -->
@@ -424,7 +448,7 @@ async function handleGenerateCert() {
             </tr>
             <tr>
               <td class="coc-label">Part Number/Description:</td>
-              <td class="coc-value" colspan="3">${partDescription.trim()}</td>
+              <td class="coc-value" colspan="3">${topAssemblyDisplay}</td>
             </tr>
           </table>
 
@@ -464,10 +488,10 @@ async function handleGenerateCert() {
             <div style="margin-top: 20px; text-align: left;">Date: ${formattedDate}</div>
           </div>
 
-          <!-- Form Number -->
+          <!-- Form Number
         //   <p class="coc-form-number">
         //     Form 8010-2 Rev. 01 21 May 2026 
-        //   </p>
+        //   </p> -->
         </div>
       `;
 

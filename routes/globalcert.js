@@ -104,7 +104,47 @@ router.get("/inventory-hist", (req, res) => {
   );
 });
 
-// GET /globalcert?baseWorkorder=123456
+// GET /globalcert/part-description?part=521572
+// Query part description from GLOBALCERT using VBS
+router.get("/part-description", (req, res) => {
+  const { part } = req.query;
+
+  if (!part) {
+    return res.status(400).json({ error: "Missing part parameter" });
+  }
+
+  const vbsPath = path.join(__dirname, "globalcert-part-description.vbs");
+  const cscript32 = process.env.SYSTEMROOT
+    ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
+    : "C:/Windows/SysWOW64/cscript.exe";
+
+  execFile(
+    cscript32,
+    ["//Nologo", vbsPath, part],
+    { windowsHide: true },
+    (err, stdout, stderr) => {
+      console.log("globalcert part-description VBS stderr:", stderr);
+      console.log("globalcert part-description VBS stdout:", stdout);
+      if (err) {
+        return res
+          .status(500)
+          .json({ error: "VBS execution failed", details: stderr });
+      }
+      try {
+        const data = JSON.parse(stdout);
+        res.json(data);
+      } catch (e) {
+        res.status(500).json({
+          error: "Failed to parse VBS output",
+          raw: stdout,
+          stderr: stderr,
+        });
+      }
+    },
+  );
+});
+
+// GET /globalcert?baseWorkorder=123456 (generic root - must be AFTER specific routes)
 router.get("/", (req, res) => {
   const baseWorkorder = req.query.baseWorkorder;
   if (!/^\d{6}$/.test(baseWorkorder)) {
