@@ -110,6 +110,47 @@ router.get("/me", (req, res) => {
   }
 });
 
+// Get current user's full name from PEOPLE table
+router.get("/me/name", (req, res) => {
+  const peopleId = req.session?.user_id || req.user;
+
+  if (!peopleId) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("Error connecting to get user name:", err.stack);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    connection.query(
+      "SELECT FIRST_NAME, LAST_NAME FROM PEOPLE WHERE PEOPLE_ID = ?",
+      [peopleId],
+      (err, rows) => {
+        connection.end();
+
+        if (err || !rows || rows.length === 0) {
+          console.warn(`Could not find user: ${peopleId}`);
+          return res.json({ firstName: peopleId, lastName: "" });
+        }
+
+        const firstName = rows[0].FIRST_NAME || "";
+        const lastName = rows[0].LAST_NAME || "";
+        res.json({ firstName, lastName });
+      },
+    );
+  });
+});
+
 // Logout endpoint
 router.post("/logout", (req, res) => {
   req.session.destroy((err) => {
