@@ -465,9 +465,9 @@ async function handleGenerateCert() {
           </div>
 
           <!-- Form Number -->
-          <p class="coc-form-number">
-            Form 8010-2 Rev. 01 21 May 2026 
-          </p>
+        //   <p class="coc-form-number">
+        //     Form 8010-2 Rev. 01 21 May 2026 
+        //   </p>
         </div>
       `;
 

@@ -44,37 +44,38 @@
 
   .coc-table {
     width: 100%;
-    font-size: 0.75em;
+    font-size: 0.85em;
     border-collapse: collapse;
     -webkit-print-color-adjust: exact;
     print-color-adjust: exact;
     margin: 0;
     padding: 0;
+    table-layout: auto !important;
   }
 
   .coc-table th:nth-child(1),
   .coc-table td:nth-child(1) {
-    width: 8% !important;
+    width: 5% !important;
   }
 
   .coc-table th:nth-child(2),
   .coc-table td:nth-child(2) {
-    width: 28% !important;
+    width: 50% !important;
   }
 
   .coc-table th:nth-child(3),
   .coc-table td:nth-child(3) {
-    width: 18% !important;
+    width: 10% !important;
   }
 
   .coc-table th:nth-child(4),
   .coc-table td:nth-child(4) {
-    width: 12% !important;
+    width: 5% !important;
   }
 
   .coc-table th:nth-child(5),
   .coc-table td:nth-child(5) {
-    width: 34% !important;
+    width: 30% !important;
   }
 
   .coc-table td,
@@ -247,6 +248,32 @@
 .coc-table td,
 .coc-table tr {
   border: 1px solid #000;
+}
+
+/* Column widths for Processes table */
+.coc-table th:nth-child(1),
+.coc-table td:nth-child(1) {
+  width: 5% !important;
+}
+
+.coc-table th:nth-child(2),
+.coc-table td:nth-child(2) {
+  width: 50% !important;
+}
+
+.coc-table th:nth-child(3),
+.coc-table td:nth-child(3) {
+  width: 10% !important;
+}
+
+.coc-table th:nth-child(4),
+.coc-table td:nth-child(4) {
+  width: 5% !important;
+}
+
+.coc-table th:nth-child(5),
+.coc-table td:nth-child(5) {
+  width: 30% !important;
 }
 
 .coc-table th {
