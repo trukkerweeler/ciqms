@@ -13,7 +13,6 @@ package-lock.json.bak
 # Deployment & Infrastructure (SECURITY)
 deploy.ps1
 *.bat
-*.vbs
 install.py
 
 # Python
