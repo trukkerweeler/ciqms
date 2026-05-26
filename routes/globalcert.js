@@ -5,9 +5,16 @@ const path = require("path");
 const router = express.Router();
 
 // POST /globalcert/process
-// Body: { baseWorkorder: "123456", suffix: "000", operationCodes: ["D172"] or [], codeTransaction: "J55" }
+// Body: { baseWorkorder: "123456", suffix: "000", operationCodes: ["D172"] or [], codeTransaction: "J55", dateHistory: "241210" (optional), invHistTime: "15070267" (optional) }
 router.post("/process", (req, res) => {
-  const { baseWorkorder, suffix, operationCodes, codeTransaction } = req.body;
+  const {
+    baseWorkorder,
+    suffix,
+    operationCodes,
+    codeTransaction,
+    dateHistory,
+    invHistTime,
+  } = req.body;
   if (
     !baseWorkorder ||
     !suffix ||
@@ -31,7 +38,7 @@ router.post("/process", (req, res) => {
     ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
     : "C:/Windows/SysWOW64/cscript.exe";
 
-  // Pass baseWorkorder, suffix, operationCodes, and codeTransaction
+  // Pass baseWorkorder, suffix, operationCodes, codeTransaction, and optional date/time
   const operationCodesStr = operationCodes.join(",");
 
   execFile(
@@ -43,6 +50,8 @@ router.post("/process", (req, res) => {
       suffix,
       operationCodesStr,
       codeTransaction,
+      dateHistory || "",
+      invHistTime || "",
     ],
     { windowsHide: true },
     (err, stdout, stderr) => {

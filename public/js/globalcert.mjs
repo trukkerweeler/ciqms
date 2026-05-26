@@ -315,6 +315,8 @@ async function handleGenerateCert() {
           suffix: suffix,
           operationCodes: allOperationCodes,
           codeTransaction: codeTransaction,
+          dateHistory: date,
+          invHistTime: time,
         }),
       });
 

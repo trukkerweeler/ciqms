@@ -48,7 +48,7 @@ Set conn = CreateObject("ADODB.Connection")
 Set rs = CreateObject("ADODB.Recordset")
 
 ' get the arguments from the command line
-Dim baseWorkorder, baseSuffix, operationCodesStr, codeTransaction, test: test = True
+Dim baseWorkorder, baseSuffix, operationCodesStr, codeTransaction, dateHistory, invHistTime, test: test = True
 If WScript.Arguments.Count > 0 Then
   baseWorkorder = WScript.Arguments(0)
   If WScript.Arguments.Count > 1 Then
@@ -60,14 +60,22 @@ If WScript.Arguments.Count > 0 Then
   If WScript.Arguments.Count > 3 Then
     codeTransaction = WScript.Arguments(3)
   End If
+  If WScript.Arguments.Count > 4 Then
+    dateHistory = WScript.Arguments(4)
+  End If
+  If WScript.Arguments.Count > 5 Then
+    invHistTime = WScript.Arguments(5)
+  End If
 Else
   If test Then
     baseWorkorder = "122429" ' Example for testing
     baseSuffix = "001" ' Example suffix
     operationCodesStr = "6061,D172" ' Example operations
     codeTransaction = "J55" ' Example transaction code
+    dateHistory = "" ' Example: no filter
+    invHistTime = "" ' Example: no filter
   Else
-    MsgBox "Usage: globalcert.vbs <baseWorkorder> <suffix> <operationCodes> <codeTransaction>"
+    MsgBox "Usage: globalcert.vbs <baseWorkorder> <suffix> <operationCodes> <codeTransaction> [dateHistory] [invHistTime]"
     WScript.Quit
   End If
 End If
@@ -98,17 +106,24 @@ If conn.State = 1 Then
   End If
   
   ' Extract child workorders from inventory FIRST
-  Dim childWorkorders, childIdx, childArray, childJobNum, childSuffixStr, childWOName, dictEnum, keyIdx, childSerialNum, childQuery, serialNum, dashPos, childJobStr, childExtractQuery, finalUnionQuery, dictCounter
+  Dim childWorkorders, childIdx, childArray, childJobNum, childSuffixStr, childWOName, dictEnum, keyIdx, childSerialNum, childQuery, serialNum, dashPos, childJobStr, childExtractQuery, finalUnionQuery, dictCounter, dateTimeFilter
   Set childWorkorders = CreateObject("Scripting.Dictionary")
   dictCounter = 0
   
-  childExtractQuery = "SELECT DISTINCT SERIAL_NUMBER FROM V_ITEM_HISTORY " & _
+  ' Build date/time filter if provided
+  dateTimeFilter = ""
+  If dateHistory <> "" And invHistTime <> "" Then
+    dateTimeFilter = " AND DATE_HISTORY = '" & dateHistory & "' AND INV_HIST_TIME = '" & invHistTime & "'"
+  End If
+  
+  childExtractQuery = "SELECT DISTINCT SERIAL_NUMBER FROM ITEM_HISTORY " & _
     "WHERE JOB = " & CLng(baseWorkorder) & " " & _
     "AND SUFFIX = '000' " & _
     "AND SERIAL_NUMBER <> '' " & _
     "AND SERIAL_NUMBER LIKE '%-___' " & _
     "AND CODE_TRANSACTION = '" & codeTransaction & "' " & _
-    "AND SEQUENCE = 990000"
+    "AND SEQUENCE = 990000" & _
+    dateTimeFilter
   
   WScript.StdErr.Write "DEBUG CHILD EXTRACT: " & childExtractQuery & vbCrLf
   
@@ -155,7 +170,7 @@ If conn.State = 1 Then
         "vih.SERIAL_NUMBER AS SOURCE_WO " & _
         "FROM JOB_HEADER jh " & _
         "LEFT JOIN V_JOB_OPERATIONS vjo ON jh.JOB = vjo.JOB AND jh.SUFFIX = vjo.SUFFIX " & _
-        "LEFT JOIN V_ITEM_HISTORY vih ON vih.JOB = " & CLng(baseWorkorder) & " AND vih.SUFFIX = '000' " & _
+        "LEFT JOIN ITEM_HISTORY vih ON vih.JOB = " & CLng(baseWorkorder) & " AND vih.SUFFIX = '000' " & _
           "AND vih.SEQUENCE = 990000 AND vih.CODE_TRANSACTION = '" & codeTransaction & "' " & _
           "AND vih.SERIAL_NUMBER = '" & childSerialNum & "' " & _
         "LEFT JOIN V_ROUTER_LINE vrl ON vjo.ROUTER = vrl.ROUTER AND vjo.ROUTER_SEQ = vrl.LINE_ROUTER " & _
