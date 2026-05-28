@@ -67,7 +67,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Step 1: Fetch inventory history transactions
+// Step 1: Fetch inventory history transactions (via processcert-coc)
 inventoryForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   inventoryResults.innerHTML = "";
@@ -83,20 +83,17 @@ inventoryForm.addEventListener("submit", async (e) => {
   }
 
   try {
-    // Fetch inventory history from new endpoint
-    const params = new URLSearchParams({
-      job,
-      codeTransaction: "J52",
-    });
+    // Fetch inventory history from processcert-coc endpoint (Step 1 only - no selectedIndices)
+    const params = new URLSearchParams({ job });
 
-    const res = await fetch(`/globalcert/inventory-hist?${params}`);
+    const res = await fetch(`/globalcert/processcert-coc?${params}`);
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || "Failed to fetch inventory");
     }
 
     const resData = await res.json();
-    currentInventoryData = resData.data || [];
+    currentInventoryData = resData.step1_j52_transactions || [];
 
     if (
       !Array.isArray(currentInventoryData) ||
@@ -147,32 +144,32 @@ inventoryForm.addEventListener("submit", async (e) => {
 
       // Date
       const tdDate = document.createElement("td");
-      tdDate.textContent = row.DATE_HISTORY || "";
+      tdDate.textContent = row.dateHistory || "";
       tr.appendChild(tdDate);
 
       // Time
       const tdTime = document.createElement("td");
-      tdTime.textContent = row.INV_HIST_TIME || "";
+      tdTime.textContent = row.timeItemHistory || "";
       tr.appendChild(tdTime);
 
       // Part
       const tdPart = document.createElement("td");
-      tdPart.textContent = row.PART || "";
+      tdPart.textContent = (row.part || "").trim();
       tr.appendChild(tdPart);
 
       // Quantity
       const tdQty = document.createElement("td");
-      tdQty.textContent = row.QUANTITY || "";
+      tdQty.textContent = row.quantity || "";
       tr.appendChild(tdQty);
 
       // Job
       const tdJob = document.createElement("td");
-      tdJob.textContent = row.JOB || "";
+      tdJob.textContent = row.job || "";
       tr.appendChild(tdJob);
 
       // Suffix
       const tdSuffix = document.createElement("td");
-      tdSuffix.textContent = row.SUFFIX || "";
+      tdSuffix.textContent = row.suffix || "";
       tr.appendChild(tdSuffix);
 
       table.querySelector("tbody").appendChild(tr);
@@ -243,7 +240,7 @@ inventoryForm.addEventListener("submit", async (e) => {
   }
 });
 
-// Generate certificate for selected rows (with date/time discrimination)
+// Generate certificate for selected rows (Step 3: Chain of Custody)
 async function handleGenerateCert() {
   if (selectedWorkorders.size === 0) {
     certResults.innerHTML =
@@ -254,292 +251,86 @@ async function handleGenerateCert() {
   certResults.innerHTML = "<p>Generating certificate...</p>";
 
   try {
-    // Define the 6 special manufacturing processes (using actual operation codes from ERP)
-    const processes = [
-      { name: "HEAT", label: "Heat Treatment", operationCodes: ["HEAT"] },
-      { name: "SWLD", label: "Spot Weld", operationCodes: ["D172"] },
-      {
-        name: "FWLD",
-        label: "Fusion Weld",
-        operationCodes: ["FUSION", "D171"],
-      },
-      {
-        name: "PASS",
-        label: "Passivation",
-        operationCodes: ["PASSM2", "PASST6", "BLAN1"],
-      },
-      { name: "CHEM", label: "Chemical", operationCodes: ["FT1C1A"] },
-      { name: "PAINT", label: "Paint", operationCodes: ["23377A", "PAINT2"] },
-    ];
-
-    // Check if testing mode (include all operations) is enabled
-    const includeAllCheckbox = document.getElementById("includeAllOps");
-    const includeAll = includeAllCheckbox && includeAllCheckbox.checked;
-
-    // Use all operation codes OR empty array for testing
-    const allOperationCodes = includeAll
-      ? []
-      : processes.flatMap((p) => p.operationCodes);
-
-    let hasData = false;
-    certResults.innerHTML = ""; // Clear loading message
-
-    // Process each selected transaction (row)
-    for (const rowIndexStr of selectedWorkorders) {
-      const rowIndex = parseInt(rowIndexStr);
-      const inventoryRow = currentInventoryData[rowIndex];
-
-      if (!inventoryRow) {
-        console.warn(`Could not find inventory row at index ${rowIndex}`);
-        continue;
-      }
-
-      const job = inventoryRow.JOB;
-      const suffix = inventoryRow.SUFFIX;
-      const codeTransaction = inventoryRow.CODE_TRANSACTION || "J55";
-      const date = inventoryRow.DATE_HISTORY;
-      const time = inventoryRow.INV_HIST_TIME;
-
-      console.log(
-        `Processing transaction: ${date} ${time} (Job: ${job}, Suffix: ${suffix}, Code: ${codeTransaction})`,
-      );
-
-      // Query special process operations only
-      const res = await fetch("/globalcert/process", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({
-          baseWorkorder: job,
-          suffix: suffix,
-          operationCodes: allOperationCodes,
-          codeTransaction: codeTransaction,
-          dateHistory: date,
-          invHistTime: time,
-        }),
-      });
-
-      if (!res.ok) {
-        console.error(
-          `Error processing transaction ${date} ${time}:`,
-          await res.text(),
-        );
-        continue;
-      }
-
-      const resData = await res.json();
-      const woData = resData.data || resData;
-
-      if (!Array.isArray(woData) || woData.length === 0) {
-        console.warn(`No process data for transaction ${date} ${time}`);
-        continue;
-      }
-
-      hasData = true;
-      currentOperationData[`${job}-${suffix}`] = woData;
-
-      // Use PART from inventory transaction (from JOB_HEADER for the base work order)
-      // This gives us the correct "Top Assembly Number" rather than mixing in child parts
-      const part = inventoryRow.PART.trim();
-      const childPart = woData[0]?.PART || part;
-      const childPartDescription = woData[0]?.PART_DESCRIPTION || "";
-
-      // Fetch Top Assembly description from INVENTORY_MASTER
-      let topAssemblyDescription = "";
-      try {
-        const descRes = await fetch(
-          `/globalcert/part-description?part=${encodeURIComponent(part)}`,
-        );
-        if (descRes.ok) {
-          const descData = await descRes.json();
-          topAssemblyDescription = descData.description || "";
-        }
-      } catch (error) {
-        console.error(`Error fetching description for part ${part}:`, error);
-      }
-
-      // Collect unique PO numbers (vendor POs) from operations, tracking SOURCE_WO and QUANTITY for each
-      // Include any REFERENCE value that's not empty and not a known text label
-      const vendorPOsMap = new Map(); // Map of PO → { SOURCE_WO, QUANTITY }
-      const excludedLabels = [
-        "LABOR INPUT",
-        "LABOR",
-        "MATERIAL",
-        "NONE",
-        "N/A",
-      ];
-      woData.forEach((op) => {
-        const ref = (op.REFERENCE || "").trim().toUpperCase();
-        // Include if not empty and not an excluded label
-        if (ref && !excludedLabels.includes(ref)) {
-          const originalRef = (op.REFERENCE || "").trim();
-          // Store mapping of PO to { SOURCE_WO, QUANTITY } (keep first occurrence if duplicate)
-          if (!vendorPOsMap.has(originalRef)) {
-            vendorPOsMap.set(originalRef, {
-              SOURCE_WO: op.SOURCE_WO,
-              QUANTITY: op.QUANTITY,
-            });
-          }
-          console.log(
-            `Added REFERENCE/PO: ${originalRef} from ${op.SOURCE_WO} (Qty: ${op.QUANTITY})`,
-          );
-        } else if (ref) {
-          console.log(`Skipped REFERENCE (known label): ${op.REFERENCE}`);
-        }
-      });
-
-      // Determine specification from operations (first outside op found)
-      let specification = "";
-      for (const op of woData) {
-        if (operationSpecMap[op.OPERATION]) {
-          specification = operationSpecMap[op.OPERATION];
-          if (specification) break;
-        }
-      }
-
-      // Format date as MM/DD/YYYY
-      const formattedDate = formatInventoryDate(date);
-      const qaUser = document.getElementById("qaUser").value || "QA User";
-
-      // Build operations table rows (only rows with data)
-      // Include childPart with its description in parentheses
-      let operationsTableRows = "";
-      const childPartDisplay = childPartDescription
-        ? `${childPart.trim()} (${childPartDescription.trim()})`
-        : childPart.trim();
-
-      if (vendorPOsMap.size > 0) {
-        let itemNum = 1;
-        vendorPOsMap.forEach((poData, po) => {
-          operationsTableRows += `<tr><td>${itemNum}</td><td>${childPartDisplay}</td><td>${po}</td><td>${poData.QUANTITY}</td><td>${poData.SOURCE_WO}</td></tr>`;
-          itemNum++;
-        });
-      } else {
-        // At least one row if no POs
-        const baseSourceWO = woData[0]?.SOURCE_WO || `${job}-${suffix}`;
-        operationsTableRows = `<tr><td>1</td><td>${childPartDisplay}</td><td>-</td><td>${inventoryRow.QUANTITY}</td><td>${baseSourceWO}</td></tr>`;
-      }
-
-      // Build Certificate of Processing HTML
-      const certDiv = document.createElement("div");
-      certDiv.className = "coc-certificate";
-
-      // Format header Part Number/Description with Top Assembly + description
-      const topAssemblyDisplay = topAssemblyDescription
-        ? `${part.trim()} (${topAssemblyDescription.trim()})`
-        : part.trim();
-      certDiv.innerHTML = `
-        <div class="coc-container">
-          <!-- Header -->
-          <div class="coc-header">
-            <div class="coc-logo-section">
-              <img src="images/ci-logo.png" alt="Christensen Industries" class="coc-logo" />
-            </div>
-            <div class="coc-company-info">
-              <h1>Christensen Industries</h1>
-              <p>2990 South Main Street, Salt Lake City, Utah 84115</p>
-              <p>Telephone: (801) 466-3334 • Fax: (801) 466-1441</p>
-            </div>
-          </div>
-
-          <h2 class="coc-title">Certification of Processing</h2>
-
-          <!-- Work Order Information -->
-          <table class="coc-info-table">
-            <tr>
-              <td class="coc-label">Work Order Number:</td>
-              <td class="coc-value">${job}-${suffix}</td>
-              <td class="coc-label">Top Assembly Number:</td>
-              <td class="coc-value">${part.trim()}</td>
-            </tr>
-            <tr>
-              <td class="coc-label">Part Number/Description:</td>
-              <td class="coc-value" colspan="3">${topAssemblyDisplay}</td>
-            </tr>
-          </table>
-
-          <!-- Process Information -->
-          <table class="coc-table">
-            <thead>
-              <tr class="coc-process-row">
-                <td colspan="5" class="coc-process-label"><strong>Process:</strong> ${getProcessName(woData[0]?.OPERATION || "OTHER")}${specification ? " - " + specification : ""}</td>
-              </tr>
-              <tr>
-                <th>ITEM</th>
-                <th>PART NUMBER / DESCRIPTION</th>
-                <th>TRACE ID</th>
-                <th>QUANTITY</th>
-                <th>WORK ORDER</th>
-              </tr>
-            </thead>
-            <tbody>
-              ${operationsTableRows}
-            </tbody>
-          </table>
-
-          <!-- Certification Statement -->
-          <div class="coc-statement">
-            <p>I certify that the listed materials were processed in conformance with the designated specifications and the latest drawing revisions on record.</p>
-          </div>
-
-          <!-- Signature Section -->
-          <div class="coc-signature">
-            <div class="signature-line">
-              <div style="display: inline-block; width: 300px; border-bottom: 1px solid #000; padding-bottom: 5px;"></div>
-            </div>
-            <div class="signature-labels">
-              <span style="display: inline-block; width: 300px; text-align: left; font-weight: bold;">${qaUser}</span>
-            </div>
-            <div class="signature-role">Quality Assurance</div>
-            <div style="margin-top: 20px; text-align: left;">Date: ${formattedDate}</div>
-          </div>
-
-          <!-- Form Number
-        //   <p class="coc-form-number">
-        //     Form 8010-2 Rev. 01 21 May 2026 
-        //   </p> -->
-        </div>
-      `;
-
-      certResults.appendChild(certDiv);
-
-      // Add page break between certificates
-      const pageBreak = document.createElement("div");
-      pageBreak.style.pageBreakAfter = "always";
-      pageBreak.style.marginTop = "30px";
-      certResults.appendChild(pageBreak);
+    // Get the job number from the first inventory row
+    const job = currentInventoryData[0]?.job;
+    if (!job) {
+      certResults.innerHTML = "<p style='color: red;'>No job found.</p>";
+      return;
     }
 
-    if (!hasData) {
-      certResults.innerHTML =
-        "<p style='color: red;'>No certificate data found for selected transactions.</p>";
-    } else {
-      const printBtn = document.createElement("button");
-      printBtn.textContent = "🖨️ PRINT CERTIFICATE";
-      printBtn.style.marginTop = "30px";
-      printBtn.style.padding = "12px 24px";
-      printBtn.style.fontSize = "16px";
-      printBtn.style.fontWeight = "bold";
-      printBtn.style.backgroundColor = "#007bff";
-      printBtn.style.color = "white";
-      printBtn.style.border = "none";
-      printBtn.style.borderRadius = "4px";
-      printBtn.style.cursor = "pointer";
-      printBtn.addEventListener("click", () => {
-        window.print();
-      });
-      printBtn.addEventListener("mouseover", () => {
-        printBtn.style.backgroundColor = "#0056b3";
-      });
-      printBtn.addEventListener("mouseout", () => {
-        printBtn.style.backgroundColor = "#007bff";
-      });
-      certResults.appendChild(printBtn);
+    // Convert selectedWorkorders Set to comma-separated string of indices
+    const selectedIndicesStr = Array.from(selectedWorkorders)
+      .sort((a, b) => parseInt(a) - parseInt(b))
+      .join(",");
+
+    // Call processcert-coc with selectedIndices to get Steps 1-3 complete data
+    const params = new URLSearchParams({
+      job,
+      selectedIndices: selectedIndicesStr,
+    });
+
+    const res = await fetch(`/globalcert/processcert-coc?${params}`);
+    if (!res.ok) {
+      const error = await res.json();
+      throw new Error(error.error || "Failed to generate certificate");
     }
-  } catch (err) {
-    certResults.innerHTML =
-      "<p style='color: red;'>Error generating certificate: " +
-      err.message +
-      "</p>";
+
+    const cocData = await res.json();
+    if (!cocData.success) {
+      throw new Error("CoC generation failed");
+    }
+
+    // cocData now contains:
+    // - step1_j52_transactions
+    // - selectedIndices
+    // - step3_coc_links (array of CoC entries with parent/operation/child data)
+
+    const cocLinks = cocData.step3_coc_links || [];
+    if (cocLinks.length === 0) {
+      certResults.innerHTML = "<p>No chain-of-custody data generated.</p>";
+      return;
+    }
+
+    // Display CoC data
+    let html = "<h3>Chain of Custody - Generated from Steps 1-3</h3>";
+    html += "<table class='coc-table'><thead><tr>";
+    html +=
+      "<th>Parent Job</th><th>Parent Suffix</th><th>Operation</th><th>Router</th>";
+    html +=
+      "<th>Child Job</th><th>Child Suffix</th><th>Child Part</th><th>Material Pulls</th>";
+    html += "</tr></thead><tbody>";
+
+    cocLinks.forEach((coc) => {
+      const parentJ52 = coc.parent_j52 || {};
+      const op = coc.operation || {};
+      const childJob = coc.child_job || {};
+      const childHeader = childJob.header || {};
+
+      const materialPullsHtml =
+        (childJob.material_pulls || [])
+          .map(
+            (m) =>
+              `${m.codeTransaction}: ${m.part.trim()} (Qty: ${m.quantity})`,
+          )
+          .join("<br>") || "None";
+
+      html += `<tr>
+        <td>${parentJ52.job || ""}</td>
+        <td>${parentJ52.suffix || ""}</td>
+        <td>${op.operation || ""}</td>
+        <td>${op.router_desc ? op.router_desc.trim() : ""}</td>
+        <td>${childJob.job || ""}</td>
+        <td>${childJob.suffix || ""}</td>
+        <td>${childHeader.part ? childHeader.part.trim() : ""}</td>
+        <td>${materialPullsHtml}</td>
+      </tr>`;
+    });
+
+    html += "</tbody></table>";
+    certResults.innerHTML = html;
+  } catch (error) {
+    console.error("Error generating certificate:", error);
+    certResults.innerHTML = `<p style='color: red;'>Error: ${error.message}</p>`;
   }
 }
 

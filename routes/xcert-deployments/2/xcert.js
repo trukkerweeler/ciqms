@@ -54,54 +54,50 @@ router.post("/process", (req, res) => {
   );
 });
 
-// GET /xcert/inventory-hist?job=122361&suffix=000&codeTransaction=J52
-// Query inventory history transactions (GET only - read only)
-router.get("/inventory-hist", (req, res) => {
-  const { job, suffix, codeTransaction } = req.query;
+// GET /xcert/processcert-coc?job=122166&selectedIndices=0,1,3
+// Steps 1-3: Fetch J52 transactions, accept selected indices, build chain-of-custody links
+// ITEM_HISTORY-based (not INVENTORY_HIST) to ensure SERIAL_NUMBER is available
+router.get("/processcert-coc", (req, res) => {
+  const { job, selectedIndices } = req.query;
 
-  // Validate parameters
-  if (!job || !suffix) {
-    return res.status(400).json({ error: "Missing job or suffix parameter" });
+  // Validate job parameter
+  if (!job) {
+    return res.status(400).json({ error: "Missing job parameter" });
   }
   if (!/^\d+$/.test(job)) {
     return res.status(400).json({ error: "Invalid job number" });
   }
-  if (!/^\d{3}$/.test(suffix)) {
-    return res.status(400).json({ error: "Invalid suffix (must be 3 digits)" });
-  }
 
-  const vbsPath = path.join(__dirname, "xcert-inventory-hist.vbs");
+  const vbsPath = path.join(__dirname, "processcert-coc.vbs");
   const cscript32 = process.env.SYSTEMROOT
     ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
     : "C:/Windows/SysWOW64/cscript.exe";
 
-  // Default code transaction to 'J52' if not provided
-  const code = codeTransaction || "J52";
+  // Build command arguments: job and optional selectedIndices
+  const args = ["//Nologo", vbsPath, job];
+  if (selectedIndices) {
+    args.push(selectedIndices);
+  }
 
-  execFile(
-    cscript32,
-    ["//Nologo", vbsPath, job, suffix, code],
-    { windowsHide: true },
-    (err, stdout, stderr) => {
-      console.log("xcert inventory-hist VBS stderr:", stderr);
-      console.log("xcert inventory-hist VBS stdout:", stdout);
-      if (err) {
-        return res
-          .status(500)
-          .json({ error: "VBS execution failed", details: stderr });
-      }
-      try {
-        const data = JSON.parse(stdout);
-        res.json(data);
-      } catch (e) {
-        res.status(500).json({
-          error: "Failed to parse VBS output",
-          raw: stdout,
-          stderr: stderr,
-        });
-      }
-    },
-  );
+  execFile(cscript32, args, { windowsHide: true }, (err, stdout, stderr) => {
+    console.log("processcert-coc VBS stderr:", stderr);
+    console.log("processcert-coc VBS stdout:", stdout);
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "VBS execution failed", details: stderr });
+    }
+    try {
+      const data = JSON.parse(stdout);
+      res.json(data);
+    } catch (e) {
+      res.status(500).json({
+        error: "Failed to parse VBS output",
+        raw: stdout,
+        stderr: stderr,
+      });
+    }
+  });
 });
 
 // GET /xcert?baseWorkorder=123456

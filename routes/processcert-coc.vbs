@@ -2,14 +2,17 @@
 ' Implements Steps 1-3 of GlobalCert Chain-of-Custody extraction
 ' Designed for use by processcert.html frontend
 '
-' Step 1: Fetch Inventory Transactions (J52) — suffix-agnostic for given JOB
-' Step 2: Accept selected transactions from frontend
-' Step 3: Build first-level chain-of-custody links only
+' Step 1: Fetch Inventory Transactions (J52) from ITEM_HISTORY
+' Step 2: Accept selected transactions from frontend (no database work)
+' Step 3: Build first-level chain-of-custody links with parent operation, child job, and materials
 '
 ' Usage: cscript //Nologo processcert-coc.vbs <JOB> [selectedTransactionIndices]
 ' Example: cscript //Nologo processcert-coc.vbs 122166 0,1,3
 '
 ' Returns: JSON structure with Step 1 transactions, selections, and CoC links
+' Tables used: ITEM_HISTORY, JOB_HEADER, JOB_OPERATIONS, ROUTER_LINE, JOB_DETAIL
+
+On Error Resume Next
 
 Dim conn, rs, fso, dsn, uid, pwd, file, WshShell, DocumentsPath, CIQMSPath
 On Error Resume Next
@@ -79,12 +82,9 @@ End If
 On Error GoTo 0
 
 ' ============================================================================
-' STEP 1: Fetch Inventory Transactions (J52)
-' Query ITEM_HISTORY for J52 rows matching JOB (suffix-agnostic)
+' STEP 1: FETCH DOWNSTREAM COMPLETIONS (J52)
+' Query ITEM_HISTORY for all J52 rows for the given job (suffix-agnostic)
 ' ============================================================================
-Dim j52Transactions
-Set j52Transactions = CreateObject("Scripting.Collection")
-
 Dim sqlStep1
 sqlStep1 = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, SERIAL_NUMBER " & _
            "FROM ITEM_HISTORY " & _
@@ -99,332 +99,371 @@ If Err.Number <> 0 Then
   WScript.Quit 1
 End If
 
-Dim transactionIndex
-transactionIndex = 0
-Dim transactionObj
+Dim j52JSON, j52Index
+j52JSON = "["
+j52Index = 0
 
 Do While Not rs.EOF
-  Set transactionObj = CreateObject("Scripting.Dictionary")
-  transactionObj("index") = transactionIndex
-  transactionObj("dateHistory") = rs("DATE_HISTORY")
-  transactionObj("timeItemHistory") = rs("TIME_ITEM_HISTORY")
-  transactionObj("part") = rs("PART")
-  transactionObj("quantity") = rs("QUANTITY")
-  transactionObj("job") = rs("JOB")
-  transactionObj("suffix") = rs("SUFFIX")
-  transactionObj("serialNumber") = rs("SERIAL_NUMBER")
+  If j52Index > 0 Then j52JSON = j52JSON & ","
   
-  j52Transactions.Add transactionObj
-  transactionIndex = transactionIndex + 1
+  j52JSON = j52JSON & "{" & _
+    """index"":" & j52Index & "," & _
+    """dateHistory"":" & QuoteJSON(rs("DATE_HISTORY")) & "," & _
+    """timeItemHistory"":" & QuoteJSON(rs("TIME_ITEM_HISTORY")) & "," & _
+    """part"":" & QuoteJSON(rs("PART")) & "," & _
+    """quantity"":" & rs("QUANTITY") & "," & _
+    """job"":" & QuoteJSON(rs("JOB")) & "," & _
+    """suffix"":" & QuoteJSON(rs("SUFFIX")) & "," & _
+    """serialNumber"":" & QuoteJSON(rs("SERIAL_NUMBER")) & _
+    "}"
+  
+  j52Index = j52Index + 1
   rs.MoveNext
 Loop
 
 rs.Close
+j52JSON = j52JSON & "]"
 
 ' ============================================================================
-' STEP 2: Accept Selected Transactions from Frontend
+' STEP 2: ACCEPT SELECTED TRANSACTIONS (No database work)
 ' Parse selectedIndicesStr (comma-separated list of indices to include)
 ' ============================================================================
-Dim selectedIndices
-Set selectedIndices = CreateObject("Scripting.Dictionary")
+Dim selectedIndicesJSON
+selectedIndicesJSON = "[]"
 
 If selectedIndicesStr <> "" Then
-  Dim indicesParts
-  indicesParts = Split(selectedIndicesStr, ",")
-  Dim idx
-  For idx = 0 To UBound(indicesParts)
-    selectedIndices(Trim(indicesParts(idx))) = True
-  Next
-Else
-  ' If no selection provided, select all transactions
-  Dim i
-  For i = 0 To j52Transactions.Count - 1
-    selectedIndices(i) = True
-  Next
+  selectedIndicesJSON = "[" & selectedIndicesStr & "]"
 End If
 
 ' ============================================================================
-' STEP 3: Build Initial Chain-of-Custody Links
-' For each selected J52 transaction, load:
-'  - Child job header (JOB_HEADER) using SERIAL_NUMBER
-'  - Child job's J52 rows (its own completions)
-'  - Child job's material pulls (J55, J50, J51)
-' STOP HERE - no recursion beyond one level
+' STEP 3: BUILD FIRST-LEVEL CHAIN OF CUSTODY
+' For each selected J52 row:
+'   3A - Parse child job from SERIAL_NUMBER
+'   3B - Match child job's J52 row
+'   3C - Load child job header
+'   3D - Load child job material pulls
+'   3E - Match parent operation
+'   3F - Join router line
+'   3G - Join job detail for PO
+'   3H - Output JSON structure
 ' ============================================================================
-Dim cocLinks
-Set cocLinks = CreateObject("Scripting.Collection")
+Dim cocJSON, cocCount
+cocJSON = "["
+cocCount = 0
 
-Dim childJob, childSuffix, childSerialNum, dateHist, timeHist
-For i = 1 To j52Transactions.Count
-  Dim currentTxn
-  Set currentTxn = j52Transactions(i)
+' Re-execute Step 1 to iterate through selected rows
+Set rs = conn.Execute(sqlStep1)
+
+Dim currentIndex
+currentIndex = 0
+
+Do While Not rs.EOF
+  ' Check if this row index should be included
+  Dim isSelected
+  isSelected = False
   
-  ' Check if this transaction is selected
-  If selectedIndices.Exists(currentTxn("index") - 1) Or selectedIndices.Exists(CStr(currentTxn("index") - 1)) Then
-    
-    ' Extract values from selected J52 transaction
-    childSerialNum = currentTxn("serialNumber")
-    dateHist = currentTxn("dateHistory")
-    timeHist = currentTxn("timeItemHistory")
-    Dim parentSuffix
-    parentSuffix = currentTxn("suffix")
-    
-    ' Create CoC link object for this parent→child relationship
-    Dim cocLink
-    Set cocLink = CreateObject("Scripting.Dictionary")
-    cocLink("parentJob") = job
-    cocLink("parentSuffix") = parentSuffix
-    cocLink("j52Transaction") = currentTxn
-    
-    ' Load child job header from JOB_HEADER using SERIAL_NUMBER
-    Dim sqlChildHeader
-    sqlChildHeader = "SELECT JOB, SUFFIX, SERIAL_NUMBER, PART, QUANTITY " & _
-                     "FROM JOB_HEADER " & _
-                     "WHERE SERIAL_NUMBER = '" & childSerialNum & "'"
-    
-    Set rs = conn.Execute(sqlChildHeader)
-    Dim childJobHeader
-    Set childJobHeader = CreateObject("Scripting.Dictionary")
-    
-    If Not rs.EOF Then
-      childJobHeader("job") = rs("JOB")
-      childJobHeader("suffix") = rs("SUFFIX")
-      childJobHeader("serialNumber") = rs("SERIAL_NUMBER")
-      childJobHeader("part") = rs("PART")
-      childJobHeader("quantity") = rs("QUANTITY")
-      
-      childJob = rs("JOB")
-      childSuffix = rs("SUFFIX")
-    End If
-    rs.Close
-    
-    cocLink("childJobHeader") = childJobHeader
-    
-    ' Load child job's J52 rows (its own completions)
-    Dim sqlChildJ52
-    sqlChildJ52 = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, SERIAL_NUMBER " & _
-                  "FROM ITEM_HISTORY " & _
-                  "WHERE SERIAL_NUMBER = '" & childSerialNum & "' " & _
-                  "AND CODE_TRANSACTION = 'J52' " & _
-                  "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
-    
-    Set rs = conn.Execute(sqlChildJ52)
-    Dim childJ52Rows
-    Set childJ52Rows = CreateObject("Scripting.Collection")
-    
-    Do While Not rs.EOF
-      Dim childJ52Obj
-      Set childJ52Obj = CreateObject("Scripting.Dictionary")
-      childJ52Obj("dateHistory") = rs("DATE_HISTORY")
-      childJ52Obj("timeItemHistory") = rs("TIME_ITEM_HISTORY")
-      childJ52Obj("part") = rs("PART")
-      childJ52Obj("quantity") = rs("QUANTITY")
-      childJ52Obj("job") = rs("JOB")
-      childJ52Obj("suffix") = rs("SUFFIX")
-      childJ52Obj("serialNumber") = rs("SERIAL_NUMBER")
-      
-      childJ52Rows.Add childJ52Obj
-      rs.MoveNext
-    Loop
-    rs.Close
-    
-    cocLink("childJ52Rows") = childJ52Rows
-    
-    ' Load child job's material pulls (J55, J50, J51)
-    Dim materialPulls
-    Set materialPulls = CreateObject("Scripting.Dictionary")
-    
-    ' J55 - Material Issue
-    Dim j55Rows
-    Set j55Rows = CreateObject("Scripting.Collection")
-    Dim sqlJ55
-    sqlJ55 = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, CODE_TRANSACTION " & _
-             "FROM ITEM_HISTORY " & _
-             "WHERE JOB = '" & childJob & "' " & _
-             "AND SUFFIX = '" & childSuffix & "' " & _
-             "AND CODE_TRANSACTION = 'J55' " & _
-             "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
-    
-    Set rs = conn.Execute(sqlJ55)
-    Do While Not rs.EOF
-      Dim j55Obj
-      Set j55Obj = CreateObject("Scripting.Dictionary")
-      j55Obj("dateHistory") = rs("DATE_HISTORY")
-      j55Obj("timeItemHistory") = rs("TIME_ITEM_HISTORY")
-      j55Obj("part") = rs("PART")
-      j55Obj("quantity") = rs("QUANTITY")
-      j55Obj("job") = rs("JOB")
-      j55Obj("suffix") = rs("SUFFIX")
-      j55Obj("codeTransaction") = rs("CODE_TRANSACTION")
-      
-      j55Rows.Add j55Obj
-      rs.MoveNext
-    Loop
-    rs.Close
-    
-    materialPulls("j55") = j55Rows
-    
-    ' J50 - Lot Issue
-    Dim j50Rows
-    Set j50Rows = CreateObject("Scripting.Collection")
-    Dim sqlJ50
-    sqlJ50 = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, CODE_TRANSACTION " & _
-             "FROM ITEM_HISTORY " & _
-             "WHERE JOB = '" & childJob & "' " & _
-             "AND SUFFIX = '" & childSuffix & "' " & _
-             "AND CODE_TRANSACTION = 'J50' " & _
-             "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
-    
-    Set rs = conn.Execute(sqlJ50)
-    Do While Not rs.EOF
-      Dim j50Obj
-      Set j50Obj = CreateObject("Scripting.Dictionary")
-      j50Obj("dateHistory") = rs("DATE_HISTORY")
-      j50Obj("timeItemHistory") = rs("TIME_ITEM_HISTORY")
-      j50Obj("part") = rs("PART")
-      j50Obj("quantity") = rs("QUANTITY")
-      j50Obj("job") = rs("JOB")
-      j50Obj("suffix") = rs("SUFFIX")
-      j50Obj("codeTransaction") = rs("CODE_TRANSACTION")
-      
-      j50Rows.Add j50Obj
-      rs.MoveNext
-    Loop
-    rs.Close
-    
-    materialPulls("j50") = j50Rows
-    
-    ' J51 - Heat/Lot Issue
-    Dim j51Rows
-    Set j51Rows = CreateObject("Scripting.Collection")
-    Dim sqlJ51
-    sqlJ51 = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, CODE_TRANSACTION " & _
-             "FROM ITEM_HISTORY " & _
-             "WHERE JOB = '" & childJob & "' " & _
-             "AND SUFFIX = '" & childSuffix & "' " & _
-             "AND CODE_TRANSACTION = 'J51' " & _
-             "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
-    
-    Set rs = conn.Execute(sqlJ51)
-    Do While Not rs.EOF
-      Dim j51Obj
-      Set j51Obj = CreateObject("Scripting.Dictionary")
-      j51Obj("dateHistory") = rs("DATE_HISTORY")
-      j51Obj("timeItemHistory") = rs("TIME_ITEM_HISTORY")
-      j51Obj("part") = rs("PART")
-      j51Obj("quantity") = rs("QUANTITY")
-      j51Obj("job") = rs("JOB")
-      j51Obj("suffix") = rs("SUFFIX")
-      j51Obj("codeTransaction") = rs("CODE_TRANSACTION")
-      
-      j51Rows.Add j51Obj
-      rs.MoveNext
-    Loop
-    rs.Close
-    
-    materialPulls("j51") = j51Rows
-    
-    cocLink("materialPulls") = materialPulls
-    
-    ' Add complete CoC link to collection
-    cocLinks.Add cocLink
+  If selectedIndicesStr = "" Then
+    isSelected = True
+  ElseIf InStr("," & selectedIndicesStr & ",", "," & currentIndex & ",") > 0 Then
+    isSelected = True
   End If
-Next
+  
+  If isSelected Then
+    If cocCount > 0 Then cocJSON = cocJSON & ","
+    
+    ' Extract parent J52 row data
+    Dim parentJob, parentSuffix, parentSerialNum, parentDateHist, parentTimeHist
+    parentJob = rs("JOB")
+    parentSuffix = rs("SUFFIX")
+    parentSerialNum = rs("SERIAL_NUMBER")
+    parentDateHist = rs("DATE_HISTORY")
+    parentTimeHist = rs("TIME_ITEM_HISTORY")
+    
+    ' 3A - Parse child job from SERIAL_NUMBER
+    ' Format: JJJJJJ-SSS (6-digit job, hyphen, 3-digit suffix, then padding)
+    ' Parse by position: job is 1-6, suffix is 8-10 (skip hyphen at position 7)
+    Dim childJob, childSuffix
+    childJob = Mid(parentSerialNum, 1, 6)
+    childSuffix = Mid(parentSerialNum, 8, 3)
+    
+    ' 3B - Match child job's J52 row
+    Dim childJ52JSON
+    childJ52JSON = GetChildJ52JSON(conn, childJob, childSuffix, parentDateHist, parentTimeHist)
+    
+    ' 3C - Load child job header
+    Dim childHeaderJSON
+    childHeaderJSON = GetChildHeaderJSON(conn, childJob, childSuffix)
+    
+    ' 3D - Load child job material pulls
+    Dim materialPullsJSON
+    materialPullsJSON = GetMaterialPullsJSON(conn, childJob, childSuffix)
+    
+    ' 3E - Match parent operation
+    Dim operationJSON
+    operationJSON = GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
+    
+    ' Build the parent_j52 object
+    Dim parentJ52JSON
+    parentJ52JSON = "{" & _
+      """dateHistory"":" & QuoteJSON(parentDateHist) & "," & _
+      """timeItemHistory"":" & QuoteJSON(parentTimeHist) & "," & _
+      """part"":" & QuoteJSON(rs("PART")) & "," & _
+      """quantity"":" & rs("QUANTITY") & "," & _
+      """job"":" & QuoteJSON(parentJob) & "," & _
+      """suffix"":" & QuoteJSON(parentSuffix) & "," & _
+      """serialNumber"":" & QuoteJSON(parentSerialNum) & _
+      "}"
+    
+    ' Build CoC entry
+    cocJSON = cocJSON & "{" & _
+      """parent_j52"":" & parentJ52JSON & "," & _
+      """operation"":" & operationJSON & "," & _
+      """child_job"":{" & _
+        """job"":" & QuoteJSON(childJob) & "," & _
+        """suffix"":" & QuoteJSON(childSuffix) & "," & _
+        """header"":" & childHeaderJSON & "," & _
+        """child_j52"":" & childJ52JSON & "," & _
+        """material_pulls"":" & materialPullsJSON & _
+      "}" & _
+      "}"
+    
+    cocCount = cocCount + 1
+  End If
+  
+  currentIndex = currentIndex + 1
+  rs.MoveNext
+Loop
+
+rs.Close
+cocJSON = cocJSON & "]"
 
 ' ============================================================================
-' Output Results as JSON for processcert.html
+' Output Results as JSON
 ' ============================================================================
 Dim output
-output = "{"
-output = output & """success"": true, "
-output = output & """step1_j52_transactions"": " & CollectionToJSON(j52Transactions) & ", "
-output = output & """selectedIndices"": " & ArrayToJSON(selectedIndicesStr) & ", "
-output = output & """step3_coc_links"": " & CocLinksToJSON(cocLinks)
-output = output & "}"
+output = "{" & _
+  """success"":true," & _
+  """step1_j52_transactions"":" & j52JSON & "," & _
+  """selectedIndices"":" & selectedIndicesJSON & "," & _
+  """step3_coc_links"":" & cocJSON & _
+  "}"
 
 WScript.Echo output
-
 conn.Close
+WScript.Quit 0
 
 ' ============================================================================
-' Helper Functions for JSON Conversion
+' Helper Functions
 ' ============================================================================
 
-Function DictionaryToJSON(dict)
-  Dim result, key
-  result = "{"
-  Dim first
-  first = True
-  For Each key In dict.Keys
-    If Not first Then result = result & ", "
-    result = result & """" & key & """: " & ValueToJSON(dict(key))
-    first = False
-  Next
-  result = result & "}"
-  DictionaryToJSON = result
-End Function
-
-Function CollectionToJSON(col)
-  Dim result, i
-  result = "["
-  For i = 1 To col.Count
-    If i > 1 Then result = result & ", "
-    result = result & ValueToJSON(col(i))
-  Next
-  result = result & "]"
-  CollectionToJSON = result
-End Function
-
-Function ValueToJSON(val)
-  If TypeName(val) = "Dictionary" Then
-    ValueToJSON = DictionaryToJSON(val)
-  ElseIf TypeName(val) = "Collection" Then
-    ValueToJSON = CollectionToJSON(val)
-  ElseIf VarType(val) = 8 Then ' String
-    ValueToJSON = """" & EscapeJSON(val) & """"
-  ElseIf IsNull(val) Then
-    ValueToJSON = "null"
-  Else
-    ValueToJSON = val
-  End If
-End Function
-
-Function ArrayToJSON(arr)
-  If arr = "" Then
-    ArrayToJSON = "[]"
-  Else
-    Dim parts, i, result
-    parts = Split(arr, ",")
-    result = "["
-    For i = 0 To UBound(parts)
-      If i > 0 Then result = result & ", "
-      result = result & Trim(parts(i))
-    Next
-    result = result & "]"
-    ArrayToJSON = result
-  End If
-End Function
-
-Function CocLinksToJSON(col)
-  Dim result, i
-  result = "["
-  For i = 1 To col.Count
-    If i > 1 Then result = result & ", "
-    result = result & DictionaryToJSON(col(i))
-  Next
-  result = result & "]"
-  CocLinksToJSON = result
+Function QuoteJSON(val)
+  QuoteJSON = """" & EscapeJSON(CStr(val)) & """"
 End Function
 
 Function EscapeJSON(str)
   Dim result
   result = Replace(str, "\", "\\")
   result = Replace(result, """", "\""")
-  result = Replace(result, "/", "\/")
-  result = Replace(result, Chr(8), "\b")
-  result = Replace(result, Chr(9), "\t")
-  result = Replace(result, Chr(10), "\n")
-  result = Replace(result, Chr(12), "\f")
   result = Replace(result, Chr(13), "\r")
+  result = Replace(result, Chr(10), "\n")
+  result = Replace(result, Chr(9), "\t")
   EscapeJSON = result
+End Function
+
+' ============================================================================
+' 3B - Match child job's J52 row
+' Query ITEM_HISTORY with:
+'   JOB = childJob, SUFFIX = childSuffix, CODE_TRANSACTION = 'J52'
+'   DATE_HISTORY = parentDateHist, TIME_ITEM_HISTORY = parentTimeHist
+' ============================================================================
+Function GetChildJ52JSON(conn, childJob, childSuffix, dateHist, timeHist)
+  Dim sqlChild, rsChild, result
+  
+  sqlChild = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, SERIAL_NUMBER " & _
+             "FROM ITEM_HISTORY " & _
+             "WHERE JOB = '" & childJob & "' " & _
+             "AND SUFFIX = '" & childSuffix & "' " & _
+             "AND CODE_TRANSACTION = 'J52' " & _
+             "AND DATE_HISTORY = '" & dateHist & "' " & _
+             "AND TIME_ITEM_HISTORY = '" & timeHist & "'"
+  
+  Set rsChild = conn.Execute(sqlChild)
+  
+  If rsChild.EOF Then
+    GetChildJ52JSON = "null"
+    rsChild.Close
+    Exit Function
+  End If
+  
+  result = "{" & _
+    """dateHistory"":" & QuoteJSON(rsChild("DATE_HISTORY")) & "," & _
+    """timeItemHistory"":" & QuoteJSON(rsChild("TIME_ITEM_HISTORY")) & "," & _
+    """part"":" & QuoteJSON(rsChild("PART")) & "," & _
+    """quantity"":" & rsChild("QUANTITY") & "," & _
+    """job"":" & QuoteJSON(rsChild("JOB")) & "," & _
+    """suffix"":" & QuoteJSON(rsChild("SUFFIX")) & "," & _
+    """serialNumber"":" & QuoteJSON(rsChild("SERIAL_NUMBER")) & _
+    "}"
+  
+  rsChild.Close
+  GetChildJ52JSON = result
+End Function
+
+' ============================================================================
+' 3C - Load child job header
+' Query JOB_HEADER for PART, PART_DESCRIPTION, ROUTER
+' ============================================================================
+Function GetChildHeaderJSON(conn, childJob, childSuffix)
+  Dim sqlHeader, rsHeader, result
+  
+  sqlHeader = "SELECT PART, PART_DESCRIPTION, ROUTER " & _
+              "FROM JOB_HEADER " & _
+              "WHERE JOB = '" & childJob & "' " & _
+              "AND SUFFIX = '" & childSuffix & "'"
+  
+  Set rsHeader = conn.Execute(sqlHeader)
+  
+  If rsHeader.EOF Then
+    GetChildHeaderJSON = "null"
+    rsHeader.Close
+    Exit Function
+  End If
+  
+  result = "{" & _
+    """part"":" & QuoteJSON(rsHeader("PART")) & "," & _
+    """description"":" & QuoteJSON(rsHeader("PART_DESCRIPTION")) & "," & _
+    """router"":" & QuoteJSON(rsHeader("ROUTER")) & _
+    "}"
+  
+  rsHeader.Close
+  GetChildHeaderJSON = result
+End Function
+
+' ============================================================================
+' 3D - Load child job material pulls
+' Query ITEM_HISTORY for J55, J50, J51 rows
+' ============================================================================
+Function GetMaterialPullsJSON(conn, childJob, childSuffix)
+  Dim sql, rsM, result, count
+  
+  sql = "SELECT PART, QUANTITY, CODE_TRANSACTION, DATE_HISTORY " & _
+        "FROM ITEM_HISTORY " & _
+        "WHERE JOB = '" & childJob & "' " & _
+        "AND SUFFIX = '" & childSuffix & "' " & _
+        "AND CODE_TRANSACTION IN ('J55','J50','J51') " & _
+        "ORDER BY CODE_TRANSACTION, DATE_HISTORY"
+  
+  Set rsM = conn.Execute(sql)
+  result = "["
+  count = 0
+  
+  Do While Not rsM.EOF
+    If count > 0 Then result = result & ","
+    result = result & "{" & _
+      """part"":" & QuoteJSON(rsM("PART")) & "," & _
+      """quantity"":" & rsM("QUANTITY") & "," & _
+      """codeTransaction"":" & QuoteJSON(rsM("CODE_TRANSACTION")) & "," & _
+      """dateHistory"":" & QuoteJSON(rsM("DATE_HISTORY")) & _
+      "}"
+    count = count + 1
+    rsM.MoveNext
+  Loop
+  
+  rsM.Close
+  result = result & "]"
+  GetMaterialPullsJSON = result
+End Function
+
+' ============================================================================
+' 3E - Match parent operation
+' Query JOB_OPERATIONS with rules:
+'   JOB = parentJob, SUFFIX = parentSuffix
+'   LMO IN ('L','O'), SEQ < '990000'
+'   DATE_COMPLETED <= parentDateHist OR DATE_COMPLETED IS NULL
+'   ORDER BY DATE_COMPLETED DESC, SEQ DESC
+'   TOP 1
+' Then 3F-3G: Join ROUTER_LINE and JOB_DETAIL
+' ============================================================================
+Function GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
+  Dim sqlOps, rsOps, result, seq, operation, router, routerSeq
+  Dim routerDesc, partWcOutside, poNumber, isOutside
+  
+  sqlOps = "SELECT TOP 1 SEQ, OPERATION, ROUTER, ROUTER_SEQ " & _
+           "FROM JOB_OPERATIONS " & _
+           "WHERE JOB = '" & parentJob & "' " & _
+           "AND SUFFIX = '" & parentSuffix & "' " & _
+           "AND LMO IN ('L','O') " & _
+           "AND SEQ < '990000' " & _
+           "AND (DATE_COMPLETED IS NULL OR DATE_COMPLETED <= '" & parentDateHist & "') " & _
+           "ORDER BY DATE_COMPLETED DESC, SEQ DESC"
+  
+  Set rsOps = conn.Execute(sqlOps)
+  
+  If rsOps.EOF Then
+    GetParentOperationJSON = "null"
+    rsOps.Close
+    Exit Function
+  End If
+  
+  seq = rsOps("SEQ")
+  operation = rsOps("OPERATION")
+  router = rsOps("ROUTER")
+  routerSeq = rsOps("ROUTER_SEQ")
+  
+  rsOps.Close
+  
+  ' 3F - Join ROUTER_LINE for DESC_RT_LINE and PART_WC_OUTSIDE
+  routerDesc = ""
+  partWcOutside = ""
+  
+  Dim sqlRouter, rsRouter
+  sqlRouter = "SELECT DESC_RT_LINE, PART_WC_OUTSIDE " & _
+              "FROM ROUTER_LINE " & _
+              "WHERE ROUTER = '" & router & "' " & _
+              "AND LINE_ROUTER = '" & routerSeq & "'"
+  
+  Set rsRouter = conn.Execute(sqlRouter)
+  If Not rsRouter.EOF Then
+    routerDesc = rsRouter("DESC_RT_LINE")
+    partWcOutside = rsRouter("PART_WC_OUTSIDE")
+  End If
+  rsRouter.Close
+  
+  ' 3G - Join JOB_DETAIL for PO if PART_WC_OUTSIDE = 'Y'
+  poNumber = ""
+  isOutside = False
+  
+  If partWcOutside = "Y" Then
+    isOutside = True
+    Dim sqlDetail, rsDetail
+    sqlDetail = "SELECT REFERENCE " & _
+                "FROM JOB_DETAIL " & _
+                "WHERE JOB = '" & parentJob & "' " & _
+                "AND SUFFIX = '" & parentSuffix & "' " & _
+                "AND OPERATION = '" & operation & "'"
+    
+    Set rsDetail = conn.Execute(sqlDetail)
+    If Not rsDetail.EOF Then
+      poNumber = rsDetail("REFERENCE")
+    End If
+    rsDetail.Close
+  End If
+  
+  ' Build operation JSON
+  Dim outsideStr
+  If isOutside Then
+    outsideStr = "true"
+  Else
+    outsideStr = "false"
+  End If
+  
+  result = "{" & _
+    """seq"":" & QuoteJSON(seq) & "," & _
+    """operation"":" & QuoteJSON(operation) & "," & _
+    """router_desc"":" & QuoteJSON(routerDesc) & "," & _
+    """po_number"":" & QuoteJSON(poNumber) & "," & _
+    """outside"":" & outsideStr & _
+    "}"
+  
+  GetParentOperationJSON = result
 End Function
