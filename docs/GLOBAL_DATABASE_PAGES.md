@@ -342,9 +342,9 @@ GLOBAL_PWD=password              # Database password
 
 ## Pervasive/ODBC Constraints & Lessons Learned
 
-### Pervasive ODBC Constraints (Critical for Haiku)
+### Pervasive v10 ODBC Constraints (Critical for Haiku)
 
-This project interacts with a legacy Pervasive SQL database through ODBC, which behaves differently from Pervasive Control Center (PCC). The following constraints **MUST** be respected:
+This project interacts with a **Pervasive v10** SQL database through ODBC, which behaves differently from Pervasive Control Center (PCC). Pervasive v10 is a legacy database engine with significant limitations. The following constraints **MUST** be respected:
 
 **Function Limitations**:
 

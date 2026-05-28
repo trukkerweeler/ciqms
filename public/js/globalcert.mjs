@@ -75,11 +75,10 @@ inventoryForm.addEventListener("submit", async (e) => {
   inventoryWorking.style.display = "block";
 
   const job = document.getElementById("job").value;
-  const suffix = document.getElementById("suffix").value;
 
-  if (!job || !suffix) {
+  if (!job) {
     inventoryWorking.style.display = "none";
-    inventoryResults.innerHTML = "Please enter job and suffix values.";
+    inventoryResults.innerHTML = "Please enter a job number.";
     return;
   }
 
@@ -87,7 +86,6 @@ inventoryForm.addEventListener("submit", async (e) => {
     // Fetch inventory history from new endpoint
     const params = new URLSearchParams({
       job,
-      suffix,
       codeTransaction: "J52",
     });
 

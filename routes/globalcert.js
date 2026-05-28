@@ -76,20 +76,17 @@ router.post("/process", (req, res) => {
   );
 });
 
-// GET /globalcert/inventory-hist?job=122361&suffix=000&codeTransaction=J52
-// Query inventory history transactions (GET only - read only)
+// GET /globalcert/inventory-hist?job=122361&codeTransaction=J52
+// Query inventory history transactions (GET only - read only) - suffix-agnostic
 router.get("/inventory-hist", (req, res) => {
-  const { job, suffix, codeTransaction } = req.query;
+  const { job, codeTransaction } = req.query;
 
   // Validate parameters
-  if (!job || !suffix) {
-    return res.status(400).json({ error: "Missing job or suffix parameter" });
+  if (!job) {
+    return res.status(400).json({ error: "Missing job parameter" });
   }
   if (!/^\d+$/.test(job)) {
     return res.status(400).json({ error: "Invalid job number" });
-  }
-  if (!/^\d{3}$/.test(suffix)) {
-    return res.status(400).json({ error: "Invalid suffix (must be 3 digits)" });
   }
 
   const vbsPath = path.join(__dirname, "globalcert-inventory-hist.vbs");
@@ -102,7 +99,7 @@ router.get("/inventory-hist", (req, res) => {
 
   execFile(
     cscript32,
-    ["//Nologo", vbsPath, job, suffix, code],
+    ["//Nologo", vbsPath, job, code],
     { windowsHide: true },
     (err, stdout, stderr) => {
       console.log("globalcert inventory-hist VBS stderr:", stderr);

@@ -1,497 +1,181 @@
-# GlobalCert Workorder Lookup
+GlobalCert — Minimal Chain‑of‑Custody Engine (Steps 1–3 Only)
+This document defines the limited, stable subset of the GlobalCert logic used for:
 
-## Overview
+Fetching inventory transactions
 
-**GlobalCert** (Global Certificate Workorder Lookup) is a certification system that generates certificates based on **inventory transactions** rather than workorder lookups. It queries the inventory history for a job/suffix, allows users to select transactions, then retrieves manufacturing operations from the base work order and all discovered child work orders.
+Selecting which transactions to include
 
-**Primary Database**: Pervasive (Global) via 32-bit ODBC + VBScript
+Building the first‑level chain‑of‑custody links
 
-**Connection Method**: VBScript helpers with ODBC DSN
+Everything else is removed.
 
-**Current Status**: ✅ Fully functional with inventory-based transaction selection and child WO discovery
+Step 1 — Fetch Inventory Transactions
+Purpose:  
+Identify the downstream completions for a given job.
+This step is suffix‑agnostic — all suffixes belonging to the job must be included.
 
----
+These are the J52 transactions representing parts transferred from WIP into inventory.
 
-## Architecture
+Inputs:
 
-### Component Stack
+JOB (6 digits)
 
-```
-User Browser (GlobalCert Certificate Generator)
-     ↓
-HTML Frontend (globalcert.html)
-     ↓
-ES6 Module (globalcert.mjs) — 3-step workflow
-     ├─ Step 1: Fetch inventory transactions
-     ├─ Step 2: Select transactions (with checkboxes)
-     └─ Step 3: Generate certificate with operations
-     ↓
-Express API Routes (routes/globalcert.js)
-     ├─ GET /globalcert/inventory-hist — Spawns globalcert-inventory-hist.vbs
-     └─ POST /globalcert/process — Spawns globalcert.vbs
-     ↓
-VBScript Helpers
-     ├─ globalcert-inventory-hist.vbs — Queries V_ITEM_HISTORY
-     └─ globalcert.vbs — Queries operations from base + children
-     ↓
-Database (ODBC DSN)
-     └─ Pervasive (Global)
-```
+SUFFIX (3 digits)
 
-## Workflow
+Required Behavior:
 
-### Step 1: Fetch Inventory Transactions
+Query ITEM_HISTORY for rows matching:
 
-User enters:
+JOB = <job>
 
-- **Job Number**: 6-digit numeric (e.g., 122473)
-- **Suffix**: 3-digit zero-padded (e.g., 000)
-- **Transaction Code**: Usually "J52" for in-transactions (optional, defaults to J52)
+SUFFIX = <suffix>
 
-Frontend calls: **GET /globalcert/inventory-hist?job=122473&suffix=000&codeTransaction=J52**
+CODE_TRANSACTION = 'J52'
 
-**Response**: List of inventory transactions with date, time, part, quantity
+Sort results by:
 
-**Display**: Table with checkboxes; if only 1 row, auto-selected
+DATE_HISTORY
 
-### Step 2: Select Transactions
+TIME_ITEM_HISTORY
 
-User can:
+Return the following fields:
 
-- Select individual rows with checkboxes
-- Select All / Deselect All buttons
-- Click "Generate Certificate"
+DATE_HISTORY
 
-### Step 3: Generate Certificate
+TIME_ITEM_HISTORY
 
-For each selected transaction:
+PART
 
-1. Query base work order operations (Job/Suffix from inventory row)
-2. Find child work orders in V_ITEM_HISTORY SERIAL_NUMBER field
-3. Query operations for each child
-4. Display all operations in a single table with SOURCE_WO column
+QUANTITY
 
-**Output**: Certificate showing:
+JOB
 
-- Transaction header: Job-Suffix | Date Time | Part | Quantity
-- Operations table with columns: #, From Job/Suffix, Operation, Description, Date Completed, Units Complete
+SUFFIX
 
----
+SERIAL_NUMBER (reference to upstream job)
 
-## Components
+Notes:
 
-### 1. Frontend Page
+These rows represent the processing lots available for certification.
 
-**File**: [public/globalcert.html](../public/globalcert.html)
+No recursion or upstream logic occurs in Step 1.
 
-**Purpose**: 3-step inventory-based certificate workflow interface.
+Step 2 — Select Transactions
+Purpose:  
+Allow the user to choose which J52 completions from Step 1 should be included in the certificate.
 
-**Key Elements**:
+Required Behavior:
 
-**Step 1: Inventory History Query Form**
+Present the list of J52 transactions from Step 1.
 
-- Job Number input (required, numeric)
-- Suffix input (required, 3 digits, defaults to "000")
-- Transaction Code input (optional, defaults to "J52")
-- "Fetch Inventory Transactions" button
+Allow multi‑selection.
 
-**Step 2: Transaction Selection**
+Pass the selected rows into Step 3.
 
-- Table with checkboxes showing: Date, Time, Part, Quantity, Job, Suffix
-- "Select All", "Deselect All", "Generate Certificate" buttons
-- Auto-selects single row if only one transaction found
+Notes:
 
-**Step 3: Certificate Results**
+No chain‑of‑custody logic occurs here.
 
-- Certificate output container with transaction details and operations table
+No recursion.
 
-**Styling**: [public/css/globalcert.css](../public/css/globalcert.css)
+No certificate formatting.
 
----
+This step is purely user selection.
 
-### 2. Frontend Module
+Step 3 — Build Initial Chain‑of‑Custody Links
+Purpose:  
+For each selected J52 transaction, identify the immediate upstream job(s) and their associated material pulls.
 
-**File**: [public/js/globalcert.mjs](../public/js/globalcert.mjs)
+This step builds the first level of the chain of custody.
 
-**Purpose**: Handle 3-step workflow, API communication, and certificate rendering.
+Required Behavior:  
+For each selected J52 transaction:
 
-**Key State**:
+Use SERIAL_NUMBER to identify the child job.
 
-- `currentInventoryData`: Array of inventory transaction rows
-- `selectedWorkorders`: Set of selected row indices (uses array index as ID)
+Match the child job’s J52 completion using:
 
-**Step 1: Form Submission** → Fetch Inventory
+SERIAL_NUMBER
 
-```javascript
-inventoryForm.addEventListener("submit", async (e) => { ... })
-```
+DATE_HISTORY
 
-- Validates job (numeric), suffix (3 digits)
-- Fetches `/globalcert/inventory-hist` with query parameters
-- Builds table with checkboxes
-- Auto-selects single row
-- Adds Select All / Deselect All / Generate Certificate buttons
+TIME_ITEM_HISTORY
 
-**Step 2: Selection Management**
+Load the child job header (JOB_HEADER).
 
-Checkboxes manage `selectedWorkorders` Set:
+Load the child job’s J52 rows (its own completions).
 
-- Add index on check
-- Remove index on uncheck
-- Add/Remove row class `selected` for styling
+Load the child job’s material pulls:
 
-**Step 3: Certificate Generation** → Generate Cert
+J55 (material issue)
 
-```javascript
-async function handleGenerateCert()
-```
+J50 (lot issue)
 
-- Iterates each selected transaction
-- Calls `POST /globalcert/process` with: baseWorkorder (job), suffix, operationCodes (empty array)
-- Receives operations from base + child WOs
-- Groups by SOURCE_WO
-- Renders single table with all operations
-- Adds "Print Certificate" button for browser print
+J51 (heat/lot issue)
 
-**Certificate Output Format**:
+Stop here.
 
-For each selected transaction, displays:
+No recursion beyond one level.
 
-```
-Header: Certificate: Job 122473-000 | Transaction: 260305 14464696 | Part: 521572 A | Qty: 17
+Do not attempt to trace the child job’s children.
 
-Table:
-  # | From Job/Suffix | Operation | Router Seq | Description | PO (Reference) | Date Completed | Units Complete
-  1 | 122429-001      | BLAN1     | 001150     | PASSIVATE... | 0041965        | 251230         | 0
-  2 | 122473-000      | ATTACH    | 0          | ATTACH...   | LABOR INPUT    | 260305         | 17
-```
+Do not generate a full certificate.
 
-**Row Highlighting**:
+Output of Step 3:  
+A structured set of relationships:
 
-- Rows with numeric PO numbers are highlighted (light yellow background) to identify outside operations
-- Text-only REFERENCE values (like "LABOR INPUT") are not highlighted
-- PO field displayed in bold blue for numeric values
+Parent job → selected J52 transaction
 
----
+Child job → matching J52 completion
 
-### 3. Express Route Handlers
-
-**File**: [routes/globalcert.js](../routes/globalcert.js)
-
-**Database**: Pervasive (inventory-hist) + Global (operations)
-
-#### Endpoint 1: GET /globalcert/inventory-hist
-
-**Query Parameters**:
-
-- `job` - Job number (required, numeric)
-- `suffix` - Suffix (required, 3 digits)
-- `codeTransaction` - Transaction code (optional, defaults to "J52")
-
-**Request Validation**:
-
-```javascript
-if (!job || !suffix) return 400 { error: "Missing job or suffix" }
-if (!/^\d+$/.test(job)) return 400 { error: "Invalid job number" }
-if (!/^\d{3}$/.test(suffix)) return 400 { error: "Invalid suffix (must be 3 digits)" }
-```
-
-**Spawn**: 32-bit cscript executes `globalcert-inventory-hist.vbs`
-
-**Response** (200):
-
-```json
-{
-  "job": "122473",
-  "suffix": "000",
-  "data": [
-    {
-      "DATE_HISTORY": "260305",
-      "INV_HIST_TIME": "14464696",
-      "QUANTITY": "17",
-      "JOB": "122473",
-      "SUFFIX": "000",
-      "PART": "521572           A  "
-    }
-  ]
-}
-```
-
-#### Endpoint 2: POST /globalcert/process
-
-**Request Body**:
-
-```json
-{
-  "baseWorkorder": "122473",
-  "suffix": "000",
-  "operationCodes": []
-}
-```
+Child job → material pulls (J55/J50/J51)
 
-**Validation**:
+This is the minimal chain‑of‑custody required for ProcessCert.
 
-```javascript
-if (!baseWorkorder || !suffix || !Array.isArray(operationCodes))
-  return 400 { error: "Missing baseWorkorder, suffix, or operationCodes" }
-if (!/^\d{6}$/.test(baseWorkorder))
-  return 400 { error: "Invalid baseWorkorder" }
-if (!/^\d{3}$/.test(suffix))
-  return 400 { error: "Invalid suffix (must be 3 digits)" }
-```
+Prohibited Behavior
+The following MUST NOT be used, referenced, or implemented:
 
-**Spawn**: 32-bit cscript executes `globalcert.vbs` with arguments: [baseWorkorder, suffix, operationCodesStr]
+Recursive chain‑of‑custody logic
 
-**Response** (200):
+Multi‑level upstream traversal
 
-```json
-{
-  "baseWorkorder": "122473",
-  "data": [
-    {
-      "SEQ": "000100",
-      "OPERATION": "KITTG",
-      "DESC_RT_LINE": "Kit Tubing",
-      "DATE_COMPLETED": "2026-03-05",
-      "UNITS_COMPLETE": "17",
-      "SOURCE_WO": "122473-000"
-    },
-    {
-      "SEQ": "000400",
-      "OPERATION": "ATTACH",
-      "DESC_RT_LINE": "Attach Solenoid",
-      "DATE_COMPLETED": "2026-03-05",
-      "UNITS_COMPLETE": "17",
-      "SOURCE_WO": "122473-000"
-    },
-    {
-      "SEQ": "000500",
-      "OPERATION": "FINALI",
-      "DESC_RT_LINE": "Final Assembly",
-      "DATE_COMPLETED": "2026-03-05",
-      "UNITS_COMPLETE": "17",
-      "SOURCE_WO": "122473-000"
-    },
-    {
-      "SEQ": "000600",
-      "OPERATION": "MARKPT",
-      "DESC_RT_LINE": "Mark Part",
-      "DATE_COMPLETED": "2026-03-05",
-      "UNITS_COMPLETE": "17",
-      "SOURCE_WO": "122473-000"
-    },
-    {
-      "SEQ": "000200",
-      "OPERATION": "PASS",
-      "DESC_RT_LINE": "Passivation",
-      "DATE_COMPLETED": "2026-03-05",
-      "UNITS_COMPLETE": "17",
-      "SOURCE_WO": "122429-001"
-    }
-  ]
-}
-```
-
----
-
-## VBScript Helpers
-
-### 1. Inventory History Query
-
-**File**: [routes/globalcert-inventory-hist.vbs](../routes/globalcert-inventory-hist.vbs)
-
-**Purpose**: Query V_ITEM_HISTORY for inventory transactions
-
-**Arguments**: `<job> <suffix> <codeTransaction>`
-
-**Database Query**:
-
-```sql
-SELECT DATE_HISTORY, INV_HIST_TIME, QUANTITY, JOB, SUFFIX, PART
-FROM INVENTORY_HIST
-WHERE JOB = 122473 AND SUFFIX = '000' AND CODE_TRANSACTION = 'J52'
-ORDER BY DATE_HISTORY
-```
-
-**Environment Variables** (from .env):
-
-- `GLOBAL_DSN` - ODBC DSN for Pervasive database
-- `GLOBAL_UID` - Database user
-- `GLOBAL_PWD` - Database password
-
----
-
-### 2. Process Operations Query
-
-**File**: [routes/globalcert.vbs](../routes/globalcert.vbs)
-
-**Purpose**: Query manufacturing operations from base + child work orders with PO discovery
-
-**Arguments**: `<baseWorkorder> <suffix> <operationCodes>`
-
-**Workflow**:
-
-1. **Query Base Operations with PO Discovery**
-
-   ```sql
-   SELECT DISTINCT
-     jo.SEQ, jo.OPERATION, CAST(jo.ROUTER_SEQ AS VARCHAR) AS ROUTER_SEQ,
-     rl.DESC_RT_LINE, jo.DATE_COMPLETED, jo.UNITS_COMPLETE,
-     jh.PART, jh.PART_DESCRIPTION,
-     COALESCE(vjd.REFERENCE, '') AS REFERENCE,
-     'baseWorkorder-baseSuffix' AS SOURCE_WO
-   FROM JOB_HEADER jh
-   LEFT JOIN JOB_OPERATIONS jo ON jh.JOB = jo.JOB AND jh.SUFFIX = jo.SUFFIX
-   LEFT JOIN ROUTER_LINE rl ON jo.ROUTER = rl.ROUTER AND jo.ROUTER_SEQ = rl.LINE_ROUTER
-   LEFT JOIN V_JOB_DETAIL vjd ON vjd.JOB = jo.JOB AND vjd.SUFFIX = jo.SUFFIX AND vjd.SEQ = jo.SEQ
-   WHERE jh.JOB = 122473 AND jh.SUFFIX = '000'
-   AND jo.LMO IN ('L','O') AND jo.SEQ < '990000' AND jo.OPERATION <> ''
-   ```
-
-   **Key Additions**:
-   - `SELECT DISTINCT` - Removes duplicate rows (V_JOB_DETAIL may have multiple rows per operation)
-   - `V_JOB_DETAIL` join - Retrieves `REFERENCE` field (contains PO numbers or text labels like "LABOR INPUT")
-   - `ROUTER_SEQ` - Included for outside operation identification
-
-2. **Find Child Work Orders** (Suffix Agnostic)
-
-   ```sql
-   SELECT DISTINCT SERIAL_NUMBER FROM V_ITEM_HISTORY
-   WHERE JOB = 122473 AND SERIAL_NUMBER <> ''
-   AND SERIAL_NUMBER LIKE '%-___'
-   AND SERIAL_NUMBER <> '122473-000'
-   ```
-
-   - First pass is **suffix agnostic** — searches all ITEM_HISTORY records for the base job number, regardless of suffix
-   - Extracts child WO numbers from SERIAL_NUMBER (e.g., "122429-001")
-   - Parses into Job and Suffix components
-
-3. **Query Child Operations** (Suffix Specific)
-   - For each discovered child WO: Execute operation query **using the specific job AND suffix** from that child (e.g., Job=122429, Suffix=001)
-   - Same V_JOB_DETAIL join for PO discovery
-   - Add SOURCE_WO field to track origin (e.g., "122429-001")
-
-4. **Combine Results**
-   - Merge base + child operations into single array
-   - Include REFERENCE (PO) and SOURCE_WO for each row
-   - Return as JSON
-
-**Sample Response**:
-
-```json
-{
-  "baseWorkorder": "122473",
-  "data": [
-    {
-      "SEQ": "000100",
-      "OPERATION": "BLAN1",
-      "ROUTER_SEQ": "001150",
-      "DESC_RT_LINE": "PASSIVATE PER SAE-AMS-2700",
-      "DATE_COMPLETED": "251230",
-      "UNITS_COMPLETE": "0",
-      "REFERENCE": "0041965",
-      "SOURCE_WO": "122429-001"
-    },
-    {
-      "SEQ": "000050",
-      "OPERATION": "ATTACH",
-      "ROUTER_SEQ": "0",
-      "DESC_RT_LINE": "Attach Solenoid",
-      "DATE_COMPLETED": "260305",
-      "UNITS_COMPLETE": "17",
-      "REFERENCE": "LABOR INPUT",
-      "SOURCE_WO": "122473-000"
-    }
-  ]
-}
-```
+Full certificate generation
 
-**Environment Variables** (from .env):
+Formatting, templates, or output rules
 
-- `GLOBAL_DSN` - ODBC DSN for Global database
-- `GLOBAL_UID` - Database user
-- `GLOBAL_PWD` - Database password
+JSON schemas
 
----
+Experimental or draft sections
 
-## Key Design Decisions
+“Fix later” notes
 
-### Why Inventory-Based?
+Any logic beyond the first‑level CoC
 
-- Allows users to select specific transactions instead of entire work orders
-- Supports date/time discrimination for multiple transactions on same WO
-- Links to physical inventory movements via INVENTORY_HIST table
+Any Step 4+ behavior
 
-### Why Child Work Order Discovery?
+These sections are considered deprecated and removed.
 
-- Manufacturing processes can span multiple work orders
-- Child WOs are identified in V_ITEM_HISTORY SERIAL_NUMBER field
-- Ensures complete operation chain is captured on certificate
+Scope of This File
+This minimal version defines:
 
-### Why Single Certificate Table?
+The data extraction
 
-- All operations (base + children) grouped in one table
-- SOURCE_WO column clearly shows which WO each operation belongs to
-- Matches manufacturing reality: sequential operations across related WOs
+The selection logic
 
-### Suffix as String Format
+The first‑level CoC linking
 
-- Database stores suffix as 3-digit zero-padded: "000", "001", not 0, 1
-- Maintains consistency across all queries and displays
-- Prevents type mismatch errors in Pervasive ODBC comparisons
+It does not define:
 
----
+Full certificate generation
 
-## Special Manufacturing Processes
+Multi‑level recursion
 
-GlobalCert filters operations to only the 6 special manufacturing processes (matching ACERT):
+Output formatting
 
-| Process | Label          | Operation Codes    |
-| ------- | -------------- | ------------------ |
-| HEAT    | Heat Treatment | `6061`             |
-| SWLD    | Spot Weld      | `D172`             |
-| FWLD    | Fusion Weld    | `FUSION`, `D171`   |
-| PASS    | Passivation    | `PASSM2`, `PASST6` |
-| CHEM    | Chemical       | `FT1C1A`           |
-| PAINT   | Paint          | `23377A`, `PAINT2` |
+Validation rules
 
-All other operations are filtered out, ensuring the certificate only shows the relevant special processes. This filtering is applied to both base and child work order operations.
+UI behavior
 
-**Spawn Configuration**:
+Any Step 4+ logic
 
-```javascript
-const vbsPath = path.join(__dirname, "globalcert.vbs");
-const cscript32 = path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe");
-
-execFile(cscript32, ["//Nologo", vbsPath, baseWorkorder], { windowsHide: true }, ...)
-```
-
-**Critical Details**:
-
-- **32-bit cscript**: Uses `SysWOW64/cscript.exe` for 32-bit ODBC driver compatibility
-- **Process Hiding**: `windowsHide: true` prevents console window from appearing
-- **Spawn Flags**: `//Nologo` suppresses VBScript execution header
-- **Arguments**: Base workorder passed as command-line argument
-- **Output**: Expects JSON string from stdout
-
-#### Endpoint
-
-**GET /globalcert**
-
-**Query Parameters**:
-
-- `baseWorkorder` - 6-digit workorder number (required)
-
-**Request Validation**:
-
-```javascript
-if (!/^\d{6}$/.test(baseWorkorder)) {
-  return res.status(400).json({ error: "Invalid baseWorkorder" });
-}
-```
-
-**Response Success** (200):
-
-```json
-
-```
+Those will be defined separately.

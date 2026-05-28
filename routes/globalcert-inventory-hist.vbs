@@ -1,6 +1,6 @@
 ' globalcert-inventory-hist.vbs - Query INVENTORY_HIST for cert transactions
-' Usage: cscript //Nologo globalcert-inventory-hist.vbs <job> <suffix> <codeTransaction>
-' Example: cscript //Nologo globalcert-inventory-hist.vbs 122361 000 J52
+' Usage: cscript //Nologo globalcert-inventory-hist.vbs <job> <codeTransaction>
+' Example: cscript //Nologo globalcert-inventory-hist.vbs 122361 J52
 
 Dim conn, rs, fso, dsn, uid, pwd, file, WshShell, DocumentsPath, CIQMSPath
 On Error Resume Next
@@ -52,18 +52,16 @@ Set conn = CreateObject("ADODB.Connection")
 Set rs = CreateObject("ADODB.Recordset")
 
 ' Get arguments from command line
-Dim job, suffix, codeTransaction, test: test = True
-If WScript.Arguments.Count >= 3 Then
+Dim job, codeTransaction, test: test = True
+If WScript.Arguments.Count >= 2 Then
   job = WScript.Arguments(0)
-  suffix = WScript.Arguments(1)
-  codeTransaction = WScript.Arguments(2)
+  codeTransaction = WScript.Arguments(1)
 Else
   If test Then
     job = "122361"
-    suffix = "000"
     codeTransaction = "J52"
   Else
-    MsgBox "Usage: globalcert-inventory-hist.vbs <job> <suffix> <codeTransaction>"
+    MsgBox "Usage: globalcert-inventory-hist.vbs <job> <codeTransaction>"
     WScript.Quit
   End If
 End If
@@ -80,6 +78,7 @@ If conn.State = 1 Then
   On Error Resume Next
   
   ' Query INVENTORY_HIST for 'in' transactions (CODE_TRANSACTION = 'J52' or specified value)
+  ' Suffix-agnostic: returns all suffixes for the given job
   Dim sqlQuery
   sqlQuery = "SELECT " & _
     "DATE_HISTORY, " & _
@@ -90,7 +89,6 @@ If conn.State = 1 Then
     "PART " & _
     "FROM INVENTORY_HIST " & _
     "WHERE JOB = " & CLng(job) & " " & _
-    "AND SUFFIX = '" & suffix & "' " & _
     "AND CODE_TRANSACTION = '" & codeTransaction & "' " & _
     "ORDER BY DATE_HISTORY"
   
@@ -100,14 +98,14 @@ If conn.State = 1 Then
   If Err.Number <> 0 Then
     WScript.StdErr.Write "ERROR: " & Err.Description & vbCrLf
     Err.Clear
-    WScript.StdOut.Write "{""job"":""" & job & """,""suffix"":""" & suffix & """,""data"":[]}"
+    WScript.StdOut.Write "{""job"":""" & job & """,""data"":[]}"
   ElseIf Not rs.EOF Then
     If Not rs Is Nothing Then
       rs.MoveFirst
     End If
-    WScript.StdOut.Write RecordsetToJSON(rs, job, suffix)
+    WScript.StdOut.Write RecordsetToJSON(rs, job)
   Else
-    WScript.StdOut.Write "{""job"":""" & job & """,""suffix"":""" & suffix & """,""data"":[]}"
+    WScript.StdOut.Write "{""job"":""" & job & """,""data"":[]}"
   End If
   On Error GoTo 0
 End If
@@ -122,10 +120,10 @@ If Not conn Is Nothing Then
   Set conn = Nothing
 End If
 
-Function RecordsetToJSON(rs, job, suffix)
+Function RecordsetToJSON(rs, job)
   Dim field, json, record, data
   If rs.EOF Then
-    RecordsetToJSON = "{""job"":""" & job & """,""suffix"":""" & suffix & """,""data"":[]}"
+    RecordsetToJSON = "{""job"":""" & job & """,""data"":[]}"
     Exit Function
   End If
   data = "["
@@ -143,7 +141,7 @@ Function RecordsetToJSON(rs, job, suffix)
     data = Left(data, Len(data) - 1) ' Remove trailing comma
   End If
   data = data & "]"
-  json = "{""job"":""" & job & """,""suffix"":""" & suffix & """,""data"":" & data & "}"
+  json = "{""job"":""" & job & """,""data"":" & data & "}"
   RecordsetToJSON = json
 End Function
 
