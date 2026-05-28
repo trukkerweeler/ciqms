@@ -4,10 +4,7 @@
 
 **GlobalCert** (Global Certificate Workorder Lookup) is a certification system that generates certificates based on **inventory transactions** rather than workorder lookups. It queries the inventory history for a job/suffix, allows users to select transactions, then retrieves manufacturing operations from the base work order and all discovered child work orders.
 
-**Primary Databases**:
-
-- Global (via 32-bit ODBC + VBScript) — for operations queries
-- Pervasive (via ODBC) — for inventory history queries
+**Primary Database**: Pervasive (Global) via 32-bit ODBC + VBScript
 
 **Connection Method**: VBScript helpers with ODBC DSN
 
@@ -34,15 +31,12 @@ Express API Routes (routes/globalcert.js)
      └─ POST /globalcert/process — Spawns globalcert.vbs
      ↓
 VBScript Helpers
-     ├─ globalcert-inventory-hist.vbs — Queries V_ITEM_HISTORY (Pervasive)
-     └─ globalcert.vbs — Queries operations from base + children (Global)
+     ├─ globalcert-inventory-hist.vbs — Queries V_ITEM_HISTORY
+     └─ globalcert.vbs — Queries operations from base + children
      ↓
-Databases (ODBC DSN)
-     ├─ Pervasive (Inventory History)
-     └─ Global (Operations)
+Database (ODBC DSN)
+     └─ Pervasive (Global)
 ```
-
----
 
 ## Workflow
 
@@ -359,7 +353,7 @@ ORDER BY DATE_HISTORY
    - `V_JOB_DETAIL` join - Retrieves `REFERENCE` field (contains PO numbers or text labels like "LABOR INPUT")
    - `ROUTER_SEQ` - Included for outside operation identification
 
-2. **Find Child Work Orders**
+2. **Find Child Work Orders** (Suffix Agnostic)
 
    ```sql
    SELECT DISTINCT SERIAL_NUMBER FROM V_ITEM_HISTORY
@@ -368,13 +362,14 @@ ORDER BY DATE_HISTORY
    AND SERIAL_NUMBER <> '122473-000'
    ```
 
+   - First pass is **suffix agnostic** — searches all ITEM_HISTORY records for the base job number, regardless of suffix
    - Extracts child WO numbers from SERIAL_NUMBER (e.g., "122429-001")
-   - Parses into Job and Suffix
+   - Parses into Job and Suffix components
 
-3. **Query Child Operations**
-   - For each child: Repeat operation query with child job/suffix
+3. **Query Child Operations** (Suffix Specific)
+   - For each discovered child WO: Execute operation query **using the specific job AND suffix** from that child (e.g., Job=122429, Suffix=001)
    - Same V_JOB_DETAIL join for PO discovery
-   - Add SOURCE_WO field to track origin
+   - Add SOURCE_WO field to track origin (e.g., "122429-001")
 
 4. **Combine Results**
    - Merge base + child operations into single array
