@@ -1,13 +1,14 @@
-# GlobalCert — Chain-of-Custody Extraction (Steps 1–3)
+# MaterialCert — Chain-of-Custody Extraction with Recursive Job Resolution
 
-This document defines the implementation and architecture of the GlobalCert chain-of-custody system for CIQMS. It covers:
+This document defines the implementation and architecture of the MaterialCert chain-of-custody system for CIQMS. It covers:
 
-- Steps 1–3 of CoC extraction (complete specification)
+- Steps 1–3 of CoC extraction with recursive job following (complete specification)
 - Database schema and table usage (ITEM_HISTORY only)
-- VBScript implementation (processcert-coc.vbs)
-- Express endpoint (GET /globalcert/processcert-coc)
-- Frontend integration (globalcert.mjs)
-- JSON output structure
+- VBScript implementation (materialcert-coc.vbs)
+- Express endpoint (GET /materialcert/materialcert-coc)
+- Frontend integration (materialcert.mjs) with recursive chain-building
+- JSON output structure with nested job chains
+- UI styling and display of hierarchical CoC trees
 
 ## Critical Decision: ITEM_HISTORY (Not INVENTORY_HIST)
 
@@ -23,24 +24,29 @@ This document defines the implementation and architecture of the GlobalCert chai
 
 ### Backend Components
 
-**VBScript Implementation**: `routes/processcert-coc.vbs`
+**VBScript Implementation**: `routes/materialcert-coc.vbs`
 
-- Unified implementation of Steps 1–3
+- Unified implementation of Steps 1–3 (non-recursive)
 - Database access via ADODB with credentials from .env (GLOBAL_DSN, GLOBAL_UID, GLOBAL_PWD)
 - Direct JSON string concatenation (no serialization)
+- Suffix-aware Step 1 query (restricts by suffix when provided for recursion)
 
-**Express Endpoint**: GET `/globalcert/processcert-coc?job=<job>&selectedIndices=<indices>`
+**Express Endpoint**: GET `/materialcert/materialcert-coc?job=<job>&suffix=<suffix>&selectedIndices=<indices>`
 
-- Calls processcert-coc.vbs with arguments
+- Calls materialcert-coc.vbs with arguments (suffix always included, even if empty)
 - Parses VBScript JSON output
-- Returns complete Step 1–3 data
+- Returns complete Step 1–3 data for single job/suffix pair
 
-**Frontend Module**: `public/js/globalcert.mjs`
+**Frontend Module**: `public/js/materialcert.mjs`
 
 - Displays Step 1 inventory table with checkboxes
 - Collects selected indices (0-based array positions)
 - Calls endpoint twice: Step 1 (no indices), Step 3 (with indices)
 - Renders CoC table
+- **Recursive job following**: Examines `material_pulls[].serialNumber` for job references (format: `JJJJJJ-SSS`)
+- Recursively calls `buildNestedCoC()` for each discovered child job
+- Maintains `visitedJobs` Set to prevent infinite loops in circular job references
+- Renders hierarchical tree display with nested children indented by depth
 
 ### Data Flow
 
@@ -377,28 +383,46 @@ AND OPERATION = '<operation>'
 - `GetMaterialPullsJSON()`: Executes 3D query
 - `GetParentOperationJSON()`: Executes 3E–3G queries
 
-### globalcert.js (Express Route)
+### materialcert.js (Express Route)
 
-**Location**: `routes/globalcert.js`
+**Location**: `routes/materialcert.js`
 
-**Endpoint**: `GET /globalcert/processcert-coc?job=<job>&selectedIndices=<indices>`
+**Endpoints**:
+
+- `GET /materialcert/materialcert-coc?job=<job>&suffix=<suffix>&selectedIndices=<indices>` - CoC extraction
+- `GET /materialcert/part-description?part=<part>` - Part lookup
+- `GET /materialcert/?job=<job>` - Legacy processing endpoint
 
 **Implementation**:
 
 ```javascript
+const args = ["//Nologo", vbsPath, job, suffix || ""];
+if (selectedIndices) args.push(selectedIndices);
 execFile(cscript32, args, { windowsHide: true }, (err, stdout, stderr) => {
   // Parse stdout as JSON and return to frontend
 });
 ```
 
-### globalcert.mjs (Frontend)
+**Critical**: Suffix always passed to VBScript (even if empty string) to maintain correct argument positions.
 
-**Location**: `public/js/globalcert.mjs`
+### materialcert.mjs (Frontend)
+
+**Location**: `public/js/materialcert.mjs`
 
 **Functions**:
 
 1. `handleInventorySubmit()`: Step 1 fetch and display
 2. `handleGenerateCert()`: Step 3 fetch and CoC table display
+3. `buildNestedCoC(job, suffix, visitedJobs)`: Recursive function that:
+   - Fetches `/materialcert/materialcert-coc?job=<job>&suffix=<suffix>`
+   - Iterates through `material_pulls` checking `serialNumber` field
+   - For valid job references (pattern: `^\d{6}-\d{3}$`), recursively calls itself
+   - Attaches `nested_children` array to CoC structure
+   - Uses `visitedJobs` Set to prevent cycles
+4. `renderCoCNode(coc, depth=0)`: Builds hierarchical HTML tree display
+   - Renders job/operation/router info at each level
+   - Material pulls indented by depth
+   - Recursively renders `nested_children` with border-left separators
 
 **Field Names** (camelCase):
 
@@ -441,13 +465,41 @@ Index 2: 250513 | 15524733 | 521572... | qty 4  | 122166-000
 
 ---
 
+## UI/UX Enhancements
+
+### Styling (materialcert.css)
+
+**Inventory Table**:
+
+- Full page width (100%) with proper margins
+- Brand color (#a91730) header background
+- 0.75rem padding on cells for readability
+- Alternating row backgrounds (#f5f5f5)
+- Hover effects (#e8e8e8) for interactivity
+- Selected rows highlighted in green (#c8e6c9)
+
+**Button Group**:
+
+- Consistent styling across all buttons (Fetch, Select All, Deselect All, Generate Certificate)
+- Light gray background (#e8e8e8) matching form buttons
+- Reduced padding (0.5rem 1rem) to minimize visual clutter
+- Font-weight 500 (not bold) for subtler appearance
+- Flex layout with 1rem gap for clean spacing
+
+**Print Media**:
+
+- `thead` forced to display as table-header-group to prevent clipping
+- Full-width table rendering on printed pages
+- Fixed column widths for consistent multi-page output
+
 ## Summary
 
 This document specifies:
 
-- **What**: Steps 1–3 of CoC extraction using ITEM_HISTORY
-- **Why**: ITEM_HISTORY has SERIAL_NUMBER for child job resolution
-- **How**: processcert-coc.vbs (VBScript) + /processcert-coc endpoint + globalcert.mjs (frontend)
+- **What**: Steps 1–3 of CoC extraction with recursive job chain following using ITEM_HISTORY
+- **Why**: ITEM_HISTORY has SERIAL_NUMBER for child job resolution; recursion enables multi-level material tracking
+- **How**: materialcert-coc.vbs (VBScript, non-recursive) + /materialcert/materialcert-coc endpoint + materialcert.mjs (frontend with recursive chain builder)
+- **Key Features**: Circular job detection via visitedJobs Set, hierarchical tree display with depth-based indentation, full-page-width responsive table layout
 - **Output**: Structured JSON with parent/child/material relationships
 
 It does not define: Multi-level recursion, full certificates, or advanced formatting.
