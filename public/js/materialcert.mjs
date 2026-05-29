@@ -1,4 +1,4 @@
-// globalcert.mjs - Certificate of Processing generation from inventory history
+// materialcert.mjs - Certificate of Processing generation from inventory history
 
 // Helper function: Recursively trim serialNumber fields from objects
 function trimSerialNumbers(obj) {
@@ -47,7 +47,7 @@ async function buildNestedCoC(job, suffix, visitedJobs) {
     // Fetch Step 1 J52 transactions for this job/suffix combo
     // Including suffix restricts Step 1 query to only this specific job/suffix
     const params = new URLSearchParams({ job, suffix });
-    const res = await fetch(`/globalcert/processcert-coc?${params}`);
+    const res = await fetch(`/materialcert/materialcert-coc?${params}`);
 
     if (!res.ok) return null;
     const data = await res.json();
@@ -167,7 +167,7 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
-// Step 1: Fetch inventory history transactions (via processcert-coc)
+// Step 1: Fetch inventory history transactions (via materialcert-coc)
 inventoryForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   inventoryResults.innerHTML = "";
@@ -183,10 +183,10 @@ inventoryForm.addEventListener("submit", async (e) => {
   }
 
   try {
-    // Fetch inventory history from processcert-coc endpoint (Step 1 only - no selectedIndices)
+    // Fetch inventory history from materialcert-coc endpoint (Step 1 only - no selectedIndices)
     const params = new URLSearchParams({ job });
 
-    const res = await fetch(`/globalcert/processcert-coc?${params}`);
+    const res = await fetch(`/materialcert/materialcert-coc?${params}`);
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || "Failed to fetch inventory");
@@ -412,13 +412,13 @@ async function handleGenerateCert() {
       .sort((a, b) => parseInt(a) - parseInt(b))
       .join(",");
 
-    // Call processcert-coc with selectedIndices to get Steps 1-3 complete data
+    // Call materialcert-coc with selectedIndices to get Steps 1-3 complete data
     const params = new URLSearchParams({
       job,
       selectedIndices: selectedIndicesStr,
     });
 
-    const res = await fetch(`/globalcert/processcert-coc?${params}`);
+    const res = await fetch(`/materialcert/materialcert-coc?${params}`);
     if (!res.ok) {
       const error = await res.json();
       throw new Error(error.error || "Failed to generate certificate");

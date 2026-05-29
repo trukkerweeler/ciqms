@@ -1,4 +1,4 @@
-' globalcert-part-description.vbs - Query part description from GLOBALCERT database
+' materialcert-part-description.vbs - Query part description from GLOBALCERT database
 ' Arguments: part number
 Dim part
 part = WScript.Arguments(0)
