@@ -346,7 +346,7 @@ End Function
 Function GetMaterialPullsJSON(conn, childJob, childSuffix)
   Dim sql, rsM, result, count
   
-  sql = "SELECT PART, QUANTITY, CODE_TRANSACTION, DATE_HISTORY " & _
+  sql = "SELECT PART, QUANTITY, CODE_TRANSACTION, DATE_HISTORY, SERIAL_NUMBER " & _
         "FROM ITEM_HISTORY " & _
         "WHERE JOB = '" & childJob & "' " & _
         "AND SUFFIX = '" & childSuffix & "' " & _
@@ -363,7 +363,8 @@ Function GetMaterialPullsJSON(conn, childJob, childSuffix)
       """part"":" & QuoteJSON(rsM("PART")) & "," & _
       """quantity"":" & rsM("QUANTITY") & "," & _
       """codeTransaction"":" & QuoteJSON(rsM("CODE_TRANSACTION")) & "," & _
-      """dateHistory"":" & QuoteJSON(rsM("DATE_HISTORY")) & _
+      """dateHistory"":" & QuoteJSON(rsM("DATE_HISTORY")) & "," & _
+      """serialNumber"":" & QuoteJSON(Trim(Replace(rsM("SERIAL_NUMBER"), Chr(0), ""))) & _
       "}"
     count = count + 1
     rsM.MoveNext
