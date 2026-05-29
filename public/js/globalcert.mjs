@@ -94,6 +94,7 @@ inventoryForm.addEventListener("submit", async (e) => {
 
     const resData = await res.json();
     currentInventoryData = resData.step1_j52_transactions || [];
+    const step3Data = resData.step3_coc_links || [];
 
     if (
       !Array.isArray(currentInventoryData) ||
@@ -187,6 +188,53 @@ inventoryForm.addEventListener("submit", async (e) => {
     inventoryResults.innerHTML =
       "<h3>Inventory History Transactions - Select rows to include in certificate:</h3>";
     inventoryResults.appendChild(table);
+
+    // Render JSON debug output for step3_coc_links
+    const jsonDebugDiv = document.getElementById("json-debug");
+    const jsonRowsContainer = document.getElementById("json-rows-container");
+    jsonRowsContainer.innerHTML = "";
+
+    step3Data.forEach((coc, index) => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "json-row-debug";
+      rowDiv.style.cssText = `
+        margin-bottom: 20px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+        font-family: monospace;
+        font-size: 12px;
+      `;
+
+      const header = document.createElement("div");
+      header.style.cssText = `
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 6px;
+      `;
+      const parentJ52 = coc.parent_j52 || {};
+      const childJob = coc.child_job || {};
+      header.textContent = `CoC Link ${index}: ${parentJ52.job}-${parentJ52.suffix} → ${childJob.job}-${childJob.suffix}`;
+      rowDiv.appendChild(header);
+
+      const pre = document.createElement("pre");
+      pre.style.cssText = `
+        margin: 0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: #333;
+      `;
+      pre.textContent = JSON.stringify(coc, null, 2);
+      rowDiv.appendChild(pre);
+
+      jsonRowsContainer.appendChild(rowDiv);
+    });
+
+    jsonDebugDiv.style.display = "block";
 
     // Show testing controls after inventory loads
     const testingControls = document.getElementById("testing-controls");
@@ -328,6 +376,57 @@ async function handleGenerateCert() {
 
     html += "</tbody></table>";
     certResults.innerHTML = html;
+
+    // Render JSON debug output for each CoC link
+    const jsonDebugDiv = document.getElementById("json-debug");
+    const jsonRowsContainer = document.getElementById("json-rows-container");
+    jsonRowsContainer.innerHTML = "";
+
+    const debugTitle = document.createElement("h3");
+    debugTitle.textContent = "Raw CoC JSON Data (Debug View)";
+    jsonRowsContainer.appendChild(debugTitle);
+
+    cocLinks.forEach((coc, index) => {
+      const rowDiv = document.createElement("div");
+      rowDiv.className = "json-row-debug";
+      rowDiv.style.cssText = `
+        margin-bottom: 20px;
+        padding: 12px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        background-color: #f9f9f9;
+        font-family: monospace;
+        font-size: 12px;
+      `;
+
+      const header = document.createElement("div");
+      header.style.cssText = `
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #333;
+        border-bottom: 1px solid #ccc;
+        padding-bottom: 6px;
+      `;
+      const parentJ52 = coc.parent_j52 || {};
+      const childJob = coc.child_job || {};
+      header.textContent = `CoC Link ${index}: ${parentJ52.job}-${parentJ52.suffix} → ${childJob.job}-${childJob.suffix}`;
+      rowDiv.appendChild(header);
+
+      const pre = document.createElement("pre");
+      pre.style.cssText = `
+        margin: 0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: #333;
+      `;
+      pre.textContent = JSON.stringify(coc, null, 2);
+      rowDiv.appendChild(pre);
+
+      jsonRowsContainer.appendChild(rowDiv);
+    });
+
+    jsonDebugDiv.style.display = "block";
   } catch (error) {
     console.error("Error generating certificate:", error);
     certResults.innerHTML = `<p style='color: red;'>Error: ${error.message}</p>`;
