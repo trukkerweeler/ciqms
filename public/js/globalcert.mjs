@@ -44,8 +44,9 @@ async function buildNestedCoC(job, suffix, visitedJobs) {
   visitedJobs.add(jobKey);
 
   try {
-    // Fetch Step 1 J52 transactions for this job
-    const params = new URLSearchParams({ job });
+    // Fetch Step 1 J52 transactions for this job/suffix combo
+    // Including suffix restricts Step 1 query to only this specific job/suffix
+    const params = new URLSearchParams({ job, suffix });
     const res = await fetch(`/globalcert/processcert-coc?${params}`);
 
     if (!res.ok) return null;
@@ -498,72 +499,70 @@ async function handleGenerateCert() {
       "<h3>Chain of Custody - Generated from Steps 1-3 (with Recursive Resolution)</h3>";
 
     // Recursive function to build nested table HTML
-    function buildCoCTablesHtml(cocArray, depth = 0) {
-      let tableHtml = "";
+    function renderCoCNode(coc, depth = 0) {
+      const indent = "&nbsp;".repeat(depth * 4);
+      let html = "";
 
-      // Add level title and styling
-      if (depth === 0) {
-        tableHtml += "<div class='coc-level-0' style='padding: 10px 0;'>";
-        tableHtml += "<h4 style='margin-top: 0;'>Top Level CoC Links</h4>";
-      } else {
-        tableHtml += `<div class='coc-level-${depth}' style='margin-left: ${depth * 30}px; padding: 15px; background-color: #f${(9 - depth).toString(16)}f${(9 - depth).toString(16)}f${(9 - depth).toString(16)}; border-left: 4px solid #999; margin-top: 20px;'>`;
-        tableHtml += `<h4 style='margin-top: 0;'>Nested Level ${depth} - Child Job CoC</h4>`;
+      const parentJ52 = coc.parent_j52 || {};
+      const op = coc.operation || {};
+      const childJob = coc.child_job || {};
+      const childHeader = childJob.header || {};
+      const materialPulls = childJob.material_pulls || [];
+
+      // Render child job identifier
+      html += `<div style='margin: 8px 0; font-weight: bold;'>${indent}Job: ${childJob.job}-${childJob.suffix}</div>`;
+
+      // Render operation details
+      html += `<div style='margin: 4px 0;'>${indent}${"&nbsp;".repeat(4)}Operation: ${op.operation || "N/A"}</div>`;
+      if (op.router_desc) {
+        html += `<div style='margin: 4px 0;'>${indent}${"&nbsp;".repeat(4)}Router: ${op.router_desc.trim()}</div>`;
+      }
+      if (op.po_number) {
+        html += `<div style='margin: 4px 0;'>${indent}${"&nbsp;".repeat(4)}PO: ${op.po_number}</div>`;
       }
 
-      // Build table for this level
-      tableHtml +=
-        "<table class='coc-table' style='width: 100%; border-collapse: collapse;'><thead><tr>";
-      tableHtml +=
-        "<th>Parent Job</th><th>Parent Suffix</th><th>Operation</th><th>Router</th>";
-      tableHtml +=
-        "<th>Child Job</th><th>Child Suffix</th><th>Child Part</th><th>Material Pulls</th>";
-      tableHtml += "</tr></thead><tbody>";
+      // Render material pulls
+      if (materialPulls.length > 0) {
+        html += `<div style='margin: 4px 0; font-weight: 600;'>${indent}${"&nbsp;".repeat(4)}Material Pulls:</div>`;
+        materialPulls.forEach((m) => {
+          html += `<div style='margin: 2px 0;'>${indent}${"&nbsp;".repeat(8)}${m.codeTransaction}: ${m.part.trim()} (Qty: ${m.quantity})`;
+          if (m.serialNumber) {
+            html += ` [SN: ${m.serialNumber}]`;
+          }
+          html += `</div>`;
+        });
+      } else {
+        html += `<div style='margin: 4px 0;'>${indent}${"&nbsp;".repeat(4)}Material Pulls: None</div>`;
+      }
 
-      cocArray.forEach((coc) => {
-        const parentJ52 = coc.parent_j52 || {};
-        const op = coc.operation || {};
-        const childJob = coc.child_job || {};
-        const childHeader = childJob.header || {};
-
-        const materialPullsHtml =
-          (childJob.material_pulls || [])
-            .map(
-              (m) =>
-                `${m.codeTransaction}: ${m.part.trim()} (Qty: ${m.quantity})`,
-            )
-            .join("<br>") || "None";
-
-        tableHtml += `<tr>
-          <td>${parentJ52.job || ""}</td>
-          <td>${parentJ52.suffix || ""}</td>
-          <td>${op.operation || ""}</td>
-          <td>${op.router_desc ? op.router_desc.trim() : ""}</td>
-          <td>${childJob.job || ""}</td>
-          <td>${childJob.suffix || ""}</td>
-          <td>${childHeader.part ? childHeader.part.trim() : ""}</td>
-          <td>${materialPullsHtml}</td>
-        </tr>`;
-      });
-
-      tableHtml += "</tbody></table>";
-
-      // Recursively add nested children tables
-      cocArray.forEach((coc) => {
-        if (coc.nested_children && coc.nested_children.length > 0) {
-          coc.nested_children.forEach((nestedJob) => {
-            const nestedCocLinks = nestedJob.step3_coc_links || [];
-            if (nestedCocLinks.length > 0) {
-              tableHtml += buildCoCTablesHtml(nestedCocLinks, depth + 1);
-            }
+      // Recursively render nested children
+      if (coc.nested_children && coc.nested_children.length > 0) {
+        html += `<div style='margin: 8px 0; margin-top: 12px; border-left: 2px solid #999; padding-left: 12px;'>`;
+        coc.nested_children.forEach((nestedNode) => {
+          const nestedCocLinks = nestedNode.step3_coc_links || [];
+          nestedCocLinks.forEach((nestedCoc) => {
+            html += renderCoCNode(nestedCoc, depth + 1);
           });
-        }
-      });
+        });
+        html += `</div>`;
+      }
 
-      tableHtml += "</div>";
-      return tableHtml;
+      return html;
     }
 
-    html += buildCoCTablesHtml(cocLinks);
+    function buildCoCTreeHtml(cocArray) {
+      let html = "<div style='font-family: monospace; font-size: 14px;'>";
+      html += "<h4>Chain of Custody Tree</h4>";
+
+      cocArray.forEach((coc) => {
+        html += renderCoCNode(coc, 0);
+      });
+
+      html += "</div>";
+      return html;
+    }
+
+    html += buildCoCTreeHtml(cocLinks);
     certResults.innerHTML = html;
 
     // Render JSON debug output for each CoC link (including nested)

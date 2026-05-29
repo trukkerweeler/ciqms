@@ -76,11 +76,12 @@ router.post("/process", (req, res) => {
   );
 });
 
-// GET /globalcert/processcert-coc?job=122166&selectedIndices=0,1,3
+// GET /globalcert/processcert-coc?job=122166&suffix=001&selectedIndices=0,1,3
 // Steps 1-3: Fetch J52 transactions, accept selected indices, build chain-of-custody links
 // ITEM_HISTORY-based (not INVENTORY_HIST) to ensure SERIAL_NUMBER is available
+// suffix parameter restricts Step 1 to specific job/suffix combo (for recursion)
 router.get("/processcert-coc", (req, res) => {
-  const { job, selectedIndices } = req.query;
+  const { job, suffix, selectedIndices } = req.query;
 
   // Validate job parameter
   if (!job) {
@@ -95,8 +96,9 @@ router.get("/processcert-coc", (req, res) => {
     ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
     : "C:/Windows/SysWOW64/cscript.exe";
 
-  // Build command arguments: job and optional selectedIndices
-  const args = ["//Nologo", vbsPath, job];
+  // Build command arguments: job, suffix (empty if not provided), optional selectedIndices
+  // Always include suffix parameter to maintain correct argument positions
+  const args = ["//Nologo", vbsPath, job, suffix || ""];
   if (selectedIndices) {
     args.push(selectedIndices);
   }
