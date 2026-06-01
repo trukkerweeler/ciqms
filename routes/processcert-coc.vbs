@@ -1,10 +1,11 @@
 ' processcert-coc.vbs
-' Implements Steps 1-3 of GlobalCert Chain-of-Custody extraction
+' Implements Steps 1-3 of Process Certificate Chain-of-Custody extraction
 ' Designed for use by processcert.html frontend
 '
 ' Step 1: Fetch Inventory Transactions (J52) from ITEM_HISTORY
 ' Step 2: Accept selected transactions from frontend (no database work)
 ' Step 3: Build first-level chain-of-custody links with parent operation, child job, and materials
+'        Process-centric: operations, router descriptions, outside processing flags, and PO references
 '
 ' Usage: cscript //Nologo processcert-coc.vbs <JOB> [selectedTransactionIndices]
 ' Example: cscript //Nologo processcert-coc.vbs 122166 0,1,3
@@ -66,13 +67,10 @@ Dim job, suffix, selectedIndicesStr
 If WScript.Arguments.Count > 0 Then
   job = WScript.Arguments(0)
   If WScript.Arguments.Count > 1 Then
-    suffix = WScript.Arguments(1)
-  End If
-  If WScript.Arguments.Count > 2 Then
-    selectedIndicesStr = WScript.Arguments(2)
+    selectedIndicesStr = WScript.Arguments(1)
   End If
 Else
-  WScript.Echo "Usage: processcert-coc.vbs <JOB> [SUFFIX] [selectedTransactionIndices]"
+  WScript.Echo "Usage: processcert-coc.vbs <JOB> [selectedTransactionIndices]"
   WScript.Quit 1
 End If
 
@@ -87,19 +85,13 @@ On Error GoTo 0
 ' ============================================================================
 ' STEP 1: FETCH DOWNSTREAM COMPLETIONS (J52)
 ' Query ITEM_HISTORY for all J52 rows for the given job
-' If suffix is provided, restrict to that specific job/suffix combo
 ' ============================================================================
 Dim sqlStep1
 sqlStep1 = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, SERIAL_NUMBER " & _
            "FROM ITEM_HISTORY " & _
            "WHERE JOB = '" & job & "' " & _
-           "AND CODE_TRANSACTION = 'J52' "
-
-If suffix <> "" Then
-  sqlStep1 = sqlStep1 & "AND SUFFIX = '" & suffix & "' "
-End If
-
-sqlStep1 = sqlStep1 & "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
+           "AND CODE_TRANSACTION = 'J52' " & _
+           "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
 
 Set rs = conn.Execute(sqlStep1)
 If Err.Number <> 0 Then

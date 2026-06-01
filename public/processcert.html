@@ -1,0 +1,74 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <title>ProcessCert Query</title>
+    <link rel="stylesheet" href="css/styles.css" />
+  </head>
+  <body>
+    <h1>ProcessCert Workorder Lookup</h1>
+
+    <!-- Step 1: Inventory History Query -->
+    <div class="inventory-section">
+      <h2>Step 1: Select Process Transactions</h2>
+      <form id="inventory-form">
+        <label for="job">Job Number:</label>
+        <input
+          type="text"
+          id="job"
+          name="job"
+          pattern="\d+"
+          value="122166"
+          required
+        />
+
+        <label for="qaUser">QA User (Signature):</label>
+        <input
+          type="text"
+          id="qaUser"
+          name="qaUser"
+          placeholder="Will auto-populate from session"
+        />
+
+        <button type="submit">Fetch Process Transactions</button>
+      </form>
+
+      <div
+        id="inventory-working"
+        style="display: none; color: blue; font-weight: bold"
+      >
+        Loading transactions...
+      </div>
+
+      <div id="inventory-results"></div>
+
+      <!-- JSON Debug Output for Each Row -->
+      <div id="json-debug" style="display: none; margin-top: 30px">
+        <h3>Raw JSON Data (Debug View)</h3>
+        <div id="json-rows-container"></div>
+      </div>
+
+      <!-- Testing: Operation Filter Toggle -->
+      <div
+        id="testing-controls"
+        style="
+          display: none;
+          margin-top: 15px;
+          padding: 10px;
+          background-color: #f0f0f0;
+          border-left: 3px solid #999;
+        "
+      >
+        <label style="font-size: 12px; color: #666">
+          <input type="checkbox" id="includeAllOps" />
+          Include all operations (testing mode)
+        </label>
+      </div>
+    </div>
+
+    <!-- Certificate Results -->
+    <div id="cert-results" style="margin-top: 30px"></div>
+
+    <script type="module" src="js/processcert.mjs"></script>
+  </body>
+</html>
