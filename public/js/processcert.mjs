@@ -649,6 +649,14 @@ async function handleGenerateCert() {
             // Add data rows
             const tbody = jobTable.querySelector("tbody");
             detailData.rows.forEach((row) => {
+              // Filter serialNumber: remove 'LABOR INPUT' and 'PO: ' prefix
+              let displaySerialNumber = row.serialNumber || "";
+              if (displaySerialNumber.trim() === "LABOR INPUT") {
+                displaySerialNumber = "";
+              } else if (displaySerialNumber.startsWith("PO: ")) {
+                displaySerialNumber = displaySerialNumber.substring(4);
+              }
+
               const tr = document.createElement("tr");
               tr.innerHTML = `
                 <td style="border: 1px solid #ddd; padding: 8px;">${row.job}</td>
@@ -659,7 +667,7 @@ async function handleGenerateCert() {
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.unitsOpen}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.unitsComplete}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.unitsScrap}</td>
-                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${row.serialNumber}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${displaySerialNumber}</td>
                 <td style="border: 1px solid #ddd; padding: 8px;">${row.codeTransaction}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.quantity}</td>
                 <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${row.dateHistory} ${row.timeItemHistory}</td>

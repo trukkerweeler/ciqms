@@ -92,7 +92,7 @@ sql = "SELECT " & _
   "ih.TIME_ITEM_HISTORY AS timeItemHistory " & _
   "FROM JOB_OPERATIONS jo " & _
   "LEFT JOIN ITEM_HISTORY ih ON ih.JOB = jo.JOB AND ih.SUFFIX = jo.SUFFIX AND ih.SEQUENCE = jo.SEQ " & _
-  "WHERE jo.JOB = " & job & " AND jo.SUFFIX = '" & suffix & "' " & _
+  "WHERE jo.JOB = " & job & " AND jo.SUFFIX = '" & suffix & "' AND jo.SEQ < 990000 " & _
   "UNION ALL " & _
   "SELECT " & _
   "jh.JOB, " & _
@@ -106,7 +106,7 @@ sql = "SELECT " & _
   "0 AS unitsComplete, " & _
   "0 AS unitsScrap, " & _
   "jh.CHARGE_DATE AS operationCompletedDate, " & _
-  "'' AS serialNumber, " & _
+  "jh.REFERENCE AS serialNumber, " & _
   "'' AS LOT, " & _
   "'' AS HEAT, " & _
   "'' AS codeTransaction, " & _
@@ -114,7 +114,7 @@ sql = "SELECT " & _
   "'' AS dateHistory, " & _
   "'' AS timeItemHistory " & _
   "FROM JOB_HIST_DTL jh " & _
-  "WHERE jh.JOB = " & job & " AND jh.SUFFIX = '" & suffix & "' " & _
+  "WHERE jh.JOB = " & job & " AND jh.SUFFIX = '" & suffix & "' AND jh.SEQ < 990000 " & _
   "ORDER BY operationSeq, dateHistory, timeItemHistory"
 
 On Error Resume Next

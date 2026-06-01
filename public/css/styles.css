@@ -48,7 +48,12 @@ table thead tr {
   background-color: var(--background-color);
   color: var(--text-color-light);
 }
-table th,
+table th {
+  color: #000;
+  padding: 0.25rem 0.5rem;
+  text-align: center;
+  font-size: 0.85rem;
+}
 table td {
   padding: 0.25rem 0.5rem;
   text-align: center;

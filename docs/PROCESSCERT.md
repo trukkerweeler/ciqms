@@ -96,7 +96,22 @@ For the given JOB (all suffixes):
   Query JOB_DETAIL for matching OPERATION
   Extract REFERENCE (PO number)
 
-Rules:
+**Important Query Rules**:
+
+- **TEXT Fields Must Be Quoted**: SUFFIX is a TEXT field in Pervasive SQL. In WHERE clauses, it MUST be quoted:
+  - Correct: `WHERE SUFFIX = '001'`
+  - Incorrect: `WHERE SUFFIX = 001` (treats as numeric, won't match)
+
+- **Historical Records**: Operations may be archived in JOB_HIST_DTL. Use UNION ALL to combine:
+  1. Current: `SELECT * FROM JOB_OPERATIONS WHERE JOB = ? AND SUFFIX = '?'`
+  2. Historical: `SELECT * FROM JOB_HIST_DTL WHERE JOB = ? AND SUFFIX = '?'`
+     Map `CHARGE_DATE` (history) to `DATE_COMPLETED` (current) for consistent output.
+     Map `REFERENCE` (history) to `SERIAL_NUMBER` output field.
+
+- **Operation Sequence Filter**: Query only operations with `SEQ < 990000` to exclude setup/numbering operations:
+  `WHERE JOB = ? AND SUFFIX = '?' AND SEQ < 990000`
+
+**Additional Rules**:
 
 - Do NOT filter by suffix.
 - Do NOT collapse operations.
@@ -214,7 +229,11 @@ IMPLEMENTATION NOTES
 **Steps to implement:**
 
 1. **Step 1 (Top-level)**: Query J52 for all suffixes, group by DATE/TIME/SUFFIX
-2. **Step 2**: Query JOB_OPERATIONS (all suffixes), join ROUTER_LINE, optionally JOB_DETAIL
+2. **Step 2**: Query JOB_OPERATIONS with UNION ALL to JOB_HIST_DTL (for archived operations)
+   - Filter: `SEQ < 990000` to exclude setup operations
+   - Quote SUFFIX in WHERE clause: `SUFFIX = '<value>'` (TEXT field requirement)
+   - LEFT JOIN ITEM_HISTORY on (JOB, SUFFIX, SEQUENCE=SEQ)
+   - Join ROUTER_LINE, optionally JOB_DETAIL
 3. **Step 3**: For each selected J52, resolve child job, load child data
 4. **Step 4**: Implement recursive function that:
    - Validates SERIAL_NUMBER format (6 digits - 3 digits)
@@ -225,7 +244,30 @@ IMPLEMENTATION NOTES
 5. **Step 5**: Group results by DATE_HISTORY/TIME_ITEM_HISTORY/SUFFIX
 6. **Step 6**: Build final JSON output with proper structure
 
-### Frontend (processcert.mjs)
+**SQL Pattern for Step 2**:
+
+Current + Historical operations use UNION ALL:
+
+```sql
+SELECT jo.JOB, jo.SUFFIX, jo.SEQ, jo.OPERATION, jo.DESCRIPTION, ih.SERIAL_NUMBER, ...
+FROM JOB_OPERATIONS jo
+LEFT JOIN ITEM_HISTORY ih ON ih.JOB = jo.JOB AND ih.SUFFIX = jo.SUFFIX AND ih.SEQUENCE = jo.SEQ
+WHERE jo.JOB = <job> AND jo.SUFFIX = '<suffix>' AND jo.SEQ < 990000
+
+UNION ALL
+
+SELECT jh.JOB, jh.SUFFIX, jh.SEQ, '', jh.DESCRIPTION, jh.REFERENCE AS SERIAL_NUMBER, jh.CHARGE_DATE AS DATE_COMPLETED, ...
+FROM JOB_HIST_DTL jh
+WHERE jh.JOB = <job> AND jh.SUFFIX = '<suffix>' AND jh.SEQ < 990000
+ORDER BY SEQ
+```
+
+Note:
+
+- TEXT fields (SUFFIX) must use single quotes in WHERE clauses
+- REFERENCE field from JOB_HIST_DTL maps to SERIAL_NUMBER output column
+
+### Frontend (processcert.mjs & processcert.html)
 
 **Responsibilities:**
 
@@ -235,6 +277,17 @@ IMPLEMENTATION NOTES
 4. Implement recursive `buildNestedTrace()` function
 5. Render hierarchical tree display of upstream trace chains
 6. Display process operations for each job level
+
+**Styling**:
+
+- Table headers must use `color: #000` for contrast against dark backgrounds
+- Ensure all table headings (`<th>`) have explicit black text color in CSS
+- Apply print-friendly styles for `@media print` (preserve headers during pagination)
+
+**Field Filtering**:
+
+- If `serialNumber` equals `'LABOR INPUT'`, render as empty string (not displayed)
+- If `serialNumber` starts with `'PO: '`, remove the prefix before rendering (e.g., "PO: 0041564" → "0041564")
 
 ### Express Router (processcert.js)
 
@@ -269,3 +322,9 @@ showing all upstream jobs, their operations, and external processing details.
 4. Operations never collapsed or reordered
 5. Processing groups remain separate by DATE/TIME/SUFFIX
 6. All recursive levels included in output
+7. Operations filtered to SEQ < 990000
+8. Historical operations from JOB_HIST_DTL included
+9. SUFFIX field properly quoted in SQL queries
+10. REFERENCE from JOB_HIST_DTL correctly mapped to serialNumber output
+11. 'LABOR INPUT' serialNumber values rendered as empty
+12. 'PO: ' prefix stripped from serialNumber values on display
