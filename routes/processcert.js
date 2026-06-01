@@ -51,4 +51,45 @@ router.get("/processcert-coc", (req, res) => {
   });
 });
 
+// GET /processcert/processcert-detail?job=122166&suffix=000
+// Detailed job operations with item history for a specific JOB/SUFFIX
+router.get("/processcert-detail", (req, res) => {
+  const { job, suffix } = req.query;
+
+  // Validate parameters
+  if (!job || !suffix) {
+    return res.status(400).json({ error: "Missing job or suffix parameter" });
+  }
+  if (!/^\d+$/.test(job) || !/^\d+$/.test(suffix)) {
+    return res.status(400).json({ error: "Invalid job or suffix number" });
+  }
+
+  const vbsPath = path.join(__dirname, "processcert-detail.vbs");
+  const cscript32 = process.env.SYSTEMROOT
+    ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
+    : "C:/Windows/SysWOW64/cscript.exe";
+
+  const args = ["//Nologo", vbsPath, job, suffix];
+
+  execFile(cscript32, args, { windowsHide: true }, (err, stdout, stderr) => {
+    console.log("processcert-detail VBS stderr:", stderr);
+    console.log("processcert-detail VBS stdout:", stdout);
+    if (err) {
+      return res
+        .status(500)
+        .json({ error: "VBS execution failed", details: stderr });
+    }
+    try {
+      const data = JSON.parse(stdout);
+      res.json(data);
+    } catch (e) {
+      res.status(500).json({
+        error: "Failed to parse VBS output",
+        raw: stdout,
+        stderr: stderr,
+      });
+    }
+  });
+});
+
 module.exports = router;

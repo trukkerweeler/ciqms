@@ -5,9 +5,19 @@ const inventoryForm = document.getElementById("inventory-form");
 const inventoryResults = document.getElementById("inventory-results");
 const inventoryWorking = document.getElementById("inventory-working");
 const certResults = document.getElementById("cert-results");
+const showJsonCheckbox = document.getElementById("show-json-rows");
+const jsonDebugDiv = document.getElementById("json-debug");
 
 let currentInventoryData = []; // Store the fetched inventory history
+let currentServerResponse = null; // Store the full server response with all steps
 let selectedTransactions = new Set(); // Track selected transaction indices
+
+// Toggle JSON debug view when checkbox changes
+showJsonCheckbox.addEventListener("change", () => {
+  if (jsonDebugDiv) {
+    jsonDebugDiv.style.display = showJsonCheckbox.checked ? "block" : "none";
+  }
+});
 
 // Initialize page - populate user field from session
 document.addEventListener("DOMContentLoaded", async () => {
@@ -39,6 +49,110 @@ document.addEventListener("DOMContentLoaded", async () => {
   }
 });
 
+// Helper function to check if a string is a valid job reference (######-###)
+function isJobReference(str) {
+  if (!str || typeof str !== "string") return false;
+  const trimmed = str.trim();
+  const match = trimmed.match(/^(\d{6})-(\d{3})$/);
+  return !!match;
+}
+
+// Extract job number and suffix from job reference string (returns both)
+function extractJobInfo(str) {
+  const match = str.trim().match(/^(\d{6})-(\d{3})$/);
+  return match ? { job: match[1], suffix: match[2] } : null;
+}
+
+// Build unique list of all JOB/SUFFIX combinations from server response
+function buildJobHierarchy(response) {
+  const uniqueJobs = new Set();
+  console.log("buildJobHierarchy - Input response:", response);
+
+  // Process all CoC links
+  if (response.step3_coc_links && Array.isArray(response.step3_coc_links)) {
+    console.log(
+      "buildJobHierarchy - Found",
+      response.step3_coc_links.length,
+      "CoC links",
+    );
+    response.step3_coc_links.forEach((coc, cocIdx) => {
+      console.log(`  CoC link ${cocIdx}:`, coc);
+
+      // Add parent_j52
+      if (coc.parent_j52 && coc.parent_j52.job) {
+        const job = coc.parent_j52.job.trim();
+        const suffix = (coc.parent_j52.suffix || "").trim();
+        const jobSuffix = `${job}-${suffix}`;
+        console.log(`    Adding parent: ${jobSuffix}`);
+        uniqueJobs.add(jobSuffix);
+      }
+
+      // Add child_job
+      if (coc.child_job && coc.child_job.job) {
+        const job = coc.child_job.job.trim();
+        const suffix = (coc.child_job.suffix || "").trim();
+        const jobSuffix = `${job}-${suffix}`;
+        console.log(`    Adding child: ${jobSuffix}`);
+        uniqueJobs.add(jobSuffix);
+      }
+
+      // Add jobs from material pulls
+      if (
+        coc.child_job &&
+        coc.child_job.material_pulls &&
+        Array.isArray(coc.child_job.material_pulls)
+      ) {
+        console.log(
+          `    Material pulls is array with ${coc.child_job.material_pulls.length} items`,
+        );
+        coc.child_job.material_pulls.forEach((pull, pullIdx) => {
+          console.log(`      Pull ${pullIdx}:`, pull);
+          if (pull.serialNumber) {
+            const sn = pull.serialNumber.trim();
+            console.log(
+              `        Checking SN: "${sn}", isJobRef:`,
+              isJobReference(sn),
+            );
+            if (isJobReference(sn)) {
+              const jobInfo = extractJobInfo(sn);
+              if (jobInfo) {
+                const jobSuffix = `${jobInfo.job}-${jobInfo.suffix}`;
+                console.log(`        Adding from material pull: ${jobSuffix}`);
+                uniqueJobs.add(jobSuffix);
+              }
+            }
+          }
+        });
+      } else {
+        console.log(
+          `    Material pulls not array or missing`,
+          coc.child_job?.material_pulls,
+        );
+      }
+    });
+  }
+
+  // Convert set to sorted array of objects
+  const jobList = Array.from(uniqueJobs)
+    .sort()
+    .map((jobSuffix) => {
+      const parts = jobSuffix.split("-");
+      return {
+        job: parts[0],
+        suffix: parts[1],
+      };
+    });
+
+  console.log(
+    "buildJobHierarchy - Found unique jobs:",
+    Array.from(uniqueJobs),
+    "Extracted:",
+    jobList,
+  );
+
+  return jobList;
+}
+
 // Step 1: Fetch inventory history transactions (J52) for the given job
 inventoryForm.addEventListener("submit", async (e) => {
   e.preventDefault();
@@ -66,6 +180,7 @@ inventoryForm.addEventListener("submit", async (e) => {
     }
 
     const resData = await res.json();
+    currentServerResponse = resData; // Store full response
     currentInventoryData = resData.step1_j52_transactions || [];
 
     if (
@@ -80,6 +195,7 @@ inventoryForm.addEventListener("submit", async (e) => {
 
     // Display inventory transactions in a table with checkboxes
     const table = document.createElement("table");
+    table.id = "transactions-table";
     table.className = "inventory-table";
     table.style.width = "100%"; // Full width table
     table.innerHTML = `<thead><tr>
@@ -207,22 +323,73 @@ inventoryForm.addEventListener("submit", async (e) => {
 
     const generateCertBtn = document.createElement("button");
     generateCertBtn.type = "button";
+    generateCertBtn.id = "gen-cert";
     generateCertBtn.textContent = "Generate Certificate";
     generateCertBtn.addEventListener("click", handleGenerateCert);
+
+    // Create checkbox for unique jobs visibility (independent of fetch checkbox)
+    const showJobsLabel = document.createElement("label");
+    showJobsLabel.style.cssText = `
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-weight: normal;
+      margin: 0;
+    `;
+    const showJobsCheckbox = document.createElement("input");
+    showJobsCheckbox.type = "checkbox";
+    showJobsCheckbox.id = "show-unique-jobs";
+    showJobsCheckbox.style.margin = "0";
+    const showJobsLabel_text = document.createElement("span");
+    showJobsLabel_text.textContent = "Show Unique Jobs";
+    showJobsLabel.appendChild(showJobsCheckbox);
+    showJobsLabel.appendChild(showJobsLabel_text);
 
     buttonGroup.appendChild(selectAllBtn);
     buttonGroup.appendChild(deselectAllBtn);
     buttonGroup.appendChild(generateCertBtn);
+    buttonGroup.appendChild(showJobsLabel);
     inventoryResults.appendChild(buttonGroup);
 
     // Render JSON debug output for initial Step 1 data
-    const jsonDebugDiv = document.getElementById("json-debug");
     const jsonRowsContainer = document.getElementById("json-rows-container");
     jsonRowsContainer.innerHTML = "";
 
-    const debugTitle = document.createElement("h3");
-    debugTitle.textContent = "Raw Step 1 Data (Debug View)";
-    jsonRowsContainer.appendChild(debugTitle);
+    // Add full server response first
+    const fullResponseDiv = document.createElement("div");
+    fullResponseDiv.className = "json-row-debug";
+    fullResponseDiv.style.cssText = `
+      margin-bottom: 20px;
+      padding: 12px;
+      border: 2px solid #0066cc;
+      border-radius: 4px;
+      background-color: #e6f2ff;
+      font-family: monospace;
+      font-size: 12px;
+    `;
+
+    const fullHeader = document.createElement("div");
+    fullHeader.style.cssText = `
+      font-weight: bold;
+      margin-bottom: 8px;
+      color: #0066cc;
+      border-bottom: 2px solid #0066cc;
+      padding-bottom: 6px;
+    `;
+    fullHeader.textContent = `Full Server Response (Complete JSON)`;
+    fullResponseDiv.appendChild(fullHeader);
+
+    const fullPre = document.createElement("pre");
+    fullPre.style.cssText = `
+      margin: 0;
+      overflow-x: auto;
+      white-space: pre-wrap;
+      word-wrap: break-word;
+      color: #333;
+    `;
+    fullPre.textContent = JSON.stringify(currentServerResponse, null, 2);
+    fullResponseDiv.appendChild(fullPre);
+    jsonRowsContainer.appendChild(fullResponseDiv);
 
     currentInventoryData.forEach((row, index) => {
       const rowDiv = document.createElement("div");
@@ -262,7 +429,8 @@ inventoryForm.addEventListener("submit", async (e) => {
       jsonRowsContainer.appendChild(rowDiv);
     });
 
-    jsonDebugDiv.style.display = "none"; // Debug view hidden for now
+    // Show/hide JSON debug view based on checkbox
+    jsonDebugDiv.style.display = showJsonCheckbox.checked ? "block" : "none";
   } catch (error) {
     console.error("Error fetching transactions:", error);
     inventoryResults.innerHTML = `<p style='color: red;'>Error: ${error.message}</p>`;
@@ -270,6 +438,26 @@ inventoryForm.addEventListener("submit", async (e) => {
     inventoryWorking.style.display = "none";
   }
 });
+
+// Fetch job operation details for a specific job/suffix
+async function fetchJobDetails(job, suffix) {
+  try {
+    const params = new URLSearchParams({ job, suffix });
+    const url = `/processcert/processcert-detail?${params}`;
+    console.log(`Fetching job details: ${url}`);
+    const res = await fetch(url);
+    if (!res.ok) {
+      console.error(`Failed to fetch details for ${job}-${suffix}`);
+      return null;
+    }
+    const data = await res.json();
+    console.log(`Received for ${job}-${suffix}:`, data);
+    return data;
+  } catch (error) {
+    console.error(`Error fetching details for ${job}-${suffix}:`, error);
+    return null;
+  }
+}
 
 // Step 3: Generate certificate for selected rows (Chain of Custody)
 async function handleGenerateCert() {
@@ -371,6 +559,129 @@ async function handleGenerateCert() {
 
     certResults.innerHTML = html;
 
+    // Fetch and display job operation details for each unique job
+    console.log("About to call buildJobHierarchy with cocData:", cocData);
+    console.log("cocData.step3_coc_links:", cocData.step3_coc_links);
+
+    // DEBUG: Write to page
+    let debugHtml =
+      "<div style='background: yellow; padding: 10px; margin-top: 20px;'><strong>DEBUG:</strong><br>";
+    debugHtml += `step3_coc_links length: ${cocData.step3_coc_links?.length}<br>`;
+    if (cocData.step3_coc_links && cocData.step3_coc_links.length > 0) {
+      debugHtml += `First link material_pulls type: ${typeof cocData.step3_coc_links[0].child_job?.material_pulls}<br>`;
+      debugHtml += `First link material_pulls length: ${cocData.step3_coc_links[0].child_job?.material_pulls?.length}<br>`;
+      if (cocData.step3_coc_links[0].child_job?.material_pulls?.length > 0) {
+        debugHtml += `First pull SN: "${cocData.step3_coc_links[0].child_job.material_pulls[0].serialNumber}"<br>`;
+      }
+    }
+    debugHtml += "</div>";
+    certResults.innerHTML += debugHtml;
+
+    const jobHierarchy = buildJobHierarchy(cocData);
+
+    // DEBUG: Show extracted jobs
+    debugHtml =
+      "<div style='background: lightblue; padding: 10px; margin-top: 20px;'><strong>EXTRACTED JOBS:</strong><br>";
+    debugHtml += `Total jobs: ${jobHierarchy.length}<br>`;
+    jobHierarchy.forEach((j) => {
+      debugHtml += `- ${j.job}-${j.suffix}<br>`;
+    });
+    debugHtml += "</div>";
+    certResults.innerHTML += debugHtml;
+
+    if (jobHierarchy.length > 0) {
+      // Add a section for job details
+      const jobDetailsHtml = document.createElement("div");
+      jobDetailsHtml.style.marginTop = "30px";
+
+      const jobDetailsTitle = document.createElement("h3");
+      jobDetailsTitle.textContent = "Job Operation Details";
+      jobDetailsHtml.appendChild(jobDetailsTitle);
+
+      // Create a container for job detail tables
+      const jobDetailsContainer = document.createElement("div");
+      jobDetailsHtml.appendChild(jobDetailsContainer);
+      certResults.appendChild(jobDetailsHtml);
+
+      // Fetch details for each unique job - use Promise.all to wait for all
+      const jobDetailPromises = jobHierarchy.map(async (jobEntry) => {
+        const detailData = await fetchJobDetails(jobEntry.job, jobEntry.suffix);
+
+        // Create table regardless of row count (show "no data" if empty)
+        if (detailData) {
+          // Add a heading for this job
+          const jobHeading = document.createElement("h4");
+          jobHeading.style.cssText = "margin-top: 20px; margin-bottom: 10px;";
+          jobHeading.textContent = `Job ${jobEntry.job}-${jobEntry.suffix}`;
+          jobDetailsContainer.appendChild(jobHeading);
+
+          if (detailData.rows && detailData.rows.length > 0) {
+            // Create data table
+            const jobTable = document.createElement("table");
+            jobTable.style.cssText = `
+              margin-bottom: 20px;
+              width: 100%;
+              border-collapse: collapse;
+              border: 1px solid #ddd;
+            `;
+
+            // Add header
+            jobTable.innerHTML = `
+              <thead>
+                <tr style="background-color: #f5f5f5;">
+                  <th style="border: 1px solid #ddd; padding: 8px;">Job</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Suffix</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Seq</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Operation</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Description</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Units Open</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Complete</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Scrap</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Serial #</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Code</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Qty</th>
+                  <th style="border: 1px solid #ddd; padding: 8px;">Date</th>
+                </tr>
+              </thead>
+              <tbody></tbody>
+            `;
+
+            // Add data rows
+            const tbody = jobTable.querySelector("tbody");
+            detailData.rows.forEach((row) => {
+              const tr = document.createElement("tr");
+              tr.innerHTML = `
+                <td style="border: 1px solid #ddd; padding: 8px;">${row.job}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${row.suffix}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${row.operationSeq}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${row.operation}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${row.operationDescription}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.unitsOpen}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.unitsComplete}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.unitsScrap}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${row.serialNumber}</td>
+                <td style="border: 1px solid #ddd; padding: 8px;">${row.codeTransaction}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; text-align: right;">${row.quantity}</td>
+                <td style="border: 1px solid #ddd; padding: 8px; font-size: 11px;">${row.dateHistory} ${row.timeItemHistory}</td>
+              `;
+              tbody.appendChild(tr);
+            });
+
+            jobDetailsContainer.appendChild(jobTable);
+          } else {
+            // No operations found for this job
+            const noDataMsg = document.createElement("p");
+            noDataMsg.style.cssText = "color: #999; font-style: italic;";
+            noDataMsg.textContent = "No job operations found in database";
+            jobDetailsContainer.appendChild(noDataMsg);
+          }
+        }
+      });
+
+      // Wait for all job detail fetches to complete
+      await Promise.all(jobDetailPromises);
+    }
+
     // Render JSON debug output for each CoC link
     const jsonDebugDiv = document.getElementById("json-debug");
     const jsonRowsContainer = document.getElementById("json-rows-container");
@@ -420,7 +731,51 @@ async function handleGenerateCert() {
       jsonRowsContainer.appendChild(rowDiv);
     });
 
-    jsonDebugDiv.style.display = "none"; // Debug view hidden for now
+    // Extract and display job hierarchy for selected transactions (only if checkbox is checked)
+    const showUniqueJobsCheckbox = document.getElementById("show-unique-jobs");
+    if (showUniqueJobsCheckbox && showUniqueJobsCheckbox.checked) {
+      const jobHierarchy = buildJobHierarchy(cocData);
+      const jobHierarchyDiv = document.createElement("div");
+      jobHierarchyDiv.className = "json-row-debug";
+      jobHierarchyDiv.style.cssText = `
+        margin-bottom: 20px;
+        padding: 12px;
+        border: 2px solid #cc6600;
+        border-radius: 4px;
+        background-color: #ffe6cc;
+        font-family: monospace;
+        font-size: 12px;
+      `;
+
+      const jobHeader = document.createElement("div");
+      jobHeader.style.cssText = `
+        font-weight: bold;
+        margin-bottom: 8px;
+        color: #cc6600;
+        border-bottom: 2px solid #cc6600;
+        padding-bottom: 6px;
+      `;
+      jobHeader.textContent = `Unique Jobs (from Selection)`;
+      jobHierarchyDiv.appendChild(jobHeader);
+
+      const jobPre = document.createElement("pre");
+      jobPre.style.cssText = `
+        margin: 0;
+        overflow-x: auto;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+        color: #333;
+      `;
+      jobPre.textContent = JSON.stringify(jobHierarchy, null, 2);
+      jobHierarchyDiv.appendChild(jobPre);
+      jsonRowsContainer.appendChild(jobHierarchyDiv);
+    }
+
+    // Show/hide JSON debug view if either checkbox is checked
+    const shouldShowDebug =
+      showJsonCheckbox.checked ||
+      (showUniqueJobsCheckbox && showUniqueJobsCheckbox.checked);
+    jsonDebugDiv.style.display = shouldShowDebug ? "block" : "none";
   } catch (error) {
     console.error("Error generating certificate:", error);
     certResults.innerHTML = `<p style='color: red;'>Error: ${error.message}</p>`;

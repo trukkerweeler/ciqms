@@ -30,7 +30,31 @@
           placeholder="Will auto-populate from session"
         />
 
-        <button type="submit">Fetch Process Transactions</button>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 15px;
+            margin-top: 10px;
+          "
+        >
+          <button type="submit" id="fetch-trans">
+            Fetch Process Transactions
+          </button>
+
+          <label
+            style="
+              display: flex;
+              align-items: center;
+              gap: 8px;
+              font-weight: normal;
+              margin: 0;
+            "
+          >
+            <input type="checkbox" id="show-json-rows" />
+            Show Full JSON for each row
+          </label>
+        </div>
       </form>
 
       <div

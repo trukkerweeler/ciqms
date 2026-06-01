@@ -256,7 +256,8 @@ output = "{" & _
   """selectedIndices"":" & selectedIndicesJSON & "," & _
   """step3_coc_links"":" & cocJSON & _
   "}"
-
+' Format JSON for readability
+output = FormatJSON(output)
 WScript.Echo output
 conn.Close
 WScript.Quit 0
@@ -278,7 +279,55 @@ Function EscapeJSON(str)
   result = Replace(result, Chr(9), "\t")
   EscapeJSON = result
 End Function
-
+' ============================================================================
+' Format JSON string with indentation and line breaks for readability
+' ============================================================================
+Function FormatJSON(jsonStr)
+  Dim formatted, i, char, indent, inString, prevChar
+  formatted = ""
+  indent = 0
+  inString = False
+  
+  For i = 1 To Len(jsonStr)
+    char = Mid(jsonStr, i, 1)
+    If i > 1 Then
+      prevChar = Mid(jsonStr, i - 1, 1)
+    Else
+      prevChar = ""
+    End If
+    
+    ' Track if we're inside a string literal
+    If char = """" And prevChar <> "\" Then
+      inString = Not inString
+    End If
+    
+    ' Only process formatting outside of strings
+    If Not inString Then
+      If char = "{" Or char = "[" Then
+        formatted = formatted & char & vbCrLf & String((indent + 1) * 2, " ")
+        indent = indent + 1
+      ElseIf char = "}" Or char = "]" Then
+        indent = indent - 1
+        ' Remove trailing spaces and newline before closing bracket
+        formatted = Trim(formatted)
+        If Right(formatted, 2) = vbCrLf Then
+          formatted = Left(formatted, Len(formatted) - 2)
+        End If
+        formatted = formatted & vbCrLf & String(indent * 2, " ") & char
+      ElseIf char = "," Then
+        formatted = formatted & char & vbCrLf & String(indent * 2, " ")
+      ElseIf char = ":" Then
+        formatted = formatted & char & " "
+      ElseIf char <> " " And char <> vbTab And char <> vbCrLf Then
+        formatted = formatted & char
+      End If
+    Else
+      formatted = formatted & char
+    End If
+  Next
+  
+  FormatJSON = formatted
+End Function
 ' ============================================================================
 ' 3B - Match child job's J52 row
 ' Query ITEM_HISTORY with:
