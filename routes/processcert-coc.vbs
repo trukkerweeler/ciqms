@@ -431,18 +431,29 @@ End Function
 
 ' ============================================================================
 ' 3E - Match parent operation
-' Query JOB_OPERATIONS with rules:
-'   JOB = parentJob, SUFFIX = parentSuffix
-'   LMO IN ('L','O'), SEQ < '990000'
-'   DATE_COMPLETED <= parentDateHist OR DATE_COMPLETED IS NULL
-'   ORDER BY DATE_COMPLETED DESC, SEQ DESC
-'   TOP 1
+' Query rules:
+'   1️⃣ TRY ACTIVE OPERATIONS (JOB_OPERATIONS)
+'      JOB = parentJob, SUFFIX = parentSuffix, LMO IN ('L','O'), SEQ < '990000'
+'      DATE_COMPLETED <= parentDateHist OR DATE_COMPLETED IS NULL
+'      ORDER BY DATE_COMPLETED DESC, SEQ DESC, TOP 1
+'
+'   2️⃣ IF NO ROWS, TRY ARCHIVED OPERATIONS (JOB_HIST_OPS)
+'      JOB = parentJob, SUFFIX = parentSuffix
+'      ORDER BY SEQ DESC, TOP 1
+'
+'   3️⃣ FALLBACK TO EMPTY (allows router lookup)
+'
 ' Then 3F-3G: Join ROUTER_LINE and JOB_DETAIL
 ' ============================================================================
 Function GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
-  Dim sqlOps, rsOps, result, seq, operation, router, routerSeq
-  Dim routerDesc, partWcOutside, poNumber, isOutside
-  
+  Dim result, sqlOps, rsOps, sqlHist, rsHist
+  Dim seq, operation, router, routerSeq
+  Dim sqlRouter, rsRouter, routerDesc, partWcOutside
+  Dim isOutside, sqlDetail, rsDetail, poNumber
+
+  ' ============================================================
+  ' 1️⃣ TRY ACTIVE OPERATIONS (JOB_OPERATIONS)
+  ' ============================================================
   sqlOps = "SELECT TOP 1 SEQ, OPERATION, ROUTER, ROUTER_SEQ " & _
            "FROM JOB_OPERATIONS " & _
            "WHERE JOB = '" & parentJob & "' " & _
@@ -451,74 +462,91 @@ Function GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
            "AND SEQ < '990000' " & _
            "AND (DATE_COMPLETED IS NULL OR DATE_COMPLETED <= '" & parentDateHist & "') " & _
            "ORDER BY DATE_COMPLETED DESC, SEQ DESC"
-  
+
   Set rsOps = conn.Execute(sqlOps)
-  
-  If rsOps.EOF Then
-    GetParentOperationJSON = "null"
-    rsOps.Close
-    Exit Function
+
+  If Not rsOps.EOF Then
+    seq = rsOps("SEQ")
+    operation = rsOps("OPERATION")
+    router = rsOps("ROUTER")
+    routerSeq = rsOps("ROUTER_SEQ")
+  Else
+    ' ============================================================
+    ' 2️⃣ TRY ARCHIVED OPERATIONS (JOB_HIST_OPS)
+    ' ============================================================
+    sqlHist = "SELECT TOP 1 SEQ, OPERATION, ROUTER, ROUTER_SEQ " & _
+              "FROM JOB_HIST_OPS " & _
+              "WHERE JOB = '" & parentJob & "' " & _
+              "AND SUFFIX = '" & parentSuffix & "' " & _
+              "ORDER BY SEQ DESC"
+
+    Set rsHist = conn.Execute(sqlHist)
+
+    If Not rsHist.EOF Then
+      seq = rsHist("SEQ")
+      operation = rsHist("OPERATION")
+      router = rsHist("ROUTER")
+      routerSeq = rsHist("ROUTER_SEQ")
+    Else
+      ' ============================================================
+      ' 3️⃣ FALLBACK TO EMPTY (allows router lookup)
+      ' ============================================================
+      seq = ""
+      operation = ""
+      router = ""
+      routerSeq = ""
+    End If
   End If
-  
-  seq = rsOps("SEQ")
-  operation = rsOps("OPERATION")
-  router = rsOps("ROUTER")
-  routerSeq = rsOps("ROUTER_SEQ")
-  
-  rsOps.Close
-  
-  ' 3F - Join ROUTER_LINE for DESC_RT_LINE and PART_WC_OUTSIDE
+
+  ' ============================================================
+  ' 4️⃣ LOOK UP ROUTER DESCRIPTION (IF WE HAVE ROUTER INFO)
+  ' ============================================================
   routerDesc = ""
-  partWcOutside = ""
-  
-  Dim sqlRouter, rsRouter
-  sqlRouter = "SELECT DESC_RT_LINE, PART_WC_OUTSIDE " & _
-              "FROM ROUTER_LINE " & _
-              "WHERE ROUTER = '" & router & "' " & _
-              "AND LINE_ROUTER = '" & routerSeq & "'"
-  
-  Set rsRouter = conn.Execute(sqlRouter)
-  If Not rsRouter.EOF Then
-    routerDesc = rsRouter("DESC_RT_LINE")
-    partWcOutside = rsRouter("PART_WC_OUTSIDE")
+  partWcOutside = "N"
+
+  If router <> "" And routerSeq <> "" Then
+    sqlRouter = "SELECT DESC_RT_LINE, PART_WC_OUTSIDE " & _
+                "FROM ROUTER_LINE " & _
+                "WHERE ROUTER = '" & router & "' " & _
+                "AND LINE_ROUTER = '" & routerSeq & "'"
+
+    Set rsRouter = conn.Execute(sqlRouter)
+
+    If Not rsRouter.EOF Then
+      routerDesc = rsRouter("DESC_RT_LINE")
+      partWcOutside = rsRouter("PART_WC_OUTSIDE")
+    End If
   End If
-  rsRouter.Close
-  
-  ' 3G - Join JOB_DETAIL for PO if PART_WC_OUTSIDE = 'Y'
+
+  ' ============================================================
+  ' 5️⃣ OUTSIDE PROCESSING (JOB_DETAIL)
+  ' ============================================================
   poNumber = ""
-  isOutside = False
-  
+
   If partWcOutside = "Y" Then
-    isOutside = True
-    Dim sqlDetail, rsDetail
     sqlDetail = "SELECT REFERENCE " & _
                 "FROM JOB_DETAIL " & _
                 "WHERE JOB = '" & parentJob & "' " & _
                 "AND SUFFIX = '" & parentSuffix & "' " & _
                 "AND OPERATION = '" & operation & "'"
-    
+
     Set rsDetail = conn.Execute(sqlDetail)
+
     If Not rsDetail.EOF Then
       poNumber = rsDetail("REFERENCE")
     End If
-    rsDetail.Close
   End If
-  
-  ' Build operation JSON
-  Dim outsideStr
-  If isOutside Then
-    outsideStr = "true"
-  Else
-    outsideStr = "false"
-  End If
-  
-  result = "{" & _
-    """seq"":" & QuoteJSON(seq) & "," & _
-    """operation"":" & QuoteJSON(operation) & "," & _
-    """router_desc"":" & QuoteJSON(routerDesc) & "," & _
-    """po_number"":" & QuoteJSON(poNumber) & "," & _
-    """outside"":" & outsideStr & _
-    "}"
-  
+
+  ' ============================================================
+  ' 6️⃣ BUILD JSON RESULT
+  ' ============================================================
+  result = "{""seq"":""" & seq & """," & _
+           """operation"":""" & operation & """," & _
+           """router"":""" & router & """," & _
+           """routerSeq"":""" & routerSeq & """," & _
+           """description"":""" & routerDesc & """," & _
+           """outsideProcessing"":""" & partWcOutside & """," & _
+           """poNumber"":""" & poNumber & """}"
+
   GetParentOperationJSON = result
 End Function

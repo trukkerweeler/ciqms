@@ -2,97 +2,243 @@
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <title>ProcessCert Query</title>
+    <title>Process Certificate - PROCESSCERT2</title>
     <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 20px;
+        background-color: #f5f5f5;
+      }
+
+      .container {
+        max-width: 1000px;
+        margin: 0 auto;
+        background: white;
+        padding: 20px;
+        border-radius: 8px;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+      }
+
+      h1 {
+        color: #333;
+        border-bottom: 2px solid #0066cc;
+        padding-bottom: 10px;
+      }
+
+      h2 {
+        color: #0066cc;
+        margin-top: 20px;
+      }
+
+      .form-group {
+        margin-bottom: 15px;
+      }
+
+      label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        width: 100%;
+        max-width: 300px;
+        padding: 8px;
+        border: 1px solid #ddd;
+        border-radius: 4px;
+        font-size: 14px;
+      }
+
+      button {
+        background-color: #0066cc;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+        margin-right: 10px;
+        margin-top: 10px;
+      }
+
+      button:hover {
+        background-color: #0052a3;
+      }
+
+      button:disabled {
+        background-color: #ccc;
+        cursor: not-allowed;
+      }
+
+      .status {
+        margin-top: 15px;
+        padding: 10px;
+        border-radius: 4px;
+        display: none;
+      }
+
+      .status.loading {
+        background-color: #e3f2fd;
+        color: #1976d2;
+        border-left: 4px solid #1976d2;
+        display: block;
+      }
+
+      .status.error {
+        background-color: #ffebee;
+        color: #c62828;
+        border-left: 4px solid #c62828;
+        display: block;
+      }
+
+      .status.success {
+        background-color: #e8f5e9;
+        color: #2e7d32;
+        border-left: 4px solid #2e7d32;
+        display: block;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 15px;
+      }
+
+      table thead {
+        background-color: #f0f0f0;
+      }
+
+      table th,
+      table td {
+        border: 1px solid #ddd;
+        padding: 10px;
+        text-align: left;
+      }
+
+      table th {
+        font-weight: bold;
+        background-color: #0066cc;
+        color: white;
+      }
+
+      table tr:nth-child(even) {
+        background-color: #f9f9f9;
+      }
+
+      .checkbox-cell {
+        text-align: center;
+      }
+
+      input[type="checkbox"] {
+        cursor: pointer;
+        width: 18px;
+        height: 18px;
+      }
+
+      #json-debug {
+        margin-top: 30px;
+        padding: 15px;
+        background-color: #1e1e1e;
+        color: #d4d4d4;
+        border-radius: 4px;
+        overflow-x: auto;
+        display: none;
+      }
+
+      #json-debug h3 {
+        color: #4ec9b0;
+        margin-top: 0;
+      }
+
+      #json-output {
+        font-family: "Courier New", monospace;
+        font-size: 12px;
+        white-space: pre-wrap;
+        word-wrap: break-word;
+      }
+
+      .button-group {
+        display: flex;
+        gap: 10px;
+        margin-top: 15px;
+      }
+    </style>
   </head>
+
   <body>
-    <h1>ProcessCert Workorder Lookup</h1>
+    <div class="container">
+      <h1>Process Certificate (PROCESSCERT2)</h1>
 
-    <!-- Step 1: Inventory History Query -->
-    <div class="inventory-section">
-      <h2>Step 1: Select Process Transactions</h2>
-      <form id="inventory-form">
-        <label for="job">Job Number:</label>
-        <input
-          type="text"
-          id="job"
-          name="job"
-          pattern="\d+"
-          value="122166"
-          required
-        />
-
-        <label for="qaUser">QA User (Signature):</label>
-        <input
-          type="text"
-          id="qaUser"
-          name="qaUser"
-          placeholder="Will auto-populate from session"
-        />
-
-        <div
-          style="
-            display: flex;
-            align-items: center;
-            gap: 15px;
-            margin-top: 10px;
-          "
-        >
-          <button type="submit" id="fetch-trans">
-            Fetch Process Transactions
-          </button>
-
-          <label
-            style="
-              display: flex;
-              align-items: center;
-              gap: 8px;
-              font-weight: normal;
-              margin: 0;
-            "
-          >
-            <input type="checkbox" id="show-json-rows" />
-            Show Full JSON for each row
-          </label>
+      <!-- Step 1: Get parent transactions -->
+      <h2>Step 1: Select Parent Transaction</h2>
+      <form id="step1-form">
+        <div class="form-group">
+          <label for="job">Job Number:</label>
+          <input
+            type="text"
+            id="job"
+            name="job"
+            pattern="\d+"
+            value="122166"
+            required
+            placeholder="Enter 6-digit job number"
+          />
         </div>
+
+        <div class="form-group">
+          <label for="qaUser">QA User (Signature):</label>
+          <input
+            type="text"
+            id="qaUser"
+            name="qaUser"
+            placeholder="Will auto-populate from session"
+          />
+        </div>
+
+        <button type="submit" id="fetch-btn">Fetch Parent Transactions</button>
       </form>
 
-      <div
-        id="inventory-working"
-        style="display: none; color: blue; font-weight: bold"
-      >
-        Loading transactions...
+      <div id="status-msg" class="status"></div>
+
+      <!-- Transactions table -->
+      <div id="transactions-section" style="display: none">
+        <h2>Available Transactions</h2>
+        <table id="transactions-table">
+          <thead>
+            <tr>
+              <th class="checkbox-cell">
+                <input type="checkbox" id="select-all" />
+              </th>
+              <th>Date</th>
+              <th>Time</th>
+              <th>Job</th>
+              <th>Suffix</th>
+              <th>Quantity</th>
+              <th>Part</th>
+            </tr>
+          </thead>
+          <tbody id="transactions-body"></tbody>
+        </table>
+
+        <div class="button-group">
+          <button id="gen-cert" type="button">
+            Generate Certificate (JSON)
+          </button>
+          <button id="clear-btn" type="button">Clear</button>
+        </div>
       </div>
 
-      <div id="inventory-results"></div>
-
-      <!-- JSON Debug Output for Each Row -->
-      <div id="json-debug" style="display: none; margin-top: 30px">
-        <h3>Raw JSON Data (Debug View)</h3>
-        <div id="json-rows-container"></div>
-      </div>
-
-      <!-- Testing: Operation Filter Toggle -->
-      <div
-        id="testing-controls"
-        style="
-          display: none;
-          margin-top: 15px;
-          padding: 10px;
-          background-color: #f0f0f0;
-          border-left: 3px solid #999;
-        "
-      >
-        <label style="font-size: 12px; color: #666">
-          <input type="checkbox" id="includeAllOps" />
-          Include all operations (testing mode)
-        </label>
+      <!-- JSON Debug View -->
+      <div id="json-debug">
+        <h3>Certificate Data (JSON Debug View)</h3>
+        <div id="json-output"></div>
       </div>
     </div>
 
-    <!-- Certificate Results -->
-    <div id="cert-results" style="margin-top: 30px"></div>
-
-    <script type="module" src="js/processcert.mjs"></script>
+    <script type="module" src="js/processcert-v2.mjs"></script>
   </body>
 </html>

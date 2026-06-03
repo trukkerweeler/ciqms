@@ -1,24 +1,22 @@
-' processcert-detail.vbs
-' Retrieves detailed job operations and item history for a given JOB/SUFFIX
-' Used to populate process certificate table with operations and transactions
-
+' processcert-detail.vbs (CLEAN VERSION)
 Option Explicit
 
-' Get command-line arguments
 Dim job, suffix
 If WScript.Arguments.Count < 2 Then
-  WScript.Echo "Usage: processcert-detail.vbs <JOB> <SUFFIX>"
+  WScript.Echo "{""error"":""Usage: processcert-detail.vbs <JOB> <SUFFIX>""}"
   WScript.Quit 1
 End If
+
 job = WScript.Arguments(0)
 suffix = WScript.Arguments(1)
 
-' Load environment variables from .env file - matching processcert-coc pattern
-Dim CIQMSPath, envPath, file, fso, dsn, uid, pwd, line, parts, WshShell, DocumentsPath
+' ============================================================
+' Load .env (same as your original)
+' ============================================================
+Dim CIQMSPath, envPath, file, fso, dsn, uid, pwd, line, WshShell, DocumentsPath
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set WshShell = CreateObject("WScript.Shell")
 
-' Detect CIQMS path using same logic as processcert-coc
 DocumentsPath = WshShell.SpecialFolders("MyDocuments")
 CIQMSPath = DocumentsPath & "\CIQMS1"
 If UCase(WshShell.ExpandEnvironmentStrings("%COMPUTERNAME%")) <> "QUALITY-MGR" Then
@@ -27,149 +25,148 @@ End If
 
 envPath = CIQMSPath & "\.env"
 Set file = fso.OpenTextFile(envPath, 1)
-If Err.Number <> 0 Then
-    Err.Clear
-    envPath = CIQMSPath & "\env"
-    Set file = fso.OpenTextFile(envPath, 1)
-End If
-If Err.Number <> 0 Then
-  WScript.Echo "Error opening .env file: " & Err.Description
-  WScript.Quit 1
-End If
 
-dsn = ""
-uid = ""
-pwd = ""
+dsn = "" : uid = "" : pwd = ""
 Do While Not file.AtEndOfStream
   line = Trim(file.ReadLine)
-  If Left(line, 11) = "GLOBAL_DSN=" Then
-    dsn = Mid(line, 12)
-  ElseIf Left(line, 11) = "GLOBAL_UID=" Then
-    uid = Mid(line, 12)
-  ElseIf Left(line, 11) = "GLOBAL_PWD=" Then
-    pwd = Mid(line, 12)
-  End If
+  If Left(line, 11) = "GLOBAL_DSN=" Then dsn = Mid(line, 12)
+  If Left(line, 11) = "GLOBAL_UID=" Then uid = Mid(line, 12)
+  If Left(line, 11) = "GLOBAL_PWD=" Then pwd = Mid(line, 12)
 Loop
 file.Close
 
 If dsn = "" Or uid = "" Or pwd = "" Then
-  WScript.Echo "Error: DSN, UID, or PWD not found in .env file."
+  WScript.Echo "{""error"":""Missing DSN/UID/PWD in .env""}"
   WScript.Quit 1
 End If
 
-' Connect to database
-Dim conn, rs, sql, jsonOutput
+' ============================================================
+' Connect to DB
+' ============================================================
+Dim conn
 Set conn = CreateObject("ADODB.Connection")
-Set rs = CreateObject("ADODB.Recordset")
-
-On Error Resume Next
 conn.Open "DSN=" & dsn & ";UID=" & uid & ";PWD=" & pwd
-If Err.Number <> 0 Then
-  WScript.Echo "Error: Connection failed - " & Err.Description
-  WScript.Quit 1
-End If
-On Error GoTo 0
 
-' Query job operations with UNION to include historical records
-sql = "SELECT " & _
-  "jo.JOB, " & _
-  "jo.SUFFIX, " & _
-  "jo.SEQ AS operationSeq, " & _
-  "jo.OPERATION, " & _
-  "jo.DESCRIPTION AS operationDescription, " & _
-  "jo.ROUTER, " & _
-  "jo.ROUTER_SEQ, " & _
-  "jo.UNITS_OPEN AS unitsOpen, " & _
-  "jo.UNITS_COMPLETE AS unitsComplete, " & _
-  "jo.UNITS_SCRAP AS unitsScrap, " & _
-  "jo.DATE_COMPLETED AS operationCompletedDate, " & _
-  "ih.SERIAL_NUMBER AS serialNumber, " & _
-  "ih.LOT, " & _
-  "ih.HEAT, " & _
-  "ih.CODE_TRANSACTION AS codeTransaction, " & _
-  "ih.QUANTITY AS quantity, " & _
-  "ih.DATE_HISTORY AS dateHistory, " & _
-  "ih.TIME_ITEM_HISTORY AS timeItemHistory " & _
-  "FROM JOB_OPERATIONS jo " & _
-  "LEFT JOIN ITEM_HISTORY ih ON ih.JOB = jo.JOB AND ih.SUFFIX = jo.SUFFIX AND ih.SEQUENCE = jo.SEQ " & _
-  "WHERE jo.JOB = " & job & " AND jo.SUFFIX = '" & suffix & "' AND jo.SEQ < 990000 " & _
-  "UNION ALL " & _
-  "SELECT " & _
-  "jh.JOB, " & _
-  "jh.SUFFIX, " & _
-  "jh.SEQ AS operationSeq, " & _
-  "'' AS OPERATION, " & _
-  "jh.DESCRIPTION AS operationDescription, " & _
-  "'' AS ROUTER, " & _
-  "0 AS ROUTER_SEQ, " & _
-  "0 AS unitsOpen, " & _
-  "0 AS unitsComplete, " & _
-  "0 AS unitsScrap, " & _
-  "jh.CHARGE_DATE AS operationCompletedDate, " & _
-  "jh.REFERENCE AS serialNumber, " & _
-  "'' AS LOT, " & _
-  "'' AS HEAT, " & _
-  "'' AS codeTransaction, " & _
-  "0 AS quantity, " & _
-  "'' AS dateHistory, " & _
-  "'' AS timeItemHistory " & _
-  "FROM JOB_HIST_DTL jh " & _
-  "WHERE jh.JOB = " & job & " AND jh.SUFFIX = '" & suffix & "' AND jh.SEQ < 990000 " & _
-  "ORDER BY operationSeq, dateHistory, timeItemHistory"
+' ============================================================
+' 1️⃣ QUERY ACTIVE OPERATIONS (JOB_OPERATIONS)
+' ============================================================
+Dim sqlOps, rsOps
+sqlOps = "SELECT SEQ, OPERATION, DESCRIPTION, ROUTER, ROUTER_SEQ, " & _
+         "UNITS_OPEN, UNITS_COMPLETE, UNITS_SCRAP, DATE_COMPLETED " & _
+         "FROM JOB_OPERATIONS " & _
+         "WHERE JOB = " & job & " AND SUFFIX = '" & suffix & "' " & _
+         "AND SEQ < 990000 " & _
+         "ORDER BY SEQ"
 
-On Error Resume Next
-Set rs = conn.Execute(sql)
-If Err.Number <> 0 Then
-  WScript.Echo "{""error"":""" & EscapeJSON(Err.Description) & """}"
-  conn.Close
-  WScript.Quit 1
-End If
-On Error GoTo 0
+Set rsOps = conn.Execute(sqlOps)
 
-' Build JSON array of results
-Dim result, index, rowCount
-result = ""
-index = 0
+' ============================================================
+' 2️⃣ QUERY ARCHIVED OPERATIONS (JOB_HIST_OPS)
+' ============================================================
+Dim sqlHist, rsHist
+sqlHist = "SELECT SEQ, OPERATION, DESCRIPTION, ROUTER, ROUTER_SEQ, " & _
+          "UNITS_OPEN, UNITS_COMPLETE, UNITS_SCRAP, DATE_COMPLETED " & _
+          "FROM JOB_HIST_OPS " & _
+          "WHERE JOB = " & job & " AND SUFFIX = '" & suffix & "' " & _
+          "ORDER BY SEQ"
 
-While Not rs.EOF
-  If index > 0 Then result = result & ","
-  
-  result = result & "{" & _
-    """job"":" & rs("job") & "," & _
-    """suffix"":" & QuoteJSON(NullToStr(rs("suffix"))) & "," & _
-    """operationSeq"":" & NullToZero(rs("operationSeq")) & "," & _
-    """operation"":" & QuoteJSON(NullToStr(rs("operation"))) & "," & _
-    """operationDescription"":" & QuoteJSON(NullToStr(rs("operationDescription"))) & "," & _
-    """router"":" & QuoteJSON(NullToStr(rs("router"))) & "," & _
-    """routerSeq"":" & NullToZero(rs("router_seq")) & "," & _
-    """unitsOpen"":" & NullToZero(rs("unitsOpen")) & "," & _
-    """unitsComplete"":" & NullToZero(rs("unitsComplete")) & "," & _
-    """unitsScrap"":" & NullToZero(rs("unitsScrap")) & "," & _
-    """operationCompletedDate"":" & QuoteJSON(NullToStr(rs("operationCompletedDate"))) & "," & _
-    """serialNumber"":" & QuoteJSON(NullToStr(rs("serialNumber"))) & "," & _
-    """lot"":" & QuoteJSON(NullToStr(rs("lot"))) & "," & _
-    """heat"":" & QuoteJSON(NullToStr(rs("heat"))) & "," & _
-    """codeTransaction"":" & QuoteJSON(NullToStr(rs("codeTransaction"))) & "," & _
-    """quantity"":" & NullToZero(rs("quantity")) & "," & _
-    """dateHistory"":" & QuoteJSON(NullToStr(rs("dateHistory"))) & "," & _
-    """timeItemHistory"":" & QuoteJSON(NullToStr(rs("timeItemHistory"))) & _
-    "}"
-  
-  index = index + 1
-  rs.MoveNext
-Wend
+Set rsHist = conn.Execute(sqlHist)
 
-' Format final JSON
+' ============================================================
+' 3️⃣ QUERY ITEM HISTORY (J52, J55, J50, J51, etc.)
+' ============================================================
+Dim sqlIH, rsIH
+sqlIH = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, CODE_TRANSACTION, " & _
+        "QUANTITY, SERIAL_NUMBER, LOT, HEAT, SEQUENCE " & _
+        "FROM ITEM_HISTORY " & _
+        "WHERE JOB = " & job & " AND SUFFIX = '" & suffix & "' " & _
+        "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
+
+Set rsIH = conn.Execute(sqlIH)
+
+' ============================================================
+' BUILD JSON
+' ============================================================
+Dim jsonOps, jsonIH
+jsonOps = BuildOpsJSON(rsOps, rsHist)
+jsonIH = BuildItemHistoryJSON(rsIH)
+
 Dim finalJson
-finalJson = "{""success"":true,""rowCount"":" & index & ",""rows"":[" & result & "]}"
+finalJson = "{""success"":true,""operations"":" & jsonOps & ",""itemHistory"":" & jsonIH & "}"
 
-rs.Close
+WScript.Echo finalJson
 conn.Close
 
-' Output result as JSON
-WScript.Echo finalJson
+' ============================================================
+' HELPERS
+' ============================================================
 
-' Helper functions
+Function BuildOpsJSON(rsOps, rsHist)
+  Dim arr, first
+  arr = "[" : first = True
+
+  ' Active ops
+  Do While Not rsOps.EOF
+    If Not first Then arr = arr & ","
+    first = False
+    arr = arr & OpRowToJSON(rsOps)
+    rsOps.MoveNext
+  Loop
+
+  ' Archived ops
+  Do While Not rsHist.EOF
+    If Not first Then arr = arr & ","
+    first = False
+    arr = arr & OpRowToJSON(rsHist)
+    rsHist.MoveNext
+  Loop
+
+  arr = arr & "]"
+  BuildOpsJSON = arr
+End Function
+
+Function OpRowToJSON(rs)
+  OpRowToJSON = "{" & _
+    """seq"":" & NullToZero(rs("SEQ")) & "," & _
+    """operation"":" & QuoteJSON(NullToStr(rs("OPERATION"))) & "," & _
+    """description"":" & QuoteJSON(NullToStr(rs("DESCRIPTION"))) & "," & _
+    """router"":" & QuoteJSON(NullToStr(rs("ROUTER"))) & "," & _
+    """routerSeq"":" & NullToZero(rs("ROUTER_SEQ")) & "," & _
+    """unitsOpen"":" & NullToZero(rs("UNITS_OPEN")) & "," & _
+    """unitsComplete"":" & NullToZero(rs("UNITS_COMPLETE")) & "," & _
+    """unitsScrap"":" & NullToZero(rs("UNITS_SCRAP")) & "," & _
+    """dateCompleted"":" & QuoteJSON(NullToStr(rs("DATE_COMPLETED"))) & _
+    "}"
+End Function
+
+Function BuildItemHistoryJSON(rs)
+  Dim arr, first
+  arr = "[" : first = True
+
+  Do While Not rs.EOF
+    If Not first Then arr = arr & ","
+    first = False
+    arr = arr & IHRowToJSON(rs)
+    rs.MoveNext
+  Loop
+
+  arr = arr & "]"
+  BuildItemHistoryJSON = arr
+End Function
+
+Function IHRowToJSON(rs)
+  IHRowToJSON = "{" & _
+    """dateHistory"":" & QuoteJSON(NullToStr(rs("DATE_HISTORY"))) & "," & _
+    """timeItemHistory"":" & QuoteJSON(NullToStr(rs("TIME_ITEM_HISTORY"))) & "," & _
+    """codeTransaction"":" & QuoteJSON(NullToStr(rs("CODE_TRANSACTION"))) & "," & _
+    """quantity"":" & NullToZero(rs("QUANTITY")) & "," & _
+    """serialNumber"":" & QuoteJSON(NullToStr(rs("SERIAL_NUMBER"))) & "," & _
+    """lot"":" & QuoteJSON(NullToStr(rs("LOT"))) & "," & _
+    """heat"":" & QuoteJSON(NullToStr(rs("HEAT"))) & "," & _
+    """sequence"":" & NullToZero(rs("SEQUENCE")) & _
+    "}"
+End Function
+
 Function QuoteJSON(str)
   If IsNull(str) Or str = "" Then
     QuoteJSON = """"""
@@ -182,25 +179,12 @@ Function NullToZero(val)
   If IsNull(val) Or val = "" Then
     NullToZero = "0"
   Else
-    On Error Resume Next
-    Dim numVal
-    numVal = CLng(val)
-    If Err.Number <> 0 Then
-      Err.Clear
-      NullToZero = "0"
-    Else
-      NullToZero = CStr(numVal)
-    End If
-    On Error GoTo 0
+    NullToZero = CStr(val)
   End If
 End Function
 
 Function NullToStr(val)
-  If IsNull(val) Then
-    NullToStr = ""
-  Else
-    NullToStr = CStr(val)
-  End If
+  If IsNull(val) Then NullToStr = "" Else NullToStr = CStr(val)
 End Function
 
 Function EscapeJSON(str)
@@ -208,9 +192,5 @@ Function EscapeJSON(str)
   result = str
   result = Replace(result, "\", "\\")
   result = Replace(result, """", "\""")
-  result = Replace(result, vbCrLf, "\n")
-  result = Replace(result, vbCr, "\n")
-  result = Replace(result, vbLf, "\n")
-  result = Replace(result, vbTab, "\t")
   EscapeJSON = result
 End Function
