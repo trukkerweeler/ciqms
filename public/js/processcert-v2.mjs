@@ -115,12 +115,12 @@ step1Form.addEventListener("submit", async (e) => {
     // Each result has parentJ52 with the parent transaction details
     if (data.certificateData && data.certificateData.length > 0) {
       parentJ52Transactions = data.certificateData.map((result) => ({
-        DATE_HISTORY: result.parentJ52.dateTime.split(" ")[0],
-        TIME_ITEM_HISTORY: result.parentJ52.dateTime.split(" ")[1],
-        QUANTITY: result.parentJ52.quantity,
-        JOB: result.parentJ52.job,
-        SUFFIX: result.parentJ52.suffix,
-        PART: result.parentJ52.part,
+        DATE_HISTORY: result.parentJ52.dateHistory || "",
+        TIME_ITEM_HISTORY: result.parentJ52.timeItemHistory || "",
+        QUANTITY: result.parentJ52.quantity || 0,
+        JOB: result.parentJ52.job || "",
+        SUFFIX: result.parentJ52.suffix || "",
+        PART: result.parentJ52.part || "",
       }));
     } else {
       showStatus("No parent transactions found", "error");

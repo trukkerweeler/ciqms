@@ -331,35 +331,31 @@ End Function
 '   DATE_HISTORY = parentDateHist, TIME_ITEM_HISTORY = parentTimeHist
 ' ============================================================================
 Function GetChildJ52JSON(conn, childJob, childSuffix, dateHist, timeHist)
-  Dim sqlChild, rsChild, result
-  
-  sqlChild = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, SERIAL_NUMBER " & _
-             "FROM ITEM_HISTORY " & _
-             "WHERE JOB = '" & childJob & "' " & _
-             "AND SUFFIX = '" & childSuffix & "' " & _
-             "AND CODE_TRANSACTION = 'J52' " & _
-             "AND DATE_HISTORY = '" & dateHist & "' " & _
-             "AND TIME_ITEM_HISTORY = '" & timeHist & "'"
-  
-  Set rsChild = conn.Execute(sqlChild)
-  
-  If rsChild.EOF Then
-    GetChildJ52JSON = "null"
-    rsChild.Close
+  Dim sql, rs, result
+
+  sql = "SELECT DATE_HISTORY, TIME_ITEM_HISTORY, PART, QUANTITY, JOB, SUFFIX, SERIAL_NUMBER " & _
+        "FROM ITEM_HISTORY " & _
+        "WHERE JOB = '" & childJob & "' " & _
+        "AND SUFFIX = '" & childSuffix & "' " & _
+        "AND CODE_TRANSACTION = 'J52' " & _
+        "AND DATE_HISTORY = '" & dateHist & "' " & _
+        "AND TIME_ITEM_HISTORY = '" & timeHist & "'"
+
+  Set rs = conn.Execute(sql)
+
+  If rs.EOF Then
+    GetChildJ52JSON = "{}"
     Exit Function
   End If
-  
-  result = "{" & _
-    """dateHistory"":" & QuoteJSON(rsChild("DATE_HISTORY")) & "," & _
-    """timeItemHistory"":" & QuoteJSON(rsChild("TIME_ITEM_HISTORY")) & "," & _
-    """part"":" & QuoteJSON(rsChild("PART")) & "," & _
-    """quantity"":" & rsChild("QUANTITY") & "," & _
-    """job"":" & QuoteJSON(rsChild("JOB")) & "," & _
-    """suffix"":" & QuoteJSON(rsChild("SUFFIX")) & "," & _
-    """serialNumber"":" & QuoteJSON(rsChild("SERIAL_NUMBER")) & _
-    "}"
-  
-  rsChild.Close
+
+  result = "{""dateHistory"":""" & rs("DATE_HISTORY") & """," & _
+           """timeItemHistory"":""" & rs("TIME_ITEM_HISTORY") & """," & _
+           """part"":""" & rs("PART") & """," & _
+           """quantity"":" & rs("QUANTITY") & "," & _
+           """job"":""" & rs("JOB") & """," & _
+           """suffix"":""" & rs("SUFFIX") & """," & _
+           """serialNumber"":""" & rs("SERIAL_NUMBER") & """}"
+
   GetChildJ52JSON = result
 End Function
 
@@ -368,28 +364,24 @@ End Function
 ' Query JOB_HEADER for PART, PART_DESCRIPTION, ROUTER
 ' ============================================================================
 Function GetChildHeaderJSON(conn, childJob, childSuffix)
-  Dim sqlHeader, rsHeader, result
-  
-  sqlHeader = "SELECT PART, PART_DESCRIPTION, ROUTER " & _
-              "FROM JOB_HEADER " & _
-              "WHERE JOB = '" & childJob & "' " & _
-              "AND SUFFIX = '" & childSuffix & "'"
-  
-  Set rsHeader = conn.Execute(sqlHeader)
-  
-  If rsHeader.EOF Then
-    GetChildHeaderJSON = "null"
-    rsHeader.Close
+  Dim sql, rs, result
+
+  sql = "SELECT PART, PART_DESCRIPTION, ROUTER " & _
+        "FROM JOB_HEADER " & _
+        "WHERE JOB = '" & childJob & "' " & _
+        "AND SUFFIX = '" & childSuffix & "'"
+
+  Set rs = conn.Execute(sql)
+
+  If rs.EOF Then
+    GetChildHeaderJSON = "{}"
     Exit Function
   End If
-  
-  result = "{" & _
-    """part"":" & QuoteJSON(rsHeader("PART")) & "," & _
-    """description"":" & QuoteJSON(rsHeader("PART_DESCRIPTION")) & "," & _
-    """router"":" & QuoteJSON(rsHeader("ROUTER")) & _
-    "}"
-  
-  rsHeader.Close
+
+  result = "{""part"":""" & rs("PART") & """," & _
+           """description"":""" & rs("PART_DESCRIPTION") & """," & _
+           """router"":""" & rs("ROUTER") & """}"
+
   GetChildHeaderJSON = result
 End Function
 
@@ -398,33 +390,34 @@ End Function
 ' Query ITEM_HISTORY for J55, J50, J51 rows
 ' ============================================================================
 Function GetMaterialPullsJSON(conn, childJob, childSuffix)
-  Dim sql, rsM, result, count
-  
-  sql = "SELECT PART, QUANTITY, CODE_TRANSACTION, DATE_HISTORY, SERIAL_NUMBER " & _
+  Dim sql, rs, result, first
+
+  sql = "SELECT PART, QUANTITY, CODE_TRANSACTION, DATE_HISTORY, TIME_ITEM_HISTORY, SERIAL_NUMBER " & _
         "FROM ITEM_HISTORY " & _
         "WHERE JOB = '" & childJob & "' " & _
         "AND SUFFIX = '" & childSuffix & "' " & _
         "AND CODE_TRANSACTION IN ('J55','J50','J51') " & _
-        "ORDER BY CODE_TRANSACTION, DATE_HISTORY"
-  
-  Set rsM = conn.Execute(sql)
-  result = "["
-  count = 0
-  
-  Do While Not rsM.EOF
-    If count > 0 Then result = result & ","
+        "ORDER BY DATE_HISTORY, TIME_ITEM_HISTORY"
+
+  Set rs = conn.Execute(sql)
+
+  result = "[" : first = True
+
+  Do While Not rs.EOF
+    If Not first Then result = result & ","
+    first = False
+
     result = result & "{" & _
-      """part"":" & QuoteJSON(rsM("PART")) & "," & _
-      """quantity"":" & rsM("QUANTITY") & "," & _
-      """codeTransaction"":" & QuoteJSON(rsM("CODE_TRANSACTION")) & "," & _
-      """dateHistory"":" & QuoteJSON(rsM("DATE_HISTORY")) & "," & _
-      """serialNumber"":" & QuoteJSON(Trim(Replace(rsM("SERIAL_NUMBER"), Chr(0), ""))) & _
-      "}"
-    count = count + 1
-    rsM.MoveNext
+      """part"":""" & rs("PART") & """," & _
+      """quantity"":" & rs("QUANTITY") & "," & _
+      """codeTransaction"":""" & rs("CODE_TRANSACTION") & """," & _
+      """dateHistory"":""" & rs("DATE_HISTORY") & """," & _
+      """timeItemHistory"":""" & rs("TIME_ITEM_HISTORY") & """," & _
+      """serialNumber"":""" & rs("SERIAL_NUMBER") & """}"
+
+    rs.MoveNext
   Loop
-  
-  rsM.Close
+
   result = result & "]"
   GetMaterialPullsJSON = result
 End Function
@@ -549,4 +542,112 @@ Function GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
            """poNumber"":""" & poNumber & """}"
 
   GetParentOperationJSON = result
+End Function
+
+' ============================================================
+' GET CHILD OPERATION JSON (with 6-step fallback logic)
+' Matches parent operation for a child job with timezone/date cutoff
+' ============================================================
+Function GetChildOperationJSON(conn, childJob, childSuffix, cutoffDate)
+  Dim sqlOps, rsOps, sqlHist, rsHist
+  Dim seq, operation, router, routerSeq
+  Dim sqlRouter, rsRouter, routerDesc, partWcOutside
+  Dim sqlDetail, rsDetail, poNumber
+
+  ' ============================================================
+  ' 1️⃣ ACTIVE OPERATIONS
+  ' ============================================================
+  sqlOps = "SELECT TOP 1 SEQ, OPERATION, ROUTER, ROUTER_SEQ, DESCRIPTION, " & _
+           "UNITS_OPEN, UNITS_COMPLETE, UNITS_SCRAP, DATE_COMPLETED " & _
+           "FROM JOB_OPERATIONS " & _
+           "WHERE JOB = '" & childJob & "' " & _
+           "AND SUFFIX = '" & childSuffix & "' " & _
+           "AND SEQ < 990000 " & _
+           "AND (DATE_COMPLETED IS NULL OR DATE_COMPLETED <= '" & cutoffDate & "') " & _
+           "ORDER BY DATE_COMPLETED DESC, SEQ DESC"
+
+  Set rsOps = conn.Execute(sqlOps)
+
+  If Not rsOps.EOF Then
+    seq = rsOps("SEQ")
+    operation = rsOps("OPERATION")
+    router = rsOps("ROUTER")
+    routerSeq = rsOps("ROUTER_SEQ")
+  Else
+    ' ============================================================
+    ' 2️⃣ ARCHIVED OPERATIONS
+    ' ============================================================
+    sqlHist = "SELECT TOP 1 SEQ, OPERATION, ROUTER, ROUTER_SEQ, DESCRIPTION, " & _
+              "UNITS_OPEN, UNITS_COMPLETE, UNITS_SCRAP, DATE_COMPLETED " & _
+              "FROM JOB_HIST_OPS " & _
+              "WHERE JOB = '" & childJob & "' " & _
+              "AND SUFFIX = '" & childSuffix & "' " & _
+              "ORDER BY SEQ DESC"
+
+    Set rsHist = conn.Execute(sqlHist)
+
+    If Not rsHist.EOF Then
+      seq = rsHist("SEQ")
+      operation = rsHist("OPERATION")
+      router = rsHist("ROUTER")
+      routerSeq = rsHist("ROUTER_SEQ")
+    Else
+      ' ============================================================
+      ' 3️⃣ ROUTER FALLBACK
+      ' ============================================================
+      seq = ""
+      operation = ""
+      router = ""
+      routerSeq = ""
+    End If
+  End If
+
+  ' ============================================================
+  ' 4️⃣ ROUTER DESCRIPTION
+  ' ============================================================
+  routerDesc = ""
+  partWcOutside = "N"
+
+  If router <> "" And routerSeq <> "" Then
+    sqlRouter = "SELECT DESC_RT_LINE, PART_WC_OUTSIDE " & _
+                "FROM ROUTER_LINE " & _
+                "WHERE ROUTER = '" & router & "' " & _
+                "AND LINE_ROUTER = '" & routerSeq & "'"
+
+    Set rsRouter = conn.Execute(sqlRouter)
+
+    If Not rsRouter.EOF Then
+      routerDesc = rsRouter("DESC_RT_LINE")
+      partWcOutside = rsRouter("PART_WC_OUTSIDE")
+    End If
+  End If
+
+  ' ============================================================
+  ' 5️⃣ OUTSIDE PROCESSING PO LOOKUP
+  ' ============================================================
+  poNumber = ""
+
+  If partWcOutside = "Y" Then
+    sqlDetail = "SELECT REFERENCE FROM JOB_DETAIL " & _
+                "WHERE JOB = '" & childJob & "' " & _
+                "AND SUFFIX = '" & childSuffix & "' " & _
+                "AND OPERATION = '" & operation & "'"
+
+    Set rsDetail = conn.Execute(sqlDetail)
+
+    If Not rsDetail.EOF Then
+      poNumber = rsDetail("REFERENCE")
+    End If
+  End If
+
+  ' ============================================================
+  ' 6️⃣ BUILD JSON
+  ' ============================================================
+  GetChildOperationJSON = "{""seq"":""" & seq & """," & _
+                          """operation"":""" & operation & """," & _
+                          """router"":""" & router & """," & _
+                          """routerSeq"":""" & routerSeq & """," & _
+                          """description"":""" & routerDesc & """," & _
+                          """outsideProcessing"":""" & partWcOutside & """," & _
+                          """poNumber"":""" & poNumber & """}"
 End Function

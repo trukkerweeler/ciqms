@@ -69,6 +69,10 @@ router.get("/processcert-detail", (req, res) => {
           .status(500)
           .json({ error: "VBS execution failed", details: stderr });
       try {
+        console.log("RAW VBS OUTPUT >>>");
+console.log(stdout);
+console.log("<<< END RAW VBS OUTPUT");
+
         res.json(JSON.parse(stdout));
       } catch (e) {
         res.status(500).json({
@@ -113,13 +117,22 @@ function callVBS(vbsPath, args) {
           reject(new Error(`VBS execution failed: ${stderr}`));
         } else {
           try {
-            resolve(JSON.parse(stdout));
-          } catch (e) {
-            console.error(
-              `Failed to parse VBS output from ${path.basename(vbsPath)}`,
-            );
-            reject(new Error(`Failed to parse VBS JSON output`));
-          }
+  // console.log("RAW VBS OUTPUT >>>");
+  // console.log(stdout);
+  // console.log("<<< END RAW VBS OUTPUT");
+
+  resolve(JSON.parse(stdout));
+} catch (e) {
+  console.error(
+    `Failed to parse VBS output from ${path.basename(vbsPath)}`
+  );
+  console.error("RAW VBS OUTPUT THAT FAILED >>>");
+  console.error(stdout);
+  console.error("<<< END RAW VBS OUTPUT");
+
+  reject(new Error(`Failed to parse VBS JSON output`));
+}
+
         }
       },
     );
@@ -154,50 +167,55 @@ router.get("/build-cert", async (req, res) => {
     );
 
     // STEP 2 — Filter by selectedIndices
-    let selectedParents = [];
-    if (selectedIndices) {
-      const indices = selectedIndices
-        .split(",")
-        .map((i) => parseInt(i, 10))
-        .filter((i) => !isNaN(i));
-      selectedParents = parentTransactions.filter((_, idx) =>
-        indices.includes(idx),
-      );
-    } else {
-      selectedParents = parentTransactions;
-    }
+let selectedParents = [];
 
-    console.log(
-      `[build-cert] Processing ${selectedParents.length} selected parent(s)`,
-    );
+if (typeof selectedIndices === "string" && selectedIndices.trim() !== "") {
+  const indices = selectedIndices
+    .split(",")
+    .map((i) => parseInt(i, 10))
+    .filter((i) => !isNaN(i));
 
-    // STEP 3 — For each selected parent, call processcert-detail.vbs
-    const certificateData = [];
-    const detailVbsPath = path.join(__dirname, "processcert-detail.vbs");
+  selectedParents = parentTransactions.filter((_, idx) =>
+    indices.includes(idx)
+  );
+} else {
+  selectedParents = parentTransactions;
+}
 
-    for (const parent of selectedParents) {
-      const { JOB, SUFFIX } = parent;
-      console.log(`[build-cert] Getting hierarchy for ${JOB}-${SUFFIX}`);
+console.log(
+  `[build-cert] Processing ${selectedParents.length} selected parent(s)`
+);
 
-      try {
-        const detailData = await callVBS(detailVbsPath, [JOB, SUFFIX]);
+// STEP 3 — For each selected parent, call processcert-detail.vbs
+const certificateData = [];
+const detailVbsPath = path.join(__dirname, "processcert-detail.vbs");
 
-        certificateData.push({
-          parentJ52: parent,
-          hierarchy: detailData.hierarchy || {},
-        });
-      } catch (err) {
-        console.error(
-          `[build-cert] Error getting detail for ${JOB}-${SUFFIX}:`,
-          err.message,
-        );
-        // Continue with other parents instead of failing completely
-        certificateData.push({
-          parentJ52: parent,
-          error: err.message,
-        });
+for (const parent of selectedParents) {
+  const { job, suffix } = parent;
+  console.log(`[build-cert] Getting hierarchy for ${job}-${suffix}`);
+
+  try {
+    const detailData = await callVBS(detailVbsPath, [job, suffix]);
+
+    certificateData.push({
+      parentJ52: parent,
+      hierarchy: {
+        operations: detailData.operations || [],
+        itemHistory: detailData.itemHistory || []
       }
-    }
+    });
+  } catch (err) {
+    console.error(
+      `[build-cert] Error getting detail for ${job}-${suffix}:`,
+      err.message
+    );
+    certificateData.push({
+      parentJ52: parent,
+      error: err.message
+    });
+  }
+}
+
 
     res.json({
       success: true,
