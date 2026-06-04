@@ -1,5 +1,5 @@
-// processcert-v2.mjs - Clean implementation for PROCESSCERT2 algorithm
-// Handles UI flow: Fetch parent J52 → User selection → Generate cert → Show JSON
+// processcert.mjs - Clean implementation for PROCESSCERT2 algorithm
+// Handles UI flow: Fetch parent J52 → User selection → Generate cert → Show cert
 
 const step1Form = document.getElementById("step1-form");
 const fetchBtn = document.getElementById("fetch-btn");
@@ -10,8 +10,11 @@ const transactionsBody = document.getElementById("transactions-body");
 const selectAllCheckbox = document.getElementById("select-all");
 const genCertBtn = document.getElementById("gen-cert");
 const clearBtn = document.getElementById("clear-btn");
+const printBtn = document.getElementById("print-btn");
 const jsonDebugDiv = document.getElementById("json-debug");
 const jsonOutput = document.getElementById("json-output");
+const jsonToggleSection = document.getElementById("json-toggle-section");
+const jsonToggleBtn = document.getElementById("json-toggle-btn");
 
 let parentJ52Transactions = [];
 let lastResponse = null; // Store full response for debugging
@@ -33,9 +36,15 @@ function clearAll() {
   transactionsBody.innerHTML = "";
   transactionsSection.style.display = "none";
   jsonDebugDiv.style.display = "none";
+  jsonToggleSection.style.display = "none";
+  jsonToggleBtn.textContent = "Show JSON";
   statusMsg.className = "status";
   statusMsg.textContent = "";
   parentJ52Transactions = [];
+  const certOutput = document.getElementById("cert-output");
+  certOutput.innerHTML = "";
+  certOutput.style.display = "none";
+  printBtn.style.display = "none";
 }
 
 /**
@@ -45,6 +54,188 @@ function formatDateTime(date, time) {
   const dateStr = date ? String(date).substring(0, 10) : "";
   const timeStr = time ? String(time).substring(0, 8) : "";
   return `${dateStr} ${timeStr}`.trim();
+}
+
+/**
+ * Normalize a fixed-width DB string (collapse internal spaces, trim)
+ */
+function normalizePart(str) {
+  return (str || "").replace(/\s+/g, " ").trim();
+}
+
+/**
+ * Get the part number (router) from a child job's operations
+ */
+function getChildPart(childEntry) {
+  const ops = childEntry.hierarchy?.operations || [];
+  for (const op of ops) {
+    const router = (op.router || "").trim();
+    if (router) return normalizePart(router);
+  }
+  return `${childEntry.childJob.job}-${childEntry.childJob.suffix}`;
+}
+
+/**
+ * Get a material trace ID from itemHistory.
+ * Looks for J55 transactions that are raw material (not job references, not PO: prefixed).
+ */
+function getTraceId(itemHistory) {
+  for (const item of itemHistory || []) {
+    const code = (item.codeTransaction || "").trim();
+    if (code !== "J55") continue;
+    const serial = (item.serialNumber || "").trim();
+    if (serial && !serial.match(/^\d{6}-\d{3}/) && !serial.startsWith("PO:")) {
+      return serial;
+    }
+    const lot = (item.lot || "").trim();
+    if (lot) return lot;
+  }
+  return "";
+}
+
+/**
+ * Render the Certificate of Processing into #cert-output.
+ */
+function renderCert(certData, qaUser) {
+  const certOutput = document.getElementById("cert-output");
+  certOutput.innerHTML = "";
+
+  const today = new Date().toLocaleDateString("en-US", {
+    month: "2-digit",
+    day: "2-digit",
+    year: "numeric",
+  });
+
+  let hasContent = false;
+
+  for (const entry of certData.certificateData) {
+    if (entry.error) continue;
+
+    const woNumber = `${entry.parentJ52.job}-${entry.parentJ52.suffix}`;
+    const topAssembly = normalizePart(entry.parentJ52.part);
+
+    // Collect process sections: one per unique outside-processing operation description
+    const processSections = new Map(); // key -> { processName, poNumber, rows[] }
+
+    // Each child job defines the process it was sent out for (outsideProcessing ops).
+    // Group children by their shared process description; each child = one row.
+    let itemNum = 1;
+
+    for (const childEntry of entry.childJobs || []) {
+      for (const op of childEntry.hierarchy?.operations || []) {
+        if (!op.outsideProcessing) continue;
+        const key = (op.description || op.operation || "").trim();
+        if (!processSections.has(key)) {
+          const processName = (
+            op.subOpDescription ||
+            op.description ||
+            op.operation ||
+            ""
+          ).trim();
+          processSections.set(key, {
+            processName,
+            poNumber: op.poNumber || "",
+            rows: [],
+          });
+        }
+        processSections.get(key).rows.push({
+          item: itemNum++,
+          part: getChildPart(childEntry),
+          trace: getTraceId(childEntry.hierarchy?.itemHistory || []),
+          qty: Math.abs(childEntry.childJob.quantity || 0),
+          workOrder: `${childEntry.childJob.job}-${childEntry.childJob.suffix}`,
+        });
+      }
+    }
+
+    if (processSections.size === 0) continue;
+    hasContent = true;
+
+    for (const [, section] of processSections) {
+      const processLabel = section.poNumber
+        ? `${section.processName} \u2014 PO: ${section.poNumber}`
+        : section.processName;
+
+      const rowsHtml = section.rows
+        .map(
+          (row) =>
+            `<tr>
+              <td class="cert-td-center">${row.item}</td>
+              <td>${row.part}</td>
+              <td>${row.trace}</td>
+              <td class="cert-td-center">${row.qty}</td>
+              <td>${row.workOrder}</td>
+            </tr>`,
+        )
+        .join("");
+
+      const doc = document.createElement("div");
+      doc.className = "cert-document";
+      doc.innerHTML = `
+        <div class="cert-header">
+          <div class="cert-logo-area">
+            <img src="/images/ci-logo.png" alt="CI" class="cert-logo">
+          </div>
+          <div class="cert-address-area">
+            2990 South Main Street, Salt Lake City, Utah 84115<br>
+            Telephone: (801) 466-3334 &bull; Fax: (801) 466-1441
+          </div>
+        </div>
+
+        <div class="cert-title-box"><strong>Certification of Processing</strong></div>
+
+        <table class="cert-info-table">
+          <tr>
+            <td class="cert-lbl">Work Order Number:</td>
+            <td class="cert-val">${woNumber}</td>
+            <td class="cert-lbl">Top Assembly Number:</td>
+            <td class="cert-val">${topAssembly}</td>
+          </tr>
+          <tr>
+            <td class="cert-lbl">Part Number/Description:</td>
+            <td class="cert-val" colspan="3">${topAssembly}</td>
+          </tr>
+        </table>
+
+        <div class="cert-process-header">Process: ${processLabel}</div>
+        <table class="cert-data-table">
+          <thead>
+            <tr>
+              <th>ITEM</th>
+              <th>PART NUMBER / DESCRIPTION</th>
+              <th>TRACE ID</th>
+              <th>QUANTITY</th>
+              <th>WORK ORDER</th>
+            </tr>
+          </thead>
+          <tbody>${rowsHtml}</tbody>
+        </table>
+
+        <div class="cert-statement">
+          I certify that the listed materials were processed in conformance with the
+          designated specifications and the latest drawing revisions on record.
+        </div>
+
+        <div class="cert-signature">
+          <div class="cert-sig-line-spacer"></div>
+          <div class="cert-sig-underline"></div>
+          <div class="cert-sig-name">${qaUser || "Quality Assurance"}</div>
+          <div class="cert-sig-role">Quality Assurance</div>
+          <div class="cert-sig-date">Date: ${today}</div>
+        </div>
+      `;
+      certOutput.appendChild(doc);
+    }
+  }
+
+  if (hasContent) {
+    certOutput.style.display = "block";
+    printBtn.style.display = "inline-block";
+  } else {
+    certOutput.innerHTML =
+      "<p style='color:#666'>No outside processing operations found for the selected transaction(s).</p>";
+    certOutput.style.display = "block";
+  }
 }
 
 /**
@@ -258,9 +449,12 @@ genCertBtn.addEventListener("click", async () => {
     }
 
     const certData = await response.json();
-    lastResponse = certData; // Store for debugging
+    lastResponse = certData;
 
-    // Display processed certificate data
+    const qaUser = document.getElementById("qaUser").value;
+    renderCert(certData, qaUser);
+
+    // Populate JSON debug view (hidden by default)
     jsonOutput.textContent = JSON.stringify(
       {
         success: certData.success,
@@ -272,7 +466,7 @@ genCertBtn.addEventListener("click", async () => {
       null,
       2,
     );
-    jsonDebugDiv.style.display = "block";
+    jsonToggleSection.style.display = "block";
 
     showStatus(
       `Certificate generated successfully (${certData.certificateData.length} parent(s))`,
@@ -288,3 +482,17 @@ genCertBtn.addEventListener("click", async () => {
  * Clear button
  */
 clearBtn.addEventListener("click", clearAll);
+
+/**
+ * Print button
+ */
+printBtn.addEventListener("click", () => window.print());
+
+/**
+ * JSON toggle button
+ */
+jsonToggleBtn.addEventListener("click", () => {
+  const visible = jsonDebugDiv.style.display !== "none";
+  jsonDebugDiv.style.display = visible ? "none" : "block";
+  jsonToggleBtn.textContent = visible ? "Show JSON" : "Hide JSON";
+});

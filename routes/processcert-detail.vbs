@@ -59,7 +59,7 @@ End If
 Err.Clear
 
 ' ========== QUERIES ==========
-sqlOps = "SELECT SEQ, OPERATION, DESCRIPTION, ROUTER, ROUTER_SEQ, UNITS_OPEN, UNITS_COMPLETE, UNITS_SCRAP, DATE_COMPLETED FROM JOB_OPERATIONS WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' AND SEQ < 990000 ORDER BY SEQ"
+sqlOps = "SELECT JO.SEQ, JO.OPERATION, JO.DESCRIPTION, JO.LMO, JO.ROUTER, JO.ROUTER_SEQ, JO.UNITS_OPEN, JO.UNITS_COMPLETE, JO.UNITS_SCRAP, JO.DATE_COMPLETED, (SELECT TOP 1 RL.PART_WC_OUTSIDE FROM ROUTER_LINE RL WHERE RL.ROUTER = JO.ROUTER AND RL.LINE_ROUTER = JO.ROUTER_SEQ) AS PART_WC_OUTSIDE FROM JOB_OPERATIONS JO WHERE JO.JOB = '" & job & "' AND JO.SUFFIX = '" & suffix & "' AND JO.SEQ < 990000 ORDER BY JO.SEQ"
 Set rsOps = conn.Execute(sqlOps)
 If Err.Number <> 0 Then
   WScript.Echo "{""success"":false,""error"":""" & EscapeJSON(Err.Description) & """}"
@@ -69,7 +69,7 @@ End If
 
 Err.Clear
 
-sqlHist = "SELECT SEQ, OPERATION, DESCRIPTION, ROUTER, ROUTER_SEQ, UNITS_OPEN, UNITS_COMPLETE, UNITS_SCRAP, DATE_COMPLETED FROM JOB_HIST_OPS WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' ORDER BY SEQ"
+sqlHist = "SELECT JO.SEQ, JO.OPERATION, JO.DESCRIPTION, JO.LMO, JO.ROUTER, JO.ROUTER_SEQ, JO.UNITS_OPEN, JO.UNITS_COMPLETE, JO.UNITS_SCRAP, JO.DATE_COMPLETED, (SELECT TOP 1 RL.PART_WC_OUTSIDE FROM ROUTER_LINE RL WHERE RL.ROUTER = JO.ROUTER AND RL.LINE_ROUTER = JO.ROUTER_SEQ) AS PART_WC_OUTSIDE FROM JOB_HIST_OPS JO WHERE JO.JOB = '" & job & "' AND JO.SUFFIX = '" & suffix & "' ORDER BY JO.SEQ"
 Set rsHist = conn.Execute(sqlHist)
 If Err.Number <> 0 Then
   WScript.Echo "{""success"":false,""error"":""" & EscapeJSON(Err.Description) & """}"
@@ -89,9 +89,9 @@ End If
 
 Err.Clear
 
-' Query JOB_DETAIL for outside processing PO numbers (REFERENCE field, keyed by OPERATION code)
-' Fall back to JOB_HIST_DTL if active table returns no rows (records are periodically archived)
-sqlJD = "SELECT OPERATION, REFERENCE FROM JOB_DETAIL WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' AND REFERENCE IS NOT NULL"
+' Query JOB_DETAIL / JOB_HIST_DTL for outside processing PO numbers.
+' Both tables have SEQ, LMO, and REFERENCE. Use LMO='O' to isolate outside processing rows.
+sqlJD = "SELECT DISTINCT SEQ, REFERENCE FROM JOB_DETAIL WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' AND LMO = 'O' AND REFERENCE IS NOT NULL"
 Set rsJD = conn.Execute(sqlJD)
 If Err.Number <> 0 Then
   Err.Clear
@@ -100,7 +100,7 @@ End If
 
 If rsJD Is Nothing Or rsJD.EOF Then
   Err.Clear
-  sqlJD = "SELECT OPERATION, REFERENCE FROM JOB_HIST_DTL WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' AND REFERENCE IS NOT NULL"
+  sqlJD = "SELECT DISTINCT SEQ, REFERENCE FROM JOB_HIST_DTL WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' AND LMO = 'O' AND REFERENCE IS NOT NULL"
   Set rsJD = conn.Execute(sqlJD)
   If Err.Number <> 0 Then
     Err.Clear
@@ -145,28 +145,32 @@ Function BuildOpsJSON(rsOps, rsHist)
 End Function
 
 Function OpRowToJSON(rs)
-  Dim seq, op, desc, router, routerSeq, unitsOpen, unitsComplete, unitsScrap, dateComplete
+  Dim seq, op, desc, lmo, router, routerSeq, unitsOpen, unitsComplete, unitsScrap, dateComplete, partWcOutside
   
   seq = NullToZero(rs("SEQ"))
   op = NullToStr(rs("OPERATION"))
   desc = NullToStr(rs("DESCRIPTION"))
+  lmo = NullToStr(rs("LMO"))
   router = NullToStr(rs("ROUTER"))
   routerSeq = NullToZero(rs("ROUTER_SEQ"))
   unitsOpen = NullToZero(rs("UNITS_OPEN"))
   unitsComplete = NullToZero(rs("UNITS_COMPLETE"))
   unitsScrap = NullToZero(rs("UNITS_SCRAP"))
   dateComplete = NullToStr(rs("DATE_COMPLETED"))
+  partWcOutside = NullToStr(rs("PART_WC_OUTSIDE"))
   
   OpRowToJSON = "{" & _
     """seq"":" & QuoteJSON(seq) & "," & _
     """operation"":" & QuoteJSON(op) & "," & _
     """description"":" & QuoteJSON(desc) & "," & _
+    """lmo"":" & QuoteJSON(lmo) & "," & _
     """router"":" & QuoteJSON(router) & "," & _
     """routerSeq"":" & QuoteJSON(routerSeq) & "," & _
     """unitsOpen"":" & unitsOpen & "," & _
     """unitsComplete"":" & unitsComplete & "," & _
     """unitsScrap"":" & unitsScrap & "," & _
-    """dateCompleted"":" & QuoteJSON(dateComplete) & _
+    """dateCompleted"":" & QuoteJSON(dateComplete) & "," & _
+    """partWcOutside"":" & QuoteJSON(partWcOutside) & _
     "}"
 End Function
 
@@ -188,11 +192,11 @@ Function BuildJobDetailJSON(rs)
   Do While Not rs.EOF
     If Not first Then arr = arr & ","
     first = False
-    Dim opCode, reference
-    opCode = NullToStr(rs("OPERATION"))
+    Dim seqVal, reference
+    seqVal = NullToZero(rs("SEQ"))
     reference = NullToStr(rs("REFERENCE"))
     arr = arr & "{" & _
-      """operation"":" & QuoteJSON(opCode) & "," & _
+      """seq"":" & QuoteJSON(seqVal) & "," & _
       """reference"":" & QuoteJSON(reference) & _
       "}"
     rs.MoveNext

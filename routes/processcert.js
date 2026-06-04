@@ -91,14 +91,28 @@ router.get("/processcert-detail", (req, res) => {
 
 /**
  * Extract unique child jobs from itemHistory
- * Looks for J55 transactions that reference different job numbers
+ * Only includes J55/J50/J51 transactions at or before the parent J52's completion timestamp.
  */
-function extractChildJobsFromItemHistory(parentJob, parentSuffix, itemHistory) {
+function extractChildJobsFromItemHistory(
+  parentJob,
+  parentSuffix,
+  itemHistory,
+  parentDateHistory,
+  parentTimeItemHistory,
+) {
   const childJobs = new Map(); // Map of "JJJJJJ-SSS" -> {job, suffix, firstJ55}
 
   if (!Array.isArray(itemHistory)) return Array.from(childJobs.values());
 
+  // Build comparable timestamp strings (both are fixed-format strings from the DB)
+  const parentTs = `${parentDateHistory || ""}${parentTimeItemHistory || ""}`;
+
   for (const item of itemHistory) {
+    // Only consider pulls at or before the selected parent J52's completion
+    if (parentTs) {
+      const itemTs = `${item.dateHistory || ""}${item.timeItemHistory || ""}`;
+      if (itemTs > parentTs) continue;
+    }
     // Look for J55/J50/J51 transactions (material pulls) — trim to handle fixed-width DB fields
     const codeTransaction = (item.codeTransaction || "").trim();
     if (
@@ -148,14 +162,14 @@ function extractChildJobsFromItemHistory(parentJob, parentSuffix, itemHistory) {
 function groupSubOperations(operations, jobDetail) {
   if (!Array.isArray(operations) || operations.length === 0) return operations;
 
-  // Build a map from operation code -> PO reference (from JOB_DETAIL)
-  const poByOpCode = new Map();
+  // Build a map from SEQ number -> PO reference (from JOB_DETAIL / JOB_HIST_DTL, LMO='O' rows)
+  const poBySeq = new Map();
   if (Array.isArray(jobDetail)) {
     for (const row of jobDetail) {
-      const opCode = (row.operation || "").trim();
+      const seqNum = parseInt(row.seq, 10);
       const ref = (row.reference || "").trim();
-      if (opCode && ref && !poByOpCode.has(opCode)) {
-        poByOpCode.set(opCode, ref);
+      if (!isNaN(seqNum) && ref && !poBySeq.has(seqNum)) {
+        poBySeq.set(seqNum, ref);
       }
     }
   }
@@ -194,18 +208,27 @@ function groupSubOperations(operations, jobDetail) {
       continue;
     }
 
-    if (group.subs.length === 0) {
-      // No sub-ops — pass base op through unchanged
+    const baseSeqNum = parseInt(group.base.seq, 10);
+    const poNumber = poBySeq.get(baseSeqNum) || "";
+
+    // Determine if this is an outside processing operation:
+    //   1. LMO = 'O' in JOB_OPERATIONS / JOB_HIST_OPS (most reliable)
+    //   2. ROUTER_LINE.PART_WC_OUTSIDE = 'Y' (secondary check)
+    //   3. Has sub-operations (N01-N99 pattern)
+    const isOutside =
+      (group.base.lmo || "").toUpperCase() === "O" ||
+      (group.base.partWcOutside || "").toUpperCase() === "Y" ||
+      group.subs.length > 0;
+
+    if (!isOutside) {
       result.push(group.base);
     } else {
-      // Sub-ops exist — merge: use base op data, flag outside processing,
-      // look up PO by base op's operation code
-      const baseOpCode = (group.base.operation || "").trim();
-      const poNumber = poByOpCode.get(baseOpCode) || "";
+      const subOpDescription = (group.subs[0]?.description || "").trim();
       result.push({
         ...group.base,
         outsideProcessing: true,
         poNumber,
+        subOpDescription,
       });
       // Sub-op rows are intentionally suppressed
     }
@@ -373,6 +396,8 @@ router.get("/build-cert", async (req, res) => {
             job,
             suffix,
             parentDetail.itemHistory,
+            parent.dateHistory,
+            parent.timeItemHistory,
           );
           linksForParent = fallbackChildren.map((child) => ({
             parent_j52: parent,
