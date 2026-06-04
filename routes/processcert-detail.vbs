@@ -1,6 +1,6 @@
 ' processcert-detail.vbs (SIMPLIFIED FOR DEBUGGING)
 Dim job, suffix, CIQMSPath, envPath, file, fso, dsn, uid, pwd, line, WshShell, DocumentsPath
-Dim conn, sqlOps, rsOps, sqlHist, rsHist, sqlIH, rsIH, jsonOps, jsonIH, finalJson
+Dim conn, sqlOps, rsOps, sqlHist, rsHist, sqlIH, rsIH, sqlJD, rsJD, jsonOps, jsonIH, jsonJD, finalJson
 
 On Error Resume Next
 
@@ -89,11 +89,31 @@ End If
 
 Err.Clear
 
+' Query JOB_DETAIL for outside processing PO numbers (REFERENCE field, keyed by OPERATION code)
+' Fall back to JOB_HIST_DTL if active table returns no rows (records are periodically archived)
+sqlJD = "SELECT OPERATION, REFERENCE FROM JOB_DETAIL WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' AND REFERENCE IS NOT NULL"
+Set rsJD = conn.Execute(sqlJD)
+If Err.Number <> 0 Then
+  Err.Clear
+  Set rsJD = Nothing
+End If
+
+If rsJD Is Nothing Or rsJD.EOF Then
+  Err.Clear
+  sqlJD = "SELECT OPERATION, REFERENCE FROM JOB_HIST_DTL WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "' AND REFERENCE IS NOT NULL"
+  Set rsJD = conn.Execute(sqlJD)
+  If Err.Number <> 0 Then
+    Err.Clear
+    Set rsJD = Nothing
+  End If
+End If
+
 ' ========== BUILD JSON RESULTS ==========
 jsonOps = BuildOpsJSON(rsOps, rsHist)
 jsonIH = BuildItemHistoryJSON(rsIH)
+jsonJD = BuildJobDetailJSON(rsJD)
 
-finalJson = "{""success"":true,""operations"":" & jsonOps & ",""itemHistory"":" & jsonIH & "}"
+finalJson = "{""success"":true,""operations"":" & jsonOps & ",""itemHistory"":" & jsonIH & ",""jobDetail"":" & jsonJD & "}"
 
 WScript.Echo finalJson
 conn.Close
@@ -148,6 +168,38 @@ Function OpRowToJSON(rs)
     """unitsScrap"":" & unitsScrap & "," & _
     """dateCompleted"":" & QuoteJSON(dateComplete) & _
     "}"
+End Function
+
+Function BuildJobDetailJSON(rs)
+  Dim arr, first
+  arr = "["
+  first = True
+
+  If rs Is Nothing Then
+    BuildJobDetailJSON = "[]"
+    Exit Function
+  End If
+
+  If rs.EOF Then
+    BuildJobDetailJSON = "[]"
+    Exit Function
+  End If
+
+  Do While Not rs.EOF
+    If Not first Then arr = arr & ","
+    first = False
+    Dim opCode, reference
+    opCode = NullToStr(rs("OPERATION"))
+    reference = NullToStr(rs("REFERENCE"))
+    arr = arr & "{" & _
+      """operation"":" & QuoteJSON(opCode) & "," & _
+      """reference"":" & QuoteJSON(reference) & _
+      "}"
+    rs.MoveNext
+  Loop
+
+  arr = arr & "]"
+  BuildJobDetailJSON = arr
 End Function
 
 Function BuildItemHistoryJSON(rs)

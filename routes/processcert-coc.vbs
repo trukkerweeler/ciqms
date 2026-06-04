@@ -170,8 +170,6 @@ Do While Not rs.EOF
   End If
   
   If isSelected Then
-    If cocCount > 0 Then cocJSON = cocJSON & ","
-    
     ' Extract parent J52 row data
     Dim parentJob, parentSuffix, parentSerialNum, parentDateHist, parentTimeHist
     parentJob = rs("JOB")
@@ -180,55 +178,101 @@ Do While Not rs.EOF
     parentDateHist = rs("DATE_HISTORY")
     parentTimeHist = rs("TIME_ITEM_HISTORY")
     
-    ' 3A - Parse child job from SERIAL_NUMBER
-    ' Format: JJJJJJ-SSS (6-digit job, hyphen, 3-digit suffix, then padding)
-    ' Parse by position: job is 1-6, suffix is 8-10 (skip hyphen at position 7)
-    Dim childJob, childSuffix
-    childJob = Mid(parentSerialNum, 1, 6)
-    childSuffix = Mid(parentSerialNum, 8, 3)
+    ' 3A - Find child job from itemHistory material pulls (J55/J50/J51)
+    ' Query itemHistory for the parent to find material pulls
+    Dim childJob, childSuffix, childSerialNum, skipThisParent
+    Dim rsChild, sqlChild
     
-    ' 3B - Match child job's J52 row
-    Dim childJ52JSON
-    childJ52JSON = GetChildJ52JSON(conn, childJob, childSuffix, parentDateHist, parentTimeHist)
+    skipThisParent = False
     
-    ' 3C - Load child job header
-    Dim childHeaderJSON
-    childHeaderJSON = GetChildHeaderJSON(conn, childJob, childSuffix)
+    sqlChild = "SELECT SERIAL_NUMBER FROM ITEM_HISTORY " & _
+               "WHERE JOB = '" & parentJob & "' " & _
+               "AND SUFFIX = '" & parentSuffix & "' " & _
+               "AND CODE_TRANSACTION IN ('J55', 'J50', 'J51') " & _
+               "AND DATE_HISTORY = '" & parentDateHist & "' " & _
+               "ORDER BY TIME_ITEM_HISTORY ASC"
     
-    ' 3D - Load child job material pulls
-    Dim materialPullsJSON
-    materialPullsJSON = GetMaterialPullsJSON(conn, childJob, childSuffix)
+    Set rsChild = conn.Execute(sqlChild)
     
-    ' 3E - Match parent operation
-    Dim operationJSON
-    operationJSON = GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
+    ' Loop through material pulls until we find one that looks like a job (JJJJJJ-SSS format)
+    Dim foundValidChild
+    foundValidChild = False
     
-    ' Build the parent_j52 object
-    Dim parentJ52JSON
-    parentJ52JSON = "{" & _
-      """dateHistory"":" & QuoteJSON(parentDateHist) & "," & _
-      """timeItemHistory"":" & QuoteJSON(parentTimeHist) & "," & _
-      """part"":" & QuoteJSON(rs("PART")) & "," & _
-      """quantity"":" & rs("QUANTITY") & "," & _
-      """job"":" & QuoteJSON(parentJob) & "," & _
-      """suffix"":" & QuoteJSON(parentSuffix) & "," & _
-      """serialNumber"":" & QuoteJSON(parentSerialNum) & _
-      "}"
+    Do While Not rsChild.EOF
+      childSerialNum = rsChild("SERIAL_NUMBER")
+      
+      ' Parse potential child serial number: Format JJJJJJ-SSS (6-digit job, hyphen, 3-digit suffix)
+      ' Extract the parts: position 1-6 for job, position 8-10 for suffix (position 7 is hyphen)
+      childJob = Trim(Mid(childSerialNum, 1, 6))
+      childSuffix = Trim(Mid(childSerialNum, 8, 3))
+      
+      ' Simplified validation: 
+      ' 1. Both job and suffix must be exactly 6 and 3 digits respectively
+      ' 2. Must be all digits (no PO refs, no special chars)
+      ' 3. Cannot be the same as parent
+      If Len(childJob) = 6 And Len(childSuffix) = 3 And _
+         IsAllDigits(childJob) And IsAllDigits(childSuffix) And _
+         Not (childJob = parentJob And childSuffix = parentSuffix) Then
+        foundValidChild = True
+        Exit Do
+      End If
+      
+      rsChild.MoveNext
+    Loop
     
-    ' Build CoC entry
-    cocJSON = cocJSON & "{" & _
-      """parent_j52"":" & parentJ52JSON & "," & _
-      """operation"":" & operationJSON & "," & _
-      """child_job"":{" & _
-        """job"":" & QuoteJSON(childJob) & "," & _
-        """suffix"":" & QuoteJSON(childSuffix) & "," & _
-        """header"":" & childHeaderJSON & "," & _
-        """child_j52"":" & childJ52JSON & "," & _
-        """material_pulls"":" & materialPullsJSON & _
-      "}" & _
-      "}"
+    rsChild.Close
     
-    cocCount = cocCount + 1
+    If Not foundValidChild Then
+      skipThisParent = True
+    End If
+    
+    ' If we determined to skip this parent, move to next row
+    If Not skipThisParent Then
+      ' 3B - Match child job's J52 row
+      Dim childJ52JSON
+      childJ52JSON = GetChildJ52JSON(conn, childJob, childSuffix, parentDateHist, parentTimeHist)
+    
+      ' 3C - Load child job header
+      Dim childHeaderJSON
+      childHeaderJSON = GetChildHeaderJSON(conn, childJob, childSuffix)
+      
+      ' 3D - Load child job material pulls
+      Dim materialPullsJSON
+      materialPullsJSON = GetMaterialPullsJSON(conn, childJob, childSuffix)
+      
+      ' 3E - Match parent operation
+      Dim operationJSON
+      operationJSON = GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
+      
+      ' Build the parent_j52 object
+      Dim parentJ52JSON
+      parentJ52JSON = "{" & _
+        """dateHistory"":" & QuoteJSON(parentDateHist) & "," & _
+        """timeItemHistory"":" & QuoteJSON(parentTimeHist) & "," & _
+        """part"":" & QuoteJSON(rs("PART")) & "," & _
+        """quantity"":" & rs("QUANTITY") & "," & _
+        """job"":" & QuoteJSON(parentJob) & "," & _
+        """suffix"":" & QuoteJSON(parentSuffix) & "," & _
+        """serialNumber"":" & QuoteJSON(parentSerialNum) & _
+        "}"
+      
+      ' Build CoC entry (add comma if not first)
+      If cocCount > 0 Then cocJSON = cocJSON & ","
+      
+      cocJSON = cocJSON & "{" & _
+        """parent_j52"":" & parentJ52JSON & "," & _
+        """operation"":" & operationJSON & "," & _
+        """child_job"":{" & _
+          """job"":" & QuoteJSON(childJob) & "," & _
+          """suffix"":" & QuoteJSON(childSuffix) & "," & _
+          """header"":" & childHeaderJSON & "," & _
+          """child_j52"":" & childJ52JSON & "," & _
+          """material_pulls"":" & materialPullsJSON & _
+        "}" & _
+        "}"
+      
+      cocCount = cocCount + 1
+    End If
   End If
   
   currentIndex = currentIndex + 1
@@ -248,9 +292,6 @@ output = "{" & _
   """selectedIndices"":" & selectedIndicesJSON & "," & _
   """step3_coc_links"":" & cocJSON & _
   "}"
-
-' Format JSON for readability
-output = FormatJSON(output)
 
 WScript.Echo output
 conn.Close
@@ -650,4 +691,25 @@ Function GetChildOperationJSON(conn, childJob, childSuffix, cutoffDate)
                           """description"":""" & routerDesc & """," & _
                           """outsideProcessing"":""" & partWcOutside & """," & _
                           """poNumber"":""" & poNumber & """}"
+End Function
+
+' ============================================================
+' HELPER: Check if string contains only digits
+' ============================================================
+Function IsAllDigits(val)
+  Dim i, char
+  If Len(val) = 0 Then
+    IsAllDigits = False
+    Exit Function
+  End If
+  
+  For i = 1 To Len(val)
+    char = Mid(val, i, 1)
+    If char < "0" Or char > "9" Then
+      IsAllDigits = False
+      Exit Function
+    End If
+  Next
+  
+  IsAllDigits = True
 End Function
