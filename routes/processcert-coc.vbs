@@ -26,37 +26,46 @@ If UCase(WshShell.ExpandEnvironmentStrings("%COMPUTERNAME%")) <> "QUALITY-MGR" T
   CIQMSPath = DocumentsPath & "\CIQMS"
 End If
 
-Dim envPath
-envPath = CIQMSPath & "\.env"
-Set file = fso.OpenTextFile(envPath, 1)
-If Err.Number <> 0 Then
-    Err.Clear
-    envPath = CIQMSPath & "\env"
-    Set file = fso.OpenTextFile(envPath, 1)
-End If
-If Err.Number <> 0 Then
-  WScript.Echo "Error opening .env file: " & Err.Description
-  WScript.Quit 1
-End If
+' Read DB credentials from env vars set by Node.js (already loaded from .env at startup)
+dsn = WshShell.ExpandEnvironmentStrings("%CIQMS_GLOBAL_DSN%")
+uid = WshShell.ExpandEnvironmentStrings("%CIQMS_GLOBAL_UID%")
+pwd = WshShell.ExpandEnvironmentStrings("%CIQMS_GLOBAL_PWD%")
 
-dsn = ""
-uid = ""
-pwd = ""
-Do While Not file.AtEndOfStream
-  Dim line
-  line = Trim(file.ReadLine)
-  If Left(line, 11) = "GLOBAL_DSN=" Then
-    dsn = Mid(line, 12)
-  ElseIf Left(line, 11) = "GLOBAL_UID=" Then
-    uid = Mid(line, 12)
-  ElseIf Left(line, 11) = "GLOBAL_PWD=" Then
-    pwd = Mid(line, 12)
+' Fallback: parse .env file if env vars not set
+If dsn = "%CIQMS_GLOBAL_DSN%" Or dsn = "" Then
+  Dim envPath, envPath1, envPath2, envPath3
+  envPath1 = CIQMSPath & "\.env"
+  envPath2 = CIQMSPath & "\env"
+  envPath3 = fso.GetParentFolderName(fso.GetParentFolderName(WScript.ScriptFullName)) & "\.env"
+  envPath = envPath1
+  Set file = fso.OpenTextFile(envPath, 1)
+  If Err.Number <> 0 Then
+      Err.Clear
+      envPath = envPath2
+      Set file = fso.OpenTextFile(envPath, 1)
   End If
-Loop
-file.Close
+  If Err.Number <> 0 Then
+      Err.Clear
+      envPath = envPath3
+      Set file = fso.OpenTextFile(envPath, 1)
+  End If
+  If Err.Number <> 0 Then
+    WScript.Echo "Error opening .env file. Tried: [" & envPath1 & "] [" & envPath2 & "] [" & envPath3 & "]"
+    WScript.Quit 1
+  End If
+  dsn = "" : uid = "" : pwd = ""
+  Do While Not file.AtEndOfStream
+    Dim line
+    line = Trim(file.ReadLine)
+    If Left(line, 11) = "GLOBAL_DSN=" Then dsn = Mid(line, 12)
+    If Left(line, 11) = "GLOBAL_UID=" Then uid = Mid(line, 12)
+    If Left(line, 11) = "GLOBAL_PWD=" Then pwd = Mid(line, 12)
+  Loop
+  file.Close
+End If
 
 If dsn = "" Or uid = "" Or pwd = "" Then
-  WScript.Echo "Error: DSN, UID, or PWD not found in .env file."
+  WScript.Echo "Error: DSN, UID, or PWD not found."
   WScript.Quit 1
 End If
 

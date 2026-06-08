@@ -23,26 +23,39 @@ If UCase(WshShell.ExpandEnvironmentStrings("%COMPUTERNAME%")) <> "QUALITY-MGR" T
   CIQMSPath = DocumentsPath & "\CIQMS"
 End If
 
-envPath = CIQMSPath & "\.env"
+' Read DB credentials from env vars set by Node.js (already loaded from .env at startup)
+dsn = WshShell.ExpandEnvironmentStrings("%CIQMS_GLOBAL_DSN%")
+uid = WshShell.ExpandEnvironmentStrings("%CIQMS_GLOBAL_UID%")
+pwd = WshShell.ExpandEnvironmentStrings("%CIQMS_GLOBAL_PWD%")
 
-On Error Resume Next
-Set file = fso.OpenTextFile(envPath, 1)
-If Err.Number <> 0 Then
-  WScript.Echo "{""success"":false,""error"":""" & EscapeJSON(Err.Description) & """}"
-  WScript.Quit 1
+' Fallback: parse .env file if env vars not set
+If dsn = "%CIQMS_GLOBAL_DSN%" Or dsn = "" Then
+  Dim envPath1, envPath2
+  envPath1 = CIQMSPath & "\.env"
+  envPath2 = fso.GetParentFolderName(fso.GetParentFolderName(WScript.ScriptFullName)) & "\.env"
+  envPath = envPath1
+  Set file = fso.OpenTextFile(envPath, 1)
+  If Err.Number <> 0 Then
+    Err.Clear
+    envPath = envPath2
+    Set file = fso.OpenTextFile(envPath, 1)
+  End If
+  If Err.Number <> 0 Then
+    WScript.Echo "{""success"":false,""error"":""Env not found. Tried: " & envPath1 & " and " & envPath2 & """}"
+    WScript.Quit 1
+  End If
+  dsn = "" : uid = "" : pwd = ""
+  Do While Not file.AtEndOfStream
+    line = Trim(file.ReadLine)
+    If Left(line, 11) = "GLOBAL_DSN=" Then dsn = Mid(line, 12)
+    If Left(line, 11) = "GLOBAL_UID=" Then uid = Mid(line, 12)
+    If Left(line, 11) = "GLOBAL_PWD=" Then pwd = Mid(line, 12)
+  Loop
+  file.Close
 End If
 
-dsn = "" : uid = "" : pwd = ""
-Do While Not file.AtEndOfStream
-  line = Trim(file.ReadLine)
-  If Left(line, 11) = "GLOBAL_DSN=" Then dsn = Mid(line, 12)
-  If Left(line, 11) = "GLOBAL_UID=" Then uid = Mid(line, 12)
-  If Left(line, 11) = "GLOBAL_PWD=" Then pwd = Mid(line, 12)
-Loop
-file.Close
-
 If dsn = "" Or uid = "" Or pwd = "" Then
-  WScript.Echo "{""success"":false,""error"":""Missing DSN, UID, or PWD in .env""}"
+  WScript.Echo "{""success"":false,""error"":""Missing DSN, UID, or PWD""}"
   WScript.Quit 1
 End If
 
@@ -108,12 +121,29 @@ If rsJD Is Nothing Or rsJD.EOF Then
   End If
 End If
 
+' Query JOB_HEADER for part number and description
+Dim partNumber, partDescription
+partNumber = ""
+partDescription = ""
+Dim sqlJH, rsJH
+sqlJH = "SELECT PART, PART_DESCRIPTION FROM JOB_HEADER WHERE JOB = '" & job & "' AND SUFFIX = '" & suffix & "'"
+Set rsJH = conn.Execute(sqlJH)
+If Err.Number = 0 Then
+  If Not rsJH.EOF Then
+    partNumber = NullToStr(rsJH("PART"))
+    partDescription = NullToStr(rsJH("PART_DESCRIPTION"))
+  End If
+  rsJH.Close
+Else
+  Err.Clear
+End If
+
 ' ========== BUILD JSON RESULTS ==========
 jsonOps = BuildOpsJSON(rsOps, rsHist)
 jsonIH = BuildItemHistoryJSON(rsIH)
 jsonJD = BuildJobDetailJSON(rsJD)
 
-finalJson = "{""success"":true,""operations"":" & jsonOps & ",""itemHistory"":" & jsonIH & ",""jobDetail"":" & jsonJD & "}"
+finalJson = "{""success"":true,""part"":" & QuoteJSON(partNumber) & ",""partDescription"":" & QuoteJSON(partDescription) & ",""operations"":" & jsonOps & ",""itemHistory"":" & jsonIH & ",""jobDetail"":" & jsonJD & "}"
 
 WScript.Echo finalJson
 conn.Close

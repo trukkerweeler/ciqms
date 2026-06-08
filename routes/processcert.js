@@ -30,9 +30,10 @@ router.get("/processcert-coc", (req, res) => {
   execFile(cscript32, args, { windowsHide: true }, (err, stdout, stderr) => {
     console.log("processcert-coc stderr:", stderr);
     if (err)
-      return res
-        .status(500)
-        .json({ error: "VBS execution failed", details: stderr });
+      return res.status(500).json({
+        error: "VBS execution failed",
+        details: (stderr || stdout || "").trim(),
+      });
     try {
       res.json(JSON.parse(stdout));
     } catch (e) {
@@ -65,9 +66,10 @@ router.get("/processcert-detail", (req, res) => {
     (err, stdout, stderr) => {
       console.log("processcert-detail stderr:", stderr);
       if (err)
-        return res
-          .status(500)
-          .json({ error: "VBS execution failed", details: stderr });
+        return res.status(500).json({
+          error: "VBS execution failed",
+          details: (stderr || stdout || "").trim(),
+        });
       try {
         console.log("RAW VBS OUTPUT >>>");
         console.log(stdout);
@@ -91,7 +93,8 @@ router.get("/processcert-detail", (req, res) => {
 
 /**
  * Extract unique child jobs from itemHistory
- * Only includes J55/J50/J51 transactions at or before the parent J52's completion timestamp.
+ * Only includes J55/J50/J51 transactions STRICTLY AFTER the previous J52 for this suffix
+ * and AT OR BEFORE the selected parent J52's completion timestamp.
  */
 function extractChildJobsFromItemHistory(
   parentJob,
@@ -99,19 +102,23 @@ function extractChildJobsFromItemHistory(
   itemHistory,
   parentDateHistory,
   parentTimeItemHistory,
+  prevDateHistory,
+  prevTimeItemHistory,
 ) {
   const childJobs = new Map(); // Map of "JJJJJJ-SSS" -> {job, suffix, firstJ55}
 
   if (!Array.isArray(itemHistory)) return Array.from(childJobs.values());
 
-  // Build comparable timestamp strings (both are fixed-format strings from the DB)
+  // Upper bound: at or before the selected J52
   const parentTs = `${parentDateHistory || ""}${parentTimeItemHistory || ""}`;
+  // Lower bound: strictly after the previous J52 for this suffix (empty string = no lower bound)
+  const prevTs = `${prevDateHistory || ""}${prevTimeItemHistory || ""}`;
 
   for (const item of itemHistory) {
-    // Only consider pulls at or before the selected parent J52's completion
-    if (parentTs) {
+    if (parentTs || prevTs) {
       const itemTs = `${item.dateHistory || ""}${item.timeItemHistory || ""}`;
-      if (itemTs > parentTs) continue;
+      if (parentTs && itemTs > parentTs) continue; // too new
+      if (prevTs && itemTs <= prevTs) continue; // belongs to a prior batch
     }
     // Look for J55/J50/J51 transactions (material pulls) — trim to handle fixed-width DB fields
     const codeTransaction = (item.codeTransaction || "").trim();
@@ -144,6 +151,48 @@ function extractChildJobsFromItemHistory(
     }
   }
 
+  // Second pass: if the lower bound excluded a child job that doesn't appear
+  // anywhere in the window result (i.e., the child was only ever pulled before prevTs
+  // and is therefore unique to this batch), include it anyway.
+  // This handles cases where an older sub-job's material was legitimately consumed
+  // in the current completion batch, just pulled/prepared earlier.
+  if (prevTs) {
+    for (const item of itemHistory) {
+      const itemTs = `${item.dateHistory || ""}${item.timeItemHistory || ""}`;
+      if (parentTs && itemTs > parentTs) continue; // still too new
+      if (itemTs > prevTs) continue; // already handled in first pass
+
+      const codeTransaction = (item.codeTransaction || "").trim();
+      if (
+        (codeTransaction === "J55" ||
+          codeTransaction === "J50" ||
+          codeTransaction === "J51") &&
+        item.serialNumber
+      ) {
+        const serialNum = item.serialNumber.trim();
+        const match = serialNum.match(/^(\d{6})-(\d{3})/);
+        if (match) {
+          const childJob = match[1];
+          const childSuffix = match[2];
+          const key = `${childJob}-${childSuffix}`;
+
+          if (childJob === parentJob && childSuffix === parentSuffix) continue;
+
+          // Only add if this child was NOT already found in the main window.
+          // If it IS in the main window, the lower bound correctly excluded this
+          // earlier pull (it belongs to a prior batch for that child).
+          if (!childJobs.has(key)) {
+            childJobs.set(key, {
+              job: childJob,
+              suffix: childSuffix,
+              firstJ55: item,
+            });
+          }
+        }
+      }
+    }
+  }
+
   return Array.from(childJobs.values());
 }
 
@@ -162,17 +211,30 @@ function extractChildJobsFromItemHistory(
 function groupSubOperations(operations, jobDetail) {
   if (!Array.isArray(operations) || operations.length === 0) return operations;
 
-  // Build a map from SEQ number -> PO reference (from JOB_DETAIL / JOB_HIST_DTL, LMO='O' rows)
+  // Build a map from base-hundred SEQ -> PO reference (from JOB_DETAIL / JOB_HIST_DTL, LMO='O' rows).
+  // JOB_DETAIL rows use the sub-op seq (e.g. 1250) so we normalize to the base op seq (e.g. 1200)
+  // so it matches when we look up by the base operation's seq number.
   const poBySeq = new Map();
+  const allPORefs = []; // all distinct PO references, for fallback
   if (Array.isArray(jobDetail)) {
     for (const row of jobDetail) {
       const seqNum = parseInt(row.seq, 10);
       const ref = (row.reference || "").trim();
-      if (!isNaN(seqNum) && ref && !poBySeq.has(seqNum)) {
-        poBySeq.set(seqNum, ref);
+      if (!isNaN(seqNum) && ref) {
+        const baseSeq = Math.floor(seqNum / 100) * 100;
+        if (!poBySeq.has(baseSeq)) {
+          poBySeq.set(baseSeq, ref);
+        }
+        // Also store exact seq so we can match directly
+        if (!poBySeq.has(seqNum)) {
+          poBySeq.set(seqNum, ref);
+        }
+        if (!allPORefs.includes(ref)) allPORefs.push(ref);
       }
     }
   }
+  // Fallback: if there is exactly one distinct PO ref, use it when seq-based lookup misses
+  const singlePOFallback = allPORefs.length === 1 ? allPORefs[0] : "";
 
   // Group by base hundred: floor(parseInt(seq) / 100) * 100
   const groups = new Map(); // baseKey (number) -> { base: op, subs: [op, ...] }
@@ -201,15 +263,37 @@ function groupSubOperations(operations, jobDetail) {
 
   // Build merged output
   const result = [];
-  for (const [, group] of groups) {
+  for (const [groupKey, group] of groups) {
     if (!group.base) {
-      // No base op — push sub-ops as-is (shouldn't normally happen)
-      result.push(...group.subs);
+      // No base op found (e.g. JOB_HIST_OPS only recorded the sub-op row).
+      // Check whether any sub-op indicates outside processing and whether a
+      // PO reference exists for this base-hundred group — if so, promote the
+      // first sub-op as the representative outside processing row.
+      const poNumber =
+        typeof groupKey === "number"
+          ? poBySeq.get(groupKey) || singlePOFallback
+          : singlePOFallback;
+      const isOutsideSub = group.subs.some(
+        (s) =>
+          (s.lmo || "").toUpperCase() === "O" ||
+          (s.partWcOutside || "").toUpperCase() === "Y",
+      );
+      if ((poNumber || isOutsideSub) && group.subs.length > 0) {
+        const firstSub = group.subs[0];
+        result.push({
+          ...firstSub,
+          outsideProcessing: true,
+          poNumber,
+          subOpDescription: (firstSub.description || "").trim(),
+        });
+      } else {
+        result.push(...group.subs);
+      }
       continue;
     }
 
     const baseSeqNum = parseInt(group.base.seq, 10);
-    const poNumber = poBySeq.get(baseSeqNum) || "";
+    const poNumber = poBySeq.get(baseSeqNum) || singlePOFallback;
 
     // Determine if this is an outside processing operation:
     //   1. LMO = 'O' in JOB_OPERATIONS / JOB_HIST_OPS (most reliable)
@@ -253,17 +337,27 @@ function getCscript32() {
 function callVBS(vbsPath, args, includeRaw = false) {
   return new Promise((resolve, reject) => {
     const cscript32 = getCscript32();
+    // Pass DB credentials directly — Node already loaded them from .env at startup
     execFile(
       cscript32,
       ["//Nologo", vbsPath, ...args],
-      { windowsHide: true },
+      {
+        windowsHide: true,
+        env: {
+          ...process.env,
+          CIQMS_GLOBAL_DSN: process.env.GLOBAL_DSN || "",
+          CIQMS_GLOBAL_UID: process.env.GLOBAL_UID || "",
+          CIQMS_GLOBAL_PWD: process.env.GLOBAL_PWD || "",
+        },
+      },
       (err, stdout, stderr) => {
         if (err) {
+          const errDetail = (stderr || stdout || "").trim();
           console.error(
             `VBS execution failed (${path.basename(vbsPath)}):`,
-            stderr,
+            errDetail,
           );
-          reject(new Error(`VBS execution failed: ${stderr}`));
+          reject(new Error(`VBS execution failed: ${errDetail}`));
         } else {
           try {
             console.log("RAW VBS OUTPUT >>>");
@@ -392,12 +486,30 @@ router.get("/build-cert", async (req, res) => {
           console.log(
             `[build-cert] cocLinks empty for ${job}-${suffix}, extracting from itemHistory`,
           );
+
+          // Find the previous J52 for this same job+suffix to use as a lower-bound
+          // so we only pick up J55 pulls that belong to this specific completion batch.
+          const parentTs = `${parent.dateHistory || ""}${parent.timeItemHistory || ""}`;
+          const sameSuffixJ52s = parentTransactions
+            .filter((t) => t.job === job && t.suffix === suffix)
+            .map((t) => ({
+              ts: `${t.dateHistory || ""}${t.timeItemHistory || ""}`,
+              t,
+            }))
+            .sort((a, b) => (a.ts < b.ts ? -1 : a.ts > b.ts ? 1 : 0));
+
+          const thisIndex = sameSuffixJ52s.findIndex((e) => e.ts === parentTs);
+          const prevEntry =
+            thisIndex > 0 ? sameSuffixJ52s[thisIndex - 1] : null;
+
           const fallbackChildren = extractChildJobsFromItemHistory(
             job,
             suffix,
             parentDetail.itemHistory,
             parent.dateHistory,
             parent.timeItemHistory,
+            prevEntry?.t.dateHistory,
+            prevEntry?.t.timeItemHistory,
           );
           linksForParent = fallbackChildren.map((child) => ({
             parent_j52: parent,
@@ -441,6 +553,8 @@ router.get("/build-cert", async (req, res) => {
                   `${child.job}-${child.suffix}`,
                 quantity: child.firstJ55?.quantity || 0,
                 dateHistory: child.firstJ55?.dateHistory || "",
+                part: childDetail.part || "",
+                partDescription: childDetail.partDescription || "",
               },
               hierarchy: {
                 operations: groupSubOperations(
@@ -467,6 +581,7 @@ router.get("/build-cert", async (req, res) => {
         //
         certificateData.push({
           parentJ52: parent,
+          partDescription: parentDetail.partDescription || "",
           hierarchy: {
             operations: groupSubOperations(
               parentDetail.operations || [],

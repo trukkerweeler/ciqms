@@ -113,6 +113,7 @@ function renderCert(certData, qaUser) {
 
     const woNumber = `${entry.parentJ52.job}-${entry.parentJ52.suffix}`;
     const topAssembly = normalizePart(entry.parentJ52.part);
+    const topAssemblyDesc = normalizePart(entry.partDescription || "");
 
     // Collect process sections: one per unique outside-processing operation description
     const processSections = new Map(); // key -> { processName, poNumber, rows[] }
@@ -124,14 +125,32 @@ function renderCert(certData, qaUser) {
     for (const childEntry of entry.childJobs || []) {
       for (const op of childEntry.hierarchy?.operations || []) {
         if (!op.outsideProcessing) continue;
+        // Skip generic catch-all outside processing ops that don't represent a certifiable process
+        // Check both description and subOpDescription since the displayed name uses subOpDescription first
+        const opDesc = (op.description || op.operation || "")
+          .trim()
+          .toUpperCase();
+        const subDesc = (op.subOpDescription || "").trim().toUpperCase();
+        const NON_CERT_OPS = [
+          "MISCELLANEOUS OUTSIDE",
+          "MISC OUTSIDE",
+          "MISCELLANEOUS",
+          "PASSIVATE TO PRINT",
+          "PARTS TRANSFERRED FROM WIP",
+          "PARTS TRANSFERED FROM WIP",
+        ];
+        if (NON_CERT_OPS.includes(opDesc) || NON_CERT_OPS.includes(subDesc))
+          continue;
         const key = (op.description || op.operation || "").trim();
+        const processName = (
+          op.subOpDescription ||
+          op.description ||
+          op.operation ||
+          ""
+        ).trim();
+        // Skip ops with no meaningful process description
+        if (!key && !processName) continue;
         if (!processSections.has(key)) {
-          const processName = (
-            op.subOpDescription ||
-            op.description ||
-            op.operation ||
-            ""
-          ).trim();
           processSections.set(key, {
             processName,
             poNumber: op.poNumber || "",
@@ -141,7 +160,12 @@ function renderCert(certData, qaUser) {
         processSections.get(key).rows.push({
           item: itemNum++,
           part: getChildPart(childEntry),
-          trace: getTraceId(childEntry.hierarchy?.itemHistory || []),
+          partDesc: normalizePart(childEntry.childJob.partDescription || ""),
+          trace:
+            op.poNumber || getTraceId(childEntry.hierarchy?.itemHistory || []),
+          traceHover: op.poNumber
+            ? getTraceId(childEntry.hierarchy?.itemHistory || [])
+            : "",
           qty: Math.abs(childEntry.childJob.quantity || 0),
           workOrder: `${childEntry.childJob.job}-${childEntry.childJob.suffix}`,
         });
@@ -152,19 +176,17 @@ function renderCert(certData, qaUser) {
     hasContent = true;
 
     for (const [, section] of processSections) {
-      const processLabel = section.poNumber
-        ? `${section.processName} \u2014 PO: ${section.poNumber}`
-        : section.processName;
+      const processLabel = section.processName;
 
       const rowsHtml = section.rows
         .map(
           (row) =>
             `<tr>
               <td class="cert-td-center">${row.item}</td>
-              <td>${row.part}</td>
+              <td>${row.part}${row.partDesc ? `<br><span style="font-size:0.85em;color:#333">${row.partDesc}</span>` : ""}</td>
               <td>${row.trace}</td>
               <td class="cert-td-center">${row.qty}</td>
-              <td>${row.workOrder}</td>
+              <td title="${row.traceHover ? "Trace ID: " + row.traceHover : ""}">${row.workOrder}</td>
             </tr>`,
         )
         .join("");
@@ -193,7 +215,7 @@ function renderCert(certData, qaUser) {
           </tr>
           <tr>
             <td class="cert-lbl">Part Number/Description:</td>
-            <td class="cert-val" colspan="3">${topAssembly}</td>
+            <td class="cert-val" colspan="3">${topAssembly}${topAssemblyDesc ? ` &mdash; ${topAssemblyDesc}` : ""}</td>
           </tr>
         </table>
 
@@ -296,15 +318,17 @@ step1Form.addEventListener("submit", async (e) => {
 
     if (!response.ok) {
       const error = await response.json();
-      showStatus(`Error: ${error.error}`, "error");
+      showStatus(
+        `Error: ${error.error}${error.details ? " — " + error.details : ""}`,
+        "error",
+      );
       return;
     }
-
-    const data = await response.json();
 
     // Extract parent J52s from the response
     // The /build-cert endpoint returns certificateData which is an array of results
     // Each result has parentJ52 with the parent transaction details
+    const data = await response.json();
     if (data.certificateData && data.certificateData.length > 0) {
       parentJ52Transactions = data.certificateData.map((result) => ({
         DATE_HISTORY: result.parentJ52.dateHistory || "",
@@ -431,6 +455,15 @@ genCertBtn.addEventListener("click", async () => {
   const job = document.getElementById("job").value;
   const indices = Array.from(selectedIndices).sort().join(",");
 
+  // Clear previous cert output before generating a new one
+  const certOutput = document.getElementById("cert-output");
+  certOutput.innerHTML = "";
+  certOutput.style.display = "none";
+  printBtn.style.display = "none";
+  jsonDebugDiv.style.display = "none";
+  jsonToggleSection.style.display = "none";
+  jsonToggleBtn.textContent = "Show JSON";
+
   showStatus("Generating certificate...", "loading");
 
   try {
@@ -443,7 +476,10 @@ genCertBtn.addEventListener("click", async () => {
 
     if (!response.ok) {
       const error = await response.json();
-      showStatus(`Error: ${error.error}`, "error");
+      showStatus(
+        `Error: ${error.error}${error.details ? " — " + error.details : ""}`,
+        "error",
+      );
       console.error("Error details:", error);
       return;
     }
