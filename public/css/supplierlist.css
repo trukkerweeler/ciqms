@@ -49,3 +49,27 @@ footer {
   bottom: auto !important;
   width: auto !important;
 }
+
+@media print {
+  #header,
+  footer,
+  .addrecordheadingbutton {
+    display: none !important;
+  }
+
+  body {
+    margin: 0 !important;
+    padding: 0 !important;
+  }
+
+  .recordsaddrecordheading {
+    padding: 0 0 8px 0 !important;
+    margin: 0 !important;
+  }
+
+  main {
+    height: auto !important;
+    overflow: visible !important;
+    overflow-y: visible !important;
+  }
+}

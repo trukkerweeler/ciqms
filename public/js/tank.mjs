@@ -36,10 +36,10 @@ const TANK_CONFIG = {
         name: "Temperature",
         unit: "°F",
         dataField: "fahrenheitData",
-        lcl: 60,
-        ucl: 95,
-        min: 55,
-        max: 105,
+        lcl: 120,
+        ucl: 150,
+        min: 110,
+        max: 160,
         color: "#000000",
       },
     ],
@@ -56,6 +56,16 @@ const TANK_CONFIG = {
         min: 55,
         max: 105,
         color: "#000000",
+      },
+      {
+        name: "Concentration",
+        unit: "%",
+        dataField: "percentData",
+        lcl: 10,
+        ucl: 25,
+        min: 5,
+        max: 30,
+        color: "#1e88e5",
       },
     ],
   },
@@ -241,6 +251,12 @@ window.addEventListener("DOMContentLoaded", async () => {
       return;
     }
 
+    // Pre-process labels to month abbreviations (reliable in print)
+    const monthLabels = data.labels.map((label) => {
+      const d = new Date(label);
+      return isNaN(d) ? label : d.toLocaleString("default", { month: "short" });
+    });
+
     // Render charts for each tank configuration
     tankConfig.charts.forEach((chartConfig, chartIndex) => {
       const canvasId = chartIndex === 0 ? "temperatureChart" : "percentChart";
@@ -302,7 +318,7 @@ window.addEventListener("DOMContentLoaded", async () => {
       new Chart(canvas, {
         type: "line",
         data: {
-          labels: data.labels,
+          labels: monthLabels,
           datasets: [
             {
               label: chartConfig.name,
@@ -356,6 +372,12 @@ window.addEventListener("DOMContentLoaded", async () => {
             title: {
               display: false,
             },
+            tooltip: {
+              callbacks: {
+                title: (items) =>
+                  data.labels[items[0].dataIndex] || items[0].label,
+              },
+            },
           },
           scales: {
             y: {
@@ -390,6 +412,10 @@ window.addEventListener("DOMContentLoaded", async () => {
               },
               grid: {
                 display: true,
+              },
+              ticks: {
+                maxRotation: 0,
+                autoSkip: true,
               },
             },
           },
