@@ -31,6 +31,56 @@ function getFieldDisplayName(fieldName) {
   return fieldAliases[fieldName] || fieldName;
 }
 
+const COL_WIDTHS_KEY = "scheduleColWidths";
+
+function saveColWidths(fields, cols) {
+  const saved = {};
+  fields.forEach((key, i) => {
+    saved[key] = parseInt(cols[i].style.width, 10);
+  });
+  localStorage.setItem(COL_WIDTHS_KEY, JSON.stringify(saved));
+}
+
+function loadColWidths() {
+  try {
+    return JSON.parse(localStorage.getItem(COL_WIDTHS_KEY)) || {};
+  } catch {
+    return {};
+  }
+}
+
+function makeColumnsResizable(table, fields) {
+  let startX, startWidth;
+
+  table.addEventListener("mousedown", (e) => {
+    const handle = e.target.closest(".col-resize-handle");
+    if (!handle) return;
+    e.preventDefault();
+    const th = handle.closest("th");
+    const colIndex = Array.from(th.parentElement.children).indexOf(th);
+    const cols = table.querySelectorAll("col");
+    const col = cols[colIndex];
+    startX = e.clientX;
+    startWidth = th.offsetWidth;
+    handle.classList.add("resizing");
+
+    function onMouseMove(e) {
+      const newWidth = Math.max(40, startWidth + (e.clientX - startX));
+      col.style.width = newWidth + "px";
+    }
+
+    function onMouseUp() {
+      handle.classList.remove("resizing");
+      saveColWidths(fields, Array.from(cols));
+      document.removeEventListener("mousemove", onMouseMove);
+      document.removeEventListener("mouseup", onMouseUp);
+    }
+
+    document.addEventListener("mousemove", onMouseMove);
+    document.addEventListener("mouseup", onMouseUp);
+  });
+}
+
 document.addEventListener("DOMContentLoaded", async () => {
   const apiUrl = await getApiUrl();
   const user = await getSessionUser();
@@ -76,6 +126,30 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         const table = document.createElement("table");
         table.classList.add("schedule-table");
+
+        // Initial column widths (px) — AUDITEE1 narrow, SUBJECT wide
+        const defaultWidths = {
+          AUDIT_MANAGER_ID: 60,
+          STANDARD: 90,
+          SUBJECT: 260,
+          SCHEDULED_DATE: 100,
+          LEAD_AUDITOR: 110,
+          AUDITEE1: 80,
+          COMPLETION_DATE: 100,
+        };
+
+        // Merge with any saved widths from previous session
+        const savedWidths = loadColWidths();
+        const colWidths = Object.assign({}, defaultWidths, savedWidths);
+
+        const colgroup = document.createElement("colgroup");
+        for (let key of myFields) {
+          const col = document.createElement("col");
+          col.style.width = (colWidths[key] || 100) + "px";
+          colgroup.appendChild(col);
+        }
+        table.appendChild(colgroup);
+
         const thead = document.createElement("thead");
         const tbody = document.createElement("tbody");
         const header = document.createElement("tr");
@@ -83,10 +157,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         for (let key of myFields) {
           const th = document.createElement("th");
           th.textContent = getFieldDisplayName(key);
+
+          // Add resize handle
+          const handle = document.createElement("div");
+          handle.className = "col-resize-handle";
+          th.appendChild(handle);
+
           header.appendChild(th);
         }
 
         thead.appendChild(header);
+        makeColumnsResizable(table, myFields);
 
         for (let record of records) {
           const tr = document.createElement("tr");

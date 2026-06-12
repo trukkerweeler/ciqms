@@ -202,7 +202,7 @@ router.post("/", (req, res) => {
           let moveResult = { success: true };
           let movedFilePath = req.body.LINK;
 
-          if (req.body.moveFileOnFirstRecord) {
+          if (req.body.moveFileOnFirstRecord && req.body.moveFile) {
             moveResult = moveCompetencyFile(req.body.LINK);
             if (moveResult.success) {
               // Calculate the moved path for returning to client

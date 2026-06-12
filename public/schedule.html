@@ -15,10 +15,31 @@
     <link rel="stylesheet" href="/css/schedule-overrides.css" />
     <link rel="icon" href="images/ci-logo.png" />
     <title>Audit Schedule</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      #main {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding-bottom: 72px; /* 50px footer + 10px visible gap */
+      }
+    </style>
   </head>
   <body>
     <header id="header"></header>
-    <div style="margin: 1em 0; display: flex; align-items: center; gap: 1em">
+    <div
+      style="margin: 0 0 1em 0; display: flex; align-items: center; gap: 1em"
+    >
       <h1 style="display: inline-block; margin: 0">Audit Schedule</h1>
       <span
         id="scheduleSummary"

@@ -96,6 +96,56 @@ function setupEventListeners() {
       }
     });
   }
+
+  // File drop zone
+  const fileDrop = document.getElementById("fileDrop");
+  const fileBrowse = document.getElementById("fileBrowse");
+  const clearFileBtn = document.getElementById("clearFileBtn");
+
+  if (fileDrop) {
+    fileDrop.addEventListener("click", (e) => {
+      if (e.target !== fileBrowse) fileBrowse.click();
+    });
+    fileDrop.addEventListener("dragover", (e) => {
+      e.preventDefault();
+      fileDrop.classList.add("drag-over");
+    });
+    fileDrop.addEventListener("dragleave", () =>
+      fileDrop.classList.remove("drag-over"),
+    );
+    fileDrop.addEventListener("drop", (e) => {
+      e.preventDefault();
+      fileDrop.classList.remove("drag-over");
+      const file = e.dataTransfer.files[0];
+      if (file) setDroppedFile(file.name);
+    });
+  }
+
+  if (fileBrowse) {
+    fileBrowse.addEventListener("change", () => {
+      const file = fileBrowse.files[0];
+      if (file) setDroppedFile(file.name);
+    });
+  }
+
+  if (clearFileBtn) {
+    clearFileBtn.addEventListener("click", clearDroppedFile);
+  }
+}
+
+function setDroppedFile(name) {
+  document.getElementById("LINK").value = name;
+  document.getElementById("fileDropName").textContent = name;
+  document.getElementById("fileDropPreview").style.display = "flex";
+  document.getElementById("fileDrop").style.display = "none";
+}
+
+function clearDroppedFile() {
+  document.getElementById("LINK").value = "";
+  const fileBrowse = document.getElementById("fileBrowse");
+  if (fileBrowse) fileBrowse.value = "";
+  document.getElementById("fileDropPreview").style.display = "none";
+  document.getElementById("fileDrop").style.display = "";
 }
 
 function openAddTrainingDialog() {
@@ -104,6 +154,11 @@ function openAddTrainingDialog() {
     // Reset form and set today's date
     const form = document.getElementById("addTrainingForm");
     form.reset();
+    clearDroppedFile();
+
+    // Default archive checkbox to checked
+    const moveFileCheck = document.getElementById("moveFileCheck");
+    if (moveFileCheck) moveFileCheck.checked = true;
 
     // Set today's date as default
     const today = new Date();
@@ -155,6 +210,10 @@ async function saveTraining(event) {
       const originalLinkValue = formData.get("LINK") || "";
       let movedFilePath = originalLinkValue; // Will update after first record with moved path
 
+      // Whether to archive (move) the file
+      const moveFile =
+        document.getElementById("moveFileCheck")?.checked ?? true;
+
       // Loop through attendees and submit each record
       for (let index = 0; index < attendees.length; index++) {
         const personId = attendees[index];
@@ -184,8 +243,9 @@ async function saveTraining(event) {
           }
         }
 
-        // Send moveFileOnFirstRecord flag so backend knows this is the first record
+        // Send flags so backend knows whether/when to move the file
         dataJson.moveFileOnFirstRecord = index === 0;
+        dataJson.moveFile = moveFile;
 
         const response = await fetch(url, {
           method: "POST",
@@ -249,7 +309,7 @@ async function saveTraining(event) {
       }
 
       document.getElementById("addTrainingDialog").close();
-      // await loadTrainingData(); // Reload the data (refresh commented out)
+      await loadTrainingData();
     } catch (err) {
       alert("Error saving training record: " + err);
     }
@@ -271,6 +331,18 @@ function displayTrainingTable(data) {
 
   const table = document.createElement("table");
   table.className = "data-table";
+  table.style.tableLayout = "fixed";
+  table.style.width = "100%";
+
+  // Define column widths
+  const colWidths = ["6%", "11%", "9%", "11%", "11%", "7%", "9%", "9%", "27%"];
+  const colgroup = document.createElement("colgroup");
+  colWidths.forEach((w) => {
+    const col = document.createElement("col");
+    col.style.width = w;
+    colgroup.appendChild(col);
+  });
+  table.appendChild(colgroup);
 
   // Create header
   const thead = document.createElement("thead");
@@ -282,7 +354,7 @@ function displayTrainingTable(data) {
     "Date",
     "Person",
     "Instructor",
-    "Minutes",
+    "Min",
     "Created By",
     "Created Date",
     "Link",
@@ -319,10 +391,16 @@ function displayTrainingTable(data) {
         item.CTA_ATTENDANCE_LINK
           ? `<a href="/training-files/${encodeURIComponent(
               item.CTA_ATTENDANCE_LINK,
-            )}" target="_blank">Open File</a>`
+            )}" target="_blank" title="${item.CTA_ATTENDANCE_LINK}">${item.CTA_ATTENDANCE_LINK.split(/[\\/]/).pop()}</a>`
           : ""
       }</td>
     `;
+
+    row.querySelectorAll("td").forEach((td) => {
+      td.style.overflow = "hidden";
+      td.style.textOverflow = "ellipsis";
+      td.style.whiteSpace = "nowrap";
+    });
 
     tbody.appendChild(row);
   });

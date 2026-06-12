@@ -271,15 +271,15 @@ Always `Trim(Replace(SERIAL_NUMBER, Chr(0), ""))` before checking.
 
 ## Database Tables Used
 
-| Table | Purpose |
-|-------|---------|
-| `ITEM_HISTORY` | J52 completion events, J55 material pulls |
-| `JOB_OPERATIONS` | Active job operations |
-| `JOB_HIST_OPS` | Archived job operations (closed jobs) |
-| `JOB_DETAIL` | Outside processing PO references (active) |
-| `JOB_HIST_DTL` | Outside processing PO references (archived) |
-| `ROUTER_LINE` | Router descriptions, `PART_WC_OUTSIDE` flag |
-| `JOB_HEADER` | Part number and part description |
+| Table            | Purpose                                     |
+| ---------------- | ------------------------------------------- |
+| `ITEM_HISTORY`   | J52 completion events, J55 material pulls   |
+| `JOB_OPERATIONS` | Active job operations                       |
+| `JOB_HIST_OPS`   | Archived job operations (closed jobs)       |
+| `JOB_DETAIL`     | Outside processing PO references (active)   |
+| `JOB_HIST_DTL`   | Outside processing PO references (archived) |
+| `ROUTER_LINE`    | Router descriptions, `PART_WC_OUTSIDE` flag |
+| `JOB_HEADER`     | Part number and part description            |
 
 ---
 

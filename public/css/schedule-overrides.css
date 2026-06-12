@@ -2,3 +2,45 @@
   background-color: #e0e0e0 !important;
   color: #888 !important;
 }
+
+/* Fill the flex main container; gap is handled by #main padding-bottom */
+.table-container {
+  flex: 1;
+  min-height: 0;
+  height: auto;
+  padding-bottom: 0;
+  margin-bottom: 0;
+}
+
+/* Resizable column headers */
+.schedule-table {
+  table-layout: fixed;
+}
+
+.schedule-table th {
+  position: relative;
+  overflow: hidden;
+  white-space: nowrap;
+  user-select: none;
+}
+
+.schedule-table td {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.col-resize-handle {
+  position: absolute;
+  right: 0;
+  top: 0;
+  width: 6px;
+  height: 100%;
+  cursor: col-resize;
+  z-index: 1;
+}
+
+.col-resize-handle:hover,
+.col-resize-handle.resizing {
+  background: rgba(255, 255, 255, 0.4);
+}

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -12,6 +12,99 @@
     />
     <link rel="stylesheet" href="/css/styles.css" />
     <title>Competency (CI QMS)</title>
+    <style>
+      html,
+      body {
+        height: 100%;
+        overflow: hidden;
+      }
+      body {
+        display: flex;
+        flex-direction: column;
+      }
+      #main {
+        flex: 1;
+        min-height: 0;
+        display: flex;
+        flex-direction: column;
+        overflow: hidden;
+        padding-bottom: 50px; /* clear fixed footer */
+      }
+      #trainingTableContainer {
+        flex: 1;
+        min-height: 0;
+        overflow-y: auto;
+      }
+
+      /* File drop zone */
+      .file-drop-zone {
+        border: 2px dashed #ced4da;
+        border-radius: 6px;
+        padding: 0.75rem 1rem;
+        text-align: center;
+        cursor: pointer;
+        transition:
+          border-color 0.2s,
+          background 0.2s;
+        background: #f8f9fa;
+        color: #6c757d;
+        font-size: 0.88rem;
+      }
+      .file-drop-zone:hover,
+      .file-drop-zone.drag-over {
+        border-color: #a91730;
+        background: rgba(169, 23, 48, 0.05);
+        color: #a91730;
+      }
+      .file-drop-link {
+        text-decoration: underline;
+        color: #a91730;
+      }
+      .file-drop-preview {
+        display: flex;
+        align-items: center;
+        gap: 0.5rem;
+        padding: 0.35rem 0.6rem;
+        background: #e8f5e9;
+        border: 1px solid #a5d6a7;
+        border-radius: 6px;
+        margin-top: 0.25rem;
+        font-size: 0.85rem;
+        color: #2e7d32;
+        word-break: break-all;
+      }
+      .file-clear-btn {
+        background: none !important;
+        border: none !important;
+        color: #c62828 !important;
+        cursor: pointer !important;
+        font-size: 1rem !important;
+        padding: 0 0.25rem !important;
+        height: auto !important;
+        line-height: 1 !important;
+        margin-left: auto !important;
+        flex-shrink: 0;
+      }
+      .archive-label {
+        display: flex !important;
+        align-items: center !important;
+        gap: 0.4rem !important;
+        margin-top: 0.4rem !important;
+        font-weight: normal !important;
+        text-transform: none !important;
+        letter-spacing: 0 !important;
+        cursor: pointer !important;
+        font-size: 0.82rem !important;
+        color: #495057 !important;
+      }
+      .archive-label input[type="checkbox"] {
+        margin: 0 !important;
+        width: auto !important;
+        padding: 0 !important;
+        font-size: inherit !important;
+        flex-shrink: 0;
+      }
+    </style>
   </head>
   <body>
     <header id="header"></header>
@@ -26,15 +119,16 @@
       </button>
     </div>
 
-    <div id="employeeFilter" style="margin: 1rem 0">
-      <label for="employeeIdFilter" style="margin-right: 0.5rem"
-        >Filter by Employee ID:</label
-      >
+    <div
+      id="employeeFilter"
+      style="margin: 1rem 0; display: flex; align-items: center; gap: 0.5rem"
+    >
+      <label for="employeeIdFilter">Filter by Employee ID:</label>
       <input
         type="text"
         id="employeeIdFilter"
         placeholder="Enter employee ID"
-        style="padding: 0.5rem; text-transform: uppercase; margin-right: 0.5rem"
+        style="padding: 0.5rem; text-transform: uppercase"
       />
       <button id="clearFilterBtn" class="btn" style="padding: 0.5rem 1rem">
         Clear
@@ -111,14 +205,42 @@
               />
             </div>
 
-            <div class="form-group">
-              <label for="LINK">Link</label>
-              <input
-                type="text"
-                id="LINK"
-                name="LINK"
-                placeholder="Enter link"
-              />
+            <div class="form-group full-width">
+              <label>Training Document</label>
+              <div id="fileDrop" class="file-drop-zone">
+                Drop file here, or
+                <span class="file-drop-link">click to browse</span>
+                <input
+                  type="file"
+                  id="fileBrowse"
+                  tabindex="-1"
+                  style="display: none"
+                />
+                <input type="hidden" id="LINK" name="LINK" />
+              </div>
+              <div
+                id="fileDropPreview"
+                class="file-drop-preview"
+                style="display: none"
+              >
+                <span id="fileDropName"></span>
+                <button
+                  type="button"
+                  id="clearFileBtn"
+                  class="file-clear-btn"
+                  title="Remove file"
+                >
+                  ✕
+                </button>
+              </div>
+              <label
+                class="archive-label"
+                title="Move the file from _to-enter to _entered after saving"
+              >
+                <input type="checkbox" id="moveFileCheck" />
+                Archive file after saving
+                <em style="color: #888">(_to-enter → _entered)</em>
+              </label>
             </div>
           </div>
 
