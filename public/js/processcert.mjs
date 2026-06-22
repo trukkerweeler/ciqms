@@ -1,6 +1,37 @@
 // processcert.mjs - Clean implementation for PROCESSCERT2 algorithm
 // Handles UI flow: Fetch parent J52 → User selection → Generate cert → Show cert
 
+// Special process codes that should be highlighted on certificates
+const SPECIAL_PROCESS_CODES = [
+  "SPOTW", // Spot Welding
+  "6061", // Passivation spec
+  "ALODINE", // Alodine passivation
+  "WELD", // Welding processes
+  "NADCAP", // NADCAP certified processes
+  "CHEM FILM", // Chemical film
+  "PASSIV", // Passivation (catches PASSIVATE, PASSIVATION, etc.)
+];
+
+// Operations to exclude as generic catch-alls
+const TRULY_NON_CERT_OPS = [
+  "MISCELLANEOUS OUTSIDE",
+  "MISC OUTSIDE",
+  "MISCELLANEOUS",
+  "PARTS TRANSFERRED FROM WIP",
+  "PARTS TRANSFERED FROM WIP",
+];
+
+/**
+ * Check if an operation is a special process
+ */
+function isSpecialProcess(processName) {
+  if (!processName) return false;
+  const upperName = processName.trim().toUpperCase();
+  return SPECIAL_PROCESS_CODES.some((code) =>
+    upperName.includes(code.toUpperCase()),
+  );
+}
+
 const step1Form = document.getElementById("step1-form");
 const fetchBtn = document.getElementById("fetch-btn");
 const statusMsg = document.getElementById("status-msg");
@@ -76,6 +107,23 @@ function getChildPart(childEntry) {
 }
 
 /**
+ * Get quantity from itemHistory
+ */
+function getQuantityFromHistory(itemHistory) {
+  for (const item of itemHistory || []) {
+    const code = (item.codeTransaction || "").trim();
+    // Look for J52 (parent transaction) which should have the quantity
+    if (code === "J52" || code === "J55") {
+      const qty = item.quantity;
+      if (qty !== null && qty !== undefined && qty !== "") {
+        return Math.abs(Number(qty) || 0);
+      }
+    }
+  }
+  return 0;
+}
+
+/**
  * Get a material trace ID from itemHistory.
  * Looks for J55 transactions that are raw material (not job references, not PO: prefixed).
  */
@@ -122,42 +170,90 @@ function renderCert(certData, qaUser) {
     // Group children by their shared process description; each child = one row.
     let itemNum = 1;
 
-    for (const childEntry of entry.childJobs || []) {
-      for (const op of childEntry.hierarchy?.operations || []) {
+    // ====================================================================
+    // FIRST: Check PARENT job's operations for outside processing (LMO='O')
+    // ====================================================================
+    if (Array.isArray(entry.hierarchy?.operations)) {
+      for (const op of entry.hierarchy.operations) {
         if (!op.outsideProcessing) continue;
-        // Skip generic catch-all outside processing ops that don't represent a certifiable process
-        // Check both description and subOpDescription since the displayed name uses subOpDescription first
+
+        // Skip only truly generic catch-all ops that have no meaningful identifier
         const opDesc = (op.description || op.operation || "")
           .trim()
           .toUpperCase();
         const subDesc = (op.subOpDescription || "").trim().toUpperCase();
-        const NON_CERT_OPS = [
-          "MISCELLANEOUS OUTSIDE",
-          "MISC OUTSIDE",
-          "MISCELLANEOUS",
-          "PASSIVATE TO PRINT",
-          "PARTS TRANSFERRED FROM WIP",
-          "PARTS TRANSFERED FROM WIP",
-        ];
-        if (NON_CERT_OPS.includes(opDesc) || NON_CERT_OPS.includes(subDesc))
+        // Filter out only truly generic catch-alls, NOT "PASSIVATE TO PRINT" which is a real operation
+        if (
+          TRULY_NON_CERT_OPS.includes(opDesc) ||
+          TRULY_NON_CERT_OPS.includes(subDesc)
+        )
           continue;
-        const key = (op.description || op.operation || "").trim();
-        const processName = (
-          op.subOpDescription ||
-          op.description ||
-          op.operation ||
-          ""
-        ).trim();
-        // Skip ops with no meaningful process description
-        if (!key && !processName) continue;
-        if (!processSections.has(key)) {
-          processSections.set(key, {
+
+        // Use ROUTER operation description (partWcOutside) as the real identifier, not the generic JOB operation name
+        const processName =
+          `${op.operation || ""} ${op.partWcOutside?.trim() || op.subOpDescription || op.description || ""}`.trim();
+
+        if (!processName) continue;
+        // Filter to show ONLY special processes on certificate
+        if (!isSpecialProcess(processName)) continue;
+
+        // Use processName (the real ROUTER description) as the grouping key, not the generic JOB operation
+        if (!processSections.has(processName)) {
+          processSections.set(processName, {
             processName,
             poNumber: op.poNumber || "",
             rows: [],
           });
         }
-        processSections.get(key).rows.push({
+
+        processSections.get(processName).rows.push({
+          item: itemNum++,
+          part: topAssembly,
+          partDesc: topAssemblyDesc,
+          trace: op.poNumber || "",
+          traceHover: "",
+          qty: getQuantityFromHistory(entry.hierarchy?.itemHistory || []),
+          workOrder: woNumber,
+        });
+      }
+    }
+
+    // ====================================================================
+    // THEN: Check child jobs for outside operations
+    // ====================================================================
+    for (const childEntry of entry.childJobs || []) {
+      for (const op of childEntry.hierarchy?.operations || []) {
+        if (!op.outsideProcessing) continue;
+
+        // Skip only truly generic catch-all ops that have no meaningful identifier
+        const opDesc = (op.description || op.operation || "")
+          .trim()
+          .toUpperCase();
+        const subDesc = (op.subOpDescription || "").trim().toUpperCase();
+        if (
+          TRULY_NON_CERT_OPS.includes(opDesc) ||
+          TRULY_NON_CERT_OPS.includes(subDesc)
+        )
+          continue;
+
+        // Use ROUTER operation description (partWcOutside) as the real identifier
+        const processName =
+          `${op.operation || ""} ${op.partWcOutside?.trim() || op.subOpDescription || op.description || ""}`.trim();
+
+        if (!processName) continue;
+        // Filter to show ONLY special processes on certificate
+        if (!isSpecialProcess(processName)) continue;
+
+        // Use processName (the real ROUTER description) as the grouping key
+        if (!processSections.has(processName)) {
+          processSections.set(processName, {
+            processName,
+            poNumber: op.poNumber || "",
+            rows: [],
+          });
+        }
+
+        processSections.get(processName).rows.push({
           item: itemNum++,
           part: getChildPart(childEntry),
           partDesc: normalizePart(childEntry.childJob.partDescription || ""),
@@ -166,7 +262,7 @@ function renderCert(certData, qaUser) {
           traceHover: op.poNumber
             ? getTraceId(childEntry.hierarchy?.itemHistory || [])
             : "",
-          qty: Math.abs(childEntry.childJob.quantity || 0),
+          qty: getQuantityFromHistory(childEntry.hierarchy?.itemHistory || []),
           workOrder: `${childEntry.childJob.job}-${childEntry.childJob.suffix}`,
         });
       }
@@ -175,79 +271,100 @@ function renderCert(certData, qaUser) {
     if (processSections.size === 0) continue;
     hasContent = true;
 
+    // Build all process rows in one table body
+    let allProcessRowsHtml = `
+      <thead>
+        <tr>
+          <th>ITEM</th>
+          <th>PART NUMBER / DESCRIPTION</th>
+          <th>TRACE ID</th>
+          <th>QUANTITY</th>
+          <th>WORK ORDER</th>
+        </tr>
+      </thead>
+      <tbody>
+    `;
+
     for (const [, section] of processSections) {
       const processLabel = section.processName;
+      const isSpecial = isSpecialProcess(processLabel);
 
-      const rowsHtml = section.rows
-        .map(
-          (row) =>
-            `<tr>
-              <td class="cert-td-center">${row.item}</td>
-              <td>${row.part}${row.partDesc ? `<br><span style="font-size:0.85em;color:#333">${row.partDesc}</span>` : ""}</td>
-              <td>${row.trace}</td>
-              <td class="cert-td-center">${row.qty}</td>
-              <td title="${row.traceHover ? "Trace ID: " + row.traceHover : ""}">${row.workOrder}</td>
-            </tr>`,
-        )
-        .join("");
-
-      const doc = document.createElement("div");
-      doc.className = "cert-document";
-      doc.innerHTML = `
-        <div class="cert-header">
-          <div class="cert-logo-area">
-            <img src="/images/ci-logo.png" alt="CI" class="cert-logo">
-          </div>
-          <div class="cert-address-area">
-            2990 South Main Street, Salt Lake City, Utah 84115<br>
-            Telephone: (801) 466-3334 &bull; Fax: (801) 466-1441
-          </div>
-        </div>
-
-        <div class="cert-title-box"><strong>Certification of Processing</strong></div>
-
-        <table class="cert-info-table">
-          <tr>
-            <td class="cert-lbl">Work Order Number:</td>
-            <td class="cert-val">${woNumber}</td>
-            <td class="cert-lbl">Top Assembly Number:</td>
-            <td class="cert-val">${topAssembly}</td>
-          </tr>
-          <tr>
-            <td class="cert-lbl">Part Number/Description:</td>
-            <td class="cert-val" colspan="3">${topAssembly}${topAssemblyDesc ? ` &mdash; ${topAssemblyDesc}` : ""}</td>
-          </tr>
-        </table>
-
-        <div class="cert-process-header">Process: ${processLabel}</div>
-        <table class="cert-data-table">
-          <thead>
-            <tr>
-              <th>ITEM</th>
-              <th>PART NUMBER / DESCRIPTION</th>
-              <th>TRACE ID</th>
-              <th>QUANTITY</th>
-              <th>WORK ORDER</th>
-            </tr>
-          </thead>
-          <tbody>${rowsHtml}</tbody>
-        </table>
-
-        <div class="cert-statement">
-          I certify that the listed materials were processed in conformance with the
-          designated specifications and the latest drawing revisions on record.
-        </div>
-
-        <div class="cert-signature">
-          <div class="cert-sig-line-spacer"></div>
-          <div class="cert-sig-underline"></div>
-          <div class="cert-sig-name">${qaUser || "Quality Assurance"}</div>
-          <div class="cert-sig-role">Quality Assurance</div>
-          <div class="cert-sig-date">Date: ${today}</div>
-        </div>
+      // Add process header row
+      allProcessRowsHtml += `
+        <tr class="cert-process-row${isSpecial ? " cert-process-row-special" : ""}">
+          <td colspan="5" class="cert-process-header-cell${isSpecial ? " cert-process-header-cell-special" : ""}">
+            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+              <strong>Process: ${processLabel}</strong>${isSpecial ? '<span class="special-process-badge">★ SPECIAL PROCESS</span>' : ""}
+            </div>
+          </td>
+        </tr>
       `;
-      certOutput.appendChild(doc);
+
+      // Add data rows for this process (reset item numbering per process)
+      let itemNum = 1;
+      for (const row of section.rows) {
+        allProcessRowsHtml += `
+          <tr>
+            <td class="cert-td-center">${itemNum++}</td>
+            <td>${row.part}${row.partDesc ? `<br><span style="font-size:0.85em;color:#333">${row.partDesc}</span>` : ""}</td>
+            <td>${row.trace}</td>
+            <td class="cert-td-center">${row.qty}</td>
+            <td title="${row.traceHover ? "Trace ID: " + row.traceHover : ""}">${row.workOrder}</td>
+          </tr>
+        `;
+      }
     }
+
+    allProcessRowsHtml += `
+      </tbody>
+    `;
+
+    const doc = document.createElement("div");
+    doc.className = "cert-document";
+    doc.innerHTML = `
+      <div class="cert-header">
+        <div class="cert-logo-area">
+          <img src="/images/ci-logo.png" alt="CI" class="cert-logo">
+        </div>
+        <div class="cert-address-area">
+          2990 South Main Street, Salt Lake City, Utah 84115<br>
+          Telephone: (801) 466-3334 &bull; Fax: (801) 466-1441
+        </div>
+      </div>
+
+      <div class="cert-title-box"><strong>Certification of Processing</strong></div>
+
+      <table class="cert-info-table">
+        <tr>
+          <td class="cert-lbl">Work Order Number:</td>
+          <td class="cert-val">${woNumber}</td>
+          <td class="cert-lbl">Top Assembly Number:</td>
+          <td class="cert-val">${topAssembly}</td>
+        </tr>
+        <tr>
+          <td class="cert-lbl">Part Number/Description:</td>
+          <td class="cert-val" colspan="3">${topAssembly}${topAssemblyDesc ? ` &mdash; ${topAssemblyDesc}` : ""}</td>
+        </tr>
+      </table>
+
+      <table class="cert-data-table">
+        ${allProcessRowsHtml}
+      </table>
+
+      <div class="cert-statement">
+        I certify that the listed materials were processed in conformance with the
+        designated specifications and the latest drawing revisions on record.
+      </div>
+
+      <div class="cert-signature">
+        <div class="cert-sig-line-spacer"></div>
+        <div class="cert-sig-underline"></div>
+        <div class="cert-sig-name">${qaUser || "Quality Assurance"}</div>
+        <div class="cert-sig-role">Quality Assurance</div>
+        <div class="cert-sig-date">Date: ${today}</div>
+      </div>
+    `;
+    certOutput.appendChild(doc);
   }
 
   if (hasContent) {
@@ -337,6 +454,7 @@ step1Form.addEventListener("submit", async (e) => {
         JOB: result.parentJ52.job || "",
         SUFFIX: result.parentJ52.suffix || "",
         PART: result.parentJ52.part || "",
+        TRANSACTION_CODE: "J52",
       }));
     } else {
       showStatus("No parent transactions found", "error");
@@ -396,6 +514,7 @@ function renderTransactionsTable() {
     tr.appendChild(createCell(row.SUFFIX || ""));
     tr.appendChild(createCell(row.QUANTITY || ""));
     tr.appendChild(createCell(row.PART || ""));
+    tr.appendChild(createCell(row.TRANSACTION_CODE || ""));
 
     transactionsBody.appendChild(tr);
   });

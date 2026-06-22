@@ -133,6 +133,11 @@
         text-align: center;
       }
 
+      #transactions-table td:last-child {
+        text-align: center;
+        width: 50px;
+      }
+
       input[type="checkbox"] {
         cursor: pointer;
         width: 18px;
@@ -244,6 +249,25 @@
         font-weight: bold;
         font-size: 13px;
         margin-bottom: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .cert-process-header-special {
+        background-color: #fff3cd !important;
+        border: 2px solid #ff6b35 !important;
+      }
+
+      .special-process-badge {
+        background-color: #ff6b35;
+        color: white;
+        padding: 3px 10px;
+        border-radius: 4px;
+        font-size: 11px;
+        font-weight: bold;
+        margin-left: 10px;
+        white-space: nowrap;
       }
 
       .cert-data-table {
@@ -262,6 +286,31 @@
       .cert-data-table thead tr {
         background-color: #f0f0f0;
         font-weight: bold;
+      }
+
+      .cert-td-center {
+        text-align: center;
+        width: 40px;
+      }
+
+      .cert-process-row {
+        background-color: #d0d0d0;
+      }
+
+      .cert-process-row-special {
+        background-color: #fff3cd !important;
+      }
+
+      .cert-process-header-cell {
+        background-color: #d0d0d0;
+        border: 1px solid #000;
+        font-weight: bold;
+        padding: 6px 8px !important;
+      }
+
+      .cert-process-header-cell-special {
+        background-color: #fff3cd !important;
+        border: 2px solid #ff6b35 !important;
       }
 
       .cert-td-center {
@@ -353,9 +402,22 @@
         .cert-process-header,
         .cert-data-table th,
         .cert-data-table td,
+        .cert-process-header-cell,
         .cert-statement,
         .cert-signature {
           font-size: 17px !important;
+        }
+        .cert-process-header-special {
+          background-color: #fff3cd !important;
+          border: 2px solid #ff6b35 !important;
+        }
+        .cert-process-header-cell-special {
+          background-color: #fff3cd !important;
+          border: 2px solid #ff6b35 !important;
+        }
+        .special-process-badge {
+          background-color: #ff6b35 !important;
+          color: white !important;
         }
       }
     </style>
@@ -375,7 +437,7 @@
             id="job"
             name="job"
             pattern="\d+"
-            value="122390"
+            value="122480"
             required
             placeholder="Enter 6-digit job number"
           />
@@ -411,6 +473,7 @@
               <th>Suffix</th>
               <th>Quantity</th>
               <th>Part</th>
+              <th style="width: 50px; text-align: center">Code</th>
             </tr>
           </thead>
           <tbody id="transactions-body"></tbody>

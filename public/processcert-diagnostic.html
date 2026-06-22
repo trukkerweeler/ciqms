@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Process Certificate - Diagnostic</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+
+      body {
+        font-family: Arial, sans-serif;
+        background: #f5f5f5;
+        padding: 20px;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+        background: white;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+        padding: 20px;
+      }
+
+      h1 {
+        color: #333;
+        margin-bottom: 20px;
+        border-bottom: 3px solid #0066cc;
+        padding-bottom: 10px;
+      }
+
+      h2 {
+        color: #0066cc;
+        margin-top: 30px;
+        margin-bottom: 15px;
+        font-size: 1.2em;
+      }
+
+      .input-section {
+        display: flex;
+        gap: 10px;
+        margin-bottom: 20px;
+        flex-wrap: wrap;
+      }
+
+      .input-group {
+        display: flex;
+        flex-direction: column;
+        gap: 5px;
+      }
+
+      label {
+        font-weight: bold;
+        color: #333;
+        font-size: 0.9em;
+      }
+
+      input[type="text"],
+      input[type="number"] {
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 4px;
+        font-size: 1em;
+        width: 200px;
+      }
+
+      button {
+        padding: 8px 16px;
+        background: #0066cc;
+        color: white;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        font-weight: bold;
+        transition: background 0.3s;
+        height: fit-content;
+      }
+
+      button:hover {
+        background: #0052a3;
+      }
+
+      button:disabled {
+        background: #ccc;
+        cursor: not-allowed;
+      }
+
+      .status {
+        padding: 10px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+
+      .status.loading {
+        background: #e3f2fd;
+        color: #1976d2;
+      }
+
+      .status.error {
+        background: #ffebee;
+        color: #c62828;
+      }
+
+      .status.success {
+        background: #e8f5e9;
+        color: #2e7d32;
+      }
+
+      .job-info {
+        background: #f9f9f9;
+        padding: 10px;
+        border-left: 4px solid #0066cc;
+        margin: 10px 0;
+        border-radius: 4px;
+      }
+
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        margin-top: 10px;
+        font-size: 0.9em;
+      }
+
+      th {
+        background: #0066cc;
+        color: white;
+        padding: 10px;
+        text-align: left;
+        font-weight: bold;
+        position: sticky;
+        top: 0;
+      }
+
+      td {
+        padding: 8px;
+        border-bottom: 1px solid #ddd;
+      }
+
+      tr:hover {
+        background: #f9f9f9;
+      }
+
+      .passed {
+        background: #e8f5e9;
+      }
+
+      .filtered {
+        background: #ffebee;
+        opacity: 0.7;
+      }
+
+      .filtered td {
+        color: #999;
+      }
+
+      .json-pre {
+        background: #f5f5f5;
+        padding: 10px;
+        border-radius: 4px;
+        overflow-x: auto;
+        font-size: 0.85em;
+        border-left: 4px solid #0066cc;
+      }
+
+      .grouping-item {
+        background: #f9f9f9;
+        padding: 10px;
+        margin: 5px 0;
+        border-left: 3px solid #0066cc;
+        border-radius: 4px;
+      }
+
+      .grouping-item strong {
+        color: #0066cc;
+      }
+
+      .empty {
+        color: #999;
+        font-style: italic;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .flag-true {
+        color: #2e7d32;
+        font-weight: bold;
+      }
+
+      .flag-false {
+        color: #c62828;
+      }
+
+      .truncate {
+        max-width: 250px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+
+      .truncate:hover {
+        overflow: visible;
+        white-space: normal;
+        word-break: break-word;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <h1>Process Certificate Diagnostic Tool</h1>
+
+      <div class="input-section">
+        <div class="input-group">
+          <label for="jobNumber">Job Number:</label>
+          <input
+            type="text"
+            id="jobNumber"
+            placeholder="Enter 6-digit job number"
+            value="122480"
+          />
+        </div>
+        <button id="fetchBtn" onclick="fetchDiagnosticData()">
+          Fetch Data
+        </button>
+      </div>
+
+      <div id="status"></div>
+      <div id="jobInfo"></div>
+
+      <!-- Combined Operations View -->
+      <div class="combined-section">
+        <h2>All Operations (Parent + Children): Raw Operations</h2>
+        <p
+          style="
+            font-size: 0.9em;
+            color: #666;
+            margin: -10px 0 10px 0;
+            font-style: italic;
+          "
+        >
+          ⓘ Pre-filtered by API: SEQ ≥ 100, excluded noise opcodes (FINALI,
+          ATTACH, REAM, SANDEB, COUNTS, KITTG, ASSEMB, SHEAR, PUNCH, INSP04,
+          INSP05, BEND, TUMDEB, DEFORM, PARTMK)
+        </p>
+        <div id="allRawOps"></div>
+
+        <h2>All Operations: Filtering Analysis</h2>
+        <div id="allFilterAnalysis"></div>
+
+        <h2>All Operations: Grouping Results</h2>
+        <div id="allGrouping"></div>
+      </div>
+
+      <!-- Final Results -->
+      <h2>Final Process Sections (Certificate Data)</h2>
+      <div id="finalSections"></div>
+
+      <!-- Raw JSON -->
+      <h2>Raw API Response (JSON)</h2>
+      <button onclick="toggleJSON()">Toggle Raw JSON</button>
+      <pre id="rawJSON" class="json-pre" style="display: none"></pre>
+    </div>
+
+    <script type="module">
+      import * as diag from "./js/processcert-diagnostic.mjs";
+
+      window.fetchDiagnosticData = diag.fetchDiagnosticData;
+      window.toggleJSON = diag.toggleJSON;
+    </script>
+  </body>
+</html>

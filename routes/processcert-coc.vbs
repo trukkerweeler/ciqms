@@ -502,7 +502,9 @@ Function GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
            "WHERE JOB = '" & parentJob & "' " & _
            "AND SUFFIX = '" & parentSuffix & "' " & _
            "AND LMO IN ('L','O') " & _
+           "AND SEQ >= '000100' " & _
            "AND SEQ < '990000' " & _
+           "AND OPERATION NOT IN ('FINALI', 'ATTACH', 'REAM', 'SANDEB', 'COUNTS', 'KITTG', 'ASSEMB', 'SHEAR', 'PUNCH', 'INSP04', 'INSP05', 'BEND', 'TUMDEB', 'DEFORM', 'PARTMK') " & _
            "AND (DATE_COMPLETED IS NULL OR DATE_COMPLETED <= '" & parentDateHist & "') " & _
            "ORDER BY DATE_COMPLETED DESC, SEQ DESC"
 
@@ -548,6 +550,10 @@ Function GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
   partWcOutside = "N"
 
   If router <> "" And routerSeq <> "" Then
+    ' Trim whitespace/padding from ROUTER fields before using in query
+    router = Trim(router)
+    routerSeq = Trim(routerSeq)
+    
     sqlRouter = "SELECT DESC_RT_LINE, PART_WC_OUTSIDE " & _
                 "FROM ROUTER_LINE " & _
                 "WHERE ROUTER = '" & router & "' " & _
@@ -583,13 +589,7 @@ Function GetParentOperationJSON(conn, parentJob, parentSuffix, parentDateHist)
   ' ============================================================
   ' 6️⃣ BUILD JSON RESULT
   ' ============================================================
-  result = "{""seq"":""" & seq & """," & _
-           """operation"":""" & operation & """," & _
-           """router"":""" & router & """," & _
-           """routerSeq"":""" & routerSeq & """," & _
-           """description"":""" & routerDesc & """," & _
-           """outsideProcessing"":""" & partWcOutside & """," & _
-           """poNumber"":""" & poNumber & """}"
+  result = "{""seq"":" & QuoteJSON(seq) & ",""operation"":" & QuoteJSON(operation) & ",""router"":" & QuoteJSON(router) & ",""routerSeq"":" & QuoteJSON(routerSeq) & ",""description"":" & QuoteJSON(routerDesc) & ",""outsideProcessing"":" & QuoteJSON(partWcOutside) & ",""poNumber"":" & QuoteJSON(poNumber) & "}"
 
   GetParentOperationJSON = result
 End Function
@@ -612,7 +612,10 @@ Function GetChildOperationJSON(conn, childJob, childSuffix, cutoffDate)
            "FROM JOB_OPERATIONS " & _
            "WHERE JOB = '" & childJob & "' " & _
            "AND SUFFIX = '" & childSuffix & "' " & _
+           "AND SEQ >= 100 " & _
            "AND SEQ < 990000 " & _
+           "AND LMO NOT IN ('C', 'M') " & _
+           "AND OPERATION NOT IN ('FINALI', 'ATTACH', 'REAM', 'SANDEB', 'COUNTS', 'KITTG', 'ASSEMB', 'SHEAR', 'PUNCH', 'INSP04', 'INSP05', 'BEND', 'TUMDEB', 'DEFORM', 'PARTMK') " & _
            "AND (DATE_COMPLETED IS NULL OR DATE_COMPLETED <= '" & cutoffDate & "') " & _
            "ORDER BY DATE_COMPLETED DESC, SEQ DESC"
 
@@ -659,6 +662,10 @@ Function GetChildOperationJSON(conn, childJob, childSuffix, cutoffDate)
   partWcOutside = "N"
 
   If router <> "" And routerSeq <> "" Then
+    ' Trim whitespace/padding from ROUTER fields before using in query
+    router = Trim(router)
+    routerSeq = Trim(routerSeq)
+    
     sqlRouter = "SELECT DESC_RT_LINE, PART_WC_OUTSIDE " & _
                 "FROM ROUTER_LINE " & _
                 "WHERE ROUTER = '" & router & "' " & _
@@ -693,13 +700,28 @@ Function GetChildOperationJSON(conn, childJob, childSuffix, cutoffDate)
   ' ============================================================
   ' 6️⃣ BUILD JSON
   ' ============================================================
-  GetChildOperationJSON = "{""seq"":""" & seq & """," & _
-                          """operation"":""" & operation & """," & _
-                          """router"":""" & router & """," & _
-                          """routerSeq"":""" & routerSeq & """," & _
-                          """description"":""" & routerDesc & """," & _
-                          """outsideProcessing"":""" & partWcOutside & """," & _
-                          """poNumber"":""" & poNumber & """}"
+  GetChildOperationJSON = "{""seq"":" & QuoteJSON(seq) & ",""operation"":" & QuoteJSON(operation) & ",""router"":" & QuoteJSON(router) & ",""routerSeq"":" & QuoteJSON(routerSeq) & ",""description"":" & QuoteJSON(routerDesc) & ",""outsideProcessing"":" & QuoteJSON(partWcOutside) & ",""poNumber"":" & QuoteJSON(poNumber) & "}"
+End Function
+
+' ============================================================
+' HELPER: Escape JSON string (replace quotes and backslashes)
+' ============================================================
+Function EscapeJSON(val)
+  If Len(val) = 0 Then
+    EscapeJSON = ""
+    Exit Function
+  End If
+  
+  ' Replace backslashes first
+  val = Replace(val, "\", "\\")
+  ' Replace quotes with escaped quotes
+  val = Replace(val, """", "\""")
+  ' Replace newlines
+  val = Replace(val, vbCrLf, "\n")
+  val = Replace(val, vbLf, "\n")
+  val = Replace(val, vbCr, "\n")
+  
+  EscapeJSON = val
 End Function
 
 ' ============================================================

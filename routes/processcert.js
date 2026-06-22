@@ -1,8 +1,8 @@
-// routes/processcert.js - Process Certificate implementation
 const express = require("express");
 const path = require("path");
 const { execFile } = require("child_process");
 const util = require("util");
+const fs = require("fs");
 
 const router = express.Router();
 
@@ -114,11 +114,25 @@ function extractChildJobsFromItemHistory(
   // Lower bound: strictly after the previous J52 for this suffix (empty string = no lower bound)
   const prevTs = `${prevDateHistory || ""}${prevTimeItemHistory || ""}`;
 
+  console.log(
+    `[extractChildJobsFromItemHistory] parentJob=${parentJob}, parentSuffix=${parentSuffix}, parentTs="${parentTs}", prevTs="${prevTs}"`,
+  );
+
   for (const item of itemHistory) {
     if (parentTs || prevTs) {
       const itemTs = `${item.dateHistory || ""}${item.timeItemHistory || ""}`;
-      if (parentTs && itemTs > parentTs) continue; // too new
-      if (prevTs && itemTs <= prevTs) continue; // belongs to a prior batch
+      if (parentTs && itemTs > parentTs) {
+        console.log(
+          `  [FILTER] Skipping ${item.serialNumber} (too new: ${itemTs} > ${parentTs})`,
+        );
+        continue; // too new
+      }
+      if (prevTs && itemTs <= prevTs) {
+        console.log(
+          `  [FILTER] Skipping ${item.serialNumber} (too old: ${itemTs} <= ${prevTs})`,
+        );
+        continue; // belongs to a prior batch
+      }
     }
     // Look for J55/J50/J51 transactions (material pulls) — trim to handle fixed-width DB fields
     const codeTransaction = (item.codeTransaction || "").trim();
@@ -137,10 +151,14 @@ function extractChildJobsFromItemHistory(
         const key = `${childJob}-${childSuffix}`;
 
         // Skip if it's the parent itself
-        if (childJob === parentJob && childSuffix === parentSuffix) continue;
+        if (childJob === parentJob && childSuffix === parentSuffix) {
+          console.log(`  [SKIP] Skipping self-reference ${key}`);
+          continue;
+        }
 
         // Store first occurrence of this child
         if (!childJobs.has(key)) {
+          console.log(`  [FOUND] Child ${key} from itemHistory`);
           childJobs.set(key, {
             job: childJob,
             suffix: childSuffix,
@@ -193,7 +211,11 @@ function extractChildJobsFromItemHistory(
     }
   }
 
-  return Array.from(childJobs.values());
+  const finalResult = Array.from(childJobs.values());
+  console.log(
+    `[extractChildJobsFromItemHistory] FINAL: Found ${finalResult.length} children: ${finalResult.map((c) => `${c.job}-${c.suffix}`).join(", ")}`,
+  );
+  return finalResult;
 }
 
 /**
@@ -208,8 +230,29 @@ function extractChildJobsFromItemHistory(
  * @param {Array} jobDetail   - jobDetail array from processcert-detail.vbs
  * @returns {Array} merged operations
  */
+function isSpecialProcess(processName) {
+  if (!processName) return false;
+  const specialCodes = [
+    "SPOTW",
+    "6061",
+    "ALODINE",
+    "WELD",
+    "NADCAP",
+    "CHEM FILM",
+  ];
+  const upperName = processName.trim().toUpperCase();
+  return specialCodes.some((code) => upperName.includes(code.toUpperCase()));
+}
+
 function groupSubOperations(operations, jobDetail) {
-  if (!Array.isArray(operations) || operations.length === 0) return operations;
+  if (!Array.isArray(operations) || operations.length === 0) {
+    console.log("[groupSubOperations] No operations provided");
+    return operations;
+  }
+
+  console.log(
+    `[groupSubOperations] Processing ${operations.length} operation(s): ${operations.map((op) => `${op.operation}(LMO=${op.lmo})`).join(", ")}`,
+  );
 
   // Build a map from base-hundred SEQ -> PO reference (from JOB_DETAIL / JOB_HIST_DTL, LMO='O' rows).
   // JOB_DETAIL rows use the sub-op seq (e.g. 1250) so we normalize to the base op seq (e.g. 1200)
@@ -273,11 +316,15 @@ function groupSubOperations(operations, jobDetail) {
         typeof groupKey === "number"
           ? poBySeq.get(groupKey) || singlePOFallback
           : singlePOFallback;
-      const isOutsideSub = group.subs.some(
-        (s) =>
+      const isOutsideSub = group.subs.some((s) => {
+        const processName =
+          `${s.operation || ""} ${s.partWcOutside?.trim() || s.description || ""}`.trim();
+        return (
           (s.lmo || "").toUpperCase() === "O" ||
-          (s.partWcOutside || "").toUpperCase() === "Y",
-      );
+          (s.partWcOutside || "").toUpperCase() === "Y" ||
+          isSpecialProcess(processName)
+        );
+      });
       if ((poNumber || isOutsideSub) && group.subs.length > 0) {
         const firstSub = group.subs[0];
         result.push({
@@ -299,14 +346,21 @@ function groupSubOperations(operations, jobDetail) {
     //   1. LMO = 'O' in JOB_OPERATIONS / JOB_HIST_OPS (most reliable)
     //   2. ROUTER_LINE.PART_WC_OUTSIDE = 'Y' (secondary check)
     //   3. Has sub-operations (N01-N99 pattern)
+    //   4. Is a special process (SPOTW, 6061, ALODINE, WELD, NADCAP, CHEM FILM)
+    const processName =
+      `${group.base.operation || ""} ${group.base.partWcOutside?.trim() || group.base.description || ""}`.trim();
     const isOutside =
       (group.base.lmo || "").toUpperCase() === "O" ||
       (group.base.partWcOutside || "").toUpperCase() === "Y" ||
-      group.subs.length > 0;
+      group.subs.length > 0 ||
+      isSpecialProcess(processName);
 
     if (!isOutside) {
       result.push(group.base);
     } else {
+      console.log(
+        `[groupSubOperations] Marking as outsideProcessing: ${group.base.operation} (LMO=${group.base.lmo}, PART_WC_OUTSIDE=${group.base.partWcOutside}, isSpecial=${isSpecialProcess(processName)})`,
+      );
       const subOpDescription = (group.subs[0]?.description || "").trim();
       result.push({
         ...group.base,
@@ -364,7 +418,9 @@ function callVBS(vbsPath, args, includeRaw = false) {
             console.log(stdout);
             console.log("<<< END RAW VBS OUTPUT");
 
-            const parsed = JSON.parse(stdout);
+            // Trim output first (VBScript can output BOM or extra whitespace)
+            const trimmedOutput = stdout.trim();
+            const parsed = JSON.parse(trimmedOutput);
             if (includeRaw) {
               resolve({ parsed, raw: stdout });
             } else {
@@ -377,8 +433,26 @@ function callVBS(vbsPath, args, includeRaw = false) {
             console.error("RAW VBS OUTPUT THAT FAILED >>>");
             console.error(stdout);
             console.error("<<< END RAW VBS OUTPUT");
+            console.error("STDERR:", stderr);
+            console.error("Parse error:", e.message);
 
-            reject(new Error(`Failed to parse VBS JSON output`));
+            // Write full output to debug file
+            const debugFile = path.join(
+              __dirname,
+              `vbs-debug-${Date.now()}.json`,
+            );
+            fs.writeFileSync(
+              debugFile,
+              `STDOUT:\n${stdout}\n\nSTDERR:\n${stderr}`,
+              "utf8",
+            );
+            console.error(`Full output written to: ${debugFile}`);
+
+            reject(
+              new Error(
+                `Failed to parse VBS JSON output: ${stdout.substring(0, 500)}  [STDERR: ${stderr.substring(0, 200)}]`,
+              ),
+            );
           }
         }
       },
@@ -454,7 +528,9 @@ router.get("/build-cert", async (req, res) => {
 
     for (const parent of selectedParents) {
       const { job, suffix } = parent;
-      console.log(`[build-cert] Getting hierarchy for ${job}-${suffix}`);
+      console.log(
+        `\n${"=".repeat(80)}\n[PARENT START] Processing ${job}-${suffix}\n${"=".repeat(80)}`,
+      );
 
       try {
         //
@@ -480,6 +556,12 @@ router.get("/build-cert", async (req, res) => {
             link.parent_j52.timeItemHistory === parent.timeItemHistory,
         );
 
+        if (linksForParent.length > 0) {
+          console.log(
+            `\n>>> CoC LINKS FOUND: ${linksForParent.map((l) => `${l.child_job.job}-${l.child_job.suffix}`).join(", ")}`,
+          );
+        }
+
         // FALLBACK: If cocLinks is empty or no links found for this parent,
         // extract children from the parent's itemHistory (J55 transactions)
         if (linksForParent.length === 0 && parentDetail.itemHistory) {
@@ -502,7 +584,7 @@ router.get("/build-cert", async (req, res) => {
           const prevEntry =
             thisIndex > 0 ? sameSuffixJ52s[thisIndex - 1] : null;
 
-          const fallbackChildren = extractChildJobsFromItemHistory(
+          const linksWithTimestamp = extractChildJobsFromItemHistory(
             job,
             suffix,
             parentDetail.itemHistory,
@@ -511,12 +593,13 @@ router.get("/build-cert", async (req, res) => {
             prevEntry?.t.dateHistory,
             prevEntry?.t.timeItemHistory,
           );
-          linksForParent = fallbackChildren.map((child) => ({
+
+          linksForParent = linksWithTimestamp.map((child) => ({
             parent_j52: parent,
             child_job: child,
           }));
           console.log(
-            `[build-cert] Found ${linksForParent.length} children via itemHistory fallback`,
+            `\n>>> CHILDREN DISCOVERED (timebound): ${linksWithTimestamp.map((c) => `${c.job}-${c.suffix}`).join(", ") || "(none)"}`,
           );
         }
 
@@ -564,6 +647,68 @@ router.get("/build-cert", async (req, res) => {
                 itemHistory: childDetail.itemHistory || [],
               },
             });
+
+            // IMPORTANT: If this child has its own children (grandchildren of the parent),
+            // discover and fetch those too! This ensures all levels of the hierarchy are included.
+            const grandchildrenLinks = extractChildJobsFromItemHistory(
+              child.job,
+              child.suffix,
+              childDetail.itemHistory || [],
+              null, // no timestamp bounds
+              null,
+              null,
+              null,
+            );
+
+            if (grandchildrenLinks.length > 0) {
+              console.log(
+                `[build-cert]   Found ${grandchildrenLinks.length} grandchildren of ${child.job}-${child.suffix}`,
+              );
+
+              for (const grandchild of grandchildrenLinks) {
+                console.log(
+                  `[build-cert]   Getting grandchild ${grandchild.job}-${grandchild.suffix}`,
+                );
+
+                try {
+                  const grandchildDetailResult = await callVBS(
+                    detailVbsPath,
+                    [grandchild.job, grandchild.suffix],
+                    true,
+                  );
+                  const grandchildDetail = grandchildDetailResult.parsed;
+                  debugInfo.rawVbsOutputs[
+                    `processcert-detail.vbs (grandchild ${grandchild.job}-${grandchild.suffix})`
+                  ] = grandchildDetailResult.raw;
+
+                  childHierarchies.push({
+                    childJob: {
+                      job: grandchild.job,
+                      suffix: grandchild.suffix,
+                      serialNumber:
+                        grandchild.firstJ55?.serialNumber ||
+                        `${grandchild.job}-${grandchild.suffix}`,
+                      quantity: grandchild.firstJ55?.quantity || 0,
+                      dateHistory: grandchild.firstJ55?.dateHistory || "",
+                      part: grandchildDetail.part || "",
+                      partDescription: grandchildDetail.partDescription || "",
+                    },
+                    hierarchy: {
+                      operations: groupSubOperations(
+                        grandchildDetail.operations || [],
+                        grandchildDetail.jobDetail || [],
+                      ),
+                      itemHistory: grandchildDetail.itemHistory || [],
+                    },
+                  });
+                } catch (gcErr) {
+                  console.error(
+                    `[build-cert]   Failed to get grandchild ${grandchild.job}-${grandchild.suffix}:`,
+                    gcErr.message,
+                  );
+                }
+              }
+            }
           } catch (childErr) {
             console.error(
               `[build-cert] Failed to get detail for child ${child.job}-${child.suffix}:`,
@@ -579,18 +724,31 @@ router.get("/build-cert", async (req, res) => {
         //
         // 4. Push final combined structure
         //
+        const parentOps = groupSubOperations(
+          parentDetail.operations || [],
+          parentDetail.jobDetail || [],
+        );
+        const parentSpecialOps = parentOps.filter((op) => op.outsideProcessing);
+        const childSpecialOps = (childHierarchies || []).flatMap((ch) =>
+          (ch.hierarchy?.operations || []).filter((op) => op.outsideProcessing),
+        );
+        const totalSpecial = parentSpecialOps.length + childSpecialOps.length;
+
+        console.log(
+          `\n>>> SPECIAL PROCESSES FOUND ON PARENT ${job}-${suffix}: ${parentSpecialOps.length} parent + ${childSpecialOps.length} child = ${totalSpecial} total`,
+        );
+
         certificateData.push({
           parentJ52: parent,
           partDescription: parentDetail.partDescription || "",
           hierarchy: {
-            operations: groupSubOperations(
-              parentDetail.operations || [],
-              parentDetail.jobDetail || [],
-            ),
+            operations: parentOps,
             itemHistory: parentDetail.itemHistory || [],
           },
           childJobs: childHierarchies,
         });
+
+        console.log(`[PARENT END] ${job}-${suffix}\n${"=".repeat(80)}\n`);
       } catch (err) {
         console.error(
           `[build-cert] Error getting detail for ${job}-${suffix}:`,
