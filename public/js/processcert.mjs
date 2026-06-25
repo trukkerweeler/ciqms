@@ -33,12 +33,7 @@ function isSpecialProcess(processName) {
 }
 
 const step1Form = document.getElementById("step1-form");
-const fetchBtn = document.getElementById("fetch-btn");
 const statusMsg = document.getElementById("status-msg");
-const transactionsSection = document.getElementById("transactions-section");
-const transactionsTable = document.getElementById("transactions-table");
-const transactionsBody = document.getElementById("transactions-body");
-const selectAllCheckbox = document.getElementById("select-all");
 const genCertBtn = document.getElementById("gen-cert");
 const clearBtn = document.getElementById("clear-btn");
 const printBtn = document.getElementById("print-btn");
@@ -64,8 +59,6 @@ function showStatus(message, type = "loading") {
  */
 function clearAll() {
   selectedIndices.clear();
-  transactionsBody.innerHTML = "";
-  transactionsSection.style.display = "none";
   jsonDebugDiv.style.display = "none";
   jsonToggleSection.style.display = "none";
   jsonToggleBtn.textContent = "Show JSON";
@@ -76,6 +69,7 @@ function clearAll() {
   certOutput.innerHTML = "";
   certOutput.style.display = "none";
   printBtn.style.display = "none";
+  document.getElementById("packingSlip").value = "";
 }
 
 /**
@@ -154,50 +148,44 @@ function renderCert(certData, qaUser) {
     year: "numeric",
   });
 
-  let hasContent = false;
+  // Collect all process sections across ALL entries into one combined map
+  // key = processName, value = { processName, poNumber, rows[] }
+  const processSections = new Map();
+  const workOrders = new Set();
+  let topAssembly = "";
+  let topAssemblyDesc = "";
 
   for (const entry of certData.certificateData) {
     if (entry.error) continue;
 
     const woNumber = `${entry.parentJ52.job}-${entry.parentJ52.suffix}`;
-    const topAssembly = normalizePart(entry.parentJ52.part);
-    const topAssemblyDesc = normalizePart(entry.partDescription || "");
-
-    // Collect process sections: one per unique outside-processing operation description
-    const processSections = new Map(); // key -> { processName, poNumber, rows[] }
-
-    // Each child job defines the process it was sent out for (outsideProcessing ops).
-    // Group children by their shared process description; each child = one row.
-    let itemNum = 1;
+    workOrders.add(woNumber);
+    if (!topAssembly) {
+      topAssembly = normalizePart(entry.parentJ52.part).replace(/\s+-\s*$/, "");
+      topAssemblyDesc = normalizePart(entry.partDescription || "");
+    }
 
     // ====================================================================
-    // FIRST: Check PARENT job's operations for outside processing (LMO='O')
+    // PARENT job's outside processing operations
     // ====================================================================
     if (Array.isArray(entry.hierarchy?.operations)) {
       for (const op of entry.hierarchy.operations) {
         if (!op.outsideProcessing) continue;
 
-        // Skip only truly generic catch-all ops that have no meaningful identifier
         const opDesc = (op.description || op.operation || "")
           .trim()
           .toUpperCase();
         const subDesc = (op.subOpDescription || "").trim().toUpperCase();
-        // Filter out only truly generic catch-alls, NOT "PASSIVATE TO PRINT" which is a real operation
         if (
           TRULY_NON_CERT_OPS.includes(opDesc) ||
           TRULY_NON_CERT_OPS.includes(subDesc)
         )
           continue;
 
-        // Use ROUTER operation description (partWcOutside) as the real identifier, not the generic JOB operation name
         const processName =
           `${op.operation || ""} ${op.partWcOutside?.trim() || op.subOpDescription || op.description || ""}`.trim();
+        if (!processName || !isSpecialProcess(processName)) continue;
 
-        if (!processName) continue;
-        // Filter to show ONLY special processes on certificate
-        if (!isSpecialProcess(processName)) continue;
-
-        // Use processName (the real ROUTER description) as the grouping key, not the generic JOB operation
         if (!processSections.has(processName)) {
           processSections.set(processName, {
             processName,
@@ -205,9 +193,7 @@ function renderCert(certData, qaUser) {
             rows: [],
           });
         }
-
         processSections.get(processName).rows.push({
-          item: itemNum++,
           part: topAssembly,
           partDesc: topAssemblyDesc,
           trace: op.poNumber || "",
@@ -219,13 +205,12 @@ function renderCert(certData, qaUser) {
     }
 
     // ====================================================================
-    // THEN: Check child jobs for outside operations
+    // CHILD jobs' outside processing operations
     // ====================================================================
     for (const childEntry of entry.childJobs || []) {
       for (const op of childEntry.hierarchy?.operations || []) {
         if (!op.outsideProcessing) continue;
 
-        // Skip only truly generic catch-all ops that have no meaningful identifier
         const opDesc = (op.description || op.operation || "")
           .trim()
           .toUpperCase();
@@ -236,15 +221,10 @@ function renderCert(certData, qaUser) {
         )
           continue;
 
-        // Use ROUTER operation description (partWcOutside) as the real identifier
         const processName =
           `${op.operation || ""} ${op.partWcOutside?.trim() || op.subOpDescription || op.description || ""}`.trim();
+        if (!processName || !isSpecialProcess(processName)) continue;
 
-        if (!processName) continue;
-        // Filter to show ONLY special processes on certificate
-        if (!isSpecialProcess(processName)) continue;
-
-        // Use processName (the real ROUTER description) as the grouping key
         if (!processSections.has(processName)) {
           processSections.set(processName, {
             processName,
@@ -253,8 +233,8 @@ function renderCert(certData, qaUser) {
           });
         }
 
+        const childWo = `${childEntry.childJob.job}-${childEntry.childJob.suffix}`;
         processSections.get(processName).rows.push({
-          item: itemNum++,
           part: getChildPart(childEntry),
           partDesc: normalizePart(childEntry.childJob.partDescription || ""),
           trace:
@@ -263,118 +243,114 @@ function renderCert(certData, qaUser) {
             ? getTraceId(childEntry.hierarchy?.itemHistory || [])
             : "",
           qty: getQuantityFromHistory(childEntry.hierarchy?.itemHistory || []),
-          workOrder: `${childEntry.childJob.job}-${childEntry.childJob.suffix}`,
+          workOrder: childWo,
         });
       }
     }
-
-    if (processSections.size === 0) continue;
-    hasContent = true;
-
-    // Build all process rows in one table body
-    let allProcessRowsHtml = `
-      <thead>
-        <tr>
-          <th>ITEM</th>
-          <th>PART NUMBER / DESCRIPTION</th>
-          <th>TRACE ID</th>
-          <th>QUANTITY</th>
-          <th>WORK ORDER</th>
-        </tr>
-      </thead>
-      <tbody>
-    `;
-
-    for (const [, section] of processSections) {
-      const processLabel = section.processName;
-      const isSpecial = isSpecialProcess(processLabel);
-
-      // Add process header row
-      allProcessRowsHtml += `
-        <tr class="cert-process-row${isSpecial ? " cert-process-row-special" : ""}">
-          <td colspan="5" class="cert-process-header-cell${isSpecial ? " cert-process-header-cell-special" : ""}">
-            <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-              <strong>Process: ${processLabel}</strong>${isSpecial ? '<span class="special-process-badge">★ SPECIAL PROCESS</span>' : ""}
-            </div>
-          </td>
-        </tr>
-      `;
-
-      // Add data rows for this process (reset item numbering per process)
-      let itemNum = 1;
-      for (const row of section.rows) {
-        allProcessRowsHtml += `
-          <tr>
-            <td class="cert-td-center">${itemNum++}</td>
-            <td>${row.part}${row.partDesc ? `<br><span style="font-size:0.85em;color:#333">${row.partDesc}</span>` : ""}</td>
-            <td>${row.trace}</td>
-            <td class="cert-td-center">${row.qty}</td>
-            <td title="${row.traceHover ? "Trace ID: " + row.traceHover : ""}">${row.workOrder}</td>
-          </tr>
-        `;
-      }
-    }
-
-    allProcessRowsHtml += `
-      </tbody>
-    `;
-
-    const doc = document.createElement("div");
-    doc.className = "cert-document";
-    doc.innerHTML = `
-      <div class="cert-header">
-        <div class="cert-logo-area">
-          <img src="/images/ci-logo.png" alt="CI" class="cert-logo">
-        </div>
-        <div class="cert-address-area">
-          2990 South Main Street, Salt Lake City, Utah 84115<br>
-          Telephone: (801) 466-3334 &bull; Fax: (801) 466-1441
-        </div>
-      </div>
-
-      <div class="cert-title-box"><strong>Certification of Processing</strong></div>
-
-      <table class="cert-info-table">
-        <tr>
-          <td class="cert-lbl">Work Order Number:</td>
-          <td class="cert-val">${woNumber}</td>
-          <td class="cert-lbl">Top Assembly Number:</td>
-          <td class="cert-val">${topAssembly}</td>
-        </tr>
-        <tr>
-          <td class="cert-lbl">Part Number/Description:</td>
-          <td class="cert-val" colspan="3">${topAssembly}${topAssemblyDesc ? ` &mdash; ${topAssemblyDesc}` : ""}</td>
-        </tr>
-      </table>
-
-      <table class="cert-data-table">
-        ${allProcessRowsHtml}
-      </table>
-
-      <div class="cert-statement">
-        I certify that the listed materials were processed in conformance with the
-        designated specifications and the latest drawing revisions on record.
-      </div>
-
-      <div class="cert-signature">
-        <div class="cert-sig-line-spacer"></div>
-        <div class="cert-sig-underline"></div>
-        <div class="cert-sig-name">${qaUser || "Quality Assurance"}</div>
-        <div class="cert-sig-role">Quality Assurance</div>
-        <div class="cert-sig-date">Date: ${today}</div>
-      </div>
-    `;
-    certOutput.appendChild(doc);
   }
 
-  if (hasContent) {
-    certOutput.style.display = "block";
-    printBtn.style.display = "inline-block";
-  } else {
+  if (processSections.size === 0) {
     certOutput.innerHTML =
       "<p style='color:#666'>No outside processing operations found for the selected transaction(s).</p>";
     certOutput.style.display = "block";
+    return;
   }
+
+  // Build single table body with all process sections
+  let allProcessRowsHtml = `
+    <thead>
+      <tr>
+        <th>ITEM</th>
+        <th>PART NUMBER / DESCRIPTION</th>
+        <th>TRACE ID</th>
+        <th>QUANTITY</th>
+        <th>WORK ORDER</th>
+      </tr>
+    </thead>
+    <tbody>
+  `;
+
+  for (const [, section] of processSections) {
+    const isSpecial = isSpecialProcess(section.processName);
+    allProcessRowsHtml += `
+      <tr class="cert-process-row${isSpecial ? " cert-process-row-special" : ""}">
+        <td colspan="5" class="cert-process-header-cell${isSpecial ? " cert-process-header-cell-special" : ""}">
+          <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
+            <strong>Process: ${section.processName}</strong>${isSpecial ? '<span class="special-process-badge">★ SPECIAL PROCESS</span>' : ""}
+          </div>
+        </td>
+      </tr>
+    `;
+    let itemNum = 1;
+    for (const row of section.rows) {
+      allProcessRowsHtml += `
+        <tr>
+          <td class="cert-td-center">${itemNum++}</td>
+          <td>${row.part}${row.partDesc ? `<br><span style="font-size:0.85em;color:#333">${row.partDesc}</span>` : ""}</td>
+          <td>${row.trace}</td>
+          <td class="cert-td-center">${row.qty}</td>
+          <td title="${row.traceHover ? "Trace ID: " + row.traceHover : ""}">${row.workOrder}</td>
+        </tr>
+      `;
+    }
+  }
+  allProcessRowsHtml += `</tbody>`;
+
+  // Header: packing slip or work order list
+  const packingSlip = certData.packingSlip || "";
+  const woDisplay = packingSlip
+    ? `Packing Slip: ${packingSlip}`
+    : Array.from(workOrders).join(", ");
+
+  const doc = document.createElement("div");
+  doc.className = "cert-document";
+  doc.innerHTML = `
+    <div class="cert-header">
+      <div class="cert-logo-area">
+        <img src="/images/ci-logo.png" alt="CI" class="cert-logo">
+      </div>
+      <div class="cert-address-area">
+        2990 South Main Street, Salt Lake City, Utah 84115<br>
+        Telephone: (801) 466-3334 &bull; Fax: (801) 466-1441
+      </div>
+    </div>
+
+    <div class="cert-title-box"><strong>Certificate of Processing</strong></div>
+
+    <table class="cert-info-table">
+      <tr>
+        <td class="cert-lbl">Packing Slip:</td>
+        <td class="cert-val">${packingSlip}</td>
+        <td class="cert-lbl">Top Assembly Number:</td>
+        <td class="cert-val">${topAssembly}</td>
+      </tr>
+      <tr>
+        <td class="cert-lbl">Work Order(s):</td>
+        <td class="cert-val" colspan="3">${(certData.jobs || []).map((j) => `${j.job}-${j.suffix}`).join(", ")}</td>
+      </tr>
+    </table>
+
+    <table class="cert-data-table">
+      ${allProcessRowsHtml}
+    </table>
+
+    <div class="cert-statement">
+      I certify that the listed materials were processed in conformance with the
+      designated specifications and the latest drawing revisions on record.
+    </div>
+
+    <div class="cert-signature">
+      <div class="cert-sig-line-spacer"></div>
+      <div class="cert-sig-underline"></div>
+      <div class="cert-sig-name">${qaUser || "Quality Assurance"}</div>
+      <div class="cert-sig-role">Quality Assurance</div>
+      <div class="cert-sig-date">Date: ${today}</div>
+    </div>
+  `;
+  certOutput.appendChild(doc);
+
+  certOutput.style.display = "block";
+  printBtn.style.display = "inline-block";
 }
 
 /**
@@ -408,33 +384,33 @@ document.addEventListener("DOMContentLoaded", async () => {
 });
 
 /**
- * Step 1: Fetch parent J52 transactions
+ * Step 1: Fetch jobs from packing slip and generate certificate
  */
 step1Form.addEventListener("submit", async (e) => {
   e.preventDefault();
 
-  const job = document.getElementById("job").value;
+  const packingSlip = document
+    .getElementById("packingSlip")
+    .value.trim()
+    .padStart(6, "0");
 
-  if (!job) {
-    showStatus("Please enter a job number", "error");
+  if (!packingSlip) {
+    showStatus("Please enter a packing slip number", "error");
     return;
   }
 
-  showStatus("Fetching parent transactions...", "loading");
-  selectedIndices.clear();
+  showStatus("Looking up jobs from packing slip...", "loading");
+  clearAll();
 
   try {
-    // Call the legacy endpoint that returns parent J52s
-    // For now, we can reuse the existing processcert-coc endpoint with just Step 1
-    // OR we need to create a simpler endpoint that just gets J52s
+    // Fetch jobs from packing slip
+    const params = new URLSearchParams({ pck_no: packingSlip });
+    const jobsResponse = await fetch(
+      `/processcert/jobs-by-packing-slip?${params}`,
+    );
 
-    // Let's create a temporary approach: fetch from /processcert/build-cert first
-    // to get parent transactions and hierarchy
-    const params = new URLSearchParams({ job });
-    const response = await fetch(`/processcert/build-cert?${params}`);
-
-    if (!response.ok) {
-      const error = await response.json();
+    if (!jobsResponse.ok) {
+      const error = await jobsResponse.json();
       showStatus(
         `Error: ${error.error}${error.details ? " — " + error.details : ""}`,
         "error",
@@ -442,193 +418,91 @@ step1Form.addEventListener("submit", async (e) => {
       return;
     }
 
-    // Extract parent J52s from the response
-    // The /build-cert endpoint returns certificateData which is an array of results
-    // Each result has parentJ52 with the parent transaction details
-    const data = await response.json();
-    if (data.certificateData && data.certificateData.length > 0) {
-      parentJ52Transactions = data.certificateData.map((result) => ({
-        DATE_HISTORY: result.parentJ52.dateHistory || "",
-        TIME_ITEM_HISTORY: result.parentJ52.timeItemHistory || "",
-        QUANTITY: result.parentJ52.quantity || 0,
-        JOB: result.parentJ52.job || "",
-        SUFFIX: result.parentJ52.suffix || "",
-        PART: result.parentJ52.part || "",
-        TRANSACTION_CODE: "J52",
-      }));
-    } else {
-      showStatus("No parent transactions found", "error");
-      return;
-    }
+    const jobsData = await jobsResponse.json();
+    const jobs = jobsData.jobs || [];
 
-    if (
-      !Array.isArray(parentJ52Transactions) ||
-      parentJ52Transactions.length === 0
-    ) {
-      showStatus("No parent J52 transactions found for this job", "error");
+    if (!jobs || jobs.length === 0) {
+      showStatus("No jobs found for this packing slip", "error");
       return;
     }
 
     showStatus(
-      `Found ${parentJ52Transactions.length} parent transaction(s)`,
-      "success",
+      `Found ${jobs.length} job(s), generating certificate...`,
+      "loading",
     );
 
-    // Render transactions table
-    renderTransactionsTable();
-    transactionsSection.style.display = "block";
-  } catch (error) {
-    console.error("Fetch error:", error);
-    showStatus(`Error: ${error.message}`, "error");
-  }
-});
+    // Fetch all jobs in parallel
+    const jobResults = await Promise.all(
+      jobs.map(async (job) => {
+        try {
+          const certParams = new URLSearchParams({
+            job: job.job,
+            suffix: job.suffix,
+          });
+          const certResponse = await fetch(
+            `/processcert/build-cert?${certParams}`,
+          );
+          if (!certResponse.ok) {
+            console.warn(
+              `Error fetching job ${job.job}-${job.suffix}:`,
+              await certResponse.json(),
+            );
+            return null;
+          }
+          const certData = await certResponse.json();
+          return certData.certificateData &&
+            Array.isArray(certData.certificateData)
+            ? certData.certificateData
+            : null;
+        } catch (error) {
+          console.warn(`Error processing job ${job.job}-${job.suffix}:`, error);
+          return null;
+        }
+      }),
+    );
 
-/**
- * Render transactions in table
- */
-function renderTransactionsTable() {
-  transactionsBody.innerHTML = "";
+    const allCertificateData = jobResults.flat().filter(Boolean);
 
-  parentJ52Transactions.forEach((row, idx) => {
-    const tr = document.createElement("tr");
-
-    const checkboxTd = document.createElement("td");
-    checkboxTd.className = "checkbox-cell";
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.dataset.index = idx;
-    checkbox.addEventListener("change", (e) => {
-      if (e.target.checked) {
-        selectedIndices.add(idx);
-      } else {
-        selectedIndices.delete(idx);
-      }
-      updateSelectAllCheckbox();
-    });
-    checkboxTd.appendChild(checkbox);
-
-    tr.appendChild(checkboxTd);
-    tr.appendChild(createCell(row.DATE_HISTORY || ""));
-    tr.appendChild(createCell(row.TIME_ITEM_HISTORY || ""));
-    tr.appendChild(createCell(row.JOB || ""));
-    tr.appendChild(createCell(row.SUFFIX || ""));
-    tr.appendChild(createCell(row.QUANTITY || ""));
-    tr.appendChild(createCell(row.PART || ""));
-    tr.appendChild(createCell(row.TRANSACTION_CODE || ""));
-
-    transactionsBody.appendChild(tr);
-  });
-
-  console.log("Sample row data:", parentJ52Transactions[0]);
-}
-
-/**
- * Create table cell
- */
-function createCell(content) {
-  const td = document.createElement("td");
-  td.textContent = content;
-  return td;
-}
-
-/**
- * Update "Select All" checkbox state
- */
-function updateSelectAllCheckbox() {
-  const allCheckboxes = Array.from(
-    transactionsBody.querySelectorAll('input[type="checkbox"]'),
-  );
-  selectAllCheckbox.checked =
-    allCheckboxes.length > 0 && allCheckboxes.every((cb) => cb.checked);
-}
-
-/**
- * Handle "Select All" checkbox
- */
-selectAllCheckbox.addEventListener("change", (e) => {
-  const checkboxes = transactionsBody.querySelectorAll(
-    'input[type="checkbox"]',
-  );
-  if (e.target.checked) {
-    checkboxes.forEach((cb, idx) => {
-      cb.checked = true;
-      selectedIndices.add(idx);
-    });
-  } else {
-    checkboxes.forEach((cb, idx) => {
-      cb.checked = false;
-      selectedIndices.delete(idx);
-    });
-  }
-});
-
-/**
- * Step 2: Generate certificate (call /processcert/build-cert)
- */
-genCertBtn.addEventListener("click", async () => {
-  if (selectedIndices.size === 0) {
-    showStatus("Please select at least one transaction", "error");
-    return;
-  }
-
-  const job = document.getElementById("job").value;
-  const indices = Array.from(selectedIndices).sort().join(",");
-
-  // Clear previous cert output before generating a new one
-  const certOutput = document.getElementById("cert-output");
-  certOutput.innerHTML = "";
-  certOutput.style.display = "none";
-  printBtn.style.display = "none";
-  jsonDebugDiv.style.display = "none";
-  jsonToggleSection.style.display = "none";
-  jsonToggleBtn.textContent = "Show JSON";
-
-  showStatus("Generating certificate...", "loading");
-
-  try {
-    const params = new URLSearchParams({
-      job,
-      selectedIndices: indices,
-    });
-
-    const response = await fetch(`/processcert/build-cert?${params}`);
-
-    if (!response.ok) {
-      const error = await response.json();
-      showStatus(
-        `Error: ${error.error}${error.details ? " — " + error.details : ""}`,
-        "error",
-      );
-      console.error("Error details:", error);
+    if (allCertificateData.length === 0) {
+      showStatus("No certificate data found for these jobs", "error");
       return;
     }
 
-    const certData = await response.json();
-    lastResponse = certData;
-
+    // Render certificate with combined data
     const qaUser = document.getElementById("qaUser").value;
-    renderCert(certData, qaUser);
+    const combinedResponse = {
+      success: true,
+      packingSlip: packingSlip,
+      jobs: jobs,
+      certificateData: allCertificateData,
+      timestamp: new Date().toISOString(),
+    };
 
-    // Populate JSON debug view (hidden by default)
+    lastResponse = combinedResponse;
+    renderCert(combinedResponse, qaUser);
+
+    // Populate JSON debug view
     jsonOutput.textContent = JSON.stringify(
       {
-        success: certData.success,
-        job: certData.job,
-        selectedIndices: certData.selectedIndices,
-        certificateData: certData.certificateData,
-        timestamp: certData.timestamp,
+        success: combinedResponse.success,
+        packingSlip: combinedResponse.packingSlip,
+        jobs: combinedResponse.jobs,
+        certificateData: combinedResponse.certificateData,
+        timestamp: combinedResponse.timestamp,
       },
       null,
       2,
     );
+
+    // Show certificate output
+    const certOutput = document.getElementById("cert-output");
+    certOutput.style.display = "block";
+    printBtn.style.display = "inline-block";
     jsonToggleSection.style.display = "block";
 
-    showStatus(
-      `Certificate generated successfully (${certData.certificateData.length} parent(s))`,
-      "success",
-    );
+    showStatus("Certificate generated successfully", "success");
   } catch (error) {
-    console.error("Generation error:", error);
+    console.error("Fetch error:", error);
     showStatus(`Error: ${error.message}`, "error");
   }
 });

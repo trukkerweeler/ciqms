@@ -1,5 +1,34 @@
 # PROCESS CERTIFICATE (processcert)
 
+## Entry Point — Packing Slip (Current Implementation)
+
+The certificate is now generated from a **packing slip number**, not a manually selected job number.
+
+### Flow
+
+```
+User enters packing slip (e.g. 046198)
+  ↓ padStart(6, '0') → always 6 digits
+  ↓
+processcert-packing-slip.vbs
+  → ORDER_HIST_LOT WHERE INVOICE = '046198' AND SERIAL LIKE '______-___'
+  → returns SERIAL values e.g. "122480-000"
+  → parsed → [{job: "122480", suffix: "000"}, ...]
+  ↓
+Fan-out (Promise.all) — one /processcert/build-cert call per job
+  ↓
+Results combined → single Certificate of Processing rendered
+```
+
+### Key Properties
+
+- Packing slip padded to 6 digits on the frontend before sending
+- All jobs fetched **in parallel** (fan-out/fan-in pattern) — O(t) not O(n·t)
+- All process sections from all jobs merged into **one certificate document**
+- Header shows: Packing Slip number + Work Order(s) from ORDER_HIST_LOT SERIAL only (not child jobs)
+
+---
+
 ## Mental Model (Updated With Key Learnings)
 
 ## **Step 1 — Get & Display Parent J52 Transactions**

@@ -32,6 +32,120 @@ function isSpecialProcess(processName) {
 
 let currentData = null;
 let currentJobNumber = null;
+let currentPackingSlip = null;
+
+export async function fetchByPackingSlip() {
+  const pckNo = document
+    .getElementById("packingSlipNumber")
+    .value.trim()
+    .padStart(6, "0");
+  if (!pckNo) {
+    showStatus("Please enter a packing slip number", "error");
+    return;
+  }
+
+  currentPackingSlip = pckNo;
+  currentJobNumber = null;
+  showStatus("Looking up packing slip...", "loading");
+
+  // Hide previous results
+  document.getElementById("jobInfo").innerHTML = "";
+  document.getElementById("allRawOps").innerHTML = "";
+  document.getElementById("allFilterAnalysis").innerHTML = "";
+  document.getElementById("allGrouping").innerHTML = "";
+  document.getElementById("finalSections").innerHTML = "";
+  document.getElementById("rawJSON").textContent = "";
+
+  try {
+    // Step 1: lookup jobs from packing slip
+    const psResponse = await fetch(
+      `/processcert/jobs-by-packing-slip?pck_no=${encodeURIComponent(pckNo)}`,
+    );
+    const psData = await psResponse.json();
+
+    if (!psResponse.ok || !psData.success) {
+      showStatus(
+        `Packing slip lookup failed: ${psData.error || psResponse.statusText}`,
+        "error",
+      );
+      return;
+    }
+
+    // Show lookup results
+    const lookupSection = document.getElementById("packingSlipLookup");
+    const lookupInfo = document.getElementById("packingSlipInfo");
+    lookupSection.style.display = "block";
+
+    const jobs = psData.jobs || [];
+    let lookupHtml = `
+      <div style="padding:10px; background:#f0f8ff; border-left:3px solid #2e7d32; border-radius:4px; margin-bottom:10px;">
+        <strong>Packing Slip:</strong> ${pckNo} &nbsp;|&nbsp;
+        <strong>Jobs found:</strong> ${jobs.length}
+      </div>
+      <table>
+        <thead><tr><th>#</th><th>SERIAL (raw)</th><th>Job</th><th>Suffix</th></tr></thead>
+        <tbody>
+    `;
+    jobs.forEach((j, i) => {
+      lookupHtml += `<tr><td>${i + 1}</td><td>${j.job}-${j.suffix}</td><td>${j.job}</td><td>${j.suffix}</td></tr>`;
+    });
+    lookupHtml += `</tbody></table>`;
+    lookupInfo.innerHTML = lookupHtml;
+
+    // Step 2: fan-out — fetch cert data for all jobs in parallel
+    showStatus(
+      `Found ${jobs.length} job(s), fetching certificate data...`,
+      "loading",
+    );
+
+    const jobResults = await Promise.all(
+      jobs.map(async (job) => {
+        try {
+          const r = await fetch(
+            `/processcert/build-cert?job=${job.job}&suffix=${job.suffix}`,
+          );
+          const d = await r.json();
+          if (!r.ok || !d.certificateData) return null;
+          // Tag each entry with the packing slip source job
+          d.certificateData.forEach((entry) => {
+            entry._psSourceJob = `${job.job}-${job.suffix}`;
+          });
+          return d.certificateData;
+        } catch (e) {
+          console.warn(`Error fetching ${job.job}-${job.suffix}:`, e);
+          return null;
+        }
+      }),
+    );
+
+    const allCertData = jobResults.flat().filter(Boolean);
+
+    if (allCertData.length === 0) {
+      showStatus("No certificate data returned for any job", "error");
+      return;
+    }
+
+    currentData = {
+      success: true,
+      packingSlip: pckNo,
+      jobs,
+      certificateData: allCertData,
+    };
+
+    document.getElementById("rawJSON").textContent = JSON.stringify(
+      currentData,
+      null,
+      2,
+    );
+    analyzeData();
+    showStatus(
+      `✓ Loaded ${allCertData.length} parent transaction(s) across ${jobs.length} job(s)`,
+      "success",
+    );
+  } catch (error) {
+    showStatus(`Error: ${error.message}`, "error");
+  }
+}
 
 export async function fetchDiagnosticData() {
   const jobNumber = document.getElementById("jobNumber").value.trim();
@@ -41,6 +155,9 @@ export async function fetchDiagnosticData() {
   }
 
   currentJobNumber = jobNumber;
+  currentPackingSlip = null;
+  // Hide packing slip section when fetching by job
+  document.getElementById("packingSlipLookup").style.display = "none";
   showStatus("Fetching diagnostic data...", "loading");
 
   try {
@@ -122,6 +239,28 @@ function showJobInfo(entries) {
   const part = entries[0]?.parentJ52?.part || "N/A";
   const partDesc = entries[0]?.parentJ52?.partDescription || "";
 
+  // Group entries by packing slip source job (if driven from PS)
+  const psBySource = currentPackingSlip
+    ? entries.reduce((acc, e) => {
+        const src = e._psSourceJob || "unknown";
+        if (!acc[src]) acc[src] = [];
+        acc[src].push(`${e.parentJ52?.job}-${e.parentJ52?.suffix}`);
+        return acc;
+      }, {})
+    : null;
+
+  let psHierarchyHtml = "";
+  if (psBySource) {
+    psHierarchyHtml = `<div style="margin-top:8px; padding:8px; background:#f0fff0; border-left:3px solid #2e7d32; font-size:0.9em;">
+      <strong>Packing Slip:</strong> ${currentPackingSlip} &nbsp;|&nbsp;
+      <strong>PS Jobs → Hierarchies:</strong>
+      <ul style="margin:4px 0 0 20px;">`;
+    for (const [src, wos] of Object.entries(psBySource)) {
+      psHierarchyHtml += `<li><strong>${src}</strong> → ${wos.join(", ")}</li>`;
+    }
+    psHierarchyHtml += `</ul></div>`;
+  }
+
   info.innerHTML = `
     <div class="job-info">
       <strong>Job:</strong> ${jobNum} | 
@@ -130,14 +269,16 @@ function showJobInfo(entries) {
       <strong>Children:</strong> ${totalChildren} | 
       <strong>Grandchildren:</strong> ${totalGrandchildren}
     </div>
+    ${psHierarchyHtml}
     <div style="margin-top: 10px; padding: 10px; background: #f0f8ff; border-left: 3px solid #0066cc; border-radius: 4px; font-size: 0.9em; color: #333;">
-      <strong>ℹ Active API Filters:</strong>
+      <strong>ℹ Active API Filters (Certificate of Processing):</strong>
       <ul style="margin: 5px 0 0 20px; padding: 0;">
         <li><strong>Hierarchy Discovery:</strong> Recursively traverses Parent → Children → Grandchildren using CoC links</li>
         <li><strong>Child Discovery (Timebound):</strong> Only J55 entries between previous and current J52 timestamp are considered children of that parent</li>
-        <li><strong>Grandchild Discovery:</strong> Unrestricted - all J55s from child job's history are checked for further descendants</li>
+        <li><strong>Grandchild Discovery:</strong> Unrestricted — all J55s from child job's history are checked for further descendants</li>
         <li><strong>SEQ Filter:</strong> ≥ 100 (excludes setup operations)</li>
         <li><strong>Opcode Blacklist:</strong> FINALI, ATTACH, REAM, SANDEB, COUNTS, KITTG, ASSEMB, SHEAR, PUNCH, INSP04, INSP05, BEND</li>
+        <li><strong>Certificate Filter:</strong> Only SPECIAL PROCESSES shown on final cert (SPOTW, 6061, ALODINE, WELD, NADCAP, CHEM FILM, PASSIV)</li>
       </ul>
     </div>
   `;
@@ -297,9 +438,10 @@ function analyzeAllOperations(entries) {
 
   html += `</tbody></table>`;
   html += `<div style="margin-top: 10px; padding: 8px; background: #f9f9f9; border-left: 3px solid #999; font-size: 0.85em; color: #666;">
-    <strong>ℹ Note:</strong> This table shows ALL operations returned by the API after backend filtering (SEQ ≥ 100, noise opcodes excluded). 
-    Operations highlighted in yellow are special processes (SPOTW, 6061, ALODINE, WELD, NADCAP, CHEM FILM).
+    <strong>ℹ Note:</strong> This table shows ALL operations returned by the API after backend filtering (SEQ ≥ 100, noise opcodes excluded).
+    Operations highlighted in yellow are special processes (SPOTW, 6061, ALODINE, WELD, NADCAP, CHEM FILM, PASSIV).
     <strong>Hierarchy Levels:</strong> Parent (gray), Child (light blue), Grandchild (light purple).
+    Only special processes appear on the final <em>Certificate of Processing</em>.
   </div>`;
   allRawOps.innerHTML = html;
 

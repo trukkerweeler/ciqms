@@ -1,353 +1,323 @@
-# Global Shop Database Schema
-
-## 1. Overview
-
-This document describes the generic data architecture for the manufacturing and inventory system.
-It includes:
-
-- Table purposes
-- Key fields
-- Relationships
-- Data flows
-- Routing flows
-- Job flows
-- Material flows
-- Labor flows
-- Notes on date/time fields (all stored as strings)
-- A complete ERD diagram
-
-This document is not tied to any specific business process (e.g., CoC).
-It is a system‑level reference for developers, analysts, and integrators.
-
-## 2. Date & Time Field Conventions (Critical)
-
-Across all tables in this system:
-
-- All date and time fields are stored as strings.
-- Formats may include:
-  - YYMMDD
-  - YYYYMMDD
-  - MMDDYY
-  - 0, 000000, 00000000
-  - Shop‑calendar encodings
-
-These fields are NOT true dates.
-They must be interpreted by the application.
-
-This applies to:
-
-- DATE_HISTORY, INV_HIST_TIME
-- TIME_ITEM_HISTORY
-- DATE_START, DATE_DUE, DATE_COMPLETED
-- DATE_OPENED, DATE_CLOSED
-- DATE_SEQUENCE, DATE_LAST_CHG
-- All router dates
-- All job dates
-
-## 3. Table Reference (By Functional Area)
-
-### 3.1 INVENTORY_HIST
-
-**Purpose**
-
-Records all inventory movements, including:
-
-- Receipts (P10, P11)
-- Issues (J55, J52)
-- Adjustments (A10, A50)
-- Expirations
-- Cycle counts
-- Bin transfers
-
-**Key Fields**
-
-- PART
-- LOCATION
-- DATE_HISTORY (string)
-- INV_HIST_TIME (string)
-- CODE_TRANSACTION
-- QUANTITY
-- OLD_ONHAND, NEW_ONHAND
-- VENDOR_NO
-- GL_ACCOUNT
-- JOB, SUFFIX
-- PROGRAM_A
-- USERID
-
-**Notes**
-
-- DATE_HISTORY + INV_HIST_TIME is the unique transaction identifier.
-- No operation sequence is stored here.
-
-### 3.2 ITEM_HISTORY
-
-**Purpose**
-
-Records work order transactions, including:
-
-- Material issues
-- Labor postings
-- PO receipts to jobs
-- Adjustments
-- Scrap
-- Completions
-- Lot/heat/serial tracking
-
-**Key Fields**
-
-- PART
-- LOCATION
-- DATE_HISTORY (string)
-- TIME_ITEM_HISTORY (string)
-- JOB, SUFFIX
-- SEQUENCE (operation sequence)
-- LOT, BIN, HEAT, SERIAL_NUMBER
-- CODE_TRANSACTION
-- REFERENCE
-- QUANTITY
-- COST
-- PROGRAM_USED
-- USERID
-
-**Notes**
-
-- Timestamps do not align with INVENTORY_HIST.
-- SEQUENCE links to JOB_OPERATIONS.
-
-### 3.3 JOB_OPERATIONS
-
-**Purpose**
-
-Defines the instantiated routing steps for a job.
-
-**Key Fields**
-
-- JOB, SUFFIX
-- SEQ (operation sequence)
-- OPERATION
-- LMO
-- DESCRIPTION
-- ROUTER, ROUTER_SEQ
-- DATE_START, DATE_DUE, DATE_COMPLETED (strings)
-- UNITS_COMPLETE, UNITS_SCRAP
-- HOURS_ESTIMATED, HOURS_ACTUAL
-
-**Notes**
-
-- SEQ links to ITEM_HISTORY.SEQUENCE.
-- ROUTER + ROUTER_SEQ links to ROUTER_LINE.
-
-### 3.4 ROUTER_LINE
-
-**Purpose**
-
-Defines the routing master for each router.
-
-**Key Fields**
-
-- ROUTER
-- ROUTER_SUFFIX
-- ROUTER_TYPE
-- LINE_ROUTER
-- LMO
-- OPERATION
-- DESC_RT_LINE
-- RUN_TIME, SET_UP
-- RATE
-- PART_WC_OUTSIDE
-
-**Notes**
-
-- Static routing definition.
-- Does not contain transactional data.
-
-### 3.5 ROUTER_HEADER
-
-**Purpose**
-
-Defines the header information for a router.
-
-**Key Fields**
-
-- ROUTER
-- ROUTER_SUFFIX
-- ROUTER_TYPE
-- DESCRIPTION_ROUTER
-- SIMILAR
-- PROD_LINE
-- SCRAP
-- CUSTOMER
-- PART_CUSTOMER
-- DRAWING_CUSTOMER
-- DATE_CURRENT, DATE_PRIOR, DATE_ORIGINAL (strings)
-
-**Notes**
-
-- Provides router‑level metadata.
-- Does not contain operation sequences.
-
-### 3.6 JOB_HEADER
-
-**Purpose**
-
-Defines job‑level information, including:
-
-- Part
-- Customer
-- Quantities
-- Dates
-- Pricing
-- Comments
-- Sales order linkage
-
-**Key Fields**
-
-- JOB, SUFFIX
-- PART
-- DESCRIPTION
-- CUSTOMER
-- CUSTOMER_PO
-- QTY_ORDER, QTY_COMPLETED
-- DATE_OPENED, DATE_DUE, DATE_CLOSED (strings)
-- COMMENTS_1, COMMENTS_2
-- DRAWING_CUSTOMER
-- SALES_ORDER, SALES_ORDER_LINE
-
-**Notes**
-
-- Job‑level context only.
-- No operation or transaction detail.
-
-### 3.7 JOB_DETAIL
-
-**Purpose**
-
-Records labor and outside processing activity, including:
-
-- Labor input
-- Outside processing
-- Scrap
-- Completed pieces
-- Employee
-- Workcenter
-- Hours
-- Costs
-
-**Key Fields**
-
-- JOB, SUFFIX
-- SEQ
-- EMPLOYEE
-- DESCRIPTION
-- DEPT_WORKCENTER
-- HOURS_WORKED
-- PIECES_SCRAP, PIECES_COMPLTD
-- AMOUNT_LABOR, AMT_OVERHEAD
-- START_TIME, END_TIME, DATE_OUT (strings)
-
-**Notes**
-
-- Labor‑focused.
-- Not used for material movement.
-
-## 4. Data Flow Overview
-
-This section describes how data moves through the system.
-
-### 4.1 Material Flow
-
-```
-ROUTER_HEADER
-      ↓
-ROUTER_LINE
-      ↓
-JOB_OPERATIONS
-      ↓
-ITEM_HISTORY (material issues/receipts)
-      ↓
-INVENTORY_HIST (inventory movement)
-```
-
-### 4.2 Routing Flow
-
-```
-ROUTER_HEADER
-      ↓
-ROUTER_LINE
-      ↓
-JOB_OPERATIONS
-```
-
-### 4.3 Job Flow
-
-```
+# Global Shop Schema (Working Reference)
+
+A practical, minimal, LLM‑friendly schema map for reverse‑engineering the Global Shop database.
+This document tracks only the tables we actually use and the relationships we have confirmed.
+
+---
+
+# 1. Date & Time Field Conventions
+
+All date/time fields in Global Shop are stored as **strings**, not real dates.
+
+Common formats:
+- `YYYYMMDD`
+- `YYMMDD`
+- `MMDDYY`
+- `00000000`, `000000`, `0`
+- Shop‑calendar encodings
+
+These must be interpreted manually.
+
+---
+
+# 2. Core Tables (By Workflow)
+
+Below are the tables we actually use, grouped by real workflows.
+
+---
+
+## A. Inventory Movement Tables
+
+### INVENTORY_HIST
+**Purpose:**  
+All inventory movements (issues, receipts, adjustments, scrap, cycle counts, transfers).
+
+**Key Fields:**  
+- PART  
+- LOCATION  
+- DATE_HISTORY  
+- INV_HIST_TIME  
+- CODE_TRANSACTION  
+- QUANTITY  
+- OLD_ONHAND  
+- NEW_ONHAND  
+- JOB  
+- SUFFIX  
+- GL_ACCOUNT  
+- USERID  
+
+**Notes:**  
+- This is the **only** place inventory is relieved.  
+- `DATE_HISTORY + INV_HIST_TIME` = unique transaction.
+
+---
+
+## B. Work Order / Job Transaction Tables
+
+### ITEM_HISTORY
+**Purpose:**  
+Work order transactions: material issues, labor postings, PO receipts to jobs, completions, scrap.
+
+**Key Fields:**  
+- PART  
+- JOB  
+- SUFFIX  
+- SEQUENCE  
+- DATE_HISTORY  
+- TIME_ITEM_HISTORY  
+- CODE_TRANSACTION  
+- QUANTITY  
+- COST  
+- LOT / BIN / HEAT / SERIAL  
+- PROGRAM_USED  
+
+**Notes:**  
+- `SEQUENCE` links to `JOB_OPERATIONS.SEQ`.
+
+---
+
+### JOB_OPERATIONS
+**Purpose:**  
+Instantiated routing steps for a job.
+
+**Key Fields:**  
+- JOB  
+- SUFFIX  
+- SEQ  
+- OPERATION  
+- ROUTER  
+- ROUTER_SEQ  
+- DATE_START  
+- DATE_DUE  
+- DATE_COMPLETED  
+- UNITS_COMPLETE  
+- UNITS_SCRAP  
+
+---
+
+### JOB_HEADER
+**Purpose:**  
+Job‑level metadata: part, customer, quantities, dates, sales order linkage.
+
+**Key Fields:**  
+- JOB  
+- SUFFIX  
+- PART  
+- CUSTOMER  
+- CUSTOMER_PO  
+- QTY_ORDER  
+- QTY_COMPLETED  
+- DATE_OPENED  
+- DATE_DUE  
+- DATE_CLOSED  
+- SALES_ORDER  
+- SALES_ORDER_LINE  
+
+---
+
+### JOB_DETAIL
+**Purpose:**  
+Labor and outside processing activity.
+
+**Key Fields:**  
+- JOB  
+- SUFFIX  
+- SEQ  
+- EMPLOYEE  
+- HOURS_WORKED  
+- PIECES_SCRAP  
+- PIECES_COMPLTD  
+- AMOUNT_LABOR  
+- AMT_OVERHEAD  
+
+---
+
+## C. Routing Tables
+
+### ROUTER_HEADER
+Routing master header.
+
+### ROUTER_LINE
+Routing operation definitions.
+
+---
+
+## D. Order / Shipment / Invoice Tables
+
+### ORDER_HIST_HEAD  
+*(This is the table you uploaded.)*
+
+**Purpose:**  
+Historical order + invoice header. Contains:
+
+- Invoice number  
+- Order number  
+- Customer  
+- Bill‑to / Ship‑to  
+- Shipment date  
+- Packlist number  
+- Tracking number  
+- Job linkage  
+- Material/labor/overhead/outside/other costs  
+- Currency  
+- Terms  
+- Flags (credit memo, DD250, tax, lump sum, etc.)
+
+**Key Fields:**  
+- INVOICE  
+- ORDER_NO  
+- ORDER_SUFFIX  
+- CUSTOMER  
+- CUSTOMER_PO  
+- DATE_ORDER  
+- DATE_INVOICE  
+- DATE_SHIPPED  
+- PCK_NO  
+- TRACKING_NO  
+- JOB  
+- SUFFIX  
+- COST_MATERIAL  
+- COST_LABOR  
+- COST_OUTSIDE  
+- COST_OVERHEAD  
+- COST_OTHER  
+- LOCATION_JOB  
+- PRODUCT_CODE  
+
+**Notes:**  
+- This is **not** inventory.  
+- This is **not** shipment detail.  
+- This is the **order/invoice header** that ties AR → Order → Shipment.  
+- `PCK_NO` is the key link to shipment tables → which link to `INVENTORY_HIST`.
+
+---
+
+# 3. Confirmed Linkage Paths
+
+These are the actual data flows used to trace inventory consumption.
+
+### 1. Invoice → Order
+ORDER_HIST_HEAD.ORDER_NO → (SalesOrderHeader).ORDER_NO
+
+Code
+
+### 2. Order → Shipment
+ORDER_HIST_HEAD.PCK_NO → (ShipmentHeader).PCK_NO
+
+Code
+
+### 3. Shipment → Inventory Issue
+ShipmentDetail.PCK_NO → INVENTORY_HIST.PCK_NO
+ShipmentDetail.PART → INVENTORY_HIST.PART
+
+Code
+
+### 4. Job → Inventory Issue
+JOB_HEADER.JOB → INVENTORY_HIST.JOB
+
+Code
+
+### 5. Job → Work Order Transactions
+JOB_OPERATIONS.SEQ → ITEM_HISTORY.SEQUENCE
+
+Code
+
+---
+
+# 4. Data Flow Diagrams
+
+### Material Flow
+ITEM_HISTORY → INVENTORY_HIST
+
+Code
+
+### Order → Shipment → Inventory
+ORDER_HIST_HEAD
+↓ (ORDER_NO)
+Shipment Header
+↓ (PCK_NO)
+Shipment Detail
+↓
+INVENTORY_HIST (issue)
+
+Code
+
+### Job Flow
 JOB_HEADER
-      ↓
+↓
 JOB_OPERATIONS
-      ↓
+↓
 ITEM_HISTORY
-      ↓
+↓
 INVENTORY_HIST
-```
 
-### 4.4 Labor Flow
+Code
+### ORD_HIST_LOT  
+**Purpose:**  
+Shipment detail at the *lot/serial/bin* level.  
+This table represents the **actual shipped quantities**, broken down by:
 
-```
-JOB_HEADER
-      ↓
-JOB_OPERATIONS
-      ↓
-JOB_DETAIL (labor/outsourcing)
-```
+- Order line  
+- Lot  
+- Bin  
+- Heat  
+- Serial number  
+- Shipment sequence  
+- Costs per unit (material, labor, overhead, outside, freight, other)
 
-## 5. ERD Diagram (ASCII)
+This is effectively the **shipment detail table** for Global Shop.
 
-```
-                 +---------------------+
-                 |    ROUTER_HEADER    |
-                 +----------+----------+
-                            |
-                            |
-                 +----------v----------+
-                 |     ROUTER_LINE     |
-                 +----------+----------+
-                            |
-                            |
-                 +----------v----------+
-                 |   JOB_OPERATIONS    |
-                 +----------+----------+
-                            |
-            +---------------+----------------+
-            |                                |
-+-----------v-----------+         +-----------v-----------+
-|     ITEM_HISTORY      |         |      JOB_DETAIL       |
-+-----------+-----------+         +------------------------+
-            |
-            |
-+-----------v-----------+
-|    INVENTORY_HIST     |
-+------------------------+
+**Key Fields:**  
+- INVOICE  
+- ORDER_NO  
+- ORDER_SUFFIX  
+- ORDER_LINE  
+- KEY_SEQ  
+- LOT  
+- BIN  
+- HEAT  
+- SERIAL  
+- QTY_SHIPPED  
+- DATE_SHIPPED  
+- COST  
+- JOB  
+- SUFFIX  
+- PART  
+- LOCN  
+- MATL_COST  
+- LABOR_COST  
+- OVHD_COST  
+- OUTS_COST  
+- FRGT_COST  
+- OTH_COST  
 
-+------------------------+
-|      JOB_HEADER        |
-+------------------------+
-```
+**Notes:**  
+- This table is the **shipment detail** that ties an invoice/order to the actual shipped parts.  
+- `QTY_SHIPPED` and `DATE_SHIPPED` are authoritative for customer fulfillment.  
+- `PART` + `LOCN` + `QTY_SHIPPED` map directly to inventory consumption.  
+- `JOB` links back to job‑level production if the part was job‑built.  
+- `KEY_SEQ` is the internal shipment sequence (ties to packlist).  
+- This table is the bridge between **ORDER_HIST_HEAD** and **INVENTORY_HIST**.
 
-## 6. Summary
+**Critical Linkage:**  
+ORD_HIST_LOT.ORDER_NO → ORDER_HIST_HEAD.ORDER_NO
+ORD_HIST_LOT.INVOICE → ORDER_HIST_HEAD.INVOICE
+ORD_HIST_LOT.DATE_SHIPPED → INVENTORY_HIST.DATE_HISTORY
+ORD_HIST_LOT.PART → INVENTORY_HIST.PART
+ORD_HIST_LOT.QTY_SHIPPED → INVENTORY_HIST.QUANTITY (issue)
 
-This document provides a generic, system‑wide architecture reference for:
 
-- Inventory movement
-- Work order transactions
-- Routing
-- Job structure
-- Labor activity
+**Interpretation:**  
+ORD_HIST_LOT tells you *exactly what was shipped*, *from where*, *in what lot*, *at what cost*, and *on which invoice*.
 
-It includes:
 
-- Table purposes
-- Key fields
-- Relationships
-- Data flows
-- Routing flows
-- Job flows
+---
+
+# 5. Unknown Tables (To Be Filled In)
+
+- Shipment Header table name  
+- Shipment Detail table name  
+- AR detail table  
+- GL posting table  
+
+---

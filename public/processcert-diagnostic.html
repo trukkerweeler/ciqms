@@ -212,6 +212,7 @@
     <div class="container">
       <h1>Process Certificate Diagnostic Tool</h1>
 
+      <!-- Job number lookup -->
       <div class="input-section">
         <div class="input-group">
           <label for="jobNumber">Job Number:</label>
@@ -223,11 +224,36 @@
           />
         </div>
         <button id="fetchBtn" onclick="fetchDiagnosticData()">
-          Fetch Data
+          Fetch by Job
+        </button>
+      </div>
+
+      <!-- Packing slip lookup -->
+      <div
+        class="input-section"
+        style="border-top: 1px solid #ddd; padding-top: 15px; margin-top: 5px"
+      >
+        <div class="input-group">
+          <label for="packingSlipNumber">Packing Slip Number:</label>
+          <input type="text" id="packingSlipNumber" placeholder="e.g. 046198" />
+        </div>
+        <button
+          id="fetchPsBtn"
+          onclick="fetchByPackingSlip()"
+          style="background: #2e7d32"
+        >
+          Fetch by Packing Slip
         </button>
       </div>
 
       <div id="status"></div>
+
+      <!-- Packing slip lookup results (shown only when fetched by PS) -->
+      <div id="packingSlipLookup" style="display: none">
+        <h2>Packing Slip Lookup (ORDER_HIST_LOT)</h2>
+        <div id="packingSlipInfo"></div>
+      </div>
+
       <div id="jobInfo"></div>
 
       <!-- Combined Operations View -->
@@ -268,6 +294,7 @@
       import * as diag from "./js/processcert-diagnostic.mjs";
 
       window.fetchDiagnosticData = diag.fetchDiagnosticData;
+      window.fetchByPackingSlip = diag.fetchByPackingSlip;
       window.toggleJSON = diag.toggleJSON;
     </script>
   </body>

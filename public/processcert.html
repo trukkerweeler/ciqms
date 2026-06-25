@@ -427,19 +427,19 @@
     <div class="container">
       <h1>Process Certificate</h1>
 
-      <!-- Step 1: Get parent transactions -->
-      <h2>Step 1: Select Parent Transaction</h2>
+      <!-- Step 1: Enter Packing Slip Number -->
+      <h2>Enter Packing Slip Number</h2>
       <form id="step1-form">
         <div class="form-group">
-          <label for="job">Job Number:</label>
+          <label for="packingSlip">Packing Slip Number:</label>
           <input
             type="text"
-            id="job"
-            name="job"
+            id="packingSlip"
+            name="packingSlip"
             pattern="\d+"
-            value="122480"
+            placeholder="Enter packing slip number"
+            value="046198"
             required
-            placeholder="Enter 6-digit job number"
           />
         </div>
 
@@ -453,44 +453,18 @@
           />
         </div>
 
-        <button type="submit" id="fetch-btn">Fetch Parent Transactions</button>
+        <button type="submit" id="gen-cert">Generate Certificate</button>
+        <button id="clear-btn" type="button">Clear</button>
+        <button
+          id="print-btn"
+          type="button"
+          style="display: none; background-color: #2e7d32"
+        >
+          Print Certificate
+        </button>
       </form>
 
       <div id="status-msg" class="status"></div>
-
-      <!-- Transactions table -->
-      <div id="transactions-section" style="display: none">
-        <h2>Available Transactions</h2>
-        <table id="transactions-table">
-          <thead>
-            <tr>
-              <th class="checkbox-cell">
-                <input type="checkbox" id="select-all" />
-              </th>
-              <th>Date</th>
-              <th>Time</th>
-              <th>Job</th>
-              <th>Suffix</th>
-              <th>Quantity</th>
-              <th>Part</th>
-              <th style="width: 50px; text-align: center">Code</th>
-            </tr>
-          </thead>
-          <tbody id="transactions-body"></tbody>
-        </table>
-
-        <div class="button-group">
-          <button id="gen-cert" type="button">Generate Certificate</button>
-          <button id="clear-btn" type="button">Clear</button>
-          <button
-            id="print-btn"
-            type="button"
-            style="display: none; background-color: #2e7d32"
-          >
-            Print Certificate
-          </button>
-        </div>
-      </div>
 
       <!-- Certificate output -->
       <div id="cert-output" style="display: none"></div>

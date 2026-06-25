@@ -460,12 +460,93 @@ function callVBS(vbsPath, args, includeRaw = false) {
   });
 }
 
+/**
+ * Get jobs from packing slip number
+ * Query: AR_OPEN_ITEMS → ORDER_LINES to get job/suffix pairs
+ */
+router.get("/jobs-by-packing-slip", (req, res) => {
+  const { pck_no } = req.query;
+
+  if (!pck_no || !/^\d+$/.test(pck_no)) {
+    return res
+      .status(400)
+      .json({ error: "Invalid or missing packing slip parameter" });
+  }
+
+  const vbsPath = path.join(__dirname, "processcert-packing-slip.vbs");
+  const cscriptPath = path.join(
+    process.env.SYSTEMROOT,
+    "SysWOW64",
+    "cscript.exe",
+  );
+
+  const { spawn } = require("child_process");
+  const child = spawn(cscriptPath, ["//Nologo", vbsPath, pck_no]);
+
+  let output = "";
+  let errorOutput = "";
+
+  child.stdout.on("data", (data) => {
+    output += data.toString();
+  });
+
+  child.stderr.on("data", (data) => {
+    errorOutput += data.toString();
+  });
+
+  child.on("close", (code) => {
+    console.log("[jobs-by-packing-slip] exit code:", code);
+    if (errorOutput)
+      console.error("[jobs-by-packing-slip] stderr:", errorOutput);
+
+    const sanitized = output
+      .replace(/[\u0000-\u001F\u007F-\u009F]/g, "")
+      .trim();
+    console.log("[jobs-by-packing-slip] output:", sanitized);
+
+    if (code !== 0 && !sanitized) {
+      return res
+        .status(500)
+        .json({ error: "VBScript execution failed", details: errorOutput });
+    }
+
+    try {
+      const data = JSON.parse(sanitized);
+
+      if (!data.success) {
+        return res.status(404).json({
+          error: data.error || "No jobs found for this packing slip",
+          pck_no,
+        });
+      }
+
+      if (!data.jobs || data.jobs.length === 0) {
+        return res.status(404).json({
+          error: "No jobs found for this packing slip",
+          pck_no,
+        });
+      }
+
+      res.json(data);
+    } catch (parseError) {
+      console.error("[jobs-by-packing-slip] Parse error:", parseError.message);
+      res.status(500).json({
+        error: "Failed to parse VBS output",
+        details: sanitized.substring(0, 500),
+      });
+    }
+  });
+});
+
 router.get("/build-cert", async (req, res) => {
-  const { job, selectedIndices } = req.query;
+  const { job, suffix, selectedIndices } = req.query;
 
   if (!job || !/^\d+$/.test(job)) {
     return res.status(400).json({ error: "Invalid or missing job parameter" });
   }
+
+  // If suffix is provided, use it; otherwise default to "000"
+  const jobSuffix = suffix || "000";
 
   const debugInfo = {
     rawVbsOutputs: {}, // Store raw outputs keyed by description

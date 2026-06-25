@@ -1,6 +1,40 @@
 # Invoice to Job — Table Relationship Chain
 
-Traces the path from an AR invoice down to the manufacturing job that produced the shipped parts.
+Traces the path from a packing slip number down to the manufacturing jobs that produced the shipped parts.
+
+---
+
+## ✅ Working Implementation (processcert-packing-slip.vbs)
+
+The chain that actually works in production uses `ORDER_HIST_LOT`:
+
+```
+ORDER_HIST_LOT
+WHERE INVOICE = '046198'   ← packing slip number (6-digit, zero-padded text)
+  → SERIAL field = "122480-000"  ← encodes job + suffix
+  → parse: JOB = "122480", SUFFIX = "000"
+```
+
+### Key Facts
+
+- `ORDER_HIST_LOT.INVOICE` stores the packing slip with **leading zeros** (e.g. `046198`, not `46198`)
+- The **SERIAL** field encodes the job as `"NNNNNN-NNN"` (6-digit job, dash, 3-digit suffix)
+- `JOB` and `SUFFIX` columns in `ORDER_HIST_LOT` are **blank** for shipped lines — always use SERIAL
+- Packing slip numbers should be **padded to 6 digits** before querying: `padStart(6, '0')`
+
+### VBScript Query
+
+```sql
+SELECT DISTINCT SERIAL FROM ORDER_HIST_LOT
+WHERE RTRIM(LTRIM(INVOICE)) = '046198'
+  AND SERIAL LIKE '______-___'
+```
+
+---
+
+## ⚠️ Theoretical Chain (Not Used — Documented for Reference)
+
+The schema documentation describes this chain, but it does **not** work reliably for process cert generation:
 
 ```
 ┌──────────────────────────┐
@@ -13,34 +47,18 @@ Traces the path from an AR invoice down to the manufacturing job that produced t
 │ PCK_NO   (packlist)      │
 └─────────────┬────────────┘
               │ 1-to-many
-              │
               ▼
 ┌──────────────────────────┐
-│      ORDER_BOOKING       │   ← Sales Order Lines
+│       ORDER_LINES        │   ← Shipment Detail
 │──────────────────────────│
 │ ORDER_NO                 │
-│ ORDER_LINE               │
-│ PART                     │
-│ QTY                      │
-│ CUSTOMER                 │
-└─────────────┬────────────┘
-              │ 1-to-many
-              │
-              ▼
-┌──────────────────────────┐
-│       ORDER_LINES        │   ← Shipment Detail (REAL)
-│──────────────────────────│
-│ ORDER_NO                 │
-│ INVOICE                  │  (= PCK_NO)
-│ PCK_NO                   │
+│ INVOICE  (= packing slip)│   ← no PCK_NO column in actual table
 │ DATE_SHIP                │
 │ PART                     │
 │ QTY_SHIPPED              │
-│ JOB                      │
-│ SUFFIX                   │
+│ JOB      ← BLANK for stock/non-job lines
+│ SUFFIX   ← BLANK for stock/non-job lines
 └─────────────┬────────────┘
-              │ many-to-one
-              │
               ▼
 ┌──────────────────────────┐
 │       JOB_HEADER         │   ← Job Master
@@ -52,19 +70,14 @@ Traces the path from an AR invoice down to the manufacturing job that produced t
 └──────────────────────────┘
 ```
 
-## Join Path
+### Why This Doesn't Work
 
-```sql
-AR_OPEN_ITEMS
-  JOIN ORDER_LINES  ON ORDER_LINES.ORDER_NO = AR_OPEN_ITEMS.ORDER_NO
-                   AND ORDER_LINES.PCK_NO   = AR_OPEN_ITEMS.PCK_NO
-  JOIN JOB_HEADER   ON JOB_HEADER.JOB       = ORDER_LINES.JOB
-                   AND JOB_HEADER.SUFFIX     = ORDER_LINES.SUFFIX
-```
+- `ORDER_LINES` has **no `PCK_NO` column** — the field is `INVOICE`
+- `ORDER_LINES.JOB` and `.SUFFIX` are **blank** for items shipped from stock (LINE_TYPE = 'S')
+- `AR_OPEN_ITEMS.PCK_NO` stores the packing slip **without** leading zeros (e.g. `46187`), while `ORDER_LINES.INVOICE` stores it **with** leading zeros (`046187`) — the values don't match directly
+- `ORDER_LINES.ORDER_NO` format does not match `AR_OPEN_ITEMS.ORDER_NO` in some cases
 
-## Notes
+### Notes
 
-- `AR_OPEN_ITEMS.PCK_NO` is the packlist number; it equals `ORDER_LINES.INVOICE` (and `ORDER_LINES.PCK_NO`).
-- `ORDER_BOOKING` holds the original sales order quantities; `ORDER_LINES` holds actual shipment records.
-- A single invoice (`PCK_NO`) may span multiple `ORDER_LINES` rows (multiple parts/jobs per shipment).
-- `JOB_HEADER` is keyed on `JOB` + `SUFFIX` — both columns are required for a unique job lookup.
+- `ORDER_BOOKING` holds original sales order quantities (not used for cert generation)
+- `JOB_HEADER` is keyed on `JOB` + `SUFFIX` — both required for unique lookup
