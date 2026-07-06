@@ -411,6 +411,14 @@ export async function createNotesSection(
   // Append header container to section
   notesSection.appendChild(headerContainer);
 
+  // Add inline last-collected strip for data-collection subjects (QTPC etc.)
+  if (title === "RESPONSE_TEXT") {
+    const collectStrip = document.createElement("div");
+    collectStrip.id = "collectLastStrip";
+    collectStrip.style.display = "none";
+    notesSection.appendChild(collectStrip);
+  }
+
   // Add date/by information if this is RESPONSE or FOLLOWUP section and date is provided
   if ((title === "RESPONSE_TEXT" || title === "FOLLOWUP_TEXT") && dateValue) {
     const dateP = document.createElement("p");

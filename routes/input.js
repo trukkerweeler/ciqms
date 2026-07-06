@@ -1252,4 +1252,58 @@ router.post("/collect/:iid", (req, res) => {
   }
 });
 
+// ==================================================
+// GET measurement data for an input (temp, pH, seconds)
+// ==================================================
+router.get("/measurement-data/:iid", (req, res) => {
+  try {
+    const connection = mysql.createConnection({
+      host: process.env.DB_HOST,
+      user: process.env.DB_USER,
+      password: process.env.DB_PASS,
+      port: 3306,
+      database: "quality",
+    });
+    connection.connect(function (err) {
+      if (err) {
+        console.error("Error connecting: " + err.stack);
+        return;
+      }
+
+      const iid = req.params.iid;
+      const query = `SELECT UNIT, VALUE FROM EIGHTYFIVETWELVE WHERE INPUT_ID = '${iid}' ORDER BY COLLECT_ID DESC LIMIT 4`;
+
+      connection.query(query, (err, rows) => {
+        try {
+          if (connection && connection.end) connection.end();
+        } catch {}
+        if (err) {
+          console.log("Failed to query EIGHTYFIVETWELVE: " + err);
+          res.sendStatus(500);
+          return;
+        }
+
+        const result = {
+          percent: null,
+          fahrenheit: null,
+          ph: null,
+          seconds: null,
+        };
+        rows.forEach((row) => {
+          if (row.UNIT === "Percent") result.percent = row.VALUE;
+          else if (row.UNIT === "Fahrenheit" || row.UNIT === "F")
+            result.fahrenheit = row.VALUE;
+          else if (row.UNIT === "pH") result.ph = row.VALUE;
+          else if (row.UNIT === "Seconds") result.seconds = row.VALUE;
+        });
+
+        res.json(result);
+      });
+    });
+  } catch (err) {
+    console.log("Error connecting to Db (input measurement-data)");
+    res.status(500).json({ error: err.message });
+  }
+});
+
 module.exports = router;

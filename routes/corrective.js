@@ -907,6 +907,71 @@ router.post("/email", async (req, res) => {
 });
 
 // ==================================================
+// Get linked NCM IDs for a corrective action
+router.get("/:id/ncm-links", (req, res) => {
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "quality",
+  });
+  connection.connect((err) => {
+    if (err) return res.status(500).json({ error: "DB connection failed" });
+    connection.query(
+      "SELECT NCM_ID FROM NCM_CORRECT_LINK WHERE CORRECTIVE_ID = ?",
+      [req.params.id],
+      (err, rows) => {
+        connection.end();
+        if (err) return res.status(500).json({ error: err.message });
+        res.json(rows.map((r) => r.NCM_ID));
+      },
+    );
+  });
+});
+
+// ==================================================
+// Replace all NCM links for a corrective action
+router.put("/:id/ncm-links", (req, res) => {
+  const caId = req.params.id;
+  const ncmIds = Array.isArray(req.body.ncmIds) ? req.body.ncmIds : [];
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "quality",
+  });
+  connection.connect((err) => {
+    if (err) return res.status(500).json({ error: "DB connection failed" });
+    connection.query(
+      "DELETE FROM NCM_CORRECT_LINK WHERE CORRECTIVE_ID = ?",
+      [caId],
+      (err) => {
+        if (err) {
+          connection.end();
+          return res.status(500).json({ error: err.message });
+        }
+        if (ncmIds.length === 0) {
+          connection.end();
+          return res.json({ success: true });
+        }
+        const values = ncmIds.map((ncmId) => [ncmId, caId]);
+        connection.query(
+          "INSERT INTO NCM_CORRECT_LINK (NCM_ID, CORRECTIVE_ID) VALUES ?",
+          [values],
+          (err) => {
+            connection.end();
+            if (err) return res.status(500).json({ error: err.message });
+            res.json({ success: true });
+          },
+        );
+      },
+    );
+  });
+});
+
+// ==================================================
 // Get a single record
 router.get("/:id", (req, res) => {
   // console.log(req.params.id);
@@ -945,11 +1010,18 @@ router.get("/:id", (req, res) => {
         , ia.CORRECTION_TEXT
         , cc.CONTROL_TEXT
         , cc.CAUSE_TEXT
+        , GROUP_CONCAT(ncl.NCM_ID ORDER BY ncl.NCM_ID SEPARATOR ', ') AS LINKED_NCMS
         from CORRECTIVE c
         left join CORRECTIVE_TREND ct on c.CORRECTIVE_ID = ct.CORRECTIVE_ID            
         left join CORRECTION ia on c.CORRECTIVE_ID = ia.CORRECTIVE_ID
         left join CORRECTIVE_CTRL cc on c.CORRECTIVE_ID = cc.CORRECTIVE_ID
-        where c.CORRECTIVE_ID = ?`;
+        left join NCM_CORRECT_LINK ncl on c.CORRECTIVE_ID = ncl.CORRECTIVE_ID
+        where c.CORRECTIVE_ID = ?
+        group by c.CORRECTIVE_ID, TITLE, USER_DEFINED_2, USER_DEFINED_1,
+          c.REQUEST_BY, c.ASSIGNED_TO, c.CORRECTIVE_DATE, c.REFERENCE,
+          c.PROJECT_ID, c.CORR_ACTION_DATE, ia.CORRECTION_DATE, ia.ACTION_BY,
+          cc.CREATE_DATE, DUE_DATE, CLOSED, c.CLOSED_DATE,
+          ct.NC_TREND, ia.CORRECTION_TEXT, cc.CONTROL_TEXT, cc.CAUSE_TEXT`;
 
       // console.log(query);
 

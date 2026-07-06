@@ -373,13 +373,15 @@ document.addEventListener("submit", async (e) => {
     const dlg = document.getElementById("collectDataDialogQTPC");
     const form = e.target;
     try {
-      const seconds = form.SECONDS_VALUE_QTPC.value.trim();
+      const secondsRaw = form.SECONDS_VALUE_QTPC.value.trim();
 
       // Require seconds value
-      if (!seconds) {
+      if (!secondsRaw) {
         alert("Please enter a time value in seconds");
         return;
       }
+
+      const seconds = parseFloat(secondsRaw).toFixed(1);
 
       const data = {
         INPUT_ID: iid,
@@ -395,6 +397,7 @@ document.addEventListener("submit", async (e) => {
       });
       if (!res.ok) throw new Error("Failed to save data");
       if (dlg) dlg.close();
+      updateCollectStrip({ seconds });
       showNotification("Data saved successfully");
     } catch (err) {
       alert("Error saving data: " + err.message);
@@ -839,7 +842,7 @@ document.addEventListener("click", async (e) => {
             if (tempData.seconds) {
               const secondsP = document.createElement("p");
               secondsP.style.margin = "5px 0";
-              secondsP.textContent = `Seconds: ${tempData.seconds}`;
+              secondsP.textContent = `Seconds: ${parseFloat(tempData.seconds).toFixed(1)}`;
               dataContainer.appendChild(secondsP);
             }
 
@@ -868,7 +871,7 @@ while (main.firstChild) {
 // Helper function to fetch 11PH data
 async function fetch11PHData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -880,7 +883,7 @@ async function fetch11PHData(inputId) {
 // Helper function to fetch 01TE temperature data
 async function fetch01TETemperatureData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -892,7 +895,7 @@ async function fetch01TETemperatureData(inputId) {
 // Helper function to fetch 03TE temperature data
 async function fetch03TETemperatureData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -904,7 +907,7 @@ async function fetch03TETemperatureData(inputId) {
 // Helper function to fetch 05TE temperature data
 async function fetch05TETemperatureData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -916,7 +919,7 @@ async function fetch05TETemperatureData(inputId) {
 // Helper function to fetch 07TE temperature data
 async function fetch07TETemperatureData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -928,7 +931,7 @@ async function fetch07TETemperatureData(inputId) {
 // Helper function to fetch 13TE pH data
 async function fetch13TEpHData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}ph-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -940,7 +943,7 @@ async function fetch13TEpHData(inputId) {
 // Helper function to fetch 08TE pH and temperature data
 async function fetch08TETemperatureData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -952,7 +955,7 @@ async function fetch08TETemperatureData(inputId) {
 // Helper function to fetch QTPH data
 async function fetchQTPHData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -961,10 +964,22 @@ async function fetchQTPHData(inputId) {
   }
 }
 
+// Update inline last-collected strip below the Collect/Respond buttons
+function updateCollectStrip(data) {
+  const strip = document.getElementById("collectLastStrip");
+  if (!strip) return;
+  if (data && data.seconds != null) {
+    strip.textContent = `Collected: ${parseFloat(data.seconds).toFixed(1)} s`;
+    strip.style.display = "block";
+  } else {
+    strip.style.display = "none";
+  }
+}
+
 // Helper function to fetch QTPC data
 async function fetchQTPCData(inputId) {
   try {
-    const response = await fetch(`${apiUrls.acert}temp-data/${inputId}`);
+    const response = await fetch(`${apiUrls.input}measurement-data/${inputId}`);
     if (!response.ok) return null;
     return await response.json();
   } catch (err) {
@@ -1221,6 +1236,12 @@ fetch(url, { method: "GET" })
         rec["RESPONSE_DATE"],
         rec["RESPONSE_BY"],
       );
+
+      // Load inline last-collected strip for QTPC
+      if (currentSubject === "QTPC") {
+        const qtpcData = await fetchQTPCData(iid);
+        updateCollectStrip(qtpcData);
+      }
 
       // Add escalation history
       const escalationHistory = await createEscalationHistory(

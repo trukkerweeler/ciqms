@@ -315,6 +315,9 @@ fetch(url, { method: "GET" })
         document.getElementById("duedate").value = record[key]["DUE_DATE"]
           ? record[key]["DUE_DATE"].substring(0, 10)
           : "";
+        // pre-populate NCM IDs from already-loaded record data
+        document.getElementById("ncmIds").value =
+          record[key]["LINKED_NCMS"] || "";
         // show the dialog
         document.getElementById("detailsDialog").showModal();
 
@@ -333,6 +336,11 @@ fetch(url, { method: "GET" })
               .value.toUpperCase();
             let project = document.getElementById("project").value;
             let duedate = document.getElementById("duedate").value;
+            const ncmIdsRaw = document.getElementById("ncmIds").value || "";
+            const ncmIds = ncmIdsRaw
+              .split(",")
+              .map((s) => s.trim())
+              .filter((s) => s.length > 0);
 
             // Validate username fields
             const assignedtoValidation = validateUsernameField(
@@ -367,6 +375,12 @@ fetch(url, { method: "GET" })
                 PROJECT_ID: project,
                 DUE_DATE: duedate,
               }),
+            });
+            // update NCM links
+            await fetch(`${apiUrl}/corrective/${caid}/ncm-links`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ ncmIds }),
             });
             // close the dialog
             document.getElementById("detailsDialog").close();
@@ -458,6 +472,16 @@ fetch(url, { method: "GET" })
       detailSection.appendChild(reqBy);
       detailSection.appendChild(project);
       detailSection.appendChild(dueDate);
+
+      // Linked NCMs row
+      const linkedNcms = document.createElement("p");
+      linkedNcms.setAttribute("class", "tbl");
+      linkedNcms.setAttribute("id", "linkedNcms");
+      const linkedNcmsValue = record[key]["LINKED_NCMS"];
+      linkedNcms.textContent = linkedNcmsValue
+        ? "Linked NCMs: " + linkedNcmsValue
+        : "";
+      detailSection.appendChild(linkedNcms);
 
       // Trend section=======================================
       const trendSection = document.createElement("section");

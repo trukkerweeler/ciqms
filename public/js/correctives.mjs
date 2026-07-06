@@ -162,6 +162,13 @@ async function handleFormSubmission() {
     dueDate.setDate(dueDate.getDate() + 21); // Default 21 days from today
     dueDate = dueDate.toISOString().slice(0, 19).replace("T", " ");
 
+    // Extract NCM IDs before building main payload (junction table, not a CORRECTIVE column)
+    const ncmIdsRaw = formData.get("NCM_IDS") || "";
+    const ncmIds = ncmIdsRaw
+      .split(",")
+      .map((s) => s.trim())
+      .filter((s) => s.length > 0);
+
     // Build data object
     const dataJson = {
       CORRECTIVE_ID: nextId,
@@ -171,8 +178,9 @@ async function handleFormSubmission() {
       CLOSED: "N",
     };
 
-    // Add form fields to data object
+    // Add form fields to data object (skip NCM_IDS — handled separately)
     for (const field of formData.keys()) {
+      if (field === "NCM_IDS") continue;
       const value = formData.get(field);
       // Convert specific fields to uppercase
       if (["REQUEST_BY", "ASSIGNED_TO"].includes(field)) {
@@ -194,6 +202,22 @@ async function handleFormSubmission() {
     });
 
     if (response.ok) {
+      // Link any provided NCM IDs to this corrective action
+      if (ncmIds.length > 0) {
+        await Promise.allSettled(
+          ncmIds.map((ncmId) =>
+            fetch(`${apiUrl}/trend/${ncmId}/ncl`, {
+              method: "PUT",
+              headers: { "Content-Type": "application/json" },
+              body: JSON.stringify({ CORRECTIVE_ID: dataJson.CORRECTIVE_ID }),
+            }).then((r) => {
+              if (!r.ok)
+                console.warn(`NCM link failed for ${ncmId}: HTTP ${r.status}`);
+            }),
+          ),
+        );
+      }
+
       // Success - send email notification after successful creation
       try {
         await fetch(`${url}/email`, {

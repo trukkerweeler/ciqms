@@ -85,6 +85,7 @@ const ipUserMapping = {
   // "192.168.1.100": "john.smith",
   // "192.168.1.101": "jane.doe",
   // Add your IP mappings below
+  "192.168.1.60": "OGOLUBOVIC",
   "192.168.1.68": "ZEISS",
   "192.168.1.69": "TKENT",
   "192.168.1.74": "AMIDDLETON",

@@ -1369,6 +1369,17 @@ input {
 #btnCollData {
   margin-right: 2px;
   padding-right: 4px;
+  background-color: #0d6efd;
+  color: #fff;
+  border-color: #0d6efd;
+}
+
+#collectLastStrip {
+  font-size: 0.75rem;
+  color: #666;
+  margin-top: 0.2rem;
+  margin-bottom: 0.2rem;
+  padding-left: 2px;
 }
 
 /* Email button spacing adjustment */

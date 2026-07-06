@@ -640,10 +640,12 @@
       <form class="dialogForm" id="collectFormQTPC">
         <label for="SECONDS_VALUE_QTPC">Seconds:</label>
         <input
-          type="text"
+          type="number"
           id="SECONDS_VALUE_QTPC"
           name="SECONDS_VALUE_QTPC"
-          placeholder="Enter time in seconds"
+          placeholder="e.g. 23.4"
+          step="any"
+          min="0"
         />
         <label for="SAMPLE_DATE_QTPC">Date:</label>
         <input
