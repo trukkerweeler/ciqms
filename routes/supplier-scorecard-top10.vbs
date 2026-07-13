@@ -1,8 +1,17 @@
 ' Top 10 Suppliers by Weighted Score (2025)
 ' Connects to Global_CII database and calculates supplier performance metrics
 
-Dim conn, rs, fso, dsn, uid, pwd, file, WshShell, DocumentsPath, CIQMSPath
+Dim conn, rs, fso, dsn, uid, pwd, file, WshShell, DocumentsPath, CIQMSPath, startDate, endDate
 On Error Resume Next
+
+' Read date range from command line: arg0=startDate, arg1=endDate (YYYY-MM-DD)
+If WScript.Arguments.Count >= 2 Then
+    startDate = Trim(WScript.Arguments(0))
+    endDate = Trim(WScript.Arguments(1))
+Else
+    WScript.StdOut.Write "{""error"":""Start and end date arguments required""}"
+    WScript.Quit
+End If
 
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set WshShell = CreateObject("WScript.Shell")
@@ -78,20 +87,33 @@ If conn.State = 1 Then
     '            "GROUP BY V_POHIST_LINES.VENDOR " & _
     '            "ORDER BY SUM(EXTENSION) DESC"
 
-    sqlQuery = "SELECT TOP 50 " & _
-           "V_POHIST_LINES.VENDOR, " & _
-           "MAX(V_VENDOR_MASTER.NAME_VENDOR) AS NAME_VENDOR, " & _
-           "SUM(EXTENSION) AS TOTAL_SPEND, " & _
-           "COUNT(DISTINCT PURCHASE_ORDER) AS PO_COUNT, " & _
-           "COUNT(*) AS LINE_COUNT, " & _
-           "SUM(CASE WHEN DATE_LAST_RECEIVED <= DATE_DUE_LINE THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS ON_TIME_PERCENT " & _
-           "FROM V_POHIST_LINES " & _
-           "LEFT JOIN V_VENDOR_MASTER ON V_POHIST_LINES.VENDOR = V_VENDOR_MASTER.VENDOR AND V_VENDOR_MASTER.REC = 1 " & _
-           "WHERE PART NOT IN ('FEE','FEE #2','SURCHARGE','INSPECT','CERTIFICATION','FREIGHT','EXPEDITE FEE','CC FEE','INSPECTION','MISSED PAYMENT','TAX') " & _
-           "AND DATE_DUE_LINE >= CONVERT('2025-01-01', SQL_DATE) " & _
-           "AND DATE_DUE_LINE <= CONVERT('2025-12-31', SQL_DATE) " & _
-           "GROUP BY V_POHIST_LINES.VENDOR " & _
-           "ORDER BY SUM(EXTENSION) DESC"
+    Dim partExclude
+    partExclude = "('FEE','FEE #2','SURCHARGE','INSPECT','CERTIFICATION'," & _
+                  "'FREIGHT','EXPEDITE FEE','CC FEE','INSPECTION','MISSED PAYMENT','TAX')"
+
+    sqlQuery = "SELECT TOP 50 "
+    sqlQuery = sqlQuery & "src.VENDOR, "
+    sqlQuery = sqlQuery & "MAX(vm.NAME_VENDOR) AS NAME_VENDOR, "
+    sqlQuery = sqlQuery & "SUM(src.EXTENSION) AS TOTAL_SPEND, "
+    sqlQuery = sqlQuery & "COUNT(DISTINCT src.PURCHASE_ORDER) AS PO_COUNT, "
+    sqlQuery = sqlQuery & "COUNT(*) AS LINE_COUNT, "
+    sqlQuery = sqlQuery & "SUM(CASE WHEN src.DATE_LAST_RECEIVED <= src.DATE_DUE_LINE THEN 1 ELSE 0 END) * 100.0 / COUNT(*) AS ON_TIME_PERCENT "
+    sqlQuery = sqlQuery & "FROM ("
+    sqlQuery = sqlQuery & "SELECT VENDOR, PURCHASE_ORDER, EXTENSION, DATE_DUE_LINE, DATE_LAST_RECEIVED "
+    sqlQuery = sqlQuery & "FROM V_POHIST_LINES "
+    sqlQuery = sqlQuery & "WHERE PART NOT IN " & partExclude & " "
+    sqlQuery = sqlQuery & "AND DATE_DUE_LINE >= CONVERT('" & startDate & "', SQL_DATE) "
+    sqlQuery = sqlQuery & "AND DATE_DUE_LINE <= CONVERT('" & endDate & "', SQL_DATE) "
+    sqlQuery = sqlQuery & "UNION "
+    sqlQuery = sqlQuery & "SELECT VENDOR, PURCHASE_ORDER, EXTENSION, DATE_DUE_LINE, DATE_LAST_RECEIVED "
+    sqlQuery = sqlQuery & "FROM V_PO_LINES "
+    sqlQuery = sqlQuery & "WHERE PART NOT IN " & partExclude & " "
+    sqlQuery = sqlQuery & "AND DATE_DUE_LINE >= CONVERT('" & startDate & "', SQL_DATE) "
+    sqlQuery = sqlQuery & "AND DATE_DUE_LINE <= CONVERT('" & endDate & "', SQL_DATE) "
+    sqlQuery = sqlQuery & ") src "
+    sqlQuery = sqlQuery & "LEFT JOIN V_VENDOR_MASTER vm ON src.VENDOR = vm.VENDOR AND vm.REC = 1 "
+    sqlQuery = sqlQuery & "GROUP BY src.VENDOR "
+    sqlQuery = sqlQuery & "ORDER BY TOTAL_SPEND DESC"
 
     rs.Open sqlQuery, conn, 3, 1
     If Err.Number <> 0 Then

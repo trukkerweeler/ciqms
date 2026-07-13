@@ -18,6 +18,18 @@ window.addEventListener("DOMContentLoaded", async () => {
   const resetBtn = document.getElementById("resetBtn");
   const loadingContainer = document.getElementById("loadingContainer");
   const chartContainer = document.getElementById("chartContainer");
+  const noEntriesContainer = document.getElementById("noEntriesContainer");
+  const noEntriesTitle = document.getElementById("noEntriesTitle");
+  const noEntriesTbody = document.getElementById("noEntriesTbody");
+  const noEntriesEmpty = document.getElementById("noEntriesEmpty");
+
+  // Load PM form descriptions once
+  let pmForms = {};
+  try {
+    pmForms = await fetch("/json/pmforms.json").then((r) => r.json());
+  } catch (e) {
+    console.warn("Could not load pmforms.json", e);
+  }
 
   // Get last calendar year (full year)
   function getLastCalendarYear() {
@@ -111,6 +123,9 @@ window.addEventListener("DOMContentLoaded", async () => {
     setPreset("lastYear");
     chartContainer.classList.remove("visible");
     selectedRangeDisplay.textContent = "";
+    noEntriesContainer.style.display = "none";
+    noEntriesTbody.innerHTML = "";
+    noEntriesEmpty.style.display = "none";
     if (chartInstance) {
       chartInstance.destroy();
       chartInstance = null;
@@ -235,11 +250,40 @@ window.addEventListener("DOMContentLoaded", async () => {
           },
         },
       });
+      // Load No Entries list for previous month
+      await loadNoEntriesList();
     } catch (error) {
       loadingContainer.style.display = "none";
       console.error("Error loading PM report:", error);
       chartContainer.classList.add("visible");
       chartContainer.innerHTML = `<p style="color: red; padding: 20px; background: #fee; border: 1px solid #f99; border-radius: 4px;">Error loading report: ${error.message}</p>`;
+    }
+  }
+
+  async function loadNoEntriesList() {
+    try {
+      const response = await fetch(`${apiUrl}/input/pm-no-entries-detail`);
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const data = await response.json();
+
+      noEntriesTitle.textContent = `No Entries — ${data.month}`;
+      noEntriesTbody.innerHTML = "";
+      noEntriesEmpty.style.display = "none";
+
+      if (!data.items || data.items.length === 0) {
+        noEntriesEmpty.style.display = "block";
+      } else {
+        data.items.forEach(({ code, assignedTo }) => {
+          const tr = document.createElement("tr");
+          const desc = pmForms[code] || "—";
+          tr.innerHTML = `<td>${code}</td><td>${desc}</td><td>${assignedTo}</td>`;
+          noEntriesTbody.appendChild(tr);
+        });
+      }
+
+      noEntriesContainer.style.display = "block";
+    } catch (e) {
+      console.error("Error loading No Entries list:", e);
     }
   }
 });

@@ -10,6 +10,20 @@ router.get("/top-suppliers", (req, res) => {
   const debug = process.env.DEBUG_SUPPLIER_SCORECARD === "1";
   if (debug) console.debug("[supplier-scorecard] /top-suppliers route called");
 
+  const { startDate, endDate } = req.query;
+  if (
+    !startDate ||
+    !endDate ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
+    !/^\d{4}-\d{2}-\d{2}$/.test(endDate)
+  ) {
+    return res
+      .status(400)
+      .json({
+        error: "startDate and endDate query params required (YYYY-MM-DD)",
+      });
+  }
+
   const vbsFilePath = path.join(__dirname, "supplier-scorecard-top10.vbs");
   const cscriptPath = path.join(
     process.env.SYSTEMROOT,
@@ -21,7 +35,12 @@ router.get("/top-suppliers", (req, res) => {
   console.log("[supplier-scorecard] cscript path:", cscriptPath);
   console.log("[supplier-scorecard] Spawning VBScript...");
 
-  const child = spawn(cscriptPath, ["//Nologo", vbsFilePath]);
+  const child = spawn(cscriptPath, [
+    "//Nologo",
+    vbsFilePath,
+    startDate,
+    endDate,
+  ]);
 
   let output = "";
   let errorOutput = "";

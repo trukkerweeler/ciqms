@@ -26,9 +26,22 @@
         <h1>Supplier Performance Scorecard</h1>
       </div>
 
+      <!-- Period Toggle -->
+      <div class="period-toggle">
+        <span class="period-toggle-label">Period:</span>
+        <label>
+          <input type="radio" name="period" value="rolling12" checked />
+          Rolling 12 Months
+        </label>
+        <label>
+          <input type="radio" name="period" value="prev-cy" />
+          Previous Calendar Year
+        </label>
+      </div>
+
       <!-- Top 10 Suppliers Table -->
       <section class="scorecard-section">
-        <h2>Top 10 Suppliers (2025)</h2>
+        <h2 id="topSuppliersTitle">Top 10 Suppliers — Rolling 12 Months</h2>
         <div id="topSuppliersContainer" class="table-container">
           <p class="loading">
             Loading supplier data from database (this may take a minute)...
@@ -44,6 +57,10 @@
           <select id="supplierSelect">
             <option value="">-- Choose a supplier --</option>
           </select>
+          <button id="exportChartsBtn" class="export-btn">
+            &#x2B07; Export All Charts
+          </button>
+          <span id="exportStatus" class="export-status"></span>
         </div>
 
         <div id="chartContainer" class="chart-wrapper">
@@ -61,5 +78,6 @@
     </main>
     <footer id="footer"></footer>
   </body>
+  <script src="https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js"></script>
   <script type="module" src="/js/supplier-scorecard.mjs"></script>
 </html>

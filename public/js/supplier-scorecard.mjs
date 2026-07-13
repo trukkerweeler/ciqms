@@ -4,6 +4,46 @@ loadHeaderFooter();
 
 let allSuppliers = [];
 let currentChart = null;
+let currentPeriod = "rolling12"; // 'rolling12' or 'prev-cy'
+let currentVendor = null;
+
+/**
+ * Compute start/end dates for the current period.
+ * rolling12: first of the month 12 months ago → today.
+ * prev-cy: Jan 1 → Dec 31 of last calendar year.
+ */
+function getPeriodDates() {
+  const today = new Date();
+  if (currentPeriod === "rolling12") {
+    const start = new Date(today.getFullYear(), today.getMonth() - 12, 1);
+    return { startDate: start, endDate: today };
+  } else {
+    const prevYear = today.getFullYear() - 1;
+    return {
+      startDate: new Date(prevYear, 0, 1),
+      endDate: new Date(prevYear, 11, 31),
+    };
+  }
+}
+
+function formatDate(d) {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
+function getPeriodLabel() {
+  const today = new Date();
+  if (currentPeriod === "rolling12") {
+    const start = new Date(today.getFullYear(), today.getMonth() - 12, 1);
+    const fmt = (d) =>
+      d.toLocaleDateString("en-US", { month: "short", year: "numeric" });
+    return `Rolling 12 Months (${fmt(start)} – ${fmt(today)})`;
+  } else {
+    return `Calendar Year ${today.getFullYear() - 1}`;
+  }
+}
 
 /**
  * Fetch top 10 suppliers data
@@ -15,9 +55,11 @@ async function fetchTopSuppliers() {
     const controller = new AbortController();
     const timeoutId = setTimeout(() => controller.abort(), 120000); // 120 second timeout
 
-    const response = await fetch(`${apiUrl}/supplier-scorecard/top-suppliers`, {
-      signal: controller.signal,
-    });
+    const { startDate, endDate } = getPeriodDates();
+    const response = await fetch(
+      `${apiUrl}/supplier-scorecard/top-suppliers?startDate=${formatDate(startDate)}&endDate=${formatDate(endDate)}`,
+      { signal: controller.signal },
+    );
 
     clearTimeout(timeoutId);
 
@@ -36,6 +78,8 @@ async function fetchTopSuppliers() {
     allSuppliers = data;
     renderTopSuppliersTable(data);
     populateSupplierSelect(data);
+    document.getElementById("topSuppliersTitle").textContent =
+      `Top 10 Suppliers — ${getPeriodLabel()}`;
   } catch (error) {
     console.error("[supplier-scorecard] Error fetching suppliers:", error);
     const errorMsg =
@@ -167,13 +211,14 @@ function populateSupplierSelect(suppliers) {
     select.appendChild(option);
   });
 
-  select.addEventListener("change", (e) => {
-    if (e.target.value) {
-      fetchSupplierTrend(e.target.value);
+  select.onchange = (e) => {
+    currentVendor = e.target.value || null;
+    if (currentVendor) {
+      fetchSupplierTrend(currentVendor);
     } else {
       hideTrendChart();
     }
-  });
+  };
 }
 
 /**
@@ -198,7 +243,8 @@ async function fetchSupplierTrend(vendorCode) {
     }
 
     // Process raw PO data into quarterly trends
-    const trendArray = buildTrend(rawData);
+    const { startDate, endDate } = getPeriodDates();
+    const trendArray = buildTrend(rawData, startDate, endDate);
 
     // Transform to chart format
     const trendData = {
@@ -215,45 +261,26 @@ async function fetchSupplierTrend(vendorCode) {
 }
 
 /**
- * Get filter start date: 2 years back from the most recent completed quarter end
- */
-function getFilterStartDate() {
-  const today = new Date();
-  const month = today.getMonth(); // 0-11
-  const year = today.getFullYear();
-
-  let quarterEndDate;
-
-  // Find the most recent completed quarter end
-  if (month < 3) {
-    // We're in Q1, so most recent quarter end is Q4 of previous year
-    quarterEndDate = new Date(year - 1, 11, 31); // Dec 31
-  } else if (month < 6) {
-    // We're in Q2, so most recent quarter end is Q1
-    quarterEndDate = new Date(year, 2, 31); // Mar 31
-  } else if (month < 9) {
-    // We're in Q3, so most recent quarter end is Q2
-    quarterEndDate = new Date(year, 5, 30); // Jun 30
-  } else {
-    // We're in Q4, so most recent quarter end is Q3
-    quarterEndDate = new Date(year, 8, 30); // Sep 30
-  }
-
-  // Go back 2 years from that quarter end
-  const twoYearsBack = new Date(quarterEndDate);
-  twoYearsBack.setFullYear(twoYearsBack.getFullYear() - 2);
-
-  return twoYearsBack;
-}
-
-/**
  * Build quarterly trend from raw PO records
  */
-function buildTrend(rawRows) {
-  // Collapse to PO-level first
+function buildTrend(rawRows, startDate, endDate) {
+  const filterStart = new Date(startDate);
+  filterStart.setHours(0, 0, 0, 0);
+  const filterEnd = new Date(endDate);
+  filterEnd.setHours(23, 59, 59, 999);
+
+  // Filter individual lines to the period BEFORE collapsing to PO-level.
+  // If we collapse first, a PO with any line outside the period gets its max
+  // dueDate pushed beyond filterEnd and the entire PO is dropped.
+  const periodRows = rawRows.filter((row) => {
+    const due = new Date(row.dueDate);
+    return !isNaN(due.getTime()) && due >= filterStart && due <= filterEnd;
+  });
+
+  // Collapse to PO-level (latest due/received among in-period lines only)
   const poMap = new Map();
 
-  for (const row of rawRows) {
+  for (const row of periodRows) {
     const po = row.po;
 
     if (!poMap.has(po)) {
@@ -277,30 +304,12 @@ function buildTrend(rawRows) {
     }
   }
 
-  // Convert PO-level map to array
   const poRows = Array.from(poMap.values());
-
-  // Get filter dates
-  const today = new Date();
-  today.setHours(0, 0, 0, 0); // Set to midnight for fair comparison
-
-  const filterStartDate = getFilterStartDate();
-  filterStartDate.setHours(0, 0, 0, 0);
 
   const quarterMap = new Map();
 
   for (const row of poRows) {
     const due = new Date(row.dueDate);
-
-    // Skip POs due in the future
-    if (due > today) {
-      continue;
-    }
-
-    // Skip POs older than 2 years from most recent quarter end
-    if (due < filterStartDate) {
-      continue;
-    }
 
     const year = due.getFullYear();
     const quarter = Math.floor(due.getMonth() / 3) + 1;
@@ -487,24 +496,229 @@ function showError(containerId, message) {
   container.innerHTML = `<p class="error">${message}</p>`;
 }
 
-// Load data on page load
-window.addEventListener("DOMContentLoaded", () => {
+/**
+ * Render a vendor trend to a PNG data URL using an off-screen canvas.
+ * Returns a Promise that resolves with the data URL once Chart.js has drawn.
+ */
+function renderVendorToDataURL(trendData, vendorCode) {
+  return new Promise((resolve) => {
+    const canvas = document.createElement("canvas");
+    canvas.width = 1200;
+    canvas.height = 500;
+
+    const whiteBackground = {
+      id: "exportBackground",
+      beforeDraw: (chart) => {
+        const ctx = chart.ctx;
+        ctx.save();
+        ctx.globalCompositeOperation = "destination-over";
+        ctx.fillStyle = "#ffffff";
+        ctx.fillRect(0, 0, chart.width, chart.height);
+        ctx.restore();
+      },
+    };
+
+    const chart = new Chart(canvas, {
+      type: "line",
+      data: {
+        labels: trendData.quarters,
+        datasets: [
+          {
+            label: `${vendorCode} - On-Time Delivery %`,
+            data: trendData.onTimePercentages,
+            borderColor: "#1a472a",
+            backgroundColor: "rgba(26, 71, 42, 0.1)",
+            borderWidth: 3,
+            fill: true,
+            tension: 0.4,
+            pointRadius: 6,
+            pointBackgroundColor: "#1a472a",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            yAxisID: "y",
+          },
+          {
+            label: `${vendorCode} - PO Count`,
+            data: trendData.posCount,
+            borderColor: "#f39c12",
+            backgroundColor: "rgba(243, 156, 18, 0.1)",
+            borderWidth: 2,
+            fill: false,
+            tension: 0.4,
+            pointRadius: 5,
+            pointBackgroundColor: "#f39c12",
+            pointBorderColor: "#fff",
+            pointBorderWidth: 2,
+            yAxisID: "y1",
+          },
+        ],
+      },
+      options: {
+        responsive: false,
+        animation: {
+          duration: 0,
+          onComplete: () => {
+            resolve(canvas.toDataURL("image/png"));
+            chart.destroy();
+          },
+        },
+        plugins: {
+          legend: {
+            display: true,
+            position: "top",
+            labels: { font: { size: 13, weight: "600" }, padding: 15 },
+          },
+          title: {
+            display: true,
+            text: `Supplier Delivery Performance - ${vendorCode}`,
+            font: { size: 15, weight: "bold" },
+            padding: 20,
+          },
+        },
+        scales: {
+          y: {
+            type: "linear",
+            position: "left",
+            beginAtZero: true,
+            max: 100,
+            title: {
+              display: true,
+              text: "On-Time Delivery %",
+              font: { weight: "600" },
+            },
+          },
+          y1: {
+            type: "linear",
+            position: "right",
+            beginAtZero: true,
+            title: {
+              display: true,
+              text: "Purchase Orders",
+              font: { weight: "600" },
+            },
+            grid: { drawOnChartArea: false },
+          },
+          x: {
+            title: { display: true, text: "Quarter", font: { weight: "600" } },
+          },
+        },
+      },
+      plugins: [whiteBackground],
+    });
+  });
+}
+
+/**
+ * Export trend charts for all top-10 suppliers as a ZIP of PNGs.
+ */
+async function exportAllCharts() {
+  if (!window.JSZip) {
+    alert("JSZip library not loaded — please refresh the page.");
+    return;
+  }
+  if (allSuppliers.length === 0) {
+    alert("Load the top 10 suppliers first.");
+    return;
+  }
+
+  const btn = document.getElementById("exportChartsBtn");
+  const statusEl = document.getElementById("exportStatus");
+  btn.disabled = true;
+
+  const zip = new window.JSZip();
+  const { startDate, endDate } = getPeriodDates();
+  const apiUrl = await getApiUrl();
+  let exported = 0;
+
+  for (let i = 0; i < allSuppliers.length; i++) {
+    const supplier = allSuppliers[i];
+    const vendorCode = supplier.VENDOR;
+
+    statusEl.textContent = `Fetching ${vendorCode} (${i + 1} / ${allSuppliers.length})\u2026`;
+
+    try {
+      const response = await fetch(
+        `${apiUrl}/supplier-scorecard/trend?vendor=${encodeURIComponent(vendorCode)}`,
+      );
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
+      const rawData = await response.json();
+      if (rawData.error) throw new Error(rawData.error);
+
+      const trendArray = buildTrend(rawData, startDate, endDate);
+      if (trendArray.length === 0) {
+        statusEl.textContent = `No data for ${vendorCode}, skipping\u2026`;
+        continue;
+      }
+
+      const trendData = {
+        quarters: trendArray.map((d) => d.quarter),
+        onTimePercentages: trendArray.map((d) => d.onTimePercent),
+        posCount: trendArray.map((d) => d.poCount),
+      };
+
+      statusEl.textContent = `Rendering ${vendorCode} (${i + 1} / ${allSuppliers.length})\u2026`;
+      const dataUrl = await renderVendorToDataURL(trendData, vendorCode);
+      const base64 = dataUrl.split(",")[1];
+
+      const safeCode = vendorCode.replace(/[^a-zA-Z0-9_-]/g, "_");
+      const rank = String(i + 1).padStart(2, "0");
+      zip.file(`${rank}_${safeCode}_trend.png`, base64, { base64: true });
+      exported++;
+    } catch (err) {
+      console.error(`[export] Error for ${vendorCode}:`, err);
+      statusEl.textContent = `Error on ${vendorCode}: ${err.message}`;
+    }
+  }
+
+  if (exported === 0) {
+    statusEl.textContent = "Nothing to export.";
+    btn.disabled = false;
+    return;
+  }
+
+  statusEl.textContent = "Generating ZIP\u2026";
+  const blob = await zip.generateAsync({ type: "blob" });
+
+  const a = document.createElement("a");
+  a.href = URL.createObjectURL(blob);
+  a.download = `supplier-trends_${formatDate(new Date())}.zip`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+
+  statusEl.textContent = `Done \u2014 ${exported} chart(s) downloaded.`;
+  setTimeout(() => {
+    statusEl.textContent = "";
+  }, 4000);
+  btn.disabled = false;
+}
+
+function initPage() {
+  document.getElementById("exportChartsBtn").addEventListener("click", () => {
+    exportAllCharts().catch((err) => {
+      console.error("[export] Unhandled error:", err);
+    });
+  });
+
+  document.querySelectorAll('input[name="period"]').forEach((radio) => {
+    radio.addEventListener("change", (e) => {
+      currentPeriod = e.target.value;
+      currentVendor = null;
+      document.getElementById("supplierSelect").value = "";
+      hideTrendChart();
+      fetchTopSuppliers().catch((err) => {
+        console.error("[supplier-scorecard] Error reloading suppliers:", err);
+      });
+    });
+  });
+
   fetchTopSuppliers().catch((err) => {
     console.error(
       "[supplier-scorecard] Unhandled error in fetchTopSuppliers:",
       err,
     );
   });
-});
-
-// Safety net: if document is already loaded, call immediately
-if (document.readyState === "loading") {
-  // Waiting for DOMContentLoaded...
-} else {
-  fetchTopSuppliers().catch((err) => {
-    console.error(
-      "[supplier-scorecard] Unhandled error in immediate fetchTopSuppliers:",
-      err,
-    );
-  });
 }
+
+// Modules are always deferred — DOMContentLoaded fires after this module
+// is parsed, so a single listener is sufficient (no safety net needed).
+window.addEventListener("DOMContentLoaded", initPage);

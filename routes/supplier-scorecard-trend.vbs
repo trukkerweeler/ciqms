@@ -83,24 +83,30 @@ If conn.State = 1 Then
         EscapeJSON = s
     End Function
 
-    ' Simple query to get raw PO data - date filtering and calculations done in JavaScript
-    Dim sqlQuery
+    ' Union V_POHIST_LINES (received) + V_PO_LINES (open) for complete picture
+    Dim sqlQuery, safeVendor, partExclude
+    safeVendor = "'" & Replace(vendorCode, "'", "''") & "'"
+    partExclude = "('FEE','FEE #2','SURCHARGE','INSPECT','CERTIFICATION'," & _
+                  "'FREIGHT','EXPEDITE FEE','CC FEE','INSPECTION','MISSED PAYMENT','TAX')"
     sqlQuery = ""
-    sqlQuery = sqlQuery & "SELECT "
-    sqlQuery = sqlQuery & "PURCHASE_ORDER, "
+    sqlQuery = sqlQuery & "SELECT PURCHASE_ORDER, "
     sqlQuery = sqlQuery & "SUBSTRING(DATE_DUE_LINE, 1, 10) AS DUE_DATE, "
     sqlQuery = sqlQuery & "SUBSTRING(DATE_LAST_RECEIVED, 1, 10) AS RECEIVED_DATE, "
-    sqlQuery = sqlQuery & "VENDOR, "
-    sqlQuery = sqlQuery & "PO_TYPE, "
-    sqlQuery = sqlQuery & "PART "
+    sqlQuery = sqlQuery & "VENDOR, PO_TYPE, PART "
     sqlQuery = sqlQuery & "FROM V_POHIST_LINES "
-    sqlQuery = sqlQuery & "WHERE VENDOR = '" & Replace(vendorCode, "'", "''") & "' "
+    sqlQuery = sqlQuery & "WHERE VENDOR = " & safeVendor & " "
     sqlQuery = sqlQuery & "AND PO_TYPE = 'O' "
-    sqlQuery = sqlQuery & "AND PART NOT IN ("
-    sqlQuery = sqlQuery & "'FEE','FEE #2','SURCHARGE','INSPECT','CERTIFICATION',"
-    sqlQuery = sqlQuery & "'FREIGHT','EXPEDITE FEE','CC FEE','INSPECTION','MISSED PAYMENT','TAX'"
-    sqlQuery = sqlQuery & ") "
-    sqlQuery = sqlQuery & "ORDER BY DATE_DUE_LINE DESC "
+    sqlQuery = sqlQuery & "AND PART NOT IN " & partExclude & " "
+    sqlQuery = sqlQuery & "UNION "
+    sqlQuery = sqlQuery & "SELECT PURCHASE_ORDER, "
+    sqlQuery = sqlQuery & "SUBSTRING(DATE_DUE_LINE, 1, 10) AS DUE_DATE, "
+    sqlQuery = sqlQuery & "SUBSTRING(DATE_LAST_RECEIVED, 1, 10) AS RECEIVED_DATE, "
+    sqlQuery = sqlQuery & "VENDOR, PO_TYPE, PART "
+    sqlQuery = sqlQuery & "FROM V_PO_LINES "
+    sqlQuery = sqlQuery & "WHERE VENDOR = " & safeVendor & " "
+    sqlQuery = sqlQuery & "AND PO_TYPE = 'O' "
+    sqlQuery = sqlQuery & "AND PART NOT IN " & partExclude & " "
+    sqlQuery = sqlQuery & "ORDER BY DUE_DATE DESC "
 
 Dim dbgIndex
 For dbgIndex = 1 To Len(sqlQuery) Step 200

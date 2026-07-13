@@ -811,6 +811,65 @@ router.get("/pm-mgmt-review", (req, res) => {
 });
 
 // ==================================================
+// PM No-Entries detail for previous calendar month
+router.get("/pm-no-entries-detail", (req, res) => {
+  const today = new Date();
+  // Action items are dated/due in the current month but cover the previous month's work.
+  // Query current month's INPUT_DATE records; label them as the previous month.
+  const currentMonthStart = new Date(today.getFullYear(), today.getMonth(), 1);
+  const currentMonthEnd = new Date(
+    today.getFullYear(),
+    today.getMonth() + 1,
+    0,
+  );
+  const startStr = currentMonthStart.toISOString().split("T")[0];
+  const endStr = currentMonthEnd.toISOString().split("T")[0];
+  const prevMonthDate = new Date(today.getFullYear(), today.getMonth() - 1, 1);
+  const monthLabel = prevMonthDate.toLocaleDateString("en-US", {
+    month: "long",
+    year: "numeric",
+  });
+
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST || "localhost",
+    user: process.env.DB_USER || "root",
+    password: process.env.DB_PASS || "",
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((err) => {
+    if (err) {
+      console.error("❌ DB connection failed:", err.stack);
+      return res.status(500).json({ error: "Database connection failed" });
+    }
+
+    const sql = `SELECT DISTINCT pi.SUBJECT, pi.ASSIGNED_TO
+      FROM PEOPLE_INPUT pi
+      LEFT JOIN PPL_INPT_RCUR pir ON pi.SUBJECT = pir.SUBJECT
+      LEFT JOIN PPL_INPT_RSPN re ON pi.INPUT_ID = re.INPUT_ID
+      WHERE pir.STATUS = 'A'
+      AND pir.SUBJECT REGEXP 'PM[0-9]{2}'
+      AND pi.INPUT_DATE BETWEEN ? AND ?
+      AND re.RESPONSE_TEXT REGEXP 'no ent'
+      ORDER BY pi.SUBJECT`;
+
+    connection.query(sql, [startStr, endStr], (err, rows) => {
+      connection.end();
+      if (err) {
+        console.error("❌ pm-no-entries-detail query failed:", err);
+        return res.status(500).json({ error: "Query execution failed" });
+      }
+      const items = rows.map((r) => ({
+        code: r.SUBJECT,
+        assignedTo: r.ASSIGNED_TO || "",
+      }));
+      res.json({ month: monthLabel, items });
+    });
+  });
+});
+
+// ==================================================
 // Get a single record
 router.get("/:id", (req, res) => {
   // console.log(req.params.id);

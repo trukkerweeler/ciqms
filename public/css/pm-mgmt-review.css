@@ -149,6 +149,40 @@ main h1 {
   display: block;
 }
 
+#noEntriesContainer h2 {
+  margin-top: 0;
+  color: #333;
+  font-size: 1.1em;
+}
+
+#noEntriesTable {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 10px;
+}
+
+#noEntriesTable th,
+#noEntriesTable td {
+  text-align: left;
+  padding: 8px 14px;
+  border: 1px solid #ddd;
+  font-size: 0.95em;
+}
+
+#noEntriesTable th {
+  background: #4a90e2;
+  color: #fff;
+  font-weight: bold;
+}
+
+#noEntriesTable tbody tr:nth-child(even) {
+  background: #f2f2f2;
+}
+
+#noEntriesTable tbody tr:hover {
+  background: #e8f0fb;
+}
+
 @media print {
   .date-selector {
     display: none;
