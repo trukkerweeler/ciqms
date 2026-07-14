@@ -4,6 +4,9 @@ const path = require("path");
 const router = express.Router();
 const { spawn } = require("child_process");
 
+// Vendor codes excluded from all scorecard calculations
+const EXCLUDED_VENDORS = ["NACA01", "WEST2"];
+
 // ==================================================
 // Get top 10 suppliers with weighted scoring
 router.get("/top-suppliers", (req, res) => {
@@ -17,11 +20,9 @@ router.get("/top-suppliers", (req, res) => {
     !/^\d{4}-\d{2}-\d{2}$/.test(startDate) ||
     !/^\d{4}-\d{2}-\d{2}$/.test(endDate)
   ) {
-    return res
-      .status(400)
-      .json({
-        error: "startDate and endDate query params required (YYYY-MM-DD)",
-      });
+    return res.status(400).json({
+      error: "startDate and endDate query params required (YYYY-MM-DD)",
+    });
   }
 
   const vbsFilePath = path.join(__dirname, "supplier-scorecard-top10.vbs");
@@ -150,6 +151,9 @@ router.get("/trend", (req, res) => {
   if (!vendor) {
     return res.status(400).json({ error: "Vendor code required" });
   }
+  if (EXCLUDED_VENDORS.includes(vendor.toUpperCase())) {
+    return res.json([]);
+  }
 
   const debug = process.env.DEBUG_SUPPLIER_SCORECARD === "1";
   if (debug)
@@ -230,6 +234,12 @@ router.get("/trend", (req, res) => {
     console.error("[supplier-scorecard] Failed to spawn trend VBScript:", err);
     res.status(500).json({ error: `Failed to spawn VBScript: ${err.message}` });
   });
+});
+
+// ==================================================
+// Return the excluded vendor list
+router.get("/excluded-vendors", (req, res) => {
+  res.json(EXCLUDED_VENDORS);
 });
 
 module.exports = router;

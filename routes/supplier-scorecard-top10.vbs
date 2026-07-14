@@ -112,6 +112,7 @@ If conn.State = 1 Then
     sqlQuery = sqlQuery & "AND DATE_DUE_LINE <= CONVERT('" & endDate & "', SQL_DATE) "
     sqlQuery = sqlQuery & ") src "
     sqlQuery = sqlQuery & "LEFT JOIN V_VENDOR_MASTER vm ON src.VENDOR = vm.VENDOR AND vm.REC = 1 "
+    sqlQuery = sqlQuery & "WHERE src.VENDOR NOT IN ('NACA01', 'WEST2') "
     sqlQuery = sqlQuery & "GROUP BY src.VENDOR "
     sqlQuery = sqlQuery & "ORDER BY TOTAL_SPEND DESC"
 

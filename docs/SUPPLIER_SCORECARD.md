@@ -99,7 +99,9 @@ The VBScript UNIONs `V_POHIST_LINES` and `V_PO_LINES` filtered to the chosen dat
 
 Vendors are sorted descending by `WEIGHTED_SCORE`; top 10 are returned.
 
-**Table columns**: Rank · Vendor Code _(hover for full name)_ · Total Spend · PO Count · Line Count · On-Time % · Weighted Score
+**Table columns**: Rank · Vendor Code · Vendor Name · Total Spend · PO Count · Line Count · On-Time % · Weighted Score
+
+**Excluded vendors**: Certain vendor codes are excluded from the ranking entirely (filtered in SQL and never returned). The list is maintained in `EXCLUDED_VENDORS` in `routes/supplier-scorecard.js` and mirrored in the `WHERE src.VENDOR NOT IN (...)` clause of `supplier-scorecard-top10.vbs`. The page displays a note below the table listing the excluded codes, fetched from `GET /supplier-scorecard/excluded-vendors`.
 
 ---
 
@@ -121,11 +123,31 @@ The VBScript UNIONs `V_POHIST_LINES` and `V_PO_LINES` for the vendor with no dat
 - Left: On-Time Delivery % (0–100)
 - Right: PO Count
 
-The vendor dropdown is populated from the Top 10 result, so only top-10 suppliers are selectable.
+The vendor dropdown is populated from the Top 10 result, so only top-10 suppliers are selectable. Excluded vendors are blocked at the route level (returns `[]`) and cannot be queried even directly.
+
+---
+
+### Export All Charts (ZIP Download)
+
+An **Export All Charts** button in the trend section iterates through all top-10 suppliers, fetches each vendor's trend data, renders a 1200×500 off-screen Chart.js canvas with animations disabled, and bundles the resulting PNGs into a ZIP file for download.
+
+- **File naming**: `01_VENDORCODE_trend.png`, `02_VENDORCODE_trend.png`, … (rank-prefixed, sorted in scorecard order)
+- **ZIP filename**: `supplier-trends_YYYY-MM-DD.zip`
+- **Background**: white (applied via a Chart.js `beforeDraw` inline plugin using `destination-over` compositing)
+- **Library**: [JSZip 3.10.1](https://cdn.jsdelivr.net/npm/jszip@3.10.1/dist/jszip.min.js) loaded from CDN
+- Vendors with no in-period data are skipped; errors per vendor are logged and skipped without aborting the batch
 
 ---
 
 ## API Reference
+
+### GET `/supplier-scorecard/excluded-vendors`
+
+No parameters. Returns the current `EXCLUDED_VENDORS` array as a JSON array of vendor code strings.
+
+```json
+["NACA01", "WEST2"]
+```
 
 ### GET `/supplier-scorecard/top-suppliers`
 

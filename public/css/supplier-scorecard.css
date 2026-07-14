@@ -79,20 +79,20 @@
 
 .data-table th:nth-child(2),
 .data-table td:nth-child(2) {
-  width: 110px !important;
-  min-width: 110px !important;
+  width: 100px !important;
+  min-width: 100px !important;
 }
 
 .data-table th:nth-child(3),
 .data-table td:nth-child(3) {
-  width: 130px !important;
-  min-width: 130px !important;
+  width: 200px !important;
+  min-width: 160px !important;
 }
 
 .data-table th:nth-child(4),
 .data-table td:nth-child(4) {
-  width: 90px !important;
-  min-width: 90px !important;
+  width: 130px !important;
+  min-width: 130px !important;
 }
 
 .data-table th:nth-child(5),
@@ -103,12 +103,18 @@
 
 .data-table th:nth-child(6),
 .data-table td:nth-child(6) {
-  width: 100px !important;
-  min-width: 100px !important;
+  width: 90px !important;
+  min-width: 90px !important;
 }
 
 .data-table th:nth-child(7),
 .data-table td:nth-child(7) {
+  width: 100px !important;
+  min-width: 100px !important;
+}
+
+.data-table th:nth-child(8),
+.data-table td:nth-child(8) {
   width: 80px !important;
   min-width: 80px !important;
   max-width: 80px !important;
@@ -309,4 +315,24 @@
   font-size: 0.85rem;
   color: #555;
   font-style: italic;
+}
+
+/* Excluded vendors note below top-10 table */
+.excluded-note {
+  margin-top: 0.6rem;
+  font-size: 0.82rem;
+  color: #666;
+}
+
+.excluded-note .excluded-label {
+  font-weight: 600;
+  color: #444;
+}
+
+.excluded-note code {
+  background: #f0f0f0;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  font-family: "Courier New", monospace;
+  font-size: 0.82rem;
 }

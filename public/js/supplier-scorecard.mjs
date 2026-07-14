@@ -80,6 +80,7 @@ async function fetchTopSuppliers() {
     populateSupplierSelect(data);
     document.getElementById("topSuppliersTitle").textContent =
       `Top 10 Suppliers — ${getPeriodLabel()}`;
+    fetchAndRenderExcluded();
   } catch (error) {
     console.error("[supplier-scorecard] Error fetching suppliers:", error);
     const errorMsg =
@@ -115,6 +116,7 @@ function renderTopSuppliersTable(data) {
   const headers = [
     "Rank",
     "Vendor Code",
+    "Vendor Name",
     "Total Spend",
     "PO Count",
     "Line Count",
@@ -144,11 +146,12 @@ function renderTopSuppliersTable(data) {
     // Vendor Code
     const vendorCell = document.createElement("td");
     vendorCell.textContent = item.VENDOR || "N/A";
-    if (item.NAME_VENDOR) {
-      vendorCell.title = item.NAME_VENDOR;
-      vendorCell.style.cursor = "help";
-    }
     row.appendChild(vendorCell);
+
+    // Vendor Name
+    const nameCell = document.createElement("td");
+    nameCell.textContent = item.NAME_VENDOR || "";
+    row.appendChild(nameCell);
 
     // Total Spend
     const spendCell = document.createElement("td");
@@ -188,6 +191,31 @@ function renderTopSuppliersTable(data) {
 
   table.appendChild(tbody);
   container.appendChild(table);
+}
+
+/**
+ * Fetch the excluded-vendor list and render a note below the top-10 table.
+ */
+async function fetchAndRenderExcluded() {
+  try {
+    const apiUrl = await getApiUrl();
+    const response = await fetch(
+      `${apiUrl}/supplier-scorecard/excluded-vendors`,
+    );
+    if (!response.ok) return;
+    const vendors = await response.json();
+    const el = document.getElementById("excludedVendorsNote");
+    if (!el) return;
+    if (!vendors || vendors.length === 0) {
+      el.innerHTML = "";
+      return;
+    }
+    el.innerHTML =
+      `<span class="excluded-label">Excluded from ranking:</span> ` +
+      vendors.map((v) => `<code>${v}</code>`).join(", ");
+  } catch {
+    // non-critical — silently ignore
+  }
 }
 
 /**
