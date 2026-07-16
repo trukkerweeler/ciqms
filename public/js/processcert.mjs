@@ -160,9 +160,14 @@ function renderCert(certData, qaUser) {
 
     const woNumber = `${entry.parentJ52.job}-${entry.parentJ52.suffix}`;
     workOrders.add(woNumber);
+    const entryPart = normalizePart(entry.parentJ52.part).replace(
+      /\s+-\s*$/,
+      "",
+    );
+    const entryPartDesc = normalizePart(entry.partDescription || "");
     if (!topAssembly) {
-      topAssembly = normalizePart(entry.parentJ52.part).replace(/\s+-\s*$/, "");
-      topAssemblyDesc = normalizePart(entry.partDescription || "");
+      topAssembly = entryPart;
+      topAssemblyDesc = entryPartDesc;
     }
 
     // ====================================================================
@@ -182,24 +187,33 @@ function renderCert(certData, qaUser) {
         )
           continue;
 
-        const processName =
-          `${op.operation || ""} ${op.partWcOutside?.trim() || op.subOpDescription || op.description || ""}`.trim();
+        const processCode = (op.operation || "").trim();
+        const processDesc = (
+          op.partWcOutside?.trim() ||
+          op.subOpDescription ||
+          op.description ||
+          ""
+        ).trim();
+        const processName = `${processCode} ${processDesc}`.trim();
         if (!processName || !isSpecialProcess(processName)) continue;
 
         if (!processSections.has(processName)) {
           processSections.set(processName, {
             processName,
+            processCode,
+            processDesc,
             poNumber: op.poNumber || "",
             rows: [],
           });
         }
         processSections.get(processName).rows.push({
-          part: topAssembly,
-          partDesc: topAssemblyDesc,
+          part: entryPart,
+          partDesc: entryPartDesc,
           trace: op.poNumber || "",
           traceHover: "",
           qty: getQuantityFromHistory(entry.hierarchy?.itemHistory || []),
           workOrder: woNumber,
+          isParent: true,
         });
       }
     }
@@ -221,13 +235,21 @@ function renderCert(certData, qaUser) {
         )
           continue;
 
-        const processName =
-          `${op.operation || ""} ${op.partWcOutside?.trim() || op.subOpDescription || op.description || ""}`.trim();
+        const processCode = (op.operation || "").trim();
+        const processDesc = (
+          op.partWcOutside?.trim() ||
+          op.subOpDescription ||
+          op.description ||
+          ""
+        ).trim();
+        const processName = `${processCode} ${processDesc}`.trim();
         if (!processName || !isSpecialProcess(processName)) continue;
 
         if (!processSections.has(processName)) {
           processSections.set(processName, {
             processName,
+            processCode,
+            processDesc,
             poNumber: op.poNumber || "",
             rows: [],
           });
@@ -244,9 +266,31 @@ function renderCert(certData, qaUser) {
             : "",
           qty: getQuantityFromHistory(childEntry.hierarchy?.itemHistory || []),
           workOrder: childWo,
+          isParent: false,
         });
       }
     }
+  }
+
+  // Deduplicate rows within each process section
+  for (const [, section] of processSections) {
+    // Collect traces that are covered by at least one child row
+    const childTraces = new Set(
+      section.rows.filter((r) => !r.isParent && r.trace).map((r) => r.trace),
+    );
+    // Suppress parent rows whose trace is already represented by a child row
+    // (parent job carries the op for costing/scheduling; child is where work was done)
+    section.rows = section.rows.filter(
+      (r) => !r.isParent || !childTraces.has(r.trace),
+    );
+    // Deduplicate remaining rows (same part + trace + workOrder)
+    const seen = new Set();
+    section.rows = section.rows.filter((row) => {
+      const key = [row.part, row.trace, row.workOrder].join("|");
+      if (seen.has(key)) return false;
+      seen.add(key);
+      return true;
+    });
   }
 
   if (processSections.size === 0) {
@@ -263,7 +307,6 @@ function renderCert(certData, qaUser) {
         <th>ITEM</th>
         <th>PART NUMBER / DESCRIPTION</th>
         <th>TRACE ID</th>
-        <th>QUANTITY</th>
         <th>WORK ORDER</th>
       </tr>
     </thead>
@@ -274,9 +317,9 @@ function renderCert(certData, qaUser) {
     const isSpecial = isSpecialProcess(section.processName);
     allProcessRowsHtml += `
       <tr class="cert-process-row${isSpecial ? " cert-process-row-special" : ""}">
-        <td colspan="5" class="cert-process-header-cell${isSpecial ? " cert-process-header-cell-special" : ""}">
+        <td colspan="4" class="cert-process-header-cell${isSpecial ? " cert-process-header-cell-special" : ""}">
           <div style="display: flex; justify-content: space-between; align-items: center; width: 100%;">
-            <strong>Process: ${section.processName}</strong>${isSpecial ? '<span class="special-process-badge">★ SPECIAL PROCESS</span>' : ""}
+            <strong${section.processCode ? ` title="Op code: ${section.processCode}" style="cursor:help"` : ""}>Process: ${section.processDesc || section.processName}</strong>
           </div>
         </td>
       </tr>
@@ -288,7 +331,6 @@ function renderCert(certData, qaUser) {
           <td class="cert-td-center">${itemNum++}</td>
           <td>${row.part}${row.partDesc ? `<br><span style="font-size:0.85em;color:#333">${row.partDesc}</span>` : ""}</td>
           <td>${row.trace}</td>
-          <td class="cert-td-center">${row.qty}</td>
           <td title="${row.traceHover ? "Trace ID: " + row.traceHover : ""}">${row.workOrder}</td>
         </tr>
       `;

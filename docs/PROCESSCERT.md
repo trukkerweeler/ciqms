@@ -1,330 +1,329 @@
 # PROCESS CERTIFICATE (processcert)
 
-## Authoritative Specification for Haiku
+## Entry Point — Packing Slip (Current Implementation)
 
-This document defines the complete rules, data requirements, and recursion
-model for generating a multi-level Process Certificate (processcert) from
-a single JOB input. All steps MUST be followed exactly. No simplification,
-collapsing, or reordering is permitted.
+The certificate is now generated from a **packing slip number**, not a manually selected job number.
 
-The processcert logic mirrors materialcert recursion, but the payload is
-process‑centric: operations, router descriptions, outside processing flags,
-and PO references.
+### Flow
 
-=====================================================================
-GLOBAL RULES
-=====================================================================
+```
+User enters packing slip (e.g. 046198)
+  ↓ padStart(6, '0') → always 6 digits
+  ↓
+processcert-packing-slip.vbs
+  → ORDER_HIST_LOT WHERE INVOICE = '046198' AND SERIAL LIKE '______-___'
+  → returns SERIAL values e.g. "122480-000"
+  → parsed → [{job: "122480", suffix: "000"}, ...]
+  ↓
+Fan-out (Promise.all) — one /processcert/build-cert call per job
+  ↓
+Results combined → single Certificate of Processing rendered
+```
 
-1. SERIAL_NUMBER must always be trimmed:
-   Trim(Replace(SERIAL_NUMBER, Chr(0), ""))
+### Key Properties
 
-2. A valid job reference MUST match:
-   - 6 digits
-   - a dash
-   - 3 digits
-     Example: 122094-001
+- Packing slip padded to 6 digits on the frontend before sending
+- All jobs fetched **in parallel** (fan-out/fan-in pattern) — O(t) not O(n·t)
+- All process sections from all jobs merged into **one certificate document**
+- Header shows: Packing Slip number + Work Order(s) from ORDER_HIST_LOT SERIAL only (not child jobs)
 
-   Do NOT use strict regex. Instead:
-   - Ensure the string contains a dash
-   - Ensure the part before the dash is 6 digits
-   - Ensure the part after the dash is 3 digits
+---
 
-3. Do NOT recurse into:
-   - PO numbers (e.g., "PO: 0041564")
-   - Heat lots (e.g., "48X48")
-   - Vendor lots (e.g., "41727")
-   - Blank or NULL SERIAL_NUMBER
-   - Any SERIAL_NUMBER that does not match the job pattern
+## Mental Model (Updated With Key Learnings)
 
-4. Maintain a visitedJobs list to prevent infinite loops.
+## **Step 1 — Get & Display Parent J52 Transactions**
 
-5. All recursion MUST be suffix‑specific:
-   - Top‑level Step 1 is job‑wide
-   - Recursive Step 1 MUST use JOB + SUFFIX only
+Query all **J52** transactions for the selected work order from `ITEM_HISTORY`.
 
-=====================================================================
-STEP 1 — DOWNSTREAM COMPLETIONS (ITEM_HISTORY J52)
-=====================================================================
+These represent **completion events** for the parent job.
 
-Top‑level Step 1 MUST:
+## **Step 2 — User Selects Parent Transaction**
 
-- Query ITEM_HISTORY for all J52 rows for the given JOB.
-- NOT filter by suffix.
-- Extract:
-  DATE_HISTORY
-  TIME_ITEM_HISTORY
-  QUANTITY
-  JOB
-  SUFFIX
-  PART
-  SERIAL_NUMBER (trimmed)
+When the user picks a specific J52:
 
-Group rows by:
+Store:
 
-- DATE_HISTORY
-- TIME_ITEM_HISTORY
-- SUFFIX
+- `parentJob`
+- `parentSuffix`
+- `parentDate`
+- `parentTime`
+- `parentDateTime` (combined timestamp)
 
-Each group becomes a downstream processing lot and MUST remain separate.
+This timestamp becomes the **cutoff** for all upstream genealogy.
 
-Recursive Step 1 MUST:
+## **Step 3 — Recursively Identify Child Jobs via SERIAL_NUMBER**
 
-- Query ITEM_HISTORY J52 rows where:
-  JOB = childJob
-  AND SUFFIX = childSuffix
-- NEVER load J52 rows for other suffixes of that job.
+For each J55/J26/J52 row whose `SERIAL_NUMBER` references another job:
 
-=====================================================================
-STEP 2 — PROCESS TRACE DISCOVERY
-=====================================================================
+- Extract `childJob`
+- Extract `childSuffix`
+- Add to the dependency tree
 
-For the given JOB (all suffixes):
+This builds the **multi‑level job hierarchy**.
 
-- Query JOB_OPERATIONS for all operations with LMO in ('L','O').
-- Extract:
-  SEQ
-  OPERATION
-  ROUTER
-  ROUTER_SEQ
-  DATE_COMPLETED
+## **Step 4 — Get All J52s for Each Child Job, Then Apply Timestamp Cutoff**
 
-- Join ROUTER_LINE on ROUTER + ROUTER_SEQ:
-  DESC_RT_LINE
-  PART_WC_OUTSIDE
+For each child job:
 
-- If PART_WC_OUTSIDE = 'Y':
-  Query JOB_DETAIL for matching OPERATION
-  Extract REFERENCE (PO number)
+1. Retrieve **all** J52 transactions
+2. Keep only those where: `childDateTime <= parentDateTime`
 
-**Important Query Rules**:
+This ensures you only include work completed **before** the parent's completion.
 
-- **TEXT Fields Must Be Quoted**: SUFFIX is a TEXT field in Pervasive SQL. In WHERE clauses, it MUST be quoted:
-  - Correct: `WHERE SUFFIX = '001'`
-  - Incorrect: `WHERE SUFFIX = 001` (treats as numeric, won't match)
+## **Step 5 — Select the Correct Child J52**
 
-- **Historical Records**: Operations may be archived in JOB_HIST_DTL. Use UNION ALL to combine:
-  1. Current: `SELECT * FROM JOB_OPERATIONS WHERE JOB = ? AND SUFFIX = '?'`
-  2. Historical: `SELECT * FROM JOB_HIST_DTL WHERE JOB = ? AND SUFFIX = '?'`
-     Map `CHARGE_DATE` (history) to `DATE_COMPLETED` (current) for consistent output.
-     Map `REFERENCE` (history) to `SERIAL_NUMBER` output field.
+For each child job, select:
 
-- **Operation Sequence Filter**: Query only operations with `SEQ < 990000` to exclude setup/numbering operations:
-  `WHERE JOB = ? AND SUFFIX = '?' AND SEQ < 990000`
+```
+MAX(childDateTime) WHERE childDateTime <= parentDateTime
+```
 
-**Additional Rules**:
+This gives you:
 
-- Do NOT filter by suffix.
-- Do NOT collapse operations.
-- Preserve SEQ order.
-- You MUST return all operations for the job.
+- the correct child completion event
+- the correct quantity
+- the correct timestamp
+- the correct cutoff for operations & materials
 
-=====================================================================
-STEP 3 — FIRST‑LEVEL CHILD JOB RESOLUTION
-=====================================================================
+This is the **canonical child node**.
 
-For each selected Step 1 J52 row:
+## **Step 6 — Determine Consumed vs. Remaining Parts**
 
-- Identify child job from SERIAL_NUMBER (trimmed)
-- Load:
-  • Child JOB_HEADER
-  • Child J52 row (ITEM_HISTORY)
-  • Child process operations (JOB_OPERATIONS + ROUTER_LINE + JOB_DETAIL)
-  • Child material pulls (J55/J50/J51)
-  • Parent operation (JOB_OPERATIONS) for parent job/suffix
-  • Router line (ROUTER_LINE)
-  • PO reference if PART_WC_OUTSIDE = 'Y'
+Compare:
 
-Step 3 is NOT recursive.
+- the child job's **original quantity**
+- the quantity on the selected J52
 
-=====================================================================
-STEP 4 — CONTROLLED MULTI‑LEVEL RECURSION
-=====================================================================
+Parts not included in the selected J52 are either:
 
-Recursion MUST ONLY run on Step 3 results for the J52 rows selected in Step 1.
+- consumed earlier (check earlier J52/J55/J10 rows), or
+- still in inventory (include in cert with notation)
 
-For each material pull (J55/J50/J51):
+## **Step 7 — Recurse Deeper**
 
-- Trim SERIAL_NUMBER
-- If SERIAL_NUMBER matches a job number (######-###):
-  Treat it as a child job
+For each child job that passed the cutoff:
 
-      Run recursive Step 1 (suffix‑specific):
-          JOB = childJob
-          SUFFIX = childSuffix
+- follow its `SERIAL_NUMBER` references
+- find its children
+- apply Steps 3–6 recursively
 
-      Run Step 3 on that job
-      Append nested children
-      Continue recursion until no more job references exist
+This builds the full **multi‑level genealogy**.
 
-Rules:
+---
 
-- Only recurse on J55/J50/J51 rows
-- Only recurse when SERIAL_NUMBER looks like a job number
-- Do NOT recurse on PO numbers, heat lots, vendor lots, or blanks
-- Prevent infinite loops with visitedJobs
-- NEVER use job‑wide Step 1 inside recursion
+# 🔥 **New Critical Learnings Integrated Into the Model**
 
-=====================================================================
-STEP 5 — DOWNSTREAM PROCESS GROUPING
-=====================================================================
+These are the structural rules your engine must follow.
 
-Each downstream completion event becomes a processing group:
+## **A — JOB_DETAIL and JOB_HIST_DTL are labor tables (ignore for CoC)**
 
-- DATE_HISTORY
-- TIME_ITEM_HISTORY
-- SUFFIX
+They contain:
 
-Groups MUST remain separate.
+- employee
+- hours
+- scrap reasons
+- machine time
 
-=====================================================================
-STEP 6 — FINAL PROCESSCERT OUTPUT STRUCTURE
-=====================================================================
+They do **not** contain operation definitions.
 
-Return JSON:
+**Never use these tables for genealogy.**
 
-```json
-{
-  "job": "<input job>",
-  "part": "<part number from ITEM_HISTORY>",
-  "downstream_groups": [
-    {
-      "processing_lot": "<JOB>-<SUFFIX>-<DATE>-<TIME>",
-      "date": "<DATE_HISTORY>",
-      "time": "<TIME_ITEM_HISTORY>",
-      "quantity": "<QUANTITY>",
-      "job": "<JOB>",
-      "suffix": "<SUFFIX>",
+## **B — JOB_OPERATIONS is the active operations table**
 
-      "process_operations": [
-        {
-          "seq": "<SEQ>",
-          "operation": "<OPERATION>",
-          "router_desc": "<DESC_RT_LINE>",
-          "outside": "<true/false>",
-          "po_number": "<PO or empty>"
-        }
-      ],
+Use this when the job is still active.
 
-      "upstream_trace_chain": "<full recursive upstream structure>"
-    }
-  ]
+Contains:
+
+- `SEQ` (operation sequence)
+- `OPERATION`
+- `DESCRIPTION`
+- `UNITS_COMPLETE`
+- `DATE_COMPLETED`
+
+## **C — JOB_HIST_OPS is the archived operations table**
+
+This is the archived equivalent of `JOB_OPERATIONS`.
+
+Use this when the job is closed/archived.
+
+Contains:
+
+- `SEQ`
+- `OPERATION`
+- `DESCRIPTION`
+- `UNITS_COMPLETE`
+- `UNITS_SCRAP`
+- `DATE_COMPLETED`
+
+## **D — Archived jobs often collapse the final operation into SEQ = 999999**
+
+This is Global Shop's internal convention for:
+
+> **Final WIP transfer / job completion event**
+
+Example:
+
+- `operation_seq = 999999`
+- `operation_description = PARTS TRANSFERED FROM WIP`
+
+This is correct and expected.
+
+## **E — Correct Operation Lookup Logic**
+
+For each J52 (parent or child):
+
+### 1. Try active operations
+
+`JOB_OPERATIONS`
+
+### 2. If no rows, try archived operations
+
+`JOB_HIST_OPS`
+
+### 3. If still no rows, fallback to part router
+
+`ROUTER_LINE`
+
+This is the exact logic Global Shop uses internally.
+
+## **F — ITEM_HISTORY is always the source of truth for J52/J55/J10**
+
+Operations and materials attach to the J52 via:
+
+- timestamp
+- job/suffix
+- fallback logic above
+
+---
+
+# 🔧 **Implementation Notes (processcert.js + VBS)**
+
+## Credential Passing to VBScript
+
+Node.js loads `.env` at startup via `--env-file=.env`. The VBS files **do not re-parse `.env`** — instead, Node passes credentials directly as child process environment variables:
+
+```js
+env: {
+  ...process.env,
+  CIQMS_GLOBAL_DSN: process.env.GLOBAL_DSN,
+  CIQMS_GLOBAL_UID: process.env.GLOBAL_UID,
+  CIQMS_GLOBAL_PWD: process.env.GLOBAL_PWD,
 }
 ```
 
-Rules:
+VBS reads them with:
 
-- You MUST populate process_operations for every job.
-- You MUST populate upstream_trace_chain if upstream jobs exist.
-- You MUST recurse until no valid job references remain.
-- You MUST NOT merge downstream groups.
-- You MUST NOT duplicate trace.
-- You MUST NOT collapse operations.
-
-=====================================================================
-IMPLEMENTATION NOTES
-=====================================================================
-
-### Backend (processcert-detail.vbs)
-
-**Steps to implement:**
-
-1. **Step 1 (Top-level)**: Query J52 for all suffixes, group by DATE/TIME/SUFFIX
-2. **Step 2**: Query JOB_OPERATIONS with UNION ALL to JOB_HIST_DTL (for archived operations)
-   - Filter: `SEQ < 990000` to exclude setup operations
-   - Quote SUFFIX in WHERE clause: `SUFFIX = '<value>'` (TEXT field requirement)
-   - LEFT JOIN ITEM_HISTORY on (JOB, SUFFIX, SEQUENCE=SEQ)
-   - Join ROUTER_LINE, optionally JOB_DETAIL
-3. **Step 3**: For each selected J52, resolve child job, load child data
-4. **Step 4**: Implement recursive function that:
-   - Validates SERIAL_NUMBER format (6 digits - 3 digits)
-   - Checks visitedJobs to prevent cycles
-   - Runs recursive Step 1 for (childJob, childSuffix)
-   - Runs Step 3 for child job
-   - Collects all nested results
-5. **Step 5**: Group results by DATE_HISTORY/TIME_ITEM_HISTORY/SUFFIX
-6. **Step 6**: Build final JSON output with proper structure
-
-**SQL Pattern for Step 2**:
-
-Current + Historical operations use UNION ALL:
-
-```sql
-SELECT jo.JOB, jo.SUFFIX, jo.SEQ, jo.OPERATION, jo.DESCRIPTION, ih.SERIAL_NUMBER, ...
-FROM JOB_OPERATIONS jo
-LEFT JOIN ITEM_HISTORY ih ON ih.JOB = jo.JOB AND ih.SUFFIX = jo.SUFFIX AND ih.SEQUENCE = jo.SEQ
-WHERE jo.JOB = <job> AND jo.SUFFIX = '<suffix>' AND jo.SEQ < 990000
-
-UNION ALL
-
-SELECT jh.JOB, jh.SUFFIX, jh.SEQ, '', jh.DESCRIPTION, jh.REFERENCE AS SERIAL_NUMBER, jh.CHARGE_DATE AS DATE_COMPLETED, ...
-FROM JOB_HIST_DTL jh
-WHERE jh.JOB = <job> AND jh.SUFFIX = '<suffix>' AND jh.SEQ < 990000
-ORDER BY SEQ
+```vb
+dsn = WshShell.ExpandEnvironmentStrings("%CIQMS_GLOBAL_DSN%")
 ```
 
-Note:
+Fallback to `.env` file parsing only triggers if the env var expands back to the literal `%CIQMS_GLOBAL_DSN%` (i.e., not set).
 
-- TEXT fields (SUFFIX) must use single quotes in WHERE clauses
-- REFERENCE field from JOB_HIST_DTL maps to SERIAL_NUMBER output column
+## NON_CERT_OPS Filter
 
-### Frontend (processcert.mjs & processcert.html)
+Operations matching these descriptions are excluded from cert output (checked against both the base op and any sub-operation description):
 
-**Responsibilities:**
+```
+MISCELLANEOUS OUTSIDE
+MISC OUTSIDE
+MISCELLANEOUS
+PASSIVATE TO PRINT
+PARTS TRANSFERRED FROM WIP
+PARTS TRANSFERED FROM WIP   ← intentional misspelling (Global Shop data)
+```
 
-1. Display Step 1 J52 transactions in table with checkboxes
-2. Collect selected row indices
-3. Call endpoint with selected indices
-4. Implement recursive `buildNestedTrace()` function
-5. Render hierarchical tree display of upstream trace chains
-6. Display process operations for each job level
+Operations with no usable process name AND no key are also skipped silently.
 
-**Styling**:
+## PO Reference Lookup (`poBySeq`)
 
-- Table headers must use `color: #000` for contrast against dark backgrounds
-- Ensure all table headings (`<th>`) have explicit black text color in CSS
-- Apply print-friendly styles for `@media print` (preserve headers during pagination)
+`JOB_DETAIL` / `JOB_HIST_DTL` are queried for rows with `LMO='O'` to extract PO numbers (`REFERENCE` column).
 
-**Field Filtering**:
+The lookup map `poBySeq` is keyed by **both** the exact SEQ **and** the base-hundred SEQ (e.g., SEQ 1250 → also stored under key 1200). This handles cases where Global Shop stores the PO against a sub-operation sequence that doesn't match the base operation sequence in `JOB_HIST_OPS`.
 
-- If `serialNumber` equals `'LABOR INPUT'`, render as empty string (not displayed)
-- If `serialNumber` starts with `'PO: '`, remove the prefix before rendering (e.g., "PO: 0041564" → "0041564")
+## Orphan Sub-Operation Handling
 
-### Express Router (processcert.js)
+If a sub-operation row (e.g., SEQ 1250) has no corresponding base operation in `JOB_HIST_OPS`, it is promoted as an outside processing entry directly, with its PO reference, rather than being dropped.
 
-**Endpoints:**
+## Child Job Second-Pass Logic
 
-- `GET /processcert/processcert-detail?job=<job>&selectedIndices=<indices>`
-  - Calls processcert-detail.vbs
-  - Returns complete Steps 1-6 output
+`extractChildJobsFromItemHistory` uses a two-pass approach:
 
-### Database Tables Required
+1. **First pass**: collects children whose J55 timestamp falls in the `(prevTs, parentTs]` window
+2. **Second pass**: adds children found only before `prevTs` that weren't picked up in the first pass (handles older-but-unique child jobs)
 
-- ITEM_HISTORY (Step 1: J52 rows)
-- JOB_OPERATIONS (Step 2: operations)
-- ROUTER_LINE (Step 2: descriptions)
-- JOB_DETAIL (Step 2: PO references)
-- JOB_HEADER (Step 3: child job details)
+## Part Description
 
-=====================================================================
-TESTING
-=====================================================================
+`JOB_HEADER` is queried for `PART` and `PART_DESCRIPTION` for each job/suffix. These are forwarded through the API response and displayed in:
 
-**Test Case**: Job 122094
+- Each cert table row (smaller subtext below the part number)
+- The cert info table header area (`PART — DESCRIPTION` format)
 
-**Expected**: Multi-level processing groups with recursive traces
-showing all upstream jobs, their operations, and external processing details.
+## Deployment Notes
 
-**Key Validation Points**:
+- App runs as NSSM service on `FS1.CI.local`, port 3004
+- Logs: `C:\NodeApps\ciqms\logs\stdout.log` / `stderr.log`
+- The `.env` file lives at `C:\NodeApps\ciqms\.env` — not in a user Documents folder
+- `deploy.ps1` does NOT copy `.env` (intentional — credentials stay on server)
 
-1. SERIAL_NUMBER correctly trimmed (no null bytes, no extra whitespace)
-2. Job references properly validated (6-3 digit pattern)
-3. Recursion properly terminated (visitedJobs prevents cycles)
-4. Operations never collapsed or reordered
-5. Processing groups remain separate by DATE/TIME/SUFFIX
-6. All recursive levels included in output
-7. Operations filtered to SEQ < 990000
-8. Historical operations from JOB_HIST_DTL included
-9. SUFFIX field properly quoted in SQL queries
-10. REFERENCE from JOB_HIST_DTL correctly mapped to serialNumber output
-11. 'LABOR INPUT' serialNumber values rendered as empty
-12. 'PO: ' prefix stripped from serialNumber values on display
+---
+
+# 📋 **SQL Rules & Query Patterns**
+
+## SUFFIX Must Be Quoted
+
+SUFFIX is a TEXT field in Pervasive SQL — it MUST be single-quoted in WHERE clauses:
+
+- ✅ `WHERE SUFFIX = '001'`
+- ❌ `WHERE SUFFIX = 001` (treats as numeric, won't match)
+
+## SEQ Filter
+
+Exclude Global Shop internal sequence numbers:
+
+```sql
+AND SEQ < 990000
+```
+
+SEQ 999999 = "PARTS TRANSFERED FROM WIP" (job completion marker) — always excluded by this filter.
+
+## SERIAL_NUMBER Validation Pattern
+
+A valid child job reference must be exactly: 6 digits + dash + 3 digits.
+
+```
+122094-001  ✅
+PO: 0041564  ❌
+48X48        ❌
+```
+
+Always `Trim(Replace(SERIAL_NUMBER, Chr(0), ""))` before checking.
+
+## Database Tables Used
+
+| Table            | Purpose                                     |
+| ---------------- | ------------------------------------------- |
+| `ITEM_HISTORY`   | J52 completion events, J55 material pulls   |
+| `JOB_OPERATIONS` | Active job operations                       |
+| `JOB_HIST_OPS`   | Archived job operations (closed jobs)       |
+| `JOB_DETAIL`     | Outside processing PO references (active)   |
+| `JOB_HIST_DTL`   | Outside processing PO references (archived) |
+| `ROUTER_LINE`    | Router descriptions, `PART_WC_OUTSIDE` flag |
+| `JOB_HEADER`     | Part number and part description            |
+
+---
+
+# ✅ **Test Validation Checklist**
+
+- SERIAL_NUMBER correctly trimmed (no null bytes, no extra whitespace)
+- Job references properly validated (6-3 digit pattern)
+- Recursion properly terminated (visitedJobs prevents cycles)
+- Operations never collapsed or reordered
+- Processing groups remain separate by DATE/TIME/SUFFIX
+- All recursive levels included in output
+- Operations filtered to SEQ < 990000
+- Historical operations from JOB_HIST_OPS included
+- SUFFIX field properly quoted in SQL queries
+- PO numbers from JOB_DETAIL/JOB_HIST_DTL (LMO='O') correctly mapped
+- NON_CERT_OPS filtered from output
+- `LABOR INPUT` serialNumber values rendered as empty
+- `PO: ` prefix stripped from serialNumber values on display

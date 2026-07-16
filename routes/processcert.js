@@ -372,7 +372,55 @@ function groupSubOperations(operations, jobDetail) {
     }
   }
 
-  return result;
+  // Post-process: for outside ops whose ROUTER_SEQ is not a multiple of 100 (e.g. 990),
+  // find the nearest L-type op whose ROUTER_SEQ IS a multiple of 100 (e.g. 1000 = PA11).
+  // Absorb that op's description into the outside op for display, and remove it from output.
+  // The PO/outsideProcessing data stays on the outside op; only the display name is replaced.
+  const descriptorByRS = new Map(); // baseRouterSeq -> index in result
+  for (let i = 0; i < result.length; i++) {
+    const op = result[i];
+    if (op.outsideProcessing) continue;
+    const rs = parseInt(op.routerSeq, 10);
+    if (
+      !isNaN(rs) &&
+      rs > 0 &&
+      rs % 100 === 0 &&
+      (op.lmo || "").toUpperCase() === "L"
+    ) {
+      descriptorByRS.set(rs, i);
+    }
+  }
+
+  const absorbed = new Set();
+  for (let i = 0; i < result.length; i++) {
+    const op = result[i];
+    if (!op.outsideProcessing) continue;
+    const rs = parseInt(op.routerSeq, 10);
+    if (isNaN(rs) || rs <= 0 || rs % 100 === 0) continue;
+
+    const ceil100 = Math.ceil(rs / 100) * 100;
+    const floor100 = Math.floor(rs / 100) * 100;
+    const descriptorIdx =
+      descriptorByRS.get(ceil100) !== undefined
+        ? descriptorByRS.get(ceil100)
+        : descriptorByRS.get(floor100);
+    if (descriptorIdx === undefined) continue;
+
+    const descriptor = result[descriptorIdx];
+    console.log(
+      `[groupSubOperations] Absorbing descriptor ${descriptor.operation} (routerSeq=${descriptor.routerSeq}) into outside op ${op.operation} (routerSeq=${op.routerSeq})`,
+    );
+    result[i] = {
+      ...op,
+      operation: descriptor.operation, // use base op code (e.g. PA11, not BLAN1)
+      description: descriptor.opCodeDescription || descriptor.description, // prefer OP_CODES description (e.g. PASSIVATION PER AMS 2700)
+      partWcOutside: "", // clear so description is not overridden by sub-op's partWcOutside in display
+      subOpDescription: "", // clear for same reason
+    };
+    absorbed.add(descriptorIdx);
+  }
+
+  return result.filter((_, i) => !absorbed.has(i));
 }
 
 /**
