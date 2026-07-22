@@ -13,6 +13,7 @@ const apiUrl = await getApiUrl();
 const url = `${apiUrl}/expiry`;
 let sortOrder = "asc";
 let user; // Will be set in initialization
+let showConsumed = false;
 
 // Initialize handler function
 async function initializeExpirys() {
@@ -57,6 +58,15 @@ function setupEventListeners() {
   const saveDispositionBtn = document.getElementById("saveDispositionBtn");
   if (saveDispositionBtn) {
     saveDispositionBtn.addEventListener("click", saveDisposition);
+  }
+
+  const toggleConsumedBtn = document.getElementById("toggleConsumedBtn");
+  if (toggleConsumedBtn) {
+    toggleConsumedBtn.addEventListener("change", () => {
+      showConsumed = toggleConsumedBtn.checked;
+      applyConsumedFilter();
+      updateConsumedToggleLabel();
+    });
   }
 
   // Close dialog on outside click for add expiry dialog
@@ -160,6 +170,8 @@ async function loadExpiryData() {
 
     const data = await response.json();
     displayExpiryTable(data);
+    applyConsumedFilter();
+    updateConsumedToggleLabel();
   } catch (error) {
     console.error("Error loading expiry data:", error);
     document.getElementById("expiryTableContainer").innerHTML =
@@ -193,6 +205,7 @@ function displayExpiryTable(data) {
     { label: "Received Date", columnClass: "col-received-date" },
     { label: "Mfg Date", columnClass: "col-mfg-date" },
     { label: "Disposition", columnClass: "col-disposition" },
+    { label: "Consumed", columnClass: "col-consumed" },
     { label: "Comment", columnClass: "col-comment" },
     { label: "Actions", columnClass: "col-actions" },
   ];
@@ -223,6 +236,8 @@ function displayExpiryTable(data) {
       row.classList.add("scrap-row");
     } else if (item.DISPOSITION === "USE") {
       row.classList.add("use-row");
+    } else if (item.CONSUMED === "Y") {
+      row.classList.add("consumed-row");
     }
 
     const cells = [
@@ -263,6 +278,10 @@ function displayExpiryTable(data) {
         class: "col-disposition",
       },
       {
+        content: `<input type="checkbox" class="consumed-toggle" ${item.CONSUMED === "Y" ? "checked" : ""} onchange="toggleConsumed('${item.EXPIRATION_ID}', this)">`,
+        class: "col-consumed",
+      },
+      {
         content: item.COMMENT || "",
         class: "col-comment",
       },
@@ -287,6 +306,24 @@ function displayExpiryTable(data) {
   table.appendChild(tbody);
   container.innerHTML = "";
   container.appendChild(table);
+}
+
+function applyConsumedFilter() {
+  const rows = document.querySelectorAll("#expiryTableBody tr");
+  rows.forEach((row) => {
+    if (row.classList.contains("consumed-row")) {
+      row.style.display = showConsumed ? "" : "none";
+    }
+  });
+}
+
+function updateConsumedToggleLabel() {
+  const countEl = document.getElementById("consumedCount");
+  if (!countEl) return;
+  const count = document.querySelectorAll(
+    "#expiryTableBody tr.consumed-row",
+  ).length;
+  countEl.textContent = count;
 }
 
 function formatDate(dateString) {
@@ -350,10 +387,11 @@ window.editDisposition = async function (expirationId) {
     }
 
     const data = await response.json();
+    const record = Array.isArray(data) ? data[0] : data;
 
     document.getElementById("editExpirationId").value = expirationId;
-    document.getElementById("editDisposition").value = data.DISPOSITION || "";
-    document.getElementById("editComment").value = data.COMMENT || "";
+    document.getElementById("editDisposition").value = record.DISPOSITION || "";
+    document.getElementById("editComment").value = record.COMMENT || "";
 
     document.getElementById("dispositionDialog").showModal();
   } catch (error) {
@@ -373,20 +411,17 @@ async function saveDisposition() {
       const currentResponse = await fetch(`${url}/${expirationId}`);
       if (currentResponse.ok) {
         const currentData = await currentResponse.json();
-        old_comment = currentData.COMMENT || "";
+        const currentRecord = Array.isArray(currentData)
+          ? currentData[0]
+          : currentData;
+        old_comment = currentRecord.COMMENT || "";
       }
     } catch (err) {
       console.error("Failed to fetch current comment:", err);
     }
 
-    let finalComment;
-    if (old_comment.length === 0) {
-      finalComment = comment;
-    } else if (comment.length === 0) {
-      finalComment = old_comment;
-    } else {
-      finalComment = `${comment}\n${old_comment}`;
-    }
+    const parts = [comment, old_comment].filter((p) => p.trim().length > 0);
+    const finalComment = parts.join("\n");
 
     const response = await fetch(`${url}/${expirationId}`, {
       method: "PUT",
@@ -412,3 +447,63 @@ async function saveDisposition() {
     alert("Failed to update disposition. Please try again.");
   }
 }
+
+window.toggleConsumed = async function (expirationId, checkbox) {
+  const newConsumed = checkbox.checked ? "Y" : "N";
+  checkbox.disabled = true;
+
+  try {
+    const currentResponse = await fetch(`${url}/${expirationId}`);
+    if (!currentResponse.ok) throw new Error("Failed to fetch record");
+    const currentData = await currentResponse.json();
+    const record = Array.isArray(currentData) ? currentData[0] : currentData;
+
+    let comment = record.COMMENT || "";
+    const now = new Date();
+    const stamp = now.toLocaleString("en-US", {
+      year: "numeric",
+      month: "2-digit",
+      day: "2-digit",
+      hour: "2-digit",
+      minute: "2-digit",
+      hour12: false,
+    });
+    const stampLine = newConsumed
+      ? `Consumed by ${user || "UNKNOWN"} on ${stamp}`
+      : `Consumption reversed by ${user || "UNKNOWN"} on ${stamp}`;
+    comment = comment.length > 0 ? `${stampLine}\n${comment}` : stampLine;
+
+    const response = await fetch(`${url}/${expirationId}`, {
+      method: "PUT",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({
+        DISPOSITION: record.DISPOSITION || "",
+        COMMENT: comment,
+        CONSUMED: newConsumed,
+      }),
+    });
+
+    if (response.ok) {
+      const row = checkbox.closest("tr");
+      row.classList.toggle("consumed-row", newConsumed === "Y");
+      const commentCell = row.querySelector("td.col-comment");
+      if (commentCell) commentCell.textContent = comment;
+      // Hide immediately if consumed and filter is active; show if unchecked
+      if (newConsumed === "Y" && !showConsumed) {
+        row.style.display = "none";
+      } else {
+        row.style.display = "";
+      }
+      updateConsumedToggleLabel();
+    } else {
+      checkbox.checked = !checkbox.checked;
+      alert("Failed to update consumed status.");
+    }
+  } catch (err) {
+    console.error("Error toggling consumed:", err);
+    checkbox.checked = !checkbox.checked;
+    alert("Failed to update consumed status.");
+  } finally {
+    checkbox.disabled = false;
+  }
+};

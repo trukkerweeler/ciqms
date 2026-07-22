@@ -313,14 +313,22 @@ router.put("/:id", (req, res) => {
         return;
       }
       const query = `UPDATE EXPIRATION SET 
-      DISPOSITION = ?,
-        COMMENT = ?
+        DISPOSITION = ?,
+        COMMENT = ?,
+        CONSUMED = COALESCE(?, CONSUMED)
         WHERE EXPIRATION_ID = ?`;
       let modifiedComment = req.body.COMMENT || "";
       if (modifiedComment && !modifiedComment.endsWith("\n")) {
         modifiedComment += "\n";
       }
-      const values = [req.body.DISPOSITION, modifiedComment, req.params.id];
+      const consumed =
+        req.body.CONSUMED !== undefined ? req.body.CONSUMED : null;
+      const values = [
+        req.body.DISPOSITION,
+        modifiedComment,
+        consumed,
+        req.params.id,
+      ];
 
       connection.query(query, values, (err, rows, fields) => {
         if (err) {

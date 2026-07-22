@@ -1,6 +1,28 @@
 /* Main Content Styles - Semantic CSS */
 
 /* ============================================
+   Checkbox Wrapper (form dialogs)
+   ============================================ */
+.checkbox-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.4rem 0;
+}
+
+.checkbox-wrapper input[type="checkbox"] {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  accent-color: #2e7d32;
+}
+
+.checkbox-label {
+  font-size: 0.9rem;
+  cursor: pointer;
+}
+
+/* ============================================
    Main Container Layout
    ============================================ */
 main {
@@ -14,18 +36,23 @@ main {
    ============================================ */
 .page-heading {
   display: grid;
-  grid-template-columns: 1fr 1fr 1fr;
+  grid-template-columns: 1fr auto;
   margin: 0 0.5rem;
   background-color: var(--background-color);
   padding: 1rem 0;
+  align-items: center;
+}
+
+.page-heading-left {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 
 .page-heading h1 {
   margin: 0;
   font-size: 1.8rem;
   color: #000;
-  grid-column: 1 / 2;
-  align-self: center;
 }
 
 .page-heading h2 {
@@ -36,10 +63,57 @@ main {
 }
 
 .page-heading .addrecordheadingbutton {
-  grid-column-start: 3;
   justify-self: end;
   align-self: center;
   margin-right: 1rem;
+}
+
+/* Toggle switch */
+.toggle-switch {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  user-select: none;
+}
+
+.toggle-switch input {
+  display: none;
+}
+
+.toggle-slider {
+  position: relative;
+  width: 2.2rem;
+  height: 1.2rem;
+  background: #ccc;
+  border-radius: 1rem;
+  transition: background 0.2s;
+  flex-shrink: 0;
+}
+
+.toggle-slider::after {
+  content: "";
+  position: absolute;
+  top: 0.15rem;
+  left: 0.15rem;
+  width: 0.9rem;
+  height: 0.9rem;
+  background: #fff;
+  border-radius: 50%;
+  transition: transform 0.2s;
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: #555;
+}
+
+.toggle-switch input:checked + .toggle-slider::after {
+  transform: translateX(1rem);
+}
+
+.toggle-label {
+  font-size: 0.78rem;
+  color: #555;
 }
 
 /* ============================================
@@ -348,11 +422,27 @@ main {
   font-weight: 500;
 }
 
+.col-consumed {
+  width: 6%;
+  text-align: center;
+  font-weight: 600;
+  color: black;
+}
+
+.col-consumed .consumed-toggle {
+  width: 1.1rem;
+  height: 1.1rem;
+  cursor: pointer;
+  accent-color: #2e7d32;
+  vertical-align: middle;
+}
+
 .col-comment {
   width: 11%;
   text-align: left;
   max-width: 120px;
   overflow-wrap: break-word;
+  font-size: 0.67em;
 }
 
 .col-actions {
@@ -378,6 +468,14 @@ main {
 
 .expiryDataTable tbody tr.use-row:hover {
   background-color: #dcedc8;
+}
+
+.expiryDataTable tbody tr.consumed-row {
+  background-color: #e8f5e9;
+}
+
+.expiryDataTable tbody tr.consumed-row:hover {
+  background-color: #c8e6c9;
 }
 
 /* ============================================

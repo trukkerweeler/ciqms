@@ -1536,12 +1536,20 @@ fetch(url, { method: "GET" })
 
             const data = {
               INPUT_ID: iid,
-              ASSIGNED_TO: document.querySelector("#ASSIGNED_TO").value,
+              ASSIGNED_TO: document
+                .querySelector("#ASSIGNED_TO")
+                .value.toUpperCase(),
               DUE_DATE: document.querySelector("#DUE_DATE").value,
-              PROJECT_ID: document.querySelector("#PROJECT_ID").value,
-              REQUESTED_BY: document.querySelector("#REQUESTED_BY").value,
-              SUBJECT: document.querySelector("#SUBJECT").value,
-              INPUT_TYPE: document.querySelector("#INPUT_TYPE").value,
+              PROJECT_ID: document
+                .querySelector("#PROJECT_ID")
+                .value.toUpperCase(),
+              REQUESTED_BY: document
+                .querySelector("#REQUESTED_BY")
+                .value.toUpperCase(),
+              SUBJECT: document.querySelector("#SUBJECT").value.toUpperCase(),
+              INPUT_TYPE: document
+                .querySelector("#INPUT_TYPE")
+                .value.toUpperCase(),
               MODIFIED_DATE: getDateTime(),
               MODIFIED_BY: user,
             };

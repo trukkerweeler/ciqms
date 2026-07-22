@@ -18,7 +18,16 @@
   <body>
     <header id="header"></header>
     <div class="page-heading">
-      <h1>Expiry Records</h1>
+      <div class="page-heading-left">
+        <h1>Expiry Records</h1>
+        <label class="toggle-switch" title="Show/hide consumed records">
+          <input type="checkbox" id="toggleConsumedBtn" />
+          <span class="toggle-slider"></span>
+          <span class="toggle-label"
+            >Show Consumed (<span id="consumedCount">0</span>)</span
+          >
+        </label>
+      </div>
       <button
         class="addrecordheadingbutton button"
         id="addExpiryBtn"

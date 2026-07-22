@@ -842,7 +842,7 @@ changeImageButton.addEventListener("click", async () => {
         body: formData,
       });
       if (response.ok) {
-        alert("Image uploaded and copied successfully!");
+        window.location.reload();
       } else {
         alert("Failed to upload image.");
       }

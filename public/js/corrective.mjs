@@ -450,6 +450,21 @@ fetch(url, { method: "GET" })
         disableCloseButton();
         // Update the DOM with fresh data
         await updateAfterSave();
+
+        // Remind user of file naming conventions
+        const today = new Date();
+        const yyyy = today.getFullYear();
+        const mm = String(today.getMonth() + 1).padStart(2, "0");
+        const dd = String(today.getDate()).padStart(2, "0");
+        const datePart = `${yyyy}-${mm}${dd}`;
+        const reminderDialog = document.getElementById(
+          "closeoutReminderDialog",
+        );
+        document.getElementById("closeoutReminderMsg").textContent =
+          `CA ${caid} has been closed.\n\nRemember to save documents with the correct names:\n\n` +
+          `Corrective record:\nCorrective - Detail_${datePart}_Closed.pdf\n\n` +
+          `Closeout email:\n${datePart}_Closeout.pdf`;
+        reminderDialog.showModal();
       });
 
       const detailButtons = document.createElement("div");
