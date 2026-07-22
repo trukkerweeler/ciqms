@@ -5,6 +5,7 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
+const { validateObservation } = require("../services/bedrockValidator");
 
 // ==================================================
 // Get all records
@@ -199,46 +200,95 @@ router.post("/", (req, res) => {
 });
 
 // create observation record
-router.post("/obsn", (req, res) => {
-  // console.log('102');
-  // console.log(req.body);
+router.post("/obsn", async (req, res) => {
+  const { AUDIT_MANAGER_ID, CHECKLIST_ID, OBSERVATION } = req.body;
+
+  let connection;
   try {
-    const connection = mysql.createConnection({
+    connection = mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
       password: process.env.DB_PASS,
       port: 3306,
       database: "quality",
     });
-    connection.connect(function (err) {
-      if (err) {
-        console.error("Error connecting: " + err.stack);
-        return;
-      }
 
-      const query = `INSERT INTO AUDT_CHKL_OBSN (AUDIT_MANAGER_ID, CHECKLIST_ID, OBSERVATION) 
-                      VALUES (?, ?, ?) 
-                      ON DUPLICATE KEY UPDATE OBSERVATION = VALUES(OBSERVATION)`;
-      const values = [
-        req.body.AUDIT_MANAGER_ID,
-        req.body.CHECKLIST_ID,
-        req.body.OBSERVATION,
-      ];
-
-      connection.query(query, values, (err, rows, fields) => {
-        if (err) {
-          console.log("Failed to query for OBSERVATION insert: " + err);
-          res.sendStatus(500);
-          return;
-        }
-        res.json(rows);
-      });
-
-      connection.end();
+    await new Promise((resolve, reject) => {
+      connection.connect((err) => (err ? reject(err) : resolve()));
     });
+
+    // Save the observation
+    const insertQuery = `INSERT INTO AUDT_CHKL_OBSN (AUDIT_MANAGER_ID, CHECKLIST_ID, OBSERVATION) 
+                         VALUES (?, ?, ?) 
+                         ON DUPLICATE KEY UPDATE OBSERVATION = VALUES(OBSERVATION)`;
+    await new Promise((resolve, reject) => {
+      connection.query(
+        insertQuery,
+        [AUDIT_MANAGER_ID, CHECKLIST_ID, OBSERVATION],
+        (err, rows) => (err ? reject(err) : resolve(rows)),
+      );
+    });
+
+    // Fetch the question for this checklist item
+    const questionRows = await new Promise((resolve, reject) => {
+      connection.query(
+        "SELECT QUESTION FROM AUDT_CHKL_QUST WHERE AUDIT_MANAGER_ID = ? AND CHECKLIST_ID = ?",
+        [AUDIT_MANAGER_ID, CHECKLIST_ID],
+        (err, rows) => (err ? reject(err) : resolve(rows)),
+      );
+    });
+
+    connection.end();
+
+    // Run Bedrock validation if a question exists and observation is non-empty
+    let validation = null;
+    if (questionRows.length > 0 && OBSERVATION && OBSERVATION.trim()) {
+      try {
+        validation = await validateObservation(
+          questionRows[0].QUESTION,
+          OBSERVATION,
+        );
+
+        // Persist validation result
+        const validConn = mysql.createConnection({
+          host: process.env.DB_HOST,
+          user: process.env.DB_USER,
+          password: process.env.DB_PASS,
+          port: 3306,
+          database: "quality",
+        });
+        await new Promise((resolve, reject) => {
+          validConn.connect((err) => (err ? reject(err) : resolve()));
+        });
+        await new Promise((resolve, reject) => {
+          validConn.query(
+            `UPDATE AUDT_CHKL_OBSN
+             SET AI_SCORE = ?, AI_VALID = ?, AI_ISSUES = ?, AI_SUMMARY = ?, AI_FIX = ?, AI_VALIDATED_AT = NOW()
+             WHERE AUDIT_MANAGER_ID = ? AND CHECKLIST_ID = ?`,
+            [
+              validation.score,
+              validation.is_valid ? 1 : 0,
+              JSON.stringify(validation.issues),
+              validation.summary,
+              validation.recommended_fix,
+              AUDIT_MANAGER_ID,
+              CHECKLIST_ID,
+            ],
+            (err) => (err ? reject(err) : resolve()),
+          );
+        });
+        validConn.end();
+      } catch (bedrockErr) {
+        console.error("Bedrock validation error:", bedrockErr.message);
+        // Non-fatal — save still succeeded
+      }
+    }
+
+    res.json({ saved: true, validation });
   } catch (err) {
-    console.log("Error connecting to Db 170");
-    return;
+    console.error("Error in POST /obsn:", err);
+    if (connection) connection.end();
+    res.sendStatus(500);
   }
 });
 

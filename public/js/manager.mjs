@@ -441,6 +441,98 @@ function setupAddQuestionListener(btnAddQust, id, urlParams, apiUrls) {
   });
 }
 
+function displayValidationResult(v) {
+  const panel = document.getElementById("obsValidationResult");
+  const score = document.getElementById("obsValidScore");
+  const badge = document.getElementById("obsValidBadge");
+  const summary = document.getElementById("obsValidSummary");
+  const issues = document.getElementById("obsValidIssues");
+  const fix = document.getElementById("obsValidFix");
+
+  const ISSUE_LABELS = {
+    missing_evidence: "Missing Evidence",
+    not_objective: "Not Objective",
+    not_traceable: "Not Traceable",
+    not_aligned: "Not Aligned with Requirement",
+    future_tense: "Future Tense Language",
+    vague: "Vague Statement",
+  };
+
+  const SCORE_TIER =
+    v.score >= 81
+      ? { label: "Fully Complete", color: "#1e8e3e" }
+      : v.score >= 51
+        ? { label: "Mostly Complete", color: "#f9ab00" }
+        : v.score >= 21
+          ? { label: "Partial Evidence", color: "#e37400" }
+          : { label: "No Objective Evidence", color: "#c5221f" };
+
+  score.textContent = `${v.score}/100`;
+  score.style.color = SCORE_TIER.color;
+
+  badge.textContent = SCORE_TIER.label;
+  badge.style.backgroundColor = SCORE_TIER.color;
+  badge.style.color = "#fff";
+
+  if (v.is_valid) {
+    panel.style.backgroundColor = "#e6f4ea";
+    panel.style.border = `1px solid ${SCORE_TIER.color}`;
+  } else {
+    panel.style.backgroundColor = "#fce8e6";
+    panel.style.border = `1px solid ${SCORE_TIER.color}`;
+  }
+
+  summary.textContent = v.summary || "";
+
+  issues.innerHTML = "";
+  if (v.issues && v.issues.length > 0) {
+    v.issues.forEach((issue) => {
+      const li = document.createElement("li");
+      li.style.cssText = "margin-bottom:0.4rem;";
+
+      const label = document.createElement("strong");
+      label.textContent = ISSUE_LABELS[issue.type] || issue.type;
+      label.style.cssText = "display:block; color:#c5221f;";
+
+      const detail = document.createElement("span");
+      detail.textContent = issue.detail;
+      detail.style.cssText = "display:block; margin-left:0.5rem; color:#333;";
+
+      li.appendChild(label);
+      li.appendChild(detail);
+      issues.appendChild(li);
+    });
+  } else if (v.is_valid) {
+    const li = document.createElement("li");
+    li.style.cssText = "color:#1e8e3e; list-style:none;";
+    li.textContent = "No issues found — observation meets the standard.";
+    issues.appendChild(li);
+  }
+
+  fix.innerHTML = "";
+  if (v.recommended_fix) {
+    const label = document.createElement("strong");
+    label.textContent = "Suggested improvement: ";
+    const text = document.createElement("span");
+    text.textContent = v.recommended_fix;
+    fix.appendChild(label);
+    fix.appendChild(text);
+    fix.style.cssText =
+      "margin:0; padding:0.5rem 0.75rem; background:#fff8e1; border-left:3px solid #f9ab00; display:block;";
+  }
+
+  panel.style.display = "";
+}
+
+function resetAndCloseObsDialog(dialog, btnSave, btnClose, validationPanel) {
+  document.getElementById("obsid").textContent = "";
+  document.getElementById("newobservation").value = "";
+  if (validationPanel) validationPanel.style.display = "none";
+  if (btnSave) btnSave.style.display = "";
+  if (btnClose) btnClose.style.display = "none";
+  dialog.close();
+}
+
 /**
  * Setup observation dialog listener
  */
@@ -471,6 +563,9 @@ function setupObservationListener(id, apiUrls, summarySpan) {
     }
 
     const btnSaveObservation = document.getElementById("saveobservation");
+    const btnCloseObservation = document.getElementById("closeobservation");
+    const validationResult = document.getElementById("obsValidationResult");
+
     const handleSaveObservation = async (obsEvent) => {
       obsEvent.preventDefault();
 
@@ -484,7 +579,7 @@ function setupObservationListener(id, apiUrls, summarySpan) {
           OBSERVATION: newObservation,
         };
 
-        await fetchJson(`${apiUrls.checklist}/obsn`, {
+        const result = await fetchJson(`${apiUrls.checklist}/obsn`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newRecord),
@@ -504,9 +599,19 @@ function setupObservationListener(id, apiUrls, summarySpan) {
         // Update summary
         updateChecklistSummary(summarySpan);
 
-        document.getElementById("obsid").textContent = "";
-        document.getElementById("newobservation").value = "";
-        editObsDialog.close();
+        // Show validation result if available
+        if (result && result.validation) {
+          displayValidationResult(result.validation);
+          btnSaveObservation.style.display = "none";
+          btnCloseObservation.style.display = "";
+        } else {
+          resetAndCloseObsDialog(
+            editObsDialog,
+            btnSaveObservation,
+            btnCloseObservation,
+            validationResult,
+          );
+        }
       } catch (error) {
         console.error("Error saving observation:", error);
         alert("Error saving observation. Please try again.");
@@ -515,6 +620,17 @@ function setupObservationListener(id, apiUrls, summarySpan) {
       }
     };
 
+    const handleCloseObservation = () => {
+      resetAndCloseObsDialog(
+        editObsDialog,
+        btnSaveObservation,
+        btnCloseObservation,
+        validationResult,
+      );
+      btnCloseObservation.removeEventListener("click", handleCloseObservation);
+    };
+
+    btnCloseObservation.addEventListener("click", handleCloseObservation);
     btnSaveObservation.addEventListener("click", handleSaveObservation);
   });
 }
