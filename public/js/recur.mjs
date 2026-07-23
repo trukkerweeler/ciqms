@@ -10,6 +10,9 @@ class RecurringInputManager {
     this.addBtn = null;
     this.closeBtn = null;
     this.tableContainer = null;
+    this.showAllRecords = false;
+    this.subjectFilterInput = null;
+    this.toggleAllRecordsBtn = null;
   }
 
   async init() {
@@ -19,6 +22,8 @@ class RecurringInputManager {
     this.addBtn = document.getElementById("addRecurBtn");
     this.closeBtn = document.getElementById("closeRecurBtn");
     this.tableContainer = document.getElementById("recurTableContainer");
+    this.subjectFilterInput = document.getElementById("subjectFilterInput");
+    this.toggleAllRecordsBtn = document.getElementById("toggleAllRecordsBtn");
 
     this.setupEventListeners();
     await this.loadRecurringInputs();
@@ -49,26 +54,16 @@ class RecurringInputManager {
     });
 
     // Filter functionality - searches all columns
-    const subjectFilter = document.querySelector("#subjectFilter input");
-    if (subjectFilter) {
-      subjectFilter.addEventListener("keyup", (event) => {
-        const filter = event.target.value.toLowerCase();
-        const rows = document.querySelectorAll("tbody tr");
+    if (this.subjectFilterInput) {
+      this.subjectFilterInput.addEventListener("keyup", (event) => {
+        this.applySubjectFilter(event.target.value);
+      });
+    }
 
-        rows.forEach((row) => {
-          const cells = row.querySelectorAll("td");
-          let rowMatches = false;
-
-          // Check if any cell in the row contains the filter text
-          cells.forEach((cell) => {
-            const cellText = cell.textContent.toLowerCase();
-            if (cellText.includes(filter)) {
-              rowMatches = true;
-            }
-          });
-
-          row.style.display = rowMatches ? "" : "none";
-        });
+    if (this.toggleAllRecordsBtn) {
+      this.toggleAllRecordsBtn.addEventListener("change", async () => {
+        this.showAllRecords = this.toggleAllRecordsBtn.checked;
+        await this.loadRecurringInputs();
       });
     }
 
@@ -136,12 +131,14 @@ class RecurringInputManager {
 
   async loadRecurringInputs() {
     try {
-      const response = await fetch("/recur");
+      const queryString = this.showAllRecords ? "?includeAll=1" : "";
+      const response = await fetch(`/recur${queryString}`);
       if (!response.ok) {
         throw new Error(`HTTP error! status: ${response.status}`);
       }
       const recurData = await response.json();
       this.displayRecurringInputs(recurData);
+      this.applySubjectFilter(this.subjectFilterInput?.value || "");
     } catch (error) {
       console.error("Error loading recurring inputs:", error);
       this.tableContainer.innerHTML = `
@@ -150,6 +147,25 @@ class RecurringInputManager {
                 </div>
             `;
     }
+  }
+
+  applySubjectFilter(filterText = "") {
+    const filter = filterText.toLowerCase();
+    const rows = document.querySelectorAll("tbody tr");
+
+    rows.forEach((row) => {
+      const cells = row.querySelectorAll("td");
+      let rowMatches = false;
+
+      cells.forEach((cell) => {
+        const cellText = cell.textContent.toLowerCase();
+        if (cellText.includes(filter)) {
+          rowMatches = true;
+        }
+      });
+
+      row.style.display = rowMatches ? "" : "none";
+    });
   }
 
   displayRecurringInputs(data) {
@@ -176,6 +192,7 @@ class RecurringInputManager {
             <table class="data-table">
                 <thead>
                     <tr>
+                        <th>Recur ID</th>
                         <th>Master Input ID</th>
                         <th>Assigned To</th>
                         <th>Frequency</th>
@@ -193,6 +210,7 @@ class RecurringInputManager {
 
       tableHTML += `
                 <tr>
+                    <td>${recur.RECUR_ID || ""}</td>
                     <td>${recur.INPUT_ID || ""}</td>
                     <td>${recur.ASSIGNED_TO || ""}</td>
                     <td>${frequencyText}</td>

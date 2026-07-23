@@ -1758,6 +1758,8 @@ footer div p {
 #observationForm {
   overflow-x: hidden;
   width: 100%;
+  grid-column: span 2;
+  position: relative;
 }
 #observationForm textarea,
 #observationForm input,

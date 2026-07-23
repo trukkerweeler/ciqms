@@ -65,7 +65,11 @@ const updateChecklistSummary = (summarySpan) => {
   const totalQuestions = allRows.length;
   const answeredQuestions = Array.from(allRows).filter((row) => {
     const obsContent = row.querySelector(".obs-content");
-    return obsContent?.textContent.trim() !== "";
+    return (
+      obsContent &&
+      obsContent.textContent &&
+      obsContent.textContent.trim() !== ""
+    );
   }).length;
   const unansweredQuestions = totalQuestions - answeredQuestions;
   summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
@@ -254,7 +258,7 @@ function renderChecklistItems(records, container, summarySpan) {
 
   const totalQuestions = records.length;
   const answeredQuestions = records.filter(
-    (r) => r.OBSERVATION?.trim() !== "",
+    (r) => r.OBSERVATION && r.OBSERVATION.trim() !== "",
   ).length;
   const unansweredQuestions = totalQuestions - answeredQuestions;
 
@@ -308,7 +312,7 @@ function renderChecklistItems(records, container, summarySpan) {
 
           const btnEditObs = createElement("button", {
             classes: ["btn", "btn-primary", "btnEditObs"],
-            text: "Observation",
+            text: "Obsv",
           });
           btnEditObs.setAttribute("data-checklist-id", record.CHECKLIST_ID);
 
@@ -524,12 +528,19 @@ function displayValidationResult(v) {
   panel.style.display = "";
 }
 
-function resetAndCloseObsDialog(dialog, btnSave, btnClose, validationPanel) {
+function resetAndCloseObsDialog(
+  dialog,
+  obsEditArea,
+  obsDialogActions,
+  validationPanel,
+) {
   document.getElementById("obsid").textContent = "";
   document.getElementById("newobservation").value = "";
   if (validationPanel) validationPanel.style.display = "none";
-  if (btnSave) btnSave.style.display = "";
-  if (btnClose) btnClose.style.display = "none";
+  if (obsEditArea) obsEditArea.style.display = "";
+  if (obsDialogActions) obsDialogActions.style.display = "none";
+  const saveBtn = document.getElementById("saveobservation");
+  if (saveBtn) saveBtn.style.display = "";
   dialog.close();
 }
 
@@ -563,8 +574,28 @@ function setupObservationListener(id, apiUrls, summarySpan) {
     }
 
     const btnSaveObservation = document.getElementById("saveobservation");
+    const obsDialogActions = document.getElementById("obsDialogActions");
     const btnCloseObservation = document.getElementById("closeobservation");
+    const btnReviseObservation = document.getElementById("reviseobservation");
+    const btnCancelObservation = document.getElementById("cancelobservation");
+    const obsEditArea = document.getElementById("obsEditArea");
     const validationResult = document.getElementById("obsValidationResult");
+
+    const showEditMode = () => {
+      obsEditArea.style.display = "";
+      btnSaveObservation.style.display = "";
+      validationResult.style.display = "none";
+      obsDialogActions.style.display = "none";
+    };
+
+    const showResultMode = (validation) => {
+      obsEditArea.style.display = "none";
+      displayValidationResult(validation); // makes validationResult visible
+      obsDialogActions.style.display = "flex";
+    };
+
+    // Start in edit mode
+    showEditMode();
 
     const handleSaveObservation = async (obsEvent) => {
       obsEvent.preventDefault();
@@ -579,7 +610,7 @@ function setupObservationListener(id, apiUrls, summarySpan) {
           OBSERVATION: newObservation,
         };
 
-        const result = await fetchJson(`${apiUrls.checklist}/obsn`, {
+        const result = await fetchJson(`${apiUrls.checklist}obsn`, {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify(newRecord),
@@ -596,19 +627,15 @@ function setupObservationListener(id, apiUrls, summarySpan) {
           }
         });
 
-        // Update summary
         updateChecklistSummary(summarySpan);
 
-        // Show validation result if available
         if (result && result.validation) {
-          displayValidationResult(result.validation);
-          btnSaveObservation.style.display = "none";
-          btnCloseObservation.style.display = "";
+          showResultMode(result.validation);
         } else {
           resetAndCloseObsDialog(
             editObsDialog,
-            btnSaveObservation,
-            btnCloseObservation,
+            obsEditArea,
+            obsDialogActions,
             validationResult,
           );
         }
@@ -620,17 +647,35 @@ function setupObservationListener(id, apiUrls, summarySpan) {
       }
     };
 
-    const handleCloseObservation = () => {
-      resetAndCloseObsDialog(
-        editObsDialog,
-        btnSaveObservation,
-        btnCloseObservation,
-        validationResult,
-      );
-      btnCloseObservation.removeEventListener("click", handleCloseObservation);
+    const handleRevise = () => {
+      btnSaveObservation.addEventListener("click", handleSaveObservation);
+      showEditMode();
+      btnReviseObservation.removeEventListener("click", handleRevise);
     };
 
-    btnCloseObservation.addEventListener("click", handleCloseObservation);
+    const handleClose = () => {
+      resetAndCloseObsDialog(
+        editObsDialog,
+        obsEditArea,
+        obsDialogActions,
+        validationResult,
+      );
+      btnCloseObservation.removeEventListener("click", handleClose);
+    };
+
+    const handleCancel = () => {
+      resetAndCloseObsDialog(
+        editObsDialog,
+        obsEditArea,
+        obsDialogActions,
+        validationResult,
+      );
+      btnCancelObservation.removeEventListener("click", handleCancel);
+    };
+
+    btnCancelObservation.addEventListener("click", handleCancel);
+    btnReviseObservation.addEventListener("click", handleRevise);
+    btnCloseObservation.addEventListener("click", handleClose);
     btnSaveObservation.addEventListener("click", handleSaveObservation);
   });
 }

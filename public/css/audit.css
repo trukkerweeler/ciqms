@@ -520,6 +520,8 @@ h1 {
   position: absolute;
   top: 5px;
   right: 5px;
+  transform: scale(0.66);
+  transform-origin: top right;
 }
 
 #observationForm label[for="observation"] {
@@ -612,6 +614,36 @@ dialog form {
   grid-template-columns: 1fr 1fr;
   gap: 5px;
   margin-bottom: 25px;
+}
+
+/* Observation dialog — all sections span both columns */
+#obsEditArea,
+#obsValidationResult,
+#obsDialogActions,
+#observationForm > div:first-of-type {
+  grid-column: span 2;
+}
+
+#obsEditArea label {
+  display: block;
+  margin-bottom: 0.25rem;
+  font-weight: 600;
+}
+
+#newobservation {
+  width: 100%;
+  box-sizing: border-box;
+}
+
+#saveobservation {
+  display: block;
+  margin-top: 0.5rem;
+}
+
+#obsDialogActions {
+  display: none;
+  gap: 0.5rem;
+  flex-wrap: wrap;
 }
 
 #savenewquestion {

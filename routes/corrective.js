@@ -4,6 +4,7 @@ const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
+const { validateCorrectiveSection } = require("../services/bedrockValidator");
 
 // ==================================================
 // Corrective Action Folder Creation Function
@@ -1042,6 +1043,35 @@ router.get("/:id", (req, res) => {
   }
 });
 
+// Validate corrective section text with section-specific prompts
+router.post("/validate-section", async (req, res) => {
+  const { sectionType, text } = req.body;
+  const validTypes = ["NC_TREND", "CORRECTION", "CAUSE", "SYSTEMIC_REMEDY"];
+
+  if (!validTypes.includes(sectionType)) {
+    return res.status(400).json({
+      error:
+        "Invalid sectionType. Use one of: NC_TREND, CORRECTION, CAUSE, SYSTEMIC_REMEDY",
+    });
+  }
+
+  if (!text || !text.trim()) {
+    return res.json({ validation: null, skipped: true, reason: "empty_text" });
+  }
+
+  try {
+    const validation = await validateCorrectiveSection(sectionType, text);
+    res.json({ validation });
+  } catch (err) {
+    console.error(
+      `[corrective.validate-section] Validation error for ${sectionType}:`,
+      err.message,
+    );
+    // Non-fatal response so users can still save text when AI validation fails.
+    res.json({ validation: null, error: "validation_failed" });
+  }
+});
+
 // PUTPUTPUTPUTPPUTPUTPPUTPUTPPUTPUTPPUTPUTPPUTPUTPPUTPUTPPUTPUTPPUTPUTPPUTPUTPPUTPUTP
 router.put("/:id", (req, res) => {
   // console.log("Params: " + req.params.id);
@@ -1057,6 +1087,15 @@ router.put("/:id", (req, res) => {
   const modifiedBy = req.body.MODIFIED_BY || "SYSTEM";
 
   switch (myfield) {
+    case "NC_TREND": {
+      mytable = "CORRECTIVE_TREND";
+      appended = (req.body.NC_TREND || "").replace(/<br>/g, "\n");
+      query = `INSERT INTO CORRECTIVE_TREND (CORRECTIVE_ID, NC_TREND)
+               VALUES (?, ?)
+               ON DUPLICATE KEY UPDATE NC_TREND = ?`;
+      queryParams = [corrId, appended, appended];
+      break;
+    }
     case "CAUSE_TEXT": {
       mytable = "CORRECTIVE_CTRL";
       appended = (req.body.CAUSE_TEXT || "").replace(/<br>/g, "\n");

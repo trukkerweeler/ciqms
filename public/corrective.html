@@ -40,6 +40,19 @@
       </form>
     </dialog>
 
+    <dialog id="trendDialog" class="editDialog">
+      <form id="trend-form">
+        <label for="new-trend-text">Enter NC trend:</label>
+        <textarea
+          id="new-trend-text"
+          name="new-trend-text"
+          rows="4"
+          cols="50"
+        ></textarea>
+        <button type="submit" id="trendSave">Submit</button>
+      </form>
+    </dialog>
+
     <dialog id="correctionDialog" class="editDialog">
       <form id="correction-form">
         <label for="actionby">Action by:</label>
@@ -86,6 +99,40 @@
       <form method="dialog">
         <button id="closeoutReminderOk" autofocus>OK</button>
       </form>
+    </dialog>
+    <dialog id="validationReviewDialog" class="editDialog">
+      <div class="form">
+        <h3 id="validationReviewTitle">Quality Review</h3>
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+          "
+        >
+          <span
+            id="validationScore"
+            style="font-size: 1.4rem; font-weight: bold"
+          ></span>
+          <span
+            id="validationBadge"
+            style="
+              padding: 0.2rem 0.6rem;
+              border-radius: 12px;
+              font-size: 0.8rem;
+              font-weight: 600;
+            "
+          ></span>
+        </div>
+        <p id="validationSummary"></p>
+        <ul id="validationIssues"></ul>
+        <p id="validationFix" style="font-style: italic"></p>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end">
+          <button type="button" id="validationRevise">Revise</button>
+          <button type="button" id="validationSaveAnyway">Save Anyway</button>
+        </div>
+      </div>
     </dialog>
     <main id="main"></main>
     <footer id="footer"></footer>

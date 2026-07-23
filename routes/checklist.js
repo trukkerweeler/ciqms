@@ -243,6 +243,9 @@ router.post("/obsn", async (req, res) => {
     // Run Bedrock validation if a question exists and observation is non-empty
     let validation = null;
     if (questionRows.length > 0 && OBSERVATION && OBSERVATION.trim()) {
+      console.log(
+        `[obsn] Question found for CHECKLIST_ID ${CHECKLIST_ID}, calling Bedrock...`,
+      );
       try {
         validation = await validateObservation(
           questionRows[0].QUESTION,
@@ -279,9 +282,13 @@ router.post("/obsn", async (req, res) => {
         });
         validConn.end();
       } catch (bedrockErr) {
-        console.error("Bedrock validation error:", bedrockErr.message);
+        console.error("[obsn] Bedrock validation error:", bedrockErr.message);
         // Non-fatal — save still succeeded
       }
+    } else {
+      console.log(
+        `[obsn] Skipping Bedrock — questionRows: ${questionRows.length}, observation empty: ${!OBSERVATION?.trim()}`,
+      );
     }
 
     res.json({ saved: true, validation });

@@ -164,6 +164,120 @@ function validateCodeField(fieldName, fieldValue) {
   return { isValid: true };
 }
 
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+const SECTION_LABELS = {
+  NC_TREND: "NC Trend",
+  CORRECTION: "Correction",
+  CAUSE: "Cause",
+  SYSTEMIC_REMEDY: "Systemic Remedy",
+};
+
+const ISSUE_LABELS = {
+  missing_evidence: "Missing Evidence",
+  not_objective: "Not Objective",
+  not_traceable: "Not Traceable",
+  not_aligned: "Not Aligned",
+  future_tense: "Future Tense",
+  vague: "Vague Statement",
+  not_a_trend: "Not a Trend",
+  not_root_cause: "Not Root Cause",
+  symptom_not_cause: "Symptom, Not Cause",
+  not_systemic: "Not Systemic",
+};
+
+function getScoreTier(score) {
+  if (score >= 81) return { label: "Fully Complete", color: "#1e8e3e" };
+  if (score >= 51) return { label: "Mostly Complete", color: "#f9ab00" };
+  if (score >= 21) return { label: "Partial Evidence", color: "#e37400" };
+  return { label: "No Objective Evidence", color: "#c5221f" };
+}
+
+async function validateCorrectiveSection(sectionType, text) {
+  if (!text || !text.trim()) return null;
+
+  const response = await fetchJson(`${apiUrl}/corrective/validate-section`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sectionType, text }),
+  });
+
+  return response.validation || null;
+}
+
+function showValidationReview(sectionType, validation) {
+  const dialog = document.getElementById("validationReviewDialog");
+  const title = document.getElementById("validationReviewTitle");
+  const score = document.getElementById("validationScore");
+  const badge = document.getElementById("validationBadge");
+  const summary = document.getElementById("validationSummary");
+  const issues = document.getElementById("validationIssues");
+  const fix = document.getElementById("validationFix");
+  const btnRevise = document.getElementById("validationRevise");
+  const btnSave = document.getElementById("validationSaveAnyway");
+
+  const tier = getScoreTier(validation.score || 0);
+  title.textContent = `${SECTION_LABELS[sectionType]} Quality Review`;
+  score.textContent = `${validation.score ?? 0}/100`;
+  score.style.color = tier.color;
+  badge.textContent = tier.label;
+  badge.style.backgroundColor = tier.color;
+  badge.style.color = "#fff";
+  summary.textContent = validation.summary || "";
+
+  issues.innerHTML = "";
+  if (validation.issues && validation.issues.length > 0) {
+    validation.issues.forEach((issue) => {
+      const li = document.createElement("li");
+      const label = ISSUE_LABELS[issue.type] || issue.type;
+      li.textContent = `${label}: ${issue.detail}`;
+      issues.appendChild(li);
+    });
+  } else {
+    const li = document.createElement("li");
+    li.textContent = validation.is_valid
+      ? "No issues found."
+      : "No issue details were returned.";
+    issues.appendChild(li);
+  }
+
+  fix.textContent = validation.recommended_fix || "";
+  btnSave.textContent = validation.is_valid ? "Save" : "Save Anyway";
+
+  return new Promise((resolve) => {
+    btnRevise.onclick = () => {
+      dialog.close();
+      resolve(false);
+    };
+
+    btnSave.onclick = () => {
+      dialog.close();
+      resolve(true);
+    };
+
+    dialog.showModal();
+  });
+}
+
+async function validateThenConfirm(sectionType, text) {
+  try {
+    const validation = await validateCorrectiveSection(sectionType, text);
+    if (!validation) return true;
+    return await showValidationReview(sectionType, validation);
+  } catch (error) {
+    console.error(`Validation failed for ${sectionType}:`, error);
+    return confirm(
+      "AI validation is currently unavailable. Save anyway without scoring?",
+    );
+  }
+}
+
 fetch(url, { method: "GET" })
   .then((response) => response.json())
   .then(async (record) => {
@@ -505,10 +619,67 @@ fetch(url, { method: "GET" })
       const trendHeader = document.createElement("h3");
       trendHeader.textContent = "NC Trend";
       const trendText = document.createElement("p");
+      trendText.setAttribute("id", "trendtext");
       trendText.textContent = record[key]["NC_TREND"];
       trendText.innerHTML = trendText.innerHTML.replace(/\n/g, "<br>");
-      trendSection.appendChild(trendHeader);
-      trendSection.appendChild(trendText);
+      const btnTrend = document.createElement("button");
+      btnTrend.setAttribute("id", "btnTrend");
+      btnTrend.setAttribute("class", "btnEditNotes");
+      btnTrend.textContent = "Edit";
+      btnTrend.addEventListener("click", (e) => {
+        e.preventDefault();
+        document.getElementById("new-trend-text").value =
+          record[key]["NC_TREND"] || "";
+        document.getElementById("trendDialog").showModal();
+
+        const trendSaveBtn = document.getElementById("trendSave");
+        if (!trendSaveBtn.dataset.listener) {
+          trendSaveBtn.addEventListener("click", async (evt) => {
+            evt.preventDefault();
+            try {
+              const trendValue = document
+                .getElementById("new-trend-text")
+                .value.trim();
+              const shouldSave = await validateThenConfirm(
+                "NC_TREND",
+                trendValue,
+              );
+              if (!shouldSave) return;
+
+              const trendUrl = `${apiUrl}/corrective/${caid}`;
+              const response = await fetch(trendUrl, {
+                method: "PUT",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({
+                  NC_TREND: trendValue,
+                  MODIFIED_BY: user,
+                }),
+              });
+              if (!response.ok) {
+                throw new Error(`Failed to save: ${response.statusText}`);
+              }
+              document.getElementById("trendDialog").close();
+              location.reload();
+            } catch (error) {
+              console.error("Error saving NC Trend:", error);
+              alert(`Failed to save NC Trend: ${error.message}`);
+            }
+          });
+          trendSaveBtn.dataset.listener = "true";
+        }
+      });
+
+      const trendHeaderGrid = document.createElement("div");
+      trendHeaderGrid.setAttribute("class", "section-header-grid");
+      trendHeaderGrid.appendChild(trendHeader);
+      trendHeaderGrid.appendChild(btnTrend);
+
+      const trendContent = document.createElement("div");
+      trendContent.setAttribute("class", "section-content");
+      trendContent.appendChild(trendText);
+
+      trendSection.appendChild(trendHeaderGrid);
+      trendSection.appendChild(trendContent);
 
       // Correction section=======================================
       const correctionSection = document.createElement("section");
@@ -588,6 +759,13 @@ fetch(url, { method: "GET" })
               let newcorrectiontext = document.getElementById(
                 "new-correction-text",
               ).value;
+              const shouldSave = await validateThenConfirm(
+                "CORRECTION",
+                newcorrectiontext,
+              );
+              if (!shouldSave) {
+                return;
+              }
               let formatteddate = new Date()
                 .toISOString()
                 .replace("T", " ")
@@ -675,6 +853,13 @@ fetch(url, { method: "GET" })
               let causetext = record[key]["CAUSE_TEXT"] || "";
               let newcausetext =
                 document.getElementById("new-cause-text").value;
+              const shouldSave = await validateThenConfirm(
+                "CAUSE",
+                newcausetext,
+              );
+              if (!shouldSave) {
+                return;
+              }
               let formatteddate = new Date().toISOString();
               formatteddate = formatteddate.replace("T", " ").substring(0, 19);
               newcausetext =
@@ -772,6 +957,13 @@ fetch(url, { method: "GET" })
             let controltext = record[key]["CONTROL_TEXT"] || "";
             let newcontroltext =
               document.getElementById("new-control-text").value;
+            const shouldSave = await validateThenConfirm(
+              "SYSTEMIC_REMEDY",
+              newcontroltext,
+            );
+            if (!shouldSave) {
+              return;
+            }
             let formatteddate = new Date().toISOString();
             formatteddate = formatteddate.replace("T", " ").substring(0, 19);
             // replace the colon

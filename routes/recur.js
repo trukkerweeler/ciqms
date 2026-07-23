@@ -117,6 +117,7 @@ router.get("/nextId", (req, res) => {
 // Get the records for the recurrence table
 router.get("/", (req, res) => {
   try {
+    const includeAll = req.query.includeAll === "1";
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
       user: process.env.DB_USER,
@@ -131,8 +132,9 @@ router.get("/", (req, res) => {
         return;
       }
 
-      const query =
-        'SELECT r.RECUR_ID, r.INPUT_ID, r.ASSIGNED_TO, r.FREQUENCY, r.SUBJECT, r.STATUS, p.INPUT_TYPE FROM PPL_INPT_RCUR r LEFT JOIN PEOPLE_INPUT p ON r.INPUT_ID = p.INPUT_ID WHERE r.STATUS = "A" ORDER BY r.SUBJECT ASC';
+      const query = includeAll
+        ? "SELECT r.RECUR_ID, r.INPUT_ID, r.ASSIGNED_TO, r.FREQUENCY, r.SUBJECT, r.STATUS, p.INPUT_TYPE FROM PPL_INPT_RCUR r LEFT JOIN PEOPLE_INPUT p ON r.INPUT_ID = p.INPUT_ID ORDER BY r.SUBJECT ASC"
+        : 'SELECT r.RECUR_ID, r.INPUT_ID, r.ASSIGNED_TO, r.FREQUENCY, r.SUBJECT, r.STATUS, p.INPUT_TYPE FROM PPL_INPT_RCUR r LEFT JOIN PEOPLE_INPUT p ON r.INPUT_ID = p.INPUT_ID WHERE r.STATUS = "A" ORDER BY r.SUBJECT ASC';
       connection.query(query, (err, rows, fields) => {
         if (err) {
           console.log("Failed to query for recurrence: " + err);

@@ -1,5 +1,11 @@
 /* Recurring Inputs Table Styling */
 
+.page-heading-left {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
 .table-container .data-table {
   width: 100%;
   border-collapse: collapse;
@@ -28,37 +34,42 @@
 /* Column widths for recurring inputs table */
 .table-container .data-table thead th:nth-child(1),
 .table-container .data-table tbody td:nth-child(1) {
-  width: 150px !important;
-  min-width: 150px;
+  width: 7%;
 }
 
 .table-container .data-table thead th:nth-child(2),
 .table-container .data-table tbody td:nth-child(2) {
-  width: 120px !important;
-  min-width: 120px;
+  width: 15%;
 }
 
 .table-container .data-table thead th:nth-child(3),
 .table-container .data-table tbody td:nth-child(3) {
-  width: 140px !important;
-  min-width: 140px;
+  width: 15%;
 }
 
 .table-container .data-table thead th:nth-child(4),
 .table-container .data-table tbody td:nth-child(4) {
-  width: 120px !important;
-  min-width: 120px;
+  width: 12%;
 }
 
 .table-container .data-table thead th:nth-child(5),
 .table-container .data-table tbody td:nth-child(5) {
-  width: 100px !important;
-  min-width: 100px;
+  width: 15%;
 }
 
 .table-container .data-table thead th:nth-child(6),
 .table-container .data-table tbody td:nth-child(6) {
-  width: 80px !important;
-  min-width: 80px;
+  width: 12%;
+  text-align: center;
+}
+
+.table-container .data-table thead th:nth-child(7),
+.table-container .data-table tbody td:nth-child(7) {
+  width: 12%;
+}
+
+.table-container .data-table thead th:nth-child(8),
+.table-container .data-table tbody td:nth-child(8) {
+  width: 12%;
   text-align: center;
 }

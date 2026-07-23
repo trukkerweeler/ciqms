@@ -60,6 +60,25 @@
     <!-- Observation dialog -->
     <dialog id="editobservation" class="editDialog">
       <form id="observationForm" class="form">
+        <button
+          type="button"
+          id="cancelobservation"
+          aria-label="Close"
+          style="
+            position: absolute;
+            top: 0.5rem;
+            right: 0.5rem;
+            background: none;
+            border: none;
+            font-size: 1.25rem;
+            line-height: 1;
+            cursor: pointer;
+            color: #666;
+            padding: 0.25rem 0.5rem;
+          "
+        >
+          &times;
+        </button>
         <h2 class="formh2">Observation <span id="obsid"></span></h2>
         <div
           style="
@@ -75,17 +94,19 @@
             style="margin: 0.5rem 0 0 0; font-style: italic"
           ></p>
         </div>
-        <label for="observation">Observation:</label>
-        <textarea
-          type="textarea"
-          id="newobservation"
-          name="observation"
-          rows="4"
-          cols="40"
-          wrap="soft"
-          required
-        ></textarea>
-        <button type="submit" id="saveobservation">Save</button>
+        <div id="obsEditArea">
+          <label for="observation">Observation:</label>
+          <textarea
+            type="textarea"
+            id="newobservation"
+            name="observation"
+            rows="4"
+            cols="40"
+            wrap="soft"
+            required
+          ></textarea>
+          <button type="submit" id="saveobservation">Save</button>
+        </div>
         <div
           id="obsValidationResult"
           style="
@@ -128,13 +149,12 @@
             style="margin: 0; font-style: italic; color: #555"
           ></p>
         </div>
-        <button
-          type="button"
-          id="closeobservation"
-          style="display: none; margin-top: 0.5rem"
-        >
-          Close
-        </button>
+        <div id="obsDialogActions" style="margin-top: 0.75rem">
+          <button type="button" id="reviseobservation">
+            Revise Observation
+          </button>
+          <button type="button" id="closeobservation">Close</button>
+        </div>
       </form>
     </dialog>
     <!-- </main> -->
