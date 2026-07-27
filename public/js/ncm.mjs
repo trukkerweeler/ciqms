@@ -114,6 +114,29 @@ async function fetchJson(url, options = {}) {
   return response.json();
 }
 
+function logValidationDiagnostic(sectionType, status, details = {}) {
+  const label = NCM_SECTION_LABELS[sectionType] || sectionType;
+  const reason = details.reason || "unknown";
+  const endpoint = details.endpoint || `${apiUrl}/ncm/validate-section`;
+
+  console.groupCollapsed(`[AI Validation] ${label}: ${status} (${reason})`);
+  console.log("sectionType:", sectionType);
+  console.log("endpoint:", endpoint);
+  if (details.httpStatus) {
+    console.log("httpStatus:", details.httpStatus);
+  }
+  if (details.message) {
+    console.log("message:", details.message);
+  }
+  if (details.payload) {
+    console.log("payload:", details.payload);
+  }
+  if (details.error) {
+    console.log("error:", details.error);
+  }
+  console.groupEnd();
+}
+
 const NCM_SECTION_LABELS = {
   DESCRIPTION: "Description",
   DISPOSITION: "Disposition",
@@ -137,15 +160,81 @@ function getScoreTier(score) {
 }
 
 async function validateNcmSection(sectionType, text) {
-  if (!text || !text.trim()) return null;
+  const endpoint = `${apiUrl}/ncm/validate-section`;
 
-  const response = await fetchJson(`${apiUrl}/ncm/validate-section`, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify({ sectionType, text }),
-  });
+  if (!text || !text.trim()) {
+    logValidationDiagnostic(sectionType, "skipped", {
+      reason: "empty_text_client",
+      endpoint,
+      message: "No text provided, so the validator was not called.",
+    });
+    return null;
+  }
 
-  return response.validation || null;
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify({ sectionType, text }),
+    });
+  } catch (error) {
+    logValidationDiagnostic(sectionType, "failed", {
+      reason: "network_error",
+      endpoint,
+      message: "Request could not reach the server.",
+      error,
+    });
+    throw error;
+  }
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    logValidationDiagnostic(sectionType, "failed", {
+      reason: "http_error",
+      endpoint,
+      httpStatus: response.status,
+      message:
+        "Server returned an error response. This often means route load/startup issues in production.",
+      payload,
+    });
+    throw new Error(`HTTP ${response.status}`);
+  }
+
+  if (payload?.skipped) {
+    logValidationDiagnostic(sectionType, "skipped", {
+      reason: payload.reason || "server_skipped",
+      endpoint,
+      payload,
+    });
+    return null;
+  }
+
+  if (payload?.error) {
+    logValidationDiagnostic(sectionType, "failed", {
+      reason: payload.error,
+      endpoint,
+      payload,
+    });
+    return null;
+  }
+
+  if (!payload?.validation) {
+    logValidationDiagnostic(sectionType, "failed", {
+      reason: "missing_validation_payload",
+      endpoint,
+      payload,
+    });
+    return null;
+  }
+
+  return payload.validation;
 }
 
 function showValidationReview(sectionType, validation) {
@@ -204,12 +293,20 @@ async function validateThenConfirm(sectionType, text) {
   try {
     const validation = await validateNcmSection(sectionType, text);
     if (!validation) {
+      logValidationDiagnostic(sectionType, "fallback", {
+        reason: "no_validation_result",
+        message: "Proceeding without AI score.",
+      });
       return { shouldSave: true, validation: null };
     }
     const shouldSave = await showValidationReview(sectionType, validation);
     return { shouldSave, validation };
   } catch (error) {
-    console.error(`Validation failed for ${sectionType}:`, error);
+    logValidationDiagnostic(sectionType, "failed", {
+      reason: "exception",
+      message: "AI validation threw an exception.",
+      error,
+    });
     const shouldSave = confirm(
       "AI validation is currently unavailable. Save anyway without scoring?",
     );

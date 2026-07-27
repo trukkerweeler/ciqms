@@ -4,6 +4,44 @@ const express = require("express");
 const session = require("express-session");
 const app = express();
 const configModule = require("./config");
+const LOG_ROUTES_VERBOSE = process.env.LOG_ROUTES_VERBOSE === "true";
+const LOG_REQUESTS = process.env.LOG_REQUESTS !== "false";
+const LOG_ERROR_STACKS = process.env.LOG_ERROR_STACKS !== "false";
+
+function maskSecret(value) {
+  if (!value) return "(missing)";
+  if (value.length <= 8) return "****";
+  return `${value.slice(0, 4)}...${value.slice(-4)}`;
+}
+
+function getTimestamp() {
+  return new Date().toISOString();
+}
+
+function logError(scope, error, meta = "") {
+  const err = error instanceof Error ? error : new Error(String(error));
+  const metaText = meta ? ` | ${meta}` : "";
+
+  console.error(`[ERR ${getTimestamp()}] [${scope}] ${err.message}${metaText}`);
+
+  if (LOG_ERROR_STACKS && err.stack) {
+    console.error(err.stack);
+  }
+}
+
+const launchedWithEnvFile = process.execArgv.some((arg) =>
+  arg.startsWith("--env-file"),
+);
+console.log("\n=== Startup Diagnostics ===");
+console.log(`[ENV] launched with --env-file: ${launchedWithEnvFile}`);
+console.log(
+  `[ENV] AWS_ACCESS_KEY_ID: ${maskSecret(process.env.AWS_ACCESS_KEY_ID)}`,
+);
+console.log(`[ENV] AWS_REGION: ${process.env.AWS_REGION || "(missing)"}`);
+console.log(`[ENV] CWD: ${process.cwd()}`);
+console.log(`[ENV] LOG_ROUTES_VERBOSE: ${LOG_ROUTES_VERBOSE}`);
+console.log(`[ENV] LOG_REQUESTS: ${LOG_REQUESTS}`);
+console.log(`[ENV] LOG_ERROR_STACKS: ${LOG_ERROR_STACKS}`);
 
 // Load environment-based configuration
 const { port, env: nodeEnv } = configModule;
@@ -33,11 +71,16 @@ const browserMetaPaths = [
   "/browserconfig.xml",
 ];
 
-const capsNotice = require('./middleware/capsNotice');
+const capsNotice = require("./middleware/capsNotice");
 app.use(express.json());
 app.use(capsNotice); // Add after body parser
 
 app.use((req, res, next) => {
+  if (!LOG_REQUESTS) {
+    next();
+    return;
+  }
+
   const isBrowserMetaRequest = browserMetaPaths.some((path) =>
     req.path.startsWith(path),
   );
@@ -46,7 +89,13 @@ app.use((req, res, next) => {
     ["POST", "PUT", "DELETE", "PATCH"].includes(req.method) &&
     !isBrowserMetaRequest
   ) {
-    console.log(`[${req.method}] ${req.path}`);
+    const start = Date.now();
+    res.on("finish", () => {
+      const durationMs = Date.now() - start;
+      console.log(
+        `[REQ] ${req.method} ${req.path} -> ${res.statusCode} (${durationMs}ms)`,
+      );
+    });
   }
   next();
 });
@@ -148,7 +197,7 @@ app.get("/config", (req, res) => {
     const config = JSON.parse(configData);
     res.json(config);
   } catch (error) {
-    console.error("Error reading config file:", error);
+    logError("CONFIG", error, "Failed to read qms.config.json");
     // Fallback configuration
     res.json({
       ui: { enableRowColors: false },
@@ -181,18 +230,35 @@ const os = require("os");
 
 const routesDir = path.join(__dirname, "routes");
 
-console.log("Loading routes from:", routesDir);
+const routeLoadSummary = {
+  processed: 0,
+  registered: 0,
+  skippedAuth: 0,
+  skippedEmpty: 0,
+  skippedInvalid: 0,
+  errors: [],
+};
+const registeredRouteLines = [];
+
+console.log(`\n=== Route Registration ===`);
+console.log(`[ROUTES] Loading from: ${routesDir}`);
 
 fs.readdirSync(routesDir)
   .filter((file) => file.endsWith(".js") && !file.includes(".vbs"))
   .sort()
   .forEach((file) => {
+    routeLoadSummary.processed += 1;
     const routeName = path.basename(file, ".js");
-    console.log(`  Processing route file: ${file} (name: ${routeName})`);
+    if (LOG_ROUTES_VERBOSE) {
+      console.log(`[ROUTES] Processing ${file} (name: ${routeName})`);
+    }
 
     // Skip files that are not route modules
     if (["auth"].includes(routeName)) {
-      console.log(`    Skipped (auth handled separately)`);
+      routeLoadSummary.skippedAuth += 1;
+      if (LOG_ROUTES_VERBOSE) {
+        console.log(`[ROUTES] Skipped ${file} (auth handled separately)`);
+      }
       return;
     }
 
@@ -202,16 +268,22 @@ fs.readdirSync(routesDir)
 
       // Skip empty files
       if (stats.size === 0) {
-        console.log(`    Skipped (empty file)`);
+        routeLoadSummary.skippedEmpty += 1;
+        if (LOG_ROUTES_VERBOSE) {
+          console.log(`[ROUTES] Skipped ${file} (empty file)`);
+        }
         return;
       }
 
       const routes = require(filePath);
-      console.log(`    ✓ Loaded, checking type...`);
+      if (LOG_ROUTES_VERBOSE) {
+        console.log(`[ROUTES] Loaded ${file}`);
+      }
 
       // Skip if not a valid middleware function or router
       if (!routes || (typeof routes !== "function" && !routes.stack)) {
-        console.warn(`    Skipped: does not export valid middleware`);
+        routeLoadSummary.skippedInvalid += 1;
+        console.warn(`[ROUTES] Skipped ${file} (invalid middleware export)`);
         return;
       }
 
@@ -222,24 +294,56 @@ fs.readdirSync(routesDir)
         routePath = "/";
       }
 
-      console.log(`    ✓ Registered at path: ${routePath}`);
       app.use(routePath, routes);
+      routeLoadSummary.registered += 1;
+      registeredRouteLines.push(`${routePath} <= ${file}`);
+
+      if (LOG_ROUTES_VERBOSE) {
+        console.log(`[ROUTES] Registered ${routePath} <= ${file}`);
+      }
     } catch (error) {
-      console.error(
-        `  ✗ Error loading route ${file}:`,
-        error.message,
-        error.stack,
-      );
+      routeLoadSummary.errors.push({ file, message: error.message });
+      logError("ROUTES", error, `Error loading ${file}`);
     }
   });
+
+console.log(
+  `[ROUTES] Processed=${routeLoadSummary.processed}, Registered=${routeLoadSummary.registered}, SkippedAuth=${routeLoadSummary.skippedAuth}, SkippedEmpty=${routeLoadSummary.skippedEmpty}, SkippedInvalid=${routeLoadSummary.skippedInvalid}, Errors=${routeLoadSummary.errors.length}`,
+);
+
+if (LOG_ROUTES_VERBOSE) {
+  registeredRouteLines.forEach((line) => {
+    console.log(`[ROUTES] ${line}`);
+  });
+} else {
+  console.log("[ROUTES] Set LOG_ROUTES_VERBOSE=true for per-route details.");
+}
+
+if (routeLoadSummary.errors.length > 0) {
+  routeLoadSummary.errors.forEach((entry) => {
+    logError("ROUTES", entry.message, `Failed ${entry.file}`);
+  });
+}
 
 // Load auth routes separately (typically middleware)
 try {
   const authRoutes = require("./routes/auth");
   app.use("/auth", authRoutes);
 } catch (error) {
-  console.error(`Error loading auth routes:`, error.message);
+  logError("AUTH", error, "Error loading auth routes");
 }
+
+process.on("unhandledRejection", (reason) => {
+  logError("UNHANDLED_REJECTION", reason, "Promise rejection was not caught");
+});
+
+process.on("uncaughtException", (error) => {
+  logError(
+    "UNCAUGHT_EXCEPTION",
+    error,
+    "Unhandled exception reached process scope",
+  );
+});
 
 // Load cert3 routes (new certificate search with drill-down)
 // try {

@@ -18,6 +18,119 @@ let user; // Will be set in initialization
 let config; // Will be set in initialization
 let allNcmData = []; // Store all NCM data for filtering
 
+function logCreateValidationDiagnostic(status, details = {}) {
+  const endpoint = details.endpoint || `${apiUrl}/ncm/validate-section`;
+  const reason = details.reason || "unknown";
+
+  console.groupCollapsed(
+    `[AI Validation] New NCM Description: ${status} (${reason})`,
+  );
+  console.log("endpoint:", endpoint);
+  if (details.httpStatus) {
+    console.log("httpStatus:", details.httpStatus);
+  }
+  if (details.message) {
+    console.log("message:", details.message);
+  }
+  if (details.payload) {
+    console.log("payload:", details.payload);
+  }
+  if (details.error) {
+    console.log("error:", details.error);
+  }
+  console.groupEnd();
+}
+
+async function validateCreateDescription(text) {
+  const endpoint = `${apiUrl}/ncm/validate-section`;
+
+  if (!text || !text.trim()) {
+    logCreateValidationDiagnostic("skipped", {
+      reason: "empty_text_client",
+      endpoint,
+      message: "Description was empty, so the validator was not called.",
+    });
+    return null;
+  }
+
+  let response;
+  try {
+    response = await fetch(endpoint, {
+      method: "POST",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify({ sectionType: "DESCRIPTION", text }),
+    });
+  } catch (error) {
+    logCreateValidationDiagnostic("failed", {
+      reason: "network_error",
+      endpoint,
+      message: "Request could not reach the validation endpoint.",
+      error,
+    });
+    return null;
+  }
+
+  let payload = null;
+  try {
+    payload = await response.json();
+  } catch (error) {
+    payload = null;
+  }
+
+  if (!response.ok) {
+    logCreateValidationDiagnostic("failed", {
+      reason: "http_error",
+      endpoint,
+      httpStatus: response.status,
+      message: "Validation endpoint returned non-success status.",
+      payload,
+    });
+    return null;
+  }
+
+  if (payload?.skipped) {
+    logCreateValidationDiagnostic("skipped", {
+      reason: payload.reason || "server_skipped",
+      endpoint,
+      payload,
+    });
+    return null;
+  }
+
+  if (payload?.error) {
+    logCreateValidationDiagnostic("failed", {
+      reason: payload.error,
+      endpoint,
+      payload,
+    });
+    return null;
+  }
+
+  if (!payload?.validation) {
+    logCreateValidationDiagnostic("failed", {
+      reason: "missing_validation_payload",
+      endpoint,
+      payload,
+    });
+    return null;
+  }
+
+  logCreateValidationDiagnostic("success", {
+    reason: "validated",
+    endpoint,
+    message: `Score ${payload.validation.score ?? 0}/100`,
+    payload: {
+      score: payload.validation.score,
+      is_valid: payload.validation.is_valid,
+      summary: payload.validation.summary,
+    },
+  });
+
+  return payload.validation;
+}
+
 document.addEventListener("DOMContentLoaded", async function () {
   apiUrl = await getApiUrl();
   url = `${apiUrl}/ncm`;
@@ -273,6 +386,15 @@ async function saveNcm(event) {
           return;
         }
       }
+    }
+
+    // Run AI validation for create-flow description and log exact skip/fail reason in browser console.
+    const createValidation = await validateCreateDescription(
+      dataJson.DESCRIPTION,
+    );
+    if (createValidation) {
+      dataJson.AI_VALIDATION = createValidation;
+      dataJson.AI_VALIDATION_SECTION = "DESCRIPTION";
     }
 
     const response = await fetch(url, {
