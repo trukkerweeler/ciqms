@@ -106,6 +106,117 @@ function validateCodeField(fieldName, fieldValue) {
   return { isValid: true };
 }
 
+async function fetchJson(url, options = {}) {
+  const response = await fetch(url, options);
+  if (!response.ok) {
+    throw new Error(`HTTP ${response.status}`);
+  }
+  return response.json();
+}
+
+const NCM_SECTION_LABELS = {
+  DESCRIPTION: "Description",
+  DISPOSITION: "Disposition",
+  VERIFICATION: "Verification",
+};
+
+const NCM_ISSUE_LABELS = {
+  missing_evidence: "Missing Evidence",
+  not_objective: "Not Objective",
+  not_traceable: "Not Traceable",
+  not_aligned: "Not Aligned",
+  future_tense: "Future Tense",
+  vague: "Vague Statement",
+};
+
+function getScoreTier(score) {
+  if (score >= 81) return { label: "Fully Complete", color: "#1e8e3e" };
+  if (score >= 51) return { label: "Mostly Complete", color: "#f9ab00" };
+  if (score >= 21) return { label: "Partial Evidence", color: "#e37400" };
+  return { label: "No Objective Evidence", color: "#c5221f" };
+}
+
+async function validateNcmSection(sectionType, text) {
+  if (!text || !text.trim()) return null;
+
+  const response = await fetchJson(`${apiUrl}/ncm/validate-section`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ sectionType, text }),
+  });
+
+  return response.validation || null;
+}
+
+function showValidationReview(sectionType, validation) {
+  const dialog = document.getElementById("validationReviewDialog");
+  const title = document.getElementById("validationReviewTitle");
+  const score = document.getElementById("validationScore");
+  const badge = document.getElementById("validationBadge");
+  const summary = document.getElementById("validationSummary");
+  const issues = document.getElementById("validationIssues");
+  const fix = document.getElementById("validationFix");
+  const btnRevise = document.getElementById("validationRevise");
+  const btnSave = document.getElementById("validationSaveAnyway");
+
+  const tier = getScoreTier(validation.score || 0);
+  title.textContent = `${NCM_SECTION_LABELS[sectionType]} Quality Review`;
+  score.textContent = `${validation.score ?? 0}/100`;
+  score.style.color = tier.color;
+  badge.textContent = tier.label;
+  badge.style.backgroundColor = tier.color;
+  badge.style.color = "#fff";
+  summary.textContent = validation.summary || "";
+
+  issues.innerHTML = "";
+  if (validation.issues && validation.issues.length > 0) {
+    validation.issues.forEach((issue) => {
+      const li = document.createElement("li");
+      const label = NCM_ISSUE_LABELS[issue.type] || issue.type;
+      li.textContent = `${label}: ${issue.detail}`;
+      issues.appendChild(li);
+    });
+  } else {
+    const li = document.createElement("li");
+    li.textContent = validation.is_valid
+      ? "No issues found."
+      : "No issue details were returned.";
+    issues.appendChild(li);
+  }
+
+  fix.textContent = validation.recommended_fix || "";
+  btnSave.textContent = validation.is_valid ? "Save" : "Save Anyway";
+
+  return new Promise((resolve) => {
+    btnRevise.onclick = () => {
+      dialog.close();
+      resolve(false);
+    };
+    btnSave.onclick = () => {
+      dialog.close();
+      resolve(true);
+    };
+    dialog.showModal();
+  });
+}
+
+async function validateThenConfirm(sectionType, text) {
+  try {
+    const validation = await validateNcmSection(sectionType, text);
+    if (!validation) {
+      return { shouldSave: true, validation: null };
+    }
+    const shouldSave = await showValidationReview(sectionType, validation);
+    return { shouldSave, validation };
+  } catch (error) {
+    console.error(`Validation failed for ${sectionType}:`, error);
+    const shouldSave = confirm(
+      "AI validation is currently unavailable. Save anyway without scoring?",
+    );
+    return { shouldSave, validation: null };
+  }
+}
+
 const main = document.querySelector("main");
 
 // Function to refresh NCM data from server and re-render
@@ -724,12 +835,10 @@ async function renderNCMDetail(
       element.addEventListener("click", async (event) => {
         // prevent the default action
         event.preventDefault();
-        // get the clicked button id
-        // get the input id
-        const nid = document.querySelector("#nid");
+        // Use currentTarget so nested markup inside the button cannot break id detection.
         let nidValue = iid;
 
-        const fieldname = event.target.id;
+        const fieldname = event.currentTarget.id;
 
         if (test) {
           console.log(fieldname);
@@ -738,6 +847,7 @@ async function renderNCMDetail(
 
         let data = {
           NCM_ID: nidValue,
+          MODIFIED_BY: user,
         };
         // console.log(data);
 
@@ -746,6 +856,8 @@ async function renderNCMDetail(
         const date = d.toISOString().substring(0, 10);
         const time = d.toLocaleTimeString();
         const mydate = date + " " + time;
+        let sectionType = null;
+        let validationPayload = null;
 
         switch (fieldname) {
           case "saveTrendDesc":
@@ -756,8 +868,18 @@ async function renderNCMDetail(
             // if lenght of newtextTrendDesc is 0, do not save
             if (newtextTrendDesc.length === 0) {
               alert("Not saving, no trend text.");
-              break;
+              return;
             } else {
+              const validationResult = await validateThenConfirm(
+                "DESCRIPTION",
+                newtextTrendDesc,
+              );
+              if (!validationResult.shouldSave) {
+                return;
+              }
+              validationPayload = validationResult.validation;
+              sectionType = "DESCRIPTION";
+
               let compositetext =
                 user +
                 " - " +
@@ -777,8 +899,18 @@ async function renderNCMDetail(
             let newtextDisp = document.querySelector("#newtextDisp").value;
             if (newtextDisp.length === 0) {
               alert("Not saving, no disposition text.");
-              break;
+              return;
             } else {
+              const validationResult = await validateThenConfirm(
+                "DISPOSITION",
+                newtextDisp,
+              );
+              if (!validationResult.shouldSave) {
+                return;
+              }
+              validationPayload = validationResult.validation;
+              sectionType = "DISPOSITION";
+
               let compositetext2 =
                 user +
                 " - " +
@@ -797,8 +929,18 @@ async function renderNCMDetail(
             let newtextVerf = document.querySelector("#newtextVerf").value;
             if (newtextVerf.length === 0) {
               alert("Not saving, no verification text.");
-              break;
+              return;
             } else {
+              const validationResult = await validateThenConfirm(
+                "VERIFICATION",
+                newtextVerf,
+              );
+              if (!validationResult.shouldSave) {
+                return;
+              }
+              validationPayload = validationResult.validation;
+              sectionType = "VERIFICATION";
+
               let compositetext3 =
                 user +
                 " - " +
@@ -817,7 +959,7 @@ async function renderNCMDetail(
             let newtextNote = document.querySelector("#newtextNote").value;
             if (newtextNote.length === 0) {
               alert("Please enter note text or use the Cancel button.");
-              break;
+              return;
             } else {
               let compositetext4 =
                 user +
@@ -841,7 +983,25 @@ async function renderNCMDetail(
             break;
 
           default:
-            console.log("default");
+            console.warn("Unknown save action:", fieldname);
+            return;
+        }
+
+        if (fieldname !== "saveTrendDetail" && !data.MY_TABLE) {
+          alert(
+            "Unable to determine which NCM section to save. Please close and re-open the dialog, then try again.",
+          );
+          return;
+        }
+
+        if (sectionType && validationPayload) {
+          data = {
+            ...data,
+            AI_SECTION_TYPE: sectionType,
+            AI_VALIDATION: validationPayload,
+            AI_PROMPT_VERSION: "v1",
+            AI_MODEL_ID: "amazon.nova-pro-v1:0",
+          };
         }
 
         if (test) {

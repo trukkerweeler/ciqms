@@ -5,6 +5,10 @@ const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
 const { validateCorrectiveSection } = require("../services/bedrockValidator");
+const {
+  persistAiValidationResult,
+  persistAiValidationHistory,
+} = require("../services/aiValidationStore");
 
 // ==================================================
 // Corrective Action Folder Creation Function
@@ -1179,6 +1183,54 @@ router.put("/:id", (req, res) => {
           res.sendStatus(500);
           return;
         }
+
+        const sectionByField = {
+          NC_TREND: "NC_TREND",
+          CORRECTION_TEXT: "CORRECTION",
+          CAUSE_TEXT: "CAUSE",
+          CONTROL_TEXT: "SYSTEMIC_REMEDY",
+        };
+        const promptBySection = {
+          NC_TREND: "corrective_nc_trend",
+          CORRECTION: "corrective_correction",
+          CAUSE: "corrective_cause",
+          SYSTEMIC_REMEDY: "corrective_systemic_remedy",
+        };
+
+        const sectionType =
+          req.body.AI_SECTION_TYPE || sectionByField[myfield] || null;
+        const validation = req.body.AI_VALIDATION || null;
+
+        if (sectionType && validation) {
+          const persistPayload = {
+            moduleType: "CORRECTIVE",
+            recordId: req.params.id,
+            sectionType,
+            validation,
+            promptName: promptBySection[sectionType] || "corrective_generic",
+            promptVersion: req.body.AI_PROMPT_VERSION || "v1",
+            modelId: req.body.AI_MODEL_ID || "amazon.nova-pro-v1:0",
+            validatedBy: req.body.MODIFIED_BY || "SYSTEM",
+            validationStatus: "SUCCESS",
+            errorMessage: null,
+          };
+
+          Promise.all([
+            persistAiValidationResult(persistPayload),
+            persistAiValidationHistory(persistPayload),
+          ])
+            .catch((persistErr) => {
+              console.error(
+                `[corrective.persist] Failed to persist AI validation for ${req.params.id}/${sectionType}:`,
+                persistErr.message,
+              );
+            })
+            .finally(() => {
+              res.json(rows);
+            });
+          return;
+        }
+
         res.json(rows);
       });
 

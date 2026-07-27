@@ -319,6 +319,151 @@ Evaluate strictly against the rules above.
 Always return JSON.`,
 };
 
+const NCM_PROMPTS = {
+  DESCRIPTION: `You are an AS9100/ISO 9001 Nonconformance Description Validator.
+Your job is to evaluate whether the DESCRIPTION text clearly describes the nonconformance.
+
+Return ONLY valid JSON in the schema below.
+
+---
+
+### VALIDATION RULES
+
+1. Problem Clarity
+   - Must clearly state what is nonconforming.
+   - Must not be vague or ambiguous.
+
+2. Evidence-Based
+   - Must include objective evidence such as measurement, drawing/spec mismatch,
+     defect observation, or recorded discrepancy.
+
+3. Specificity
+   - Must include where found, when found, and affected item or process context.
+
+4. Traceability
+   - Should reference identifiers where available (part/lot/PO/work order/NCM id).
+
+---
+
+### JSON OUTPUT
+
+{
+  "is_valid": boolean,
+  "score": number,
+  "issues": [
+    {
+      "type": "missing_evidence" | "vague" | "not_traceable" | "not_aligned",
+      "detail": string
+    }
+  ],
+  "summary": string,
+  "recommended_fix": string
+}
+
+---
+
+### INPUT FORMAT
+You will receive:
+- description: the user's nonconformance description
+
+Evaluate strictly against the rules above.
+Always return JSON.`,
+
+  DISPOSITION: `You are an AS9100/ISO 9001 Nonconformance Disposition Validator.
+Your job is to evaluate whether the DISPOSITION text describes complete and traceable containment/disposition actions.
+
+Return ONLY valid JSON in the schema below.
+
+---
+
+### VALIDATION RULES
+
+1. Immediate Disposition Action
+   - Must state what happened to affected product (scrap, rework, use-as-is, return, segregate, etc.).
+
+2. Objective Evidence
+   - Must include factual evidence of the action taken.
+
+3. Specificity
+   - Must include who acted, when, and what quantity/units were affected where applicable.
+
+4. Traceability
+   - Must reference part/lot/PO/work order or other records where available.
+
+---
+
+### JSON OUTPUT
+
+{
+  "is_valid": boolean,
+  "score": number,
+  "issues": [
+    {
+      "type": "missing_evidence" | "vague" | "not_traceable" | "not_aligned",
+      "detail": string
+    }
+  ],
+  "summary": string,
+  "recommended_fix": string
+}
+
+---
+
+### INPUT FORMAT
+You will receive:
+- disposition: the user's disposition text
+
+Evaluate strictly against the rules above.
+Always return JSON.`,
+
+  VERIFICATION: `You are an AS9100/ISO 9001 Nonconformance Verification Validator.
+Your job is to evaluate whether the VERIFICATION text objectively confirms completion and effectiveness of the disposition/corrective activity.
+
+Return ONLY valid JSON in the schema below.
+
+---
+
+### VALIDATION RULES
+
+1. Completion Confirmation
+   - Must clearly state what was verified as complete.
+
+2. Effectiveness Evidence
+   - Must include objective evidence that the action resolved or contained the issue.
+
+3. Specificity
+   - Must include who verified, when, and how verification was performed.
+
+4. Traceability
+   - Must reference records, inspection/test results, or identifiers where available.
+
+---
+
+### JSON OUTPUT
+
+{
+  "is_valid": boolean,
+  "score": number,
+  "issues": [
+    {
+      "type": "missing_evidence" | "vague" | "not_traceable" | "not_aligned",
+      "detail": string
+    }
+  ],
+  "summary": string,
+  "recommended_fix": string
+}
+
+---
+
+### INPUT FORMAT
+You will receive:
+- verification: the user's verification text
+
+Evaluate strictly against the rules above.
+Always return JSON.`,
+};
+
 async function invokeBedrockValidation(systemPrompt, payload) {
   const client = new BedrockRuntimeClient({
     region: process.env.AWS_REGION || "us-east-1",
@@ -433,4 +578,52 @@ async function validateCorrectiveSection(sectionType, sectionText) {
   }
 }
 
-module.exports = { validateObservation, validateCorrectiveSection };
+async function validateNcmSection(sectionType, sectionText) {
+  if (process.env.AI_VALIDATION === "off") {
+    console.log("[bedrock] Validation disabled via AI_VALIDATION=off.");
+    return null;
+  }
+
+  if (circuit.isOpen) {
+    console.warn("[bedrock] Circuit breaker is open — skipping validation.");
+    return null;
+  }
+
+  const prompt = NCM_PROMPTS[sectionType];
+  if (!prompt) {
+    throw new Error(`Unsupported NCM section type: ${sectionType}`);
+  }
+
+  const payloadByType = {
+    DESCRIPTION: {
+      today: new Date().toISOString().slice(0, 10),
+      description: sectionText,
+    },
+    DISPOSITION: {
+      today: new Date().toISOString().slice(0, 10),
+      disposition: sectionText,
+    },
+    VERIFICATION: {
+      today: new Date().toISOString().slice(0, 10),
+      verification: sectionText,
+    },
+  };
+
+  try {
+    const result = await invokeBedrockValidation(
+      prompt,
+      payloadByType[sectionType],
+    );
+    circuit.recordSuccess();
+    return result;
+  } catch (err) {
+    circuit.recordFailure();
+    throw err;
+  }
+}
+
+module.exports = {
+  validateObservation,
+  validateCorrectiveSection,
+  validateNcmSection,
+};

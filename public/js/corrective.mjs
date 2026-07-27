@@ -268,13 +268,17 @@ function showValidationReview(sectionType, validation) {
 async function validateThenConfirm(sectionType, text) {
   try {
     const validation = await validateCorrectiveSection(sectionType, text);
-    if (!validation) return true;
-    return await showValidationReview(sectionType, validation);
+    if (!validation) {
+      return { shouldSave: true, validation: null };
+    }
+    const shouldSave = await showValidationReview(sectionType, validation);
+    return { shouldSave, validation };
   } catch (error) {
     console.error(`Validation failed for ${sectionType}:`, error);
-    return confirm(
+    const shouldSave = confirm(
       "AI validation is currently unavailable. Save anyway without scoring?",
     );
+    return { shouldSave, validation: null };
   }
 }
 
@@ -640,11 +644,11 @@ fetch(url, { method: "GET" })
               const trendValue = document
                 .getElementById("new-trend-text")
                 .value.trim();
-              const shouldSave = await validateThenConfirm(
+              const validationResult = await validateThenConfirm(
                 "NC_TREND",
                 trendValue,
               );
-              if (!shouldSave) return;
+              if (!validationResult.shouldSave) return;
 
               const trendUrl = `${apiUrl}/corrective/${caid}`;
               const response = await fetch(trendUrl, {
@@ -653,6 +657,10 @@ fetch(url, { method: "GET" })
                 body: JSON.stringify({
                   NC_TREND: trendValue,
                   MODIFIED_BY: user,
+                  AI_SECTION_TYPE: "NC_TREND",
+                  AI_VALIDATION: validationResult.validation,
+                  AI_PROMPT_VERSION: "v1",
+                  AI_MODEL_ID: "amazon.nova-pro-v1:0",
                 }),
               });
               if (!response.ok) {
@@ -759,11 +767,11 @@ fetch(url, { method: "GET" })
               let newcorrectiontext = document.getElementById(
                 "new-correction-text",
               ).value;
-              const shouldSave = await validateThenConfirm(
+              const validationResult = await validateThenConfirm(
                 "CORRECTION",
                 newcorrectiontext,
               );
-              if (!shouldSave) {
+              if (!validationResult.shouldSave) {
                 return;
               }
               let formatteddate = new Date()
@@ -787,6 +795,10 @@ fetch(url, { method: "GET" })
                   CORRECTION_TEXT: concatText,
                   ACTION_BY: newactioner,
                   MODIFIED_BY: user,
+                  AI_SECTION_TYPE: "CORRECTION",
+                  AI_VALIDATION: validationResult.validation,
+                  AI_PROMPT_VERSION: "v1",
+                  AI_MODEL_ID: "amazon.nova-pro-v1:0",
                 }),
               });
               if (!response.ok) {
@@ -853,11 +865,11 @@ fetch(url, { method: "GET" })
               let causetext = record[key]["CAUSE_TEXT"] || "";
               let newcausetext =
                 document.getElementById("new-cause-text").value;
-              const shouldSave = await validateThenConfirm(
+              const validationResult = await validateThenConfirm(
                 "CAUSE",
                 newcausetext,
               );
-              if (!shouldSave) {
+              if (!validationResult.shouldSave) {
                 return;
               }
               let formatteddate = new Date().toISOString();
@@ -883,6 +895,10 @@ fetch(url, { method: "GET" })
                   CAUSE_DATE: causeDate,
                   CAUSE_TEXT: concatText,
                   MODIFIED_BY: user,
+                  AI_SECTION_TYPE: "CAUSE",
+                  AI_VALIDATION: validationResult.validation,
+                  AI_PROMPT_VERSION: "v1",
+                  AI_MODEL_ID: "amazon.nova-pro-v1:0",
                 }),
               });
               if (!response.ok) {
@@ -957,11 +973,11 @@ fetch(url, { method: "GET" })
             let controltext = record[key]["CONTROL_TEXT"] || "";
             let newcontroltext =
               document.getElementById("new-control-text").value;
-            const shouldSave = await validateThenConfirm(
+            const validationResult = await validateThenConfirm(
               "SYSTEMIC_REMEDY",
               newcontroltext,
             );
-            if (!shouldSave) {
+            if (!validationResult.shouldSave) {
               return;
             }
             let formatteddate = new Date().toISOString();
@@ -993,6 +1009,10 @@ fetch(url, { method: "GET" })
                   CORR_ACTION_DATE: controlDate,
                   CONTROL_TEXT: concatText,
                   MODIFIED_BY: user,
+                  AI_SECTION_TYPE: "SYSTEMIC_REMEDY",
+                  AI_VALIDATION: validationResult.validation,
+                  AI_PROMPT_VERSION: "v1",
+                  AI_MODEL_ID: "amazon.nova-pro-v1:0",
                 }),
               });
               if (!response.ok) {

@@ -1,4 +1,4 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -170,6 +170,49 @@
           Save
         </button>
       </form>
+    </dialog>
+
+    <dialog id="validationReviewDialog" class="editDialog">
+      <div class="dialogTitle" id="validationReviewTitle">Quality Review</div>
+      <div style="grid-column: 1 / -1; padding: 0.75rem 1rem 0 1rem">
+        <div
+          style="
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            margin-bottom: 0.5rem;
+          "
+        >
+          <span
+            id="validationScore"
+            style="font-size: 1.4rem; font-weight: bold"
+          ></span>
+          <span
+            id="validationBadge"
+            style="
+              padding: 0.2rem 0.6rem;
+              border-radius: 12px;
+              font-size: 0.8rem;
+              font-weight: 600;
+            "
+          ></span>
+        </div>
+        <p id="validationSummary"></p>
+        <ul id="validationIssues"></ul>
+        <p id="validationFix" style="font-style: italic"></p>
+        <div style="display: flex; gap: 0.75rem; justify-content: flex-end">
+          <button type="button" class="btnDialog" id="validationRevise">
+            Revise
+          </button>
+          <button
+            type="button"
+            class="btnDialog dialogSaveBtn"
+            id="validationSaveAnyway"
+          >
+            Save Anyway
+          </button>
+        </div>
+      </div>
     </dialog>
 
     <main id="main"></main>

@@ -6,6 +6,10 @@ const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
 const { validateObservation } = require("../services/bedrockValidator");
+const {
+  persistAiValidationResult,
+  persistAiValidationHistory,
+} = require("../services/aiValidationStore");
 
 // ==================================================
 // Get all records
@@ -202,6 +206,41 @@ router.post("/", (req, res) => {
 // create observation record
 router.post("/obsn", async (req, res) => {
   const { AUDIT_MANAGER_ID, CHECKLIST_ID, OBSERVATION } = req.body;
+  const observationRecordId = `${AUDIT_MANAGER_ID}:${CHECKLIST_ID}`;
+
+  const persistObservationValidation = async ({
+    validation,
+    status = "SUCCESS",
+    errorMessage = null,
+    promptName = "manager_observation",
+    modelId = "amazon.nova-pro-v1:0",
+  }) => {
+    await persistAiValidationResult({
+      moduleType: "MANAGER_OBS",
+      recordId: observationRecordId,
+      sectionType: "OBSERVATION",
+      validation,
+      promptName,
+      promptVersion: "v1",
+      modelId,
+      validatedBy: "SYSTEM",
+      validationStatus: status,
+      errorMessage,
+    });
+
+    await persistAiValidationHistory({
+      moduleType: "MANAGER_OBS",
+      recordId: observationRecordId,
+      sectionType: "OBSERVATION",
+      validation,
+      promptName,
+      promptVersion: "v1",
+      modelId,
+      validatedBy: "SYSTEM",
+      validationStatus: status,
+      errorMessage,
+    });
+  };
 
   let connection;
   try {
@@ -242,7 +281,30 @@ router.post("/obsn", async (req, res) => {
 
     // Run Bedrock validation if a question exists and observation is non-empty
     let validation = null;
-    if (questionRows.length > 0 && OBSERVATION && OBSERVATION.trim()) {
+    // Short-circuit: if observation references a finding (CAR/OFI/DCR + 7-digit ID),
+    // the auditor documented a nonconformance — treat as fully complete (score 100).
+    const FINDING_REF_PATTERN = /\b(CAR|OFI|DCR)\s+\d{7}\b/i;
+    const isFindingReference = FINDING_REF_PATTERN.test(OBSERVATION || "");
+
+    if (isFindingReference && OBSERVATION && OBSERVATION.trim()) {
+      console.log(
+        `[obsn] Finding reference detected in CHECKLIST_ID ${CHECKLIST_ID}, skipping Bedrock — score 100.`,
+      );
+      validation = {
+        score: 100,
+        is_valid: true,
+        issues: [],
+        summary:
+          "Finding documented with traceable reference. Score set to 100.",
+        recommended_fix: "",
+      };
+      await persistObservationValidation({
+        validation,
+        status: "SUCCESS",
+        promptName: "manager_observation_finding_reference",
+        modelId: "rule-based:finding-reference",
+      });
+    } else if (questionRows.length > 0 && OBSERVATION && OBSERVATION.trim()) {
       console.log(
         `[obsn] Question found for CHECKLIST_ID ${CHECKLIST_ID}, calling Bedrock...`,
       );
@@ -251,38 +313,21 @@ router.post("/obsn", async (req, res) => {
           questionRows[0].QUESTION,
           OBSERVATION,
         );
-
-        // Persist validation result
-        const validConn = mysql.createConnection({
-          host: process.env.DB_HOST,
-          user: process.env.DB_USER,
-          password: process.env.DB_PASS,
-          port: 3306,
-          database: "quality",
-        });
-        await new Promise((resolve, reject) => {
-          validConn.connect((err) => (err ? reject(err) : resolve()));
-        });
-        await new Promise((resolve, reject) => {
-          validConn.query(
-            `UPDATE AUDT_CHKL_OBSN
-             SET AI_SCORE = ?, AI_VALID = ?, AI_ISSUES = ?, AI_SUMMARY = ?, AI_FIX = ?, AI_VALIDATED_AT = NOW()
-             WHERE AUDIT_MANAGER_ID = ? AND CHECKLIST_ID = ?`,
-            [
-              validation.score,
-              validation.is_valid ? 1 : 0,
-              JSON.stringify(validation.issues),
-              validation.summary,
-              validation.recommended_fix,
-              AUDIT_MANAGER_ID,
-              CHECKLIST_ID,
-            ],
-            (err) => (err ? reject(err) : resolve()),
-          );
-        });
-        validConn.end();
+        await persistObservationValidation({ validation, status: "SUCCESS" });
       } catch (bedrockErr) {
         console.error("[obsn] Bedrock validation error:", bedrockErr.message);
+        try {
+          await persistObservationValidation({
+            validation: null,
+            status: "FAILED",
+            errorMessage: bedrockErr.message,
+          });
+        } catch (persistErr) {
+          console.error(
+            "[obsn] Failed to persist FAILED validation status:",
+            persistErr.message,
+          );
+        }
         // Non-fatal — save still succeeded
       }
     } else {

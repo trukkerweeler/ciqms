@@ -4,6 +4,11 @@ const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
+const { validateNcmSection } = require("../services/bedrockValidator");
+const {
+  persistAiValidationResult,
+  persistAiValidationHistory,
+} = require("../services/aiValidationStore");
 let test = false;
 
 // Debug flag - enable with DEBUG_NCM=true
@@ -826,6 +831,34 @@ router.get("/test", (req, res) => {
   });
 });
 
+// Validate NCM section text with section-specific prompts
+router.post("/validate-section", async (req, res) => {
+  const { sectionType, text } = req.body;
+  const validTypes = ["DESCRIPTION", "DISPOSITION", "VERIFICATION"];
+
+  if (!validTypes.includes(sectionType)) {
+    return res.status(400).json({
+      error:
+        "Invalid sectionType. Use one of: DESCRIPTION, DISPOSITION, VERIFICATION",
+    });
+  }
+
+  if (!text || !text.trim()) {
+    return res.json({ validation: null, skipped: true, reason: "empty_text" });
+  }
+
+  try {
+    const validation = await validateNcmSection(sectionType, text);
+    res.json({ validation });
+  } catch (err) {
+    console.error(
+      `[ncm.validate-section] Validation error for ${sectionType}:`,
+      err.message,
+    );
+    res.json({ validation: null, error: "validation_failed" });
+  }
+});
+
 // ==================================================
 // Get a single record
 router.get("/:id", (req, res) => {
@@ -970,11 +1003,59 @@ router.put("/:id", (req, res) => {
           return;
         }
         const response = { data: rows };
-        if (req.capsWarning) {
-          response.warning =
-            "All caps is considered YELLING in professional communication. Please use normal capitalization.";
+
+        const sectionByTable = {
+          NCM_DESCRIPTION: "DESCRIPTION",
+          NCM_DISPOSITION: "DISPOSITION",
+          NCM_VERIFICATION: "VERIFICATION",
+        };
+        const promptBySection = {
+          DESCRIPTION: "ncm_description",
+          DISPOSITION: "ncm_disposition",
+          VERIFICATION: "ncm_verification",
+        };
+
+        const sectionType =
+          req.body.AI_SECTION_TYPE || sectionByTable[mytable] || null;
+        const validation = req.body.AI_VALIDATION || null;
+
+        const sendResponse = () => {
+          if (req.capsWarning) {
+            response.warning =
+              "All caps is considered YELLING in professional communication. Please use normal capitalization.";
+          }
+          res.json(response);
+        };
+
+        if (sectionType && validation) {
+          const persistPayload = {
+            moduleType: "NCM",
+            recordId: req.params.id,
+            sectionType,
+            validation,
+            promptName: promptBySection[sectionType] || "ncm_generic",
+            promptVersion: req.body.AI_PROMPT_VERSION || "v1",
+            modelId: req.body.AI_MODEL_ID || "amazon.nova-pro-v1:0",
+            validatedBy: req.body.MODIFIED_BY || req.body.PEOPLE_ID || "SYSTEM",
+            validationStatus: "SUCCESS",
+            errorMessage: null,
+          };
+
+          Promise.all([
+            persistAiValidationResult(persistPayload),
+            persistAiValidationHistory(persistPayload),
+          ])
+            .catch((persistErr) => {
+              console.error(
+                `[ncm.persist] Failed to persist AI validation for ${req.params.id}/${sectionType}:`,
+                persistErr.message,
+              );
+            })
+            .finally(sendResponse);
+          return;
         }
-        res.json(response);
+
+        sendResponse();
       });
 
       connection.end();
