@@ -32,6 +32,12 @@ function logCreateValidationDiagnostic(status, details = {}) {
   if (details.message) {
     console.log("message:", details.message);
   }
+  if (details.serverReason) {
+    console.log("serverReason:", details.serverReason);
+  }
+  if (details.serverDetail) {
+    console.log("serverDetail:", details.serverDetail);
+  }
   if (details.payload) {
     console.log("payload:", details.payload);
   }
@@ -101,8 +107,11 @@ async function validateCreateDescription(text) {
 
   if (payload?.error) {
     logCreateValidationDiagnostic("failed", {
-      reason: payload.error,
+      reason: payload.error_reason || payload.error,
       endpoint,
+      serverReason: payload.error_reason || "validation_failed",
+      serverDetail: payload.error_detail || "No server detail provided",
+      message: "Validation endpoint returned an application-level failure.",
       payload,
     });
     return null;

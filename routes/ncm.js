@@ -831,6 +831,38 @@ router.get("/test", (req, res) => {
   });
 });
 
+function classifyValidationError(err) {
+  const message = (err?.message || "").toLowerCase();
+  const statusCode = err?.$metadata?.httpStatusCode;
+
+  if (message.includes("unsupported ncm section type")) {
+    return "unsupported_section_type";
+  }
+  if (message.includes("security token") || message.includes("token")) {
+    return "aws_token_invalid";
+  }
+  if (message.includes("access key") || message.includes("secret access key")) {
+    return "aws_credentials_missing_or_invalid";
+  }
+  if (message.includes("credential") || message.includes("credentials")) {
+    return "aws_credentials_resolution_failed";
+  }
+  if (message.includes("region") || message.includes("signature")) {
+    return "aws_region_or_signature_error";
+  }
+  if (statusCode === 403) {
+    return "bedrock_access_denied";
+  }
+  if (statusCode === 429) {
+    return "bedrock_rate_limited";
+  }
+  if (statusCode >= 500) {
+    return "bedrock_service_error";
+  }
+
+  return "validation_exception";
+}
+
 // Validate NCM section text with section-specific prompts
 router.post("/validate-section", async (req, res) => {
   const { sectionType, text } = req.body;
@@ -849,13 +881,30 @@ router.post("/validate-section", async (req, res) => {
 
   try {
     const validation = await validateNcmSection(sectionType, text);
+    if (!validation) {
+      const reason =
+        process.env.AI_VALIDATION === "off"
+          ? "ai_validation_disabled"
+          : "validator_unavailable";
+      return res.json({ validation: null, skipped: true, reason });
+    }
     res.json({ validation });
   } catch (err) {
+    const errorReason = classifyValidationError(err);
+    const errorDetail = err?.message
+      ? String(err.message).slice(0, 240)
+      : "Unknown validation error";
+
     console.error(
       `[ncm.validate-section] Validation error for ${sectionType}:`,
       err.message,
     );
-    res.json({ validation: null, error: "validation_failed" });
+    res.json({
+      validation: null,
+      error: "validation_failed",
+      error_reason: errorReason,
+      error_detail: errorDetail,
+    });
   }
 });
 
