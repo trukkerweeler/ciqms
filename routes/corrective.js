@@ -4,7 +4,10 @@ const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
-const { validateCorrectiveSection } = require("../services/bedrockValidator");
+const {
+  validateCorrectiveSection,
+  getAiValidationModelId,
+} = require("../services/bedrockValidator");
 const {
   persistAiValidationResult,
   persistAiValidationHistory,
@@ -1209,7 +1212,7 @@ router.put("/:id", (req, res) => {
             validation,
             promptName: promptBySection[sectionType] || "corrective_generic",
             promptVersion: req.body.AI_PROMPT_VERSION || "v1",
-            modelId: req.body.AI_MODEL_ID || "amazon.nova-pro-v1:0",
+            modelId: getAiValidationModelId(req.body.AI_MODEL_ID),
             validatedBy: req.body.MODIFIED_BY || "SYSTEM",
             validationStatus: "SUCCESS",
             errorMessage: null,

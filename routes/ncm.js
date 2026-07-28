@@ -4,7 +4,10 @@ const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
 const fs = require("fs");
 const path = require("path");
-const { validateNcmSection } = require("../services/bedrockValidator");
+const {
+  validateNcmSection,
+  getAiValidationModelId,
+} = require("../services/bedrockValidator");
 const {
   persistAiValidationResult,
   persistAiValidationHistory,
@@ -859,6 +862,13 @@ function classifyValidationError(err) {
   if (statusCode >= 500) {
     return "bedrock_service_error";
   }
+  if (
+    message.includes("inference profile") ||
+    message.includes("throughput isn\u2019t supported") ||
+    message.includes("throughput isn't supported")
+  ) {
+    return "bedrock_inference_profile_required";
+  }
 
   return "validation_exception";
 }
@@ -1084,7 +1094,7 @@ router.put("/:id", (req, res) => {
             validation,
             promptName: promptBySection[sectionType] || "ncm_generic",
             promptVersion: req.body.AI_PROMPT_VERSION || "v1",
-            modelId: req.body.AI_MODEL_ID || "amazon.nova-pro-v1:0",
+            modelId: getAiValidationModelId(req.body.AI_MODEL_ID),
             validatedBy: req.body.MODIFIED_BY || req.body.PEOPLE_ID || "SYSTEM",
             validationStatus: "SUCCESS",
             errorMessage: null,

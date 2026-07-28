@@ -38,6 +38,46 @@ console.log(
   `[ENV] AWS_ACCESS_KEY_ID: ${maskSecret(process.env.AWS_ACCESS_KEY_ID)}`,
 );
 console.log(`[ENV] AWS_REGION: ${process.env.AWS_REGION || "(missing)"}`);
+const aiBedrockInferenceProfileArn =
+  process.env.AI_BEDROCK_INFERENCE_PROFILE_ARN || "";
+const bedrockInferenceProfileArn =
+  process.env.BEDROCK_INFERENCE_PROFILE_ARN || "";
+const aiModelId = process.env.AI_MODEL_ID || "";
+const bedrockModelId = process.env.BEDROCK_MODEL_ID || "";
+
+const bedrockModelSource = aiBedrockInferenceProfileArn
+  ? "AI_BEDROCK_INFERENCE_PROFILE_ARN"
+  : bedrockInferenceProfileArn
+    ? "BEDROCK_INFERENCE_PROFILE_ARN"
+    : aiModelId
+      ? "AI_MODEL_ID"
+      : bedrockModelId
+        ? "BEDROCK_MODEL_ID"
+        : "legacy_default_model_id";
+
+const selectedBedrockModelTarget =
+  aiBedrockInferenceProfileArn ||
+  bedrockInferenceProfileArn ||
+  aiModelId ||
+  bedrockModelId ||
+  "amazon.nova-pro-v1:0";
+
+console.log(
+  `[ENV] AI_BEDROCK_INFERENCE_PROFILE_ARN: ${
+    aiBedrockInferenceProfileArn ? "(set)" : "(missing)"
+  }`,
+);
+console.log(
+  `[ENV] BEDROCK_INFERENCE_PROFILE_ARN: ${
+    bedrockInferenceProfileArn ? "(set)" : "(missing)"
+  }`,
+);
+console.log(`[ENV] AI_MODEL_ID: ${aiModelId ? "(set)" : "(missing)"}`);
+console.log(
+  `[ENV] BEDROCK_MODEL_ID: ${bedrockModelId ? "(set)" : "(missing)"}`,
+);
+console.log(`[ENV] BEDROCK_MODEL_SOURCE: ${bedrockModelSource}`);
+console.log(`[ENV] BEDROCK_MODEL_TARGET: ${selectedBedrockModelTarget}`);
 console.log(`[ENV] CWD: ${process.cwd()}`);
 console.log(`[ENV] LOG_ROUTES_VERBOSE: ${LOG_ROUTES_VERBOSE}`);
 console.log(`[ENV] LOG_REQUESTS: ${LOG_REQUESTS}`);
@@ -221,6 +261,29 @@ app.get("/api/config", (req, res) => {
   }
 
   res.json({ apiUrl });
+});
+
+// Runtime diagnostics endpoint for deployment troubleshooting.
+app.get("/health/runtime", (req, res) => {
+  res.json({
+    status: "ok",
+    timestamp: new Date().toISOString(),
+    environment: nodeEnv,
+    host: os.hostname(),
+    pid: process.pid,
+    uptimeSeconds: Math.floor(process.uptime()),
+    port: {
+      configured: process.env.PORT || null,
+      effective: port,
+    },
+    bedrock: {
+      modelSource: bedrockModelSource,
+      modelTarget: selectedBedrockModelTarget,
+      inferenceProfileConfigured: Boolean(
+        aiBedrockInferenceProfileArn || bedrockInferenceProfileArn,
+      ),
+    },
+  });
 });
 
 // Autoload routes from the routes directory

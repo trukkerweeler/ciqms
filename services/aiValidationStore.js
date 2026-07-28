@@ -1,4 +1,5 @@
 const mysql = require("mysql2/promise");
+const { getAiValidationModelId } = require("./bedrockValidator");
 
 function mapValidationToColumns(validation) {
   const score = validation?.score ?? null;
@@ -30,7 +31,7 @@ async function persistAiValidationResult({
   validation,
   promptName,
   promptVersion = "v1",
-  modelId = "amazon.nova-pro-v1:0",
+  modelId = getAiValidationModelId(),
   validatedBy = "SYSTEM",
   validationStatus = "SUCCESS",
   errorMessage = null,
@@ -110,7 +111,7 @@ async function persistAiValidationHistory({
   validation,
   promptName,
   promptVersion = "v1",
-  modelId = "amazon.nova-pro-v1:0",
+  modelId = getAiValidationModelId(),
   validatedBy = "SYSTEM",
   validationStatus = "SUCCESS",
   errorMessage = null,

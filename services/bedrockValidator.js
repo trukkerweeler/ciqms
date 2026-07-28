@@ -10,6 +10,48 @@ const {
 // ---------------------------------------------------------------------------
 const FAILURE_THRESHOLD = 3;
 const COOLDOWN_MS = 10 * 60 * 1000; // 10 minutes
+const LEGACY_DEFAULT_MODEL_ID = "amazon.nova-pro-v1:0";
+let hasLoggedModelSelection = false;
+
+function getAiValidationModelId(overrideModelId) {
+  let selectedModelId = overrideModelId;
+  let source = "override";
+
+  if (!selectedModelId) {
+    selectedModelId = process.env.AI_BEDROCK_INFERENCE_PROFILE_ARN;
+    source = "AI_BEDROCK_INFERENCE_PROFILE_ARN";
+  }
+  if (!selectedModelId) {
+    selectedModelId = process.env.BEDROCK_INFERENCE_PROFILE_ARN;
+    source = "BEDROCK_INFERENCE_PROFILE_ARN";
+  }
+  if (!selectedModelId) {
+    selectedModelId = process.env.AI_MODEL_ID;
+    source = "AI_MODEL_ID";
+  }
+  if (!selectedModelId) {
+    selectedModelId = process.env.BEDROCK_MODEL_ID;
+    source = "BEDROCK_MODEL_ID";
+  }
+  if (!selectedModelId) {
+    selectedModelId = LEGACY_DEFAULT_MODEL_ID;
+    source = "legacy_default_model_id";
+  }
+
+  if (!hasLoggedModelSelection) {
+    if (source === "legacy_default_model_id") {
+      console.warn(
+        "[bedrock] Using legacy model ID fallback. Set AI_BEDROCK_INFERENCE_PROFILE_ARN (preferred) or BEDROCK_INFERENCE_PROFILE_ARN for Nova Pro.",
+      );
+    }
+    console.log(
+      `[bedrock] Using model/inference profile from ${source}: ${selectedModelId}`,
+    );
+    hasLoggedModelSelection = true;
+  }
+
+  return String(selectedModelId).trim();
+}
 
 const circuit = {
   failures: 0,
@@ -370,7 +412,7 @@ Evaluate strictly against the rules above.
 Always return JSON.`,
 
   DISPOSITION: `You are an AS9100/ISO 9001 Nonconformance Disposition Validator.
-Your job is to evaluate whether the DISPOSITION text describes complete and traceable containment/disposition actions.
+  Your job is to evaluate whether the DISPOSITION text describes a clear and traceable disposition decision for affected product.
 
 Return ONLY valid JSON in the schema below.
 
@@ -378,17 +420,39 @@ Return ONLY valid JSON in the schema below.
 
 ### VALIDATION RULES
 
-1. Immediate Disposition Action
-   - Must state what happened to affected product (scrap, rework, use-as-is, return, segregate, etc.).
+  1. Disposition Type (Required)
+    - Must explicitly state one primary disposition outcome for affected product:
+      REWORK, REPAIR, USE-AS-IS, SCRAP, or RETURN.
+    - Equivalent wording is acceptable if the intent is unambiguous.
 
-2. Objective Evidence
-   - Must include factual evidence of the action taken.
+  2. Future-State Language Is Acceptable Here
+    - DISPOSITION may describe planned or pending action (future state).
+    - Do NOT penalize future-tense wording by itself in this section.
+    - Evaluate whether the decision and execution plan are clear and controlled.
 
-3. Specificity
-   - Must include who acted, when, and what quantity/units were affected where applicable.
+  3. Evidence Standard For Disposition
+    - The evidence threshold is lower than verification/completion sections.
+    - Accept either:
+      a) completed disposition evidence, OR
+      b) controlled planned disposition evidence (who/authority, when/date target, and scope/quantity).
 
-4. Traceability
+  4. Specificity
+    - Should include responsible role/person, timing/date (actual or target), and affected quantity/units where applicable.
+
+  5. Traceability
    - Must reference part/lot/PO/work order or other records where available.
+
+  6. Alignment
+    - Disposition must be appropriate to the described nonconformance and not contradictory.
+
+  ---
+
+  ### SCORING GUIDANCE (0-100)
+
+  - 0-30: No clear disposition type, or contradictory/unclear decision.
+  - 31-60: Disposition type present but missing key control details (owner/date/scope/traceability).
+  - 61-80: Clear disposition type with mostly complete planned/completed details; minor gaps.
+  - 81-100: Clear, controlled, traceable disposition with strong specificity and alignment.
 
 ---
 
@@ -464,7 +528,9 @@ Evaluate strictly against the rules above.
 Always return JSON.`,
 };
 
-async function invokeBedrockValidation(systemPrompt, payload) {
+async function invokeBedrockValidation(systemPrompt, payload, options = {}) {
+  const modelId = getAiValidationModelId(options.modelId);
+
   const client = new BedrockRuntimeClient({
     region: process.env.AWS_REGION || "us-east-1",
     credentials: {
@@ -474,7 +540,7 @@ async function invokeBedrockValidation(systemPrompt, payload) {
   });
 
   const command = new InvokeModelCommand({
-    modelId: "amazon.nova-pro-v1:0",
+    modelId,
     contentType: "application/json",
     accept: "application/json",
     body: JSON.stringify({
@@ -626,4 +692,5 @@ module.exports = {
   validateObservation,
   validateCorrectiveSection,
   validateNcmSection,
+  getAiValidationModelId,
 };

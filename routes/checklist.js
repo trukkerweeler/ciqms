@@ -5,7 +5,10 @@
 const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
-const { validateObservation } = require("../services/bedrockValidator");
+const {
+  validateObservation,
+  getAiValidationModelId,
+} = require("../services/bedrockValidator");
 const {
   persistAiValidationResult,
   persistAiValidationHistory,
@@ -213,7 +216,7 @@ router.post("/obsn", async (req, res) => {
     status = "SUCCESS",
     errorMessage = null,
     promptName = "manager_observation",
-    modelId = "amazon.nova-pro-v1:0",
+    modelId = getAiValidationModelId(),
   }) => {
     await persistAiValidationResult({
       moduleType: "MANAGER_OBS",
