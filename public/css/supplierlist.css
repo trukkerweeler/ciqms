@@ -1,39 +1,8 @@
 /* Supplierlist.html Stylesheet */
 
-/* Override body styles from styles.css */
-body {
-  display: flex;
-  flex-direction: column;
-  min-height: 100vh;
-  margin: 0;
-  overflow-x: visible !important;
-}
-
-html {
-  height: 100%;
-}
-
-#header {
-  flex-shrink: 0;
-}
-
-.recordsaddrecordheading {
-  flex-shrink: 0;
-  padding: 15px 20px;
-}
-
 .recordsaddrecordheading h1 {
   white-space: nowrap;
   margin: 0;
-}
-
-main {
-  flex-shrink: 0;
-  height: 60vh;
-  overflow-y: auto;
-  padding: 0 !important;
-  margin-bottom: 1rem;
-  display: block !important;
 }
 
 main table {
@@ -43,11 +12,24 @@ main table {
   margin-right: 0.5rem !important;
 }
 
-footer {
-  flex-shrink: 0;
-  position: relative !important;
-  bottom: auto !important;
-  width: auto !important;
+main .table-container th.col-supplier-id,
+main .table-container td.col-supplier-id {
+  width: 10rem;
+}
+
+main .table-container th.col-name,
+main .table-container td.col-name {
+  width: 18rem;
+}
+
+main .table-container th.col-city,
+main .table-container td.col-city {
+  width: 7rem;
+}
+
+main .table-container th.col-expiry-date,
+main .table-container td.col-expiry-date {
+  width: 6rem;
 }
 
 @media print {
@@ -71,5 +53,10 @@ footer {
     height: auto !important;
     overflow: visible !important;
     overflow-y: visible !important;
+  }
+
+  main .table-container th,
+  main .table-container td {
+    font-size: 1.1rem;
   }
 }

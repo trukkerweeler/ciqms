@@ -4,18 +4,27 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Calibrations</title>
-    <link rel="stylesheet" href="css/stylescal.css" />
     <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/stylescal.css" />
     <link rel="icon" href="./images/ci-logo.png" />
   </head>
-  <body>
+  <body class="list-page">
     <header id="header"></header>
-    <nav></nav>
-    <div id="calibrationFilter">
+    <div class="recordsaddrecordheading">
+      <h1 id="calibrationPageTitle">All Calibrations</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="btnAddCal"
+        title="Add Calibration"
+      >
+        +
+      </button>
+    </div>
+    <div id="calibrationFilter" class="filter-bar">
       <label for="calibrationSearch">Filter by any field:</label>
       <input type="text" id="calibrationSearch" />
     </div>
-    <main id="main-content">
+    <main id="main">
       <dialog create-calibration-dialog class="dialog">
         <form id="create-calibration-form">
           <h2 id="create-cal-header"></h2>
@@ -35,14 +44,10 @@
             <option value="C">Customer</option>
           </select>
 
-          <label for="supplier-id">Supplier ID:</label>
-          <input
-            type="text"
-            id="supplier-id"
-            name="SUPPLIER_ID"
-            style="text-transform: uppercase"
-            required
-          />
+          <label for="supplier-id">Supplier:</label>
+          <select id="supplier-id" name="SUPPLIER_ID" required>
+            <option value="">-- Select Supplier --</option>
+          </select>
 
           <label for="employee-id">Employee ID:</label>
           <input

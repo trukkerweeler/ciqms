@@ -430,17 +430,33 @@ router.post("/inputs_notify", (req, res) => {
       }
       // Support both direct and nested (data) payloads
       const data = req.body.data ? req.body.data : req.body;
-      const { INPUT_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SUBJECT, BODY, ACTION } =
-        data;
+      const {
+        INPUT_ID,
+        ASSIGNED_TO,
+        RECIPIENT_EMAIL,
+        SUBJECT,
+        BODY,
+        ACTION,
+        EMAIL_STATUS,
+        ERROR_MESSAGE,
+      } = data;
 
       // Map ACTION to EMAIL_TYPE
       const emailTypeMap = { A: "ASSIGNMENT", C: "CLOSEOUT", R: "REQUEST" };
       const emailType = emailTypeMap[ACTION] || ACTION;
+      const normalizedStatus =
+        (EMAIL_STATUS || "SENT").toString().toUpperCase() === "FAILED"
+          ? "FAILED"
+          : "SENT";
 
       const emailNotes =
         SUBJECT && BODY
           ? `Subject: ${SUBJECT}\n\nBody: ${BODY}`
           : `Input notification - Action: ${ACTION}`;
+      const notesWithError =
+        normalizedStatus === "FAILED" && ERROR_MESSAGE
+          ? `${emailNotes}\n\nError: ${ERROR_MESSAGE}`
+          : emailNotes;
 
       const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)`;
       const values = [
@@ -448,9 +464,9 @@ router.post("/inputs_notify", (req, res) => {
         INPUT_ID,
         ASSIGNED_TO,
         RECIPIENT_EMAIL || null,
-        "SENT",
+        normalizedStatus,
         emailType,
-        emailNotes,
+        notesWithError,
       ];
 
       connection.query(query, values, (err) => {

@@ -15,16 +15,15 @@
     <link rel="icon" href="images/ci-logo.png" />
     <title>To-Do (CIQMS)</title>
   </head>
-  <body>
+  <body class="list-page">
     <header id="header"></header>
     <h1>To Do's</h1>
-    <form>
-      <label for="ASSIGNED_TO">Enter Person Id:</label>
-      <input type="text" name="search" id="ASSIGNED_TO" />
-      <button type="submit" id="todoButton">Search</button>
+    <form class="filter-bar">
+      <label for="ASSIGNED_TO">Person:</label>
+      <select name="search" id="ASSIGNED_TO"></select>
     </form>
 
-    <div class="filter-container">
+    <div class="filter-container filter-bar">
       <fieldset class="dateRange-filter">
         <legend>Due Date Range</legend>
         <label>
@@ -65,7 +64,6 @@
         </label>
       </fieldset>
     </div>
-    <p></p>
 
     <main id="main"></main>
 

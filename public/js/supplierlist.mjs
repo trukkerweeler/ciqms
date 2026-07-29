@@ -165,9 +165,7 @@ function displaySupplierListTable(data) {
   // Create table container for scrolling
   const tableContainer = document.createElement("div");
   tableContainer.setAttribute("class", "table-container");
-  tableContainer.style.maxHeight = "calc(80vh - 80px)";
-  tableContainer.style.overflowY = "auto";
-  tableContainer.style.marginBottom = "2rem";
+  tableContainer.style.marginTop = "6px";
 
   const table = document.createElement("table");
   table.className = "data-table";
@@ -198,6 +196,8 @@ function displaySupplierListTable(data) {
 
   headers.forEach((header, index) => {
     const th = document.createElement("th");
+    const columnClass = `col-${columnKeys[index].toLowerCase().replace(/_/g, "-")}`;
+    th.classList.add(columnClass);
     th.textContent = header;
     th.style.cursor = "pointer";
     th.addEventListener("click", () => sortTable(index));
@@ -247,8 +247,10 @@ function displaySupplierListTable(data) {
       cells.push(cellContent);
     }
 
-    cells.forEach((cellContent) => {
+    cells.forEach((cellContent, index) => {
       const td = document.createElement("td");
+      const columnClass = `col-${columnKeys[index].toLowerCase().replace(/_/g, "-")}`;
+      td.classList.add(columnClass);
       td.textContent = cellContent;
       row.appendChild(td);
     });
@@ -258,7 +260,8 @@ function displaySupplierListTable(data) {
 
   table.appendChild(tbody);
   main.innerHTML = "";
-  main.appendChild(table);
+  tableContainer.appendChild(table);
+  main.appendChild(tableContainer);
 }
 
 function formatFieldName(fieldName) {

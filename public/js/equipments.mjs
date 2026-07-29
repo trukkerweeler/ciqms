@@ -174,6 +174,11 @@ if (!addEquipmentBtn) {
 }
 
 function getRecords() {
+  const existingTableContainer = mainElement.querySelector(".table-container");
+  if (existingTableContainer) {
+    existingTableContainer.remove();
+  }
+
   fetch(equipmentUrl, {
     method: "GET",
     headers: {
@@ -205,14 +210,28 @@ function getRecords() {
       ];
 
       let tableContainer = document.createElement("div");
-      tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling
       tableContainer.className = "table-container";
-      tableContainer.style.maxHeight = "calc(75vh - 60px)"; // Adjusted for filter
-      tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
-      tableContainer.style.marginBottom = "2rem";
+      tableContainer.style.marginTop = "6px";
 
-      let equipmentTableTemplate = `<table class="table table-striped table-bordered table-hover" id="equipmentTable" style="margin-bottom: 0;">`;
-      equipmentTableTemplate += `<thead style="position: sticky; top: 0; background-color: #f8f9fa; z-index: 10;"><tr>`;
+      const equipmentColumnWidths = [
+        "10%", // EQUIPMENT_ID
+        "20%", // NAME
+        "12%", // EQUIPMENT_TYPE
+        "10%", // ASSIGNED_TO
+        "10%", // CUSTOMER_ID
+        "9%", // STATUS
+        "11%", // MAJOR_LOCATION
+        "10%", // MINOR_LOCATION
+        "8%", // WARRANTY_DATE
+      ];
+
+      let equipmentTableTemplate = `<table class="data-table" id="equipmentTable" style="margin-bottom: 0;">`;
+      equipmentTableTemplate += `<colgroup>`;
+      for (const width of equipmentColumnWidths) {
+        equipmentTableTemplate += `<col style="width: ${width};">`;
+      }
+      equipmentTableTemplate += `</colgroup>`;
+      equipmentTableTemplate += `<thead style="position: sticky; top: 0; z-index: 10;"><tr>`;
       for (const field of myFields) {
         equipmentTableTemplate += `<th>${field}</th>`;
       }
@@ -231,7 +250,7 @@ function getRecords() {
       const filterInput = document.getElementById("equipmentName");
       const tableBody = document.getElementById("equipmentTableBody");
 
-      filterInput.addEventListener("input", () => {
+      filterInput.oninput = () => {
         const filterValue = filterInput.value.toLowerCase();
         const filteredData = data.filter((equipment) =>
           myFields.some((field) =>
@@ -245,7 +264,7 @@ function getRecords() {
         tableBody.innerHTML = filteredData
           .map((equipment) => generateTableRow(equipment, myFields))
           .join("");
-      });
+      };
     })
     .catch((error) => {
       console.error("Error fetching equipment:", error);

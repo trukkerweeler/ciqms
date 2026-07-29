@@ -1,9 +1,20 @@
 /* Todo page specific styling */
 
+h1 {
+  flex-shrink: 0;
+  margin: 0 0.5rem;
+}
+
+form.filter-bar {
+  margin-bottom: 0;
+  padding-top: 0;
+  padding-bottom: 0;
+}
+
 .filter-container {
   display: flex;
   gap: 0.65rem;
-  margin-top: 0.5rem;
+  margin-top: 0;
   flex-wrap: wrap;
   align-items: flex-start;
 }

@@ -5,6 +5,7 @@ loadHeaderFooter();
 let calibrationUrl = "";
 let idsUrl = "";
 let deviceUrl = "";
+let suppliersUrl = "";
 
 // Wait for DOM and fetch API URL before anything else
 document.addEventListener("DOMContentLoaded", async () => {
@@ -12,13 +13,24 @@ document.addEventListener("DOMContentLoaded", async () => {
   calibrationUrl = `${apiUrl}/calibrate`;
   idsUrl = `${apiUrl}/ids`;
   deviceUrl = `${apiUrl}/device/nextdue`;
+  suppliersUrl = `${apiUrl}/suppliers`;
+
+  // Populate supplier dropdown
+  fetch(suppliersUrl)
+    .then((res) => res.json())
+    .then((suppliers) => {
+      const select = document.getElementById("supplier-id");
+      suppliers.forEach((s) => {
+        const opt = document.createElement("option");
+        opt.value = s.SUPPLIER_ID;
+        opt.textContent = `${s.SUPPLIER_ID} - ${s.NAME}`;
+        select.appendChild(opt);
+      });
+    })
+    .catch((err) => console.error("Error loading suppliers:", err));
 
   const user = await getSessionUser();
-  const mainElement = document.getElementById("main-content");
-
-  // Constrain main element height to prevent overflow
-  mainElement.style.maxHeight = "calc(100vh - 250px)";
-  mainElement.style.overflowY = "auto";
+  const mainElement = document.getElementById("main");
 
   // read the id from the URL
   const urlParams = new URLSearchParams(window.location.search);
@@ -35,36 +47,22 @@ document.addEventListener("DOMContentLoaded", async () => {
     console.error("Header element with id 'create-cal-header' not found.");
   }
 
-  // Make the page header div
-  function makePageHeaderDiv() {
-    const divTitle = document.createElement("div");
-    divTitle.classList.add("page-header-div");
-    const pageTitle = document.createElement("h1");
-    pageTitle.classList.add("page-header");
-    if (id) {
-      pageTitle.innerHTML = "Calibrations List: " + id;
-    } else {
-      pageTitle.innerHTML = "All Calibrations";
-    }
-    divTitle.appendChild(pageTitle);
-    // Add the button to the header div
-    let AddCalBtn = document.createElement("button");
-    AddCalBtn.type = "submit";
-    AddCalBtn.classList.add("btn", "btn-plus");
-    AddCalBtn.id = "btnAddCal";
-    AddCalBtn.textContent = "+ Add Cal";
+  const pageTitle = document.getElementById("calibrationPageTitle");
+  if (pageTitle) {
+    pageTitle.textContent = id
+      ? `Calibrations List: ${id}`
+      : "All Calibrations";
+  }
 
-    AddCalBtn.setAttribute("title", "Click to add a new calibration");
-
-    // Add event listener to the Add Cal button immediately when creating it
-    AddCalBtn.addEventListener("click", (e) => {
+  const addCalBtn = document.getElementById("btnAddCal");
+  if (addCalBtn) {
+    addCalBtn.addEventListener("click", (e) => {
       e.preventDefault();
       const createCalibrationDialog = document.querySelector(
         "[create-calibration-dialog]",
       );
       const deviceIdField = document.getElementById("device-id");
 
-      // If we have a device ID from the URL, pre-populate the field
       if (id && deviceIdField) {
         deviceIdField.value = id;
       }
@@ -77,21 +75,14 @@ document.addEventListener("DOMContentLoaded", async () => {
         );
       }
     });
-
-    divTitle.appendChild(AddCalBtn);
-    mainElement.appendChild(divTitle);
   }
-  makePageHeaderDiv();
 
   function getRecords() {
-    // Clear the main element
-    Array.from(mainElement.children).forEach((child) => {
-      if (!child.hasAttribute("create-calibration-dialog")) {
-        mainElement.removeChild(child);
-      }
-    });
-    // Create the header div again
-    makePageHeaderDiv();
+    const existingTableContainer =
+      mainElement.querySelector(".table-container");
+    if (existingTableContainer) {
+      existingTableContainer.remove();
+    }
 
     // Determine the URL to fetch from based on whether we have a device ID
     const fetchUrl = id ? `${calibrationUrl}/${id}` : calibrationUrl;
@@ -120,25 +111,17 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Create a scrollable container for the table
         let tableContainer = document.createElement("div");
         tableContainer.className = "table-container";
-        // Calculate height accounting for filter input and header
-        tableContainer.style.maxHeight = "calc(100% - 100px)"; // Fit within constrained main element
-        tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
-        tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling if needed
-        tableContainer.style.border = "1px solid #ddd"; // Add border for better visual separation
-        tableContainer.style.borderRadius = "4px"; // Add rounded corners
-        tableContainer.style.marginTop = "10px"; // Add some top margin
-        tableContainer.style.marginBottom = "20px"; // Add bottom margin
+        tableContainer.style.marginTop = "6px";
 
         let table = document.createElement("table");
-        table.className = "table table-striped table-bordered table-hover";
+        table.className = "data-table";
         table.style.marginBottom = "0"; // Remove default table margin
 
         // Create table header
         let thead = document.createElement("thead");
-        thead.style.position = "sticky"; // Make header sticky
-        thead.style.top = "0"; // Stick to top of container
-        thead.style.backgroundColor = "#f8f9fa"; // Light background for header
-        thead.style.zIndex = "10"; // Ensure header stays on top
+        thead.style.position = "sticky";
+        thead.style.top = "0";
+        thead.style.zIndex = "10";
 
         let headerRow = document.createElement("tr");
         myFields.forEach((field, index) => {

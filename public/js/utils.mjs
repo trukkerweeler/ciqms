@@ -307,6 +307,7 @@ export async function createNotesSection(
   sectionId = null,
   dateValue = null,
   byValue = null,
+  inputType = null,
 ) {
   let notesSection = document.createElement("section");
   notesSection.classList.add("notesSection");
@@ -383,12 +384,15 @@ export async function createNotesSection(
     const buttonContainer = document.createElement("div");
     buttonContainer.classList.add("response-buttons");
 
-    // Create Collect button
-    const collectButton = document.createElement("button");
-    collectButton.textContent = "Collect";
-    collectButton.id = "btnCollData";
-    collectButton.classList.add("editNoteButton");
-    collectButton.type = "submit";
+    // Only show Collect button for DATA type inputs
+    if (inputType === "DATA") {
+      const collectButton = document.createElement("button");
+      collectButton.textContent = "Collect";
+      collectButton.id = "btnCollData";
+      collectButton.classList.add("editNoteButton");
+      collectButton.type = "submit";
+      buttonContainer.appendChild(collectButton);
+    }
 
     // Create Respond button
     const respondButton = document.createElement("button");
@@ -398,7 +402,6 @@ export async function createNotesSection(
     respondButton.type = "submit";
 
     // Add buttons to container
-    buttonContainer.appendChild(collectButton);
     buttonContainer.appendChild(respondButton);
 
     // Add button container to header

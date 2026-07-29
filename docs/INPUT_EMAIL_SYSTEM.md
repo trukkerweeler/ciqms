@@ -416,6 +416,15 @@ When modifying the email system:
 
 ---
 
+## TODO
+
+- [ ] Add a retry failed queue for INPUT email sends.
+  - Scope: queue records where `EMAIL_STATUS = FAILED`.
+  - Behavior: background/manual retry using last known payload.
+  - Tracking: update `EMAIL_HISTORY` with retry attempt count, retry timestamp, and final status.
+
+---
+
 ## Related Files
 
 | File                                   | Purpose                        |

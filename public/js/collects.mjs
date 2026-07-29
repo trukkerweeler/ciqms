@@ -127,7 +127,8 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   const user = await getSessionUser();
   const prodPlanContainer = document.getElementById("prod-plan-container");
-  const columnControls = document.getElementById("column-controls");
+  const pageTitle = document.getElementById("collectsPageTitle");
+  const addCollBtn = document.getElementById("btnAddColl");
   const createProductPlanDialog = document.querySelector(
     "[create-product-plan-dialog]",
   );
@@ -157,6 +158,12 @@ document.addEventListener("DOMContentLoaded", async () => {
   const urlParams = new URLSearchParams(window.location.search);
   const id = urlParams.get("id");
 
+  if (pageTitle) {
+    pageTitle.textContent = id
+      ? `Product Collection: ${id}`
+      : "Product Collection";
+  }
+
   const createPlanHeader = document.querySelector("#create-plan-header");
   if (createPlanHeader) {
     if (id) {
@@ -166,15 +173,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     }
   }
 
-  // Create and add the Add Collect button to column controls
-  if (columnControls) {
-    const addCollBtn = document.createElement("button");
-    addCollBtn.type = "submit";
-    addCollBtn.classList.add("btn", "btn-plus");
-    addCollBtn.id = "btnAddColl";
-    addCollBtn.textContent = "+ Add";
-    addCollBtn.setAttribute("title", "Click to add a new collect");
-
+  if (addCollBtn) {
     addCollBtn.addEventListener("click", (e) => {
       e.preventDefault();
       const productIdField = document.getElementById("product-id");
@@ -209,8 +208,6 @@ document.addEventListener("DOMContentLoaded", async () => {
         createProductPlanDialog.showModal();
       }
     });
-
-    columnControls.appendChild(addCollBtn);
   }
 
   function displayNewRecord(record) {
@@ -352,20 +349,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Create a scrollable container for the table
         let tableContainer = document.createElement("div");
         tableContainer.className = "table-container";
-        tableContainer.style.width = "100%"; // Full width
-        tableContainer.style.flex = "1"; // Flex to fill available space
-        tableContainer.style.overflowY = "auto"; // Enable vertical scrolling
-        tableContainer.style.overflowX = "auto"; // Enable horizontal scrolling
-        tableContainer.style.border = "1px solid #ddd"; // Border
-        tableContainer.style.borderRadius = "4px"; // Rounded corners
-        tableContainer.style.marginTop = "2px"; // Top margin
-        tableContainer.style.marginBottom = "2px"; // Bottom margin
+        tableContainer.style.marginTop = "6px";
 
         let table = document.createElement("table");
-        table.className = "table table-striped table-bordered table-hover";
+        table.className = "data-table";
         table.style.marginBottom = "0"; // Remove default table margin
-        table.style.color = "#333"; // Ensure text color is visible
-        table.style.backgroundColor = "#fff"; // Ensure background is visible
         table.id = "collectsTable";
 
         // Create colgroup with resizable column support
@@ -384,20 +372,14 @@ document.addEventListener("DOMContentLoaded", async () => {
 
         // Create table header
         let thead = document.createElement("thead");
-        thead.style.position = "sticky"; // Make header sticky
-        thead.style.top = "0"; // Stick to top of container
-        thead.style.backgroundColor = "#f8f9fa"; // Light background for header
-        thead.style.zIndex = "10"; // Ensure header stays on top
+        thead.style.position = "sticky";
+        thead.style.top = "0";
+        thead.style.zIndex = "10";
 
         let headerRow = document.createElement("tr");
         myFields.forEach((field, index) => {
           let th = document.createElement("th");
           th.style.position = "relative";
-          th.style.color = "#000"; // Ensure header text is visible
-          th.style.backgroundColor = "#f8f9fa"; // Light background for header
-          th.style.padding = "10px 8px"; // Padding
-          th.style.borderBottom = "2px solid #ddd"; // Bottom border
-          th.style.fontWeight = "bold"; // Bold text
           th.dataset.columnIndex = index;
 
           // Create wrapper for header text
@@ -418,8 +400,6 @@ document.addEventListener("DOMContentLoaded", async () => {
           let row = document.createElement("tr");
           myFields.forEach((field) => {
             let td = document.createElement("td");
-            td.style.color = "#000"; // Ensure text is visible
-            td.style.padding = "8px"; // Ensure spacing
             const val = record[field];
 
             // Handle PRD_INSP_PLN_SYSID first (before null check)

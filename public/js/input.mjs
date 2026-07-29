@@ -38,13 +38,20 @@ const apiUrls = {
 let currentSubject = "";
 
 // Helper function to show timed notification banner
-function showNotification(message, duration = 3000) {
+function showNotification(message, duration = 3000, variant = "success") {
+  const backgroundColor =
+    variant === "warning"
+      ? "#f57c00"
+      : variant === "error"
+        ? "#d32f2f"
+        : "#4caf50";
+
   const banner = document.createElement("div");
   banner.style.cssText = `
     position: fixed;
     top: 20px;
     right: 20px;
-    background-color: #4caf50;
+    background-color: ${backgroundColor};
     color: white;
     padding: 16px 24px;
     border-radius: 4px;
@@ -77,6 +84,14 @@ function showNotification(message, duration = 3000) {
     banner.style.animation = "slideOut 0.3s ease-out";
     setTimeout(() => banner.remove(), 300);
   }, duration);
+}
+
+async function safeParseJson(response) {
+  try {
+    return await response.json();
+  } catch {
+    return null;
+  }
 }
 
 // Validation helper for username fields (ending with _BY or _TO)
@@ -1235,6 +1250,7 @@ fetch(url, { method: "GET" })
         null,
         rec["RESPONSE_DATE"],
         rec["RESPONSE_BY"],
+        rec["INPUT_TYPE"],
       );
 
       // Load inline last-collected strip for QTPC
@@ -1624,6 +1640,9 @@ fetch(url, { method: "GET" })
                 ASSIGNED_TO_EMAIL: userEmail,
               };
 
+              let emailSendSucceeded = false;
+              let emailFailureMessage = "";
+
               // Send notification email
               try {
                 console.log(
@@ -1642,16 +1661,20 @@ fetch(url, { method: "GET" })
                 });
 
                 console.log("Email response status:", emailResponse.status);
-                const emailResult = await emailResponse.json();
+                const emailResult = await safeParseJson(emailResponse);
                 console.log("Email response data:", emailResult);
 
                 if (!emailResponse.ok) {
+                  emailFailureMessage =
+                    emailResult?.error ||
+                    `HTTP ${emailResponse.status}: failed to send assignment email`;
                   console.error(
                     "Email send failed with status:",
                     emailResponse.status,
                     emailResult,
                   );
                 } else {
+                  emailSendSucceeded = true;
                   console.log("Email sent successfully");
                 }
 
@@ -1669,16 +1692,58 @@ fetch(url, { method: "GET" })
                         SUBJECT: emailData.SUBJECT,
                         BODY: emailData.INPUT_TEXT,
                         ACTION: "A",
+                        EMAIL_STATUS: emailSendSucceeded ? "SENT" : "FAILED",
+                        ERROR_MESSAGE: emailFailureMessage || null,
                       },
                     }),
                   },
                 );
-                const notifyResult = await notifyResponse.json();
-                console.log("inputs_notify response:", notifyResult);
+                if (!notifyResponse.ok) {
+                  console.error(
+                    "inputs_notify failed with status:",
+                    notifyResponse.status,
+                  );
+                }
                 console.log("inputs_notify recorded for INPUT_ID", iid);
+
+                if (!emailSendSucceeded) {
+                  showNotification(
+                    "Details saved, but assignment email failed to send.",
+                    5000,
+                    "warning",
+                  );
+                }
               } catch (err) {
                 console.error("Error sending assignment email:", err);
                 console.error("Error stack:", err.stack);
+
+                // Best effort failure logging when request throws before normal log call.
+                try {
+                  await fetch(`${apiUrls.input}inputs_notify`, {
+                    method: "POST",
+                    headers: { "Content-Type": "application/json" },
+                    body: JSON.stringify({
+                      data: {
+                        INPUT_ID: iid,
+                        ASSIGNED_TO: newAssignedTo,
+                        RECIPIENT_EMAIL: userEmail,
+                        SUBJECT: emailData.SUBJECT,
+                        BODY: emailData.INPUT_TEXT,
+                        ACTION: "A",
+                        EMAIL_STATUS: "FAILED",
+                        ERROR_MESSAGE: err.message || "Email request failed",
+                      },
+                    }),
+                  });
+                } catch (logErr) {
+                  console.error("Error logging failed email attempt:", logErr);
+                }
+
+                showNotification(
+                  "Details saved, but assignment email failed to send.",
+                  5000,
+                  "warning",
+                );
               }
             }
 
@@ -1743,31 +1808,49 @@ fetch(url, { method: "GET" })
             );
             console.log("Follow-up email data:", emailData);
 
-            fetch(`${apiUrls.input}email/${iid}`, {
-              method: "POST",
-              headers: { "Content-Type": "application/json" },
-              body: JSON.stringify({ data: emailData }),
-            })
-              .then((response) => {
-                console.log(
-                  "Follow-up email response status:",
-                  response.status,
-                );
-                return response.json();
-              })
-              .then((result) => {
-                console.log("Follow-up email response data:", result);
-              })
-              .catch((err) => {
-                console.error("Error sending follow-up email:", err);
-                console.error("Error stack:", err.stack);
-              });
+            let followUpEmailSent = false;
+            let followUpEmailError = "";
+
+            try {
+              const emailResponse = await fetch(
+                `${apiUrls.input}email/${iid}`,
+                {
+                  method: "POST",
+                  headers: { "Content-Type": "application/json" },
+                  body: JSON.stringify({ data: emailData }),
+                },
+              );
+
+              console.log(
+                "Follow-up email response status:",
+                emailResponse.status,
+              );
+              const emailResult = await safeParseJson(emailResponse);
+              console.log("Follow-up email response data:", emailResult);
+
+              if (emailResponse.ok) {
+                followUpEmailSent = true;
+              } else {
+                followUpEmailError =
+                  emailResult?.error ||
+                  `HTTP ${emailResponse.status}: failed to send follow-up email`;
+              }
+            } catch (err) {
+              followUpEmailError = err.message || "Email request failed";
+              console.error("Error sending follow-up email:", err);
+              console.error("Error stack:", err.stack);
+            }
 
             // Update notification table
             const notifyData = {
               INPUT_ID: iid,
               ASSIGNED_TO: assignedToText,
               ACTION: "R",
+              RECIPIENT_EMAIL: userEmail,
+              SUBJECT: emailData.subject,
+              BODY: emailData.text,
+              EMAIL_STATUS: followUpEmailSent ? "SENT" : "FAILED",
+              ERROR_MESSAGE: followUpEmailError || null,
             };
 
             try {
@@ -1778,6 +1861,14 @@ fetch(url, { method: "GET" })
               });
             } catch (err) {
               console.error("Error updating inputs_notify:", err);
+            }
+
+            if (!followUpEmailSent) {
+              showNotification(
+                "Follow-up saved, but email failed to send.",
+                5000,
+                "warning",
+              );
             }
 
             emailDialog.close();

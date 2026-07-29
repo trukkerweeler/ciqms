@@ -1,53 +1,11 @@
 /* Collects Page Styles */
 
-body {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  margin: 0;
-  padding: 0;
-}
-
-header {
-  flex-shrink: 0;
-}
-
-nav {
-  flex-shrink: 0;
-}
-
-#main-content {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.section {
-  display: flex;
-  flex-direction: column;
-  flex: 1;
-  overflow: hidden;
-}
-
-.page-header-div {
-  flex-shrink: 0;
-  padding: 2px 0;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-}
-
-#column-controls {
-  margin-left: auto;
-  display: flex;
-  gap: 8px;
-  align-items: center;
-}
-
 #prod-plan-container {
+  display: flex;
+  flex-direction: column;
   flex: 1;
-  overflow: auto;
+  min-height: 0;
+  overflow: hidden;
 }
 
 #create-product-plan-form {

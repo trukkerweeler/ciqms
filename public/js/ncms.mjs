@@ -18,6 +18,53 @@ let user; // Will be set in initialization
 let config; // Will be set in initialization
 let allNcmData = []; // Store all NCM data for filtering
 
+function showNotification(message, duration = 3000, variant = "success") {
+  const backgroundColor =
+    variant === "warning"
+      ? "#f57c00"
+      : variant === "error"
+        ? "#d32f2f"
+        : "#4caf50";
+
+  const banner = document.createElement("div");
+  banner.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: ${backgroundColor};
+    color: white;
+    padding: 16px 24px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 14px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+  `;
+  banner.textContent = message;
+  document.body.appendChild(banner);
+
+  if (!document.querySelector("style[data-notification]")) {
+    const style = document.createElement("style");
+    style.setAttribute("data-notification", "true");
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  setTimeout(() => {
+    banner.style.animation = "slideOut 0.3s ease-out";
+    setTimeout(() => banner.remove(), 300);
+  }, duration);
+}
+
 function logCreateValidationDiagnostic(status, details = {}) {
   const endpoint = details.endpoint || `${apiUrl}/ncm/validate-section`;
   const reason = details.reason || "unknown";
@@ -414,6 +461,67 @@ async function saveNcm(event) {
     });
 
     if (response.ok) {
+      // Best-effort assignment email and notification logging.
+      let emailSendSucceeded = false;
+      let emailFailureMessage = "";
+      const assignedToEmail =
+        users[dataJson.ASSIGNED_TO] ?? users.DEFAULT ?? null;
+
+      try {
+        const emailResponse = await fetch(`${url}/email`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            NCM_ID: dataJson.NCM_ID,
+            PRODUCT_ID: dataJson.PRODUCT_ID || "",
+            DESCRIPTION: dataJson.DESCRIPTION || "",
+            ASSIGNED_TO_EMAIL: assignedToEmail,
+          }),
+        });
+
+        if (emailResponse.ok) {
+          emailSendSucceeded = true;
+        } else {
+          const emailText = await emailResponse.text();
+          emailFailureMessage =
+            emailText ||
+            `HTTP ${emailResponse.status}: failed to send NCM assignment email`;
+          console.error("NCM assignment email failed:", emailFailureMessage);
+        }
+      } catch (emailError) {
+        emailFailureMessage = emailError.message || "Email request failed";
+        console.error("Error sending NCM assignment email:", emailError);
+      }
+
+      try {
+        await fetch(`${url}/ncm_notify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            NCM_ID: dataJson.NCM_ID,
+            ASSIGNED_TO: dataJson.ASSIGNED_TO,
+            RECIPIENT_EMAIL: assignedToEmail,
+            ACTION: "A",
+            EMAIL_STATUS: emailSendSucceeded ? "SENT" : "FAILED",
+            ERROR_MESSAGE: emailFailureMessage || null,
+          }),
+        });
+      } catch (notifyError) {
+        console.error("Error logging ncm_notify:", notifyError);
+      }
+
+      if (!emailSendSucceeded) {
+        showNotification(
+          "NCM saved, but assignment email failed to send.",
+          5000,
+          "warning",
+        );
+      }
+
       document.getElementById("addNcmDialog").close();
       await loadNcmData(); // Reload the data
 

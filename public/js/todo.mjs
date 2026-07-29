@@ -143,9 +143,6 @@ function renderTable(records, main, apiUrl) {
   // Create scrollable container
   const tableContainer = document.createElement("div");
   tableContainer.className = "table-container";
-  tableContainer.style.maxHeight = "calc(75vh - 60px)";
-  tableContainer.style.overflowY = "auto";
-  tableContainer.style.marginBottom = "2rem";
 
   // Add table to container and container to main
   tableContainer.appendChild(table);
@@ -157,41 +154,41 @@ document.addEventListener("DOMContentLoaded", async () => {
   loadHeaderFooter();
   const user = await getSessionUser();
 
-  // Default the ASSIGNED_TO field to the current user
-  document.getElementById("ASSIGNED_TO").value = user;
+  // Populate the ASSIGNED_TO dropdown with active people
+  const select = document.getElementById("ASSIGNED_TO");
+  const peopleRes = await fetch(`${apiUrl}/ctapersonskills/people/active`);
+  const people = await peopleRes.json();
+  for (const person of people) {
+    const opt = document.createElement("option");
+    opt.value = person.PEOPLE_ID;
+    opt.textContent = `${person.PEOPLE_ID} - ${person.FIRST_NAME} ${person.LAST_NAME}`;
+    if (person.PEOPLE_ID === user) opt.selected = true;
+    select.appendChild(opt);
+  }
 
   const main = document.querySelector("main");
   const iid = document.querySelector("#iid");
   let allRecords = []; // Store all records for filtering
 
-  const button = document.getElementById("todoButton");
-  button.addEventListener("click", async (event) => {
-    event.preventDefault();
-
-    let personid = document.getElementById("ASSIGNED_TO").value;
-    personid = personid.toUpperCase();
-
+  async function loadForPerson(personid) {
     const url = `${apiUrl}/todo`;
+    const response = await fetch(url, { method: "GET" });
+    const records = await response.json();
+    allRecords = records.filter((record) => record.ASSIGNED_TO === personid);
 
-    fetch(url, { method: "GET" })
-      .then((response) => response.json())
-      .then((records) => {
-        // filter the records to only show the ones that are assigned to the user
-        records = records.filter((record) => record.ASSIGNED_TO === personid);
-        allRecords = records; // Store for reuse when filtering by date and type
+    const dateRange = document.querySelector(
+      'input[name="dateRange"]:checked',
+    ).value;
+    const recordType = document.querySelector(
+      'input[name="recordType"]:checked',
+    ).value;
+    renderTable(applyFilters(allRecords, dateRange, recordType), main, apiUrl);
+  }
 
-        // Get selected filters
-        const dateRange = document.querySelector(
-          'input[name="dateRange"]:checked',
-        ).value;
-        const recordType = document.querySelector(
-          'input[name="recordType"]:checked',
-        ).value;
-        const filteredRecords = applyFilters(records, dateRange, recordType);
+  select.addEventListener("change", () => loadForPerson(select.value));
 
-        renderTable(filteredRecords, main, apiUrl);
-      });
-  });
+  // Auto-load for the default selected person
+  if (select.value) loadForPerson(select.value);
 
   // Add event listeners for date range radio buttons
   const dateRangeRadios = document.querySelectorAll('input[name="dateRange"]');

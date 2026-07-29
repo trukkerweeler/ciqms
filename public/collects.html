@@ -1,5 +1,5 @@
 <!doctype html>
-<html lang="en" style="height: 100%; margin: 0; padding: 0">
+<html lang="en">
   <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
@@ -8,18 +8,20 @@
     <link rel="stylesheet" href="css/collects.css" />
     <link rel="icon" href="./images/ci-logo.png" />
   </head>
-  <body>
+  <body class="list-page">
     <header id="header"></header>
-    <nav></nav>
-    <main id="main-content">
-      <section class="section">
-        <div class="page-header-div">
-          <h1 class="page-header">Product Collection</h1>
-          <div id="column-controls"></div>
-        </div>
-
-        <div id="prod-plan-container"></div>
-      </section>
+    <div class="recordsaddrecordheading">
+      <h1 id="collectsPageTitle">Product Collection</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="btnAddColl"
+        title="Add new collect"
+      >
+        +
+      </button>
+    </div>
+    <main id="main">
+      <div id="prod-plan-container"></div>
       <dialog create-product-plan-dialog class="dialog">
         <form id="create-product-plan-form">
           <h2 id="create-plan-header">Create Collect</h2>

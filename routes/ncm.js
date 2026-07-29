@@ -605,7 +605,14 @@ router.post("/ncm_notify", (req, res) => {
         console.error("Error connecting to log NCM notification: " + err.stack);
         return;
       }
-      const { NCM_ID, ACTION, ASSIGNED_TO } = req.body;
+      const {
+        NCM_ID,
+        ACTION,
+        ASSIGNED_TO,
+        RECIPIENT_EMAIL,
+        EMAIL_STATUS,
+        ERROR_MESSAGE,
+      } = req.body;
 
       // Map ACTION to EMAIL_TYPE
       const emailTypeMap = {
@@ -615,15 +622,24 @@ router.post("/ncm_notify", (req, res) => {
         E: "ESCALATION",
       };
       const emailType = emailTypeMap[ACTION] || ACTION;
+      const normalizedStatus =
+        (EMAIL_STATUS || "SENT").toString().toUpperCase() === "FAILED"
+          ? "FAILED"
+          : "SENT";
+      const notes =
+        normalizedStatus === "FAILED" && ERROR_MESSAGE
+          ? `NCM notification - Action: ${ACTION}\n\nError: ${ERROR_MESSAGE}`
+          : `NCM notification - Action: ${ACTION}`;
 
-      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, NULL, NOW(), ?, ?, ?)`;
+      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)`;
       const values = [
         "NCM",
         NCM_ID,
         ASSIGNED_TO,
-        "SENT",
+        RECIPIENT_EMAIL || null,
+        normalizedStatus,
         emailType,
-        `NCM notification - Action: ${ACTION}`,
+        notes,
       ];
 
       connection.query(query, values, (err) => {

@@ -27,6 +27,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   setupEventListeners();
   setupMRFlagVisibility();
   await loadInputTypeOptions();
+  await loadPeopleOptions();
   await loadInputData();
 });
 
@@ -174,6 +175,57 @@ async function loadInputTypeOptions() {
   }
 }
 
+async function loadPeopleOptions() {
+  try {
+    const assigneeSelect = document.getElementById("ASSIGNED_TO");
+    if (!assigneeSelect) return;
+
+    const response = await fetch(`${apiUrl}/ctapersonskills/people/active`);
+    if (!response.ok) {
+      console.error("Failed to load people for assignee select");
+      return;
+    }
+
+    const people = await response.json();
+    const placeholderOption = assigneeSelect.querySelector('option[value=""]');
+    assigneeSelect.innerHTML = "";
+
+    if (placeholderOption) {
+      assigneeSelect.appendChild(placeholderOption);
+    } else {
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "-- Select Assignee --";
+      assigneeSelect.appendChild(defaultOption);
+    }
+
+    people.forEach((person) => {
+      const option = document.createElement("option");
+      option.value = person.PEOPLE_ID;
+
+      const fullName = [person.FIRST_NAME, person.LAST_NAME]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      option.textContent = fullName
+        ? `${person.PEOPLE_ID} - ${fullName}`
+        : person.PEOPLE_ID;
+
+      if (person.PEOPLE_ID === user) {
+        option.selected = true;
+      }
+
+      assigneeSelect.appendChild(option);
+    });
+
+    if (user && assigneeSelect.querySelector(`option[value="${user}"]`)) {
+      assigneeSelect.value = user;
+    }
+  } catch (error) {
+    console.error("Error loading people for assignee select:", error);
+  }
+}
+
 async function openAddInputDialog() {
   const dialog = document.getElementById("addInputDialog");
   if (dialog) {
@@ -196,6 +248,12 @@ async function openAddInputDialog() {
 
     // Set requestor to current user
     document.getElementById("PEOPLE_ID").value = user || "";
+
+    // Default assignee to current user when available
+    const assigneeSelect = document.getElementById("ASSIGNED_TO");
+    if (assigneeSelect) {
+      assigneeSelect.value = user || "";
+    }
 
     // Reset MR flag checkbox
     const mrCheckbox = document.getElementById("USER_DEFINED_1");

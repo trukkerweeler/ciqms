@@ -1,7 +1,4 @@
 body {
-  font-family: "Arial", sans-serif; /* Change to Arial font */
-  background-color: #f4f4f4; /* Light gray background */
-  color: #333; /* Dark gray text color */
   margin: 0;
   padding: 0;
 }
@@ -38,22 +35,8 @@ input {
 .btn-save:hover {
   background-color: #45a049; /* Darker green on hover */
 }
-.page-header {
-  grid-template-rows: auto; /* Auto height for rows */
-  align-items: center; /* Center items vertically */
-  font-style: italic;
-  color: #4caf50; /* Green color for the header */
-  margin-left: 1rem;
-  display: flex;
-  justify-content: center;
-}
-
-.page-header-div {
-  display: flex;
-  justify-content: space-between;
-  align-items: center; /* Center items vertically */
-  margin-left: 1rem;
-  margin-right: 1rem;
+#calibrationFilter {
+  margin-top: 0;
 }
 
 #filterInput {
@@ -129,22 +112,8 @@ input {
   margin-left: 1rem;
 }
 
-nav ul li a,
-nav ul li button {
-  color: white; /* White text */
-  text-decoration: none; /* Removes underline */
-  font-size: 18px; /* Adjusts text size */
-  font-weight: bold; /* Makes text bold */
-  padding: 10px 15px; /* Adds spacing for better clickability */
-  display: inline-block;
-  background-color: black; /* Black background for buttons */
-  border: none; /* No border for buttons */
-}
-
-nav ul li a:hover,
-nav ul li button:hover {
-  background-color: #333; /* Darker background on hover */
-  border-radius: 5px; /* Optional: Adds rounded corners */
+#main {
+  min-height: 0;
 }
 
 .sections-div {

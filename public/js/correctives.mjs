@@ -1,5 +1,6 @@
 import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 import { calculateDaysOverdue, getRowColor } from "./escalation-utils.mjs";
+import users from "./users.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
@@ -11,6 +12,53 @@ let sortOrder = "asc";
 
 // Global variables - will be initialized on DOMContentLoaded
 let dialog, addButton, cancelButton, form, user;
+
+function showNotification(message, duration = 3000, variant = "success") {
+  const backgroundColor =
+    variant === "warning"
+      ? "#f57c00"
+      : variant === "error"
+        ? "#d32f2f"
+        : "#4caf50";
+
+  const banner = document.createElement("div");
+  banner.style.cssText = `
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    background-color: ${backgroundColor};
+    color: white;
+    padding: 16px 24px;
+    border-radius: 4px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+    font-size: 14px;
+    z-index: 10000;
+    animation: slideIn 0.3s ease-out;
+  `;
+  banner.textContent = message;
+  document.body.appendChild(banner);
+
+  if (!document.querySelector("style[data-notification]")) {
+    const style = document.createElement("style");
+    style.setAttribute("data-notification", "true");
+    style.textContent = `
+      @keyframes slideIn {
+        from { transform: translateX(400px); opacity: 0; }
+        to { transform: translateX(0); opacity: 1; }
+      }
+      @keyframes slideOut {
+        from { transform: translateX(0); opacity: 1; }
+        to { transform: translateX(400px); opacity: 0; }
+      }
+    `;
+    document.head.appendChild(style);
+  }
+
+  setTimeout(() => {
+    banner.style.animation = "slideOut 0.3s ease-out";
+    setTimeout(() => banner.remove(), 300);
+  }, duration);
+}
 
 document.addEventListener("DOMContentLoaded", async () => {
   try {
@@ -44,7 +92,8 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Setup dialog event listeners
     setupDialogHandlers();
 
-    // Set form defaults
+    // Load assignee options and set form defaults
+    await loadAssigneeOptions();
     setupFormDefaults();
   } catch (error) {
     console.error("Error initializing correctives page:", error);
@@ -127,6 +176,57 @@ function closeDialog() {
 /**
  * Set default values for form fields
  */
+async function loadAssigneeOptions() {
+  try {
+    const assigneeSelect = document.getElementById("assto");
+    if (!assigneeSelect) return;
+
+    const response = await fetch(`${apiUrl}/ctapersonskills/people/active`);
+    if (!response.ok) {
+      console.error("Failed to load people for corrective assignee select");
+      return;
+    }
+
+    const people = await response.json();
+    const placeholderOption = assigneeSelect.querySelector('option[value=""]');
+    assigneeSelect.innerHTML = "";
+
+    if (placeholderOption) {
+      assigneeSelect.appendChild(placeholderOption);
+    } else {
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "-- Select Assignee --";
+      assigneeSelect.appendChild(defaultOption);
+    }
+
+    people.forEach((person) => {
+      const option = document.createElement("option");
+      option.value = person.PEOPLE_ID;
+
+      const fullName = [person.FIRST_NAME, person.LAST_NAME]
+        .filter(Boolean)
+        .join(" ")
+        .trim();
+      option.textContent = fullName
+        ? `${person.PEOPLE_ID} - ${fullName}`
+        : person.PEOPLE_ID;
+
+      if (person.PEOPLE_ID === user) {
+        option.selected = true;
+      }
+
+      assigneeSelect.appendChild(option);
+    });
+
+    if (user && assigneeSelect.querySelector(`option[value="${user}"]`)) {
+      assigneeSelect.value = user;
+    }
+  } catch (error) {
+    console.error("Error loading people for corrective assignee select:", error);
+  }
+}
+
 function setupFormDefaults() {
   // Set date to today
   const today = new Date().toISOString().slice(0, 10);
@@ -139,6 +239,12 @@ function setupFormDefaults() {
   const reqByField = document.getElementById("reqby");
   if (reqByField && user) {
     reqByField.value = user;
+  }
+
+  // Default assignee to current user when available
+  const assigneeSelect = document.getElementById("assto");
+  if (assigneeSelect && user) {
+    assigneeSelect.value = user;
   }
 }
 
@@ -218,17 +324,37 @@ async function handleFormSubmission() {
         );
       }
 
-      // Success - send email notification after successful creation
+      // Success - send email notification after successful creation.
+      let emailSendSucceeded = false;
+      let emailFailureMessage = "";
+      const assignedToEmail =
+        users[dataJson.ASSIGNED_TO] ?? users.DEFAULT ?? null;
+
       try {
-        await fetch(`${url}/email`, {
+        const emailResponse = await fetch(`${url}/email`, {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(dataJson),
         });
+        const emailText = await emailResponse.text();
 
-        // Log notification in database
+        // Endpoint can return HTTP 200 but still indicate no send.
+        emailSendSucceeded =
+          emailResponse.ok && !emailText.toLowerCase().includes("not sent");
+        if (!emailSendSucceeded) {
+          emailFailureMessage =
+            emailText ||
+            `HTTP ${emailResponse.status}: failed to send corrective email`;
+          console.error("Corrective email failed:", emailFailureMessage);
+        }
+      } catch (emailError) {
+        emailFailureMessage = emailError.message || "Email request failed";
+        console.error("Error sending email notification:", emailError);
+      }
+
+      try {
         await fetch(`${url}/corrective-notify`, {
           method: "POST",
           headers: {
@@ -237,17 +363,22 @@ async function handleFormSubmission() {
           body: JSON.stringify({
             CORRECTIVE_ID: dataJson.CORRECTIVE_ID,
             ASSIGNED_TO: dataJson.ASSIGNED_TO,
+            RECIPIENT_EMAIL: assignedToEmail,
             ACTION: "A", // A for assignment
+            EMAIL_STATUS: emailSendSucceeded ? "SENT" : "FAILED",
+            ERROR_MESSAGE: emailFailureMessage || null,
           }),
         });
+      } catch (notifyError) {
+        console.error("Error logging corrective-notify:", notifyError);
+      }
 
-        console.log(
-          "Corrective action email and notification sent for CA",
-          dataJson.CORRECTIVE_ID,
+      if (!emailSendSucceeded) {
+        showNotification(
+          "Corrective saved, but assignment email failed to send.",
+          5000,
+          "warning",
         );
-      } catch (emailError) {
-        console.error("Error sending email notification:", emailError);
-        // Don't fail the overall operation if email fails
       }
 
       // Close dialog and reload data

@@ -39,8 +39,9 @@ main {
   grid-template-columns: 1fr auto;
   margin: 0 0.5rem;
   background-color: var(--background-color);
-  padding: 1rem 0;
+  padding: 0.5rem 0;
   align-items: center;
+  flex-shrink: 0;
 }
 
 .page-heading-left {
@@ -286,10 +287,12 @@ main {
    Table Container Layout
    ============================================ */
 .expiryTableContainer {
-  width: 100%;
-  padding: 1.5rem;
-  box-sizing: border-box;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
   overflow-x: auto;
+  padding: 0.5rem;
+  box-sizing: border-box;
 }
 
 /* ============================================
