@@ -223,7 +223,10 @@ async function loadAssigneeOptions() {
       assigneeSelect.value = user;
     }
   } catch (error) {
-    console.error("Error loading people for corrective assignee select:", error);
+    console.error(
+      "Error loading people for corrective assignee select:",
+      error,
+    );
   }
 }
 

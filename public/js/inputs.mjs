@@ -28,6 +28,7 @@ document.addEventListener("DOMContentLoaded", async function () {
   setupMRFlagVisibility();
   await loadInputTypeOptions();
   await loadPeopleOptions();
+  await loadProjectOptions();
   await loadInputData();
 });
 
@@ -223,6 +224,45 @@ async function loadPeopleOptions() {
     }
   } catch (error) {
     console.error("Error loading people for assignee select:", error);
+  }
+}
+
+async function loadProjectOptions() {
+  try {
+    const projectSelect = document.getElementById("PROJECT_ID");
+    if (!projectSelect) return;
+
+    const response = await fetch(`${apiUrl}/project`);
+    if (!response.ok) {
+      console.error("Failed to load projects for project select");
+      return;
+    }
+
+    const projects = await response.json();
+    const placeholderOption = projectSelect.querySelector('option[value=""]');
+    projectSelect.innerHTML = "";
+
+    if (placeholderOption) {
+      projectSelect.appendChild(placeholderOption);
+    } else {
+      const defaultOption = document.createElement("option");
+      defaultOption.value = "";
+      defaultOption.textContent = "-- Select Project --";
+      projectSelect.appendChild(defaultOption);
+    }
+
+    projects.forEach((project) => {
+      const option = document.createElement("option");
+      option.value = project.PROJECT_ID;
+
+      const projectName = project.NAME ? ` - ${project.NAME}` : "";
+      const closedTag = project.CLOSED === "Y" ? " (Closed)" : "";
+      option.textContent = `${project.PROJECT_ID}${projectName}${closedTag}`;
+
+      projectSelect.appendChild(option);
+    });
+  } catch (error) {
+    console.error("Error loading projects for project select:", error);
   }
 }
 
