@@ -84,9 +84,12 @@ html {
   padding: 0;
   overflow-x: hidden;
   box-sizing: border-box;
+  height: 100%;
 }
 
-*, *:before, *:after {
+*,
+*:before,
+*:after {
   box-sizing: inherit;
 }
 
@@ -2250,8 +2253,7 @@ footer div p {
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
   background: white;
-  padding-bottom: 30px;
-  margin-bottom: 30px;
+  padding-bottom: 8px;
 }
 
 .table-container table {
@@ -2439,9 +2441,7 @@ footer div p {
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  max-height: calc(100vh - 240px);
   overflow: hidden;
-}
 }
 
 /* Subject Filter Styling - Reduced spacing and height */
@@ -2548,6 +2548,64 @@ input:checked + .slider:before {
   box-sizing: border-box;
 }
 
+/* ========== LIST PAGE LAYOUT PATTERN ==========
+ * Apply class="list-page" to <body> on any page that shows
+ * a full-viewport scrollable table (no page-level scroll).
+ * The flex chain:  body → main → [wrapper?] → .table-container
+ * Each level needs flex:1 + min-height:0 to constrain scroll correctly.
+ * ================================================= */
+body.list-page {
+  display: flex;
+  flex-direction: column;
+  height: 100dvh;
+  padding-bottom: 50px; /* footer height (44px) + 6px gap */
+  overflow: hidden;
+}
+
+/* Fixed-size chrome above the table */
+body.list-page header,
+body.list-page .recordsaddrecordheading,
+body.list-page .filter-bar {
+  flex-shrink: 0;
+}
+
+/* Override the global #main block layout for list pages */
+body.list-page #main {
+  flex: 1;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+  padding: 0 0.5rem;
+  overflow: hidden;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Standardised filter bar — flex row, consistent spacing */
+.filter-bar {
+  flex-shrink: 0;
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.5rem 1rem;
+  margin: 0 0.5rem 0.25rem;
+  padding: 0.25rem 0;
+}
+
+.filter-bar label {
+  font-weight: 600;
+  font-size: 0.75rem;
+}
+
+.filter-bar input[type="text"],
+.filter-bar select {
+  height: 24px;
+  padding: 0.125rem 0.25rem;
+  border: 1px solid var(--border-color);
+  border-radius: var(--border-radius);
+  font-size: 0.75rem;
+}
+
 /* Past date styling for devices table */
 .past-date {
   background-color: #ffebee !important;
@@ -2587,15 +2645,7 @@ table td a:hover {
   color: #0d47a1 !important;
 }
 
-/* Devices page specific styling */
-body:has(script[src*="devices.mjs"]) #main {
-  padding: 0.25rem 2rem !important;
-}
-
-body:has(script[src*="devices.mjs"]) #deviceFilter {
-  margin: 0 !important;
-  padding: 0 !important;
-}
+/* Devices page specific styling handled by .list-page and .filter-bar */
 
 /* Supplier QMS Form Styling */
 .supplier-qms-form {

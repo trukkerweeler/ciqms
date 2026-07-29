@@ -14,25 +14,14 @@
       body {
         margin: 0;
         padding: 0;
-        height: 100%;
       }
 
       body {
-        display: flex;
-        flex-direction: column;
         font-size: 13px;
         font-family:
           system-ui,
           -apple-system,
           sans-serif;
-      }
-
-      header {
-        flex-shrink: 0;
-      }
-
-      nav {
-        flex-shrink: 0;
       }
 
       .page-header {
@@ -79,10 +68,9 @@
         background-color: #0056b3;
       }
 
-      main {
-        flex: 1;
-        overflow: auto;
-        border-top: 1px solid #ddd;
+      /* table-layout: fixed in .table-container requires a colgroup; products has none */
+      .table-container table {
+        table-layout: auto;
       }
 
       .empty-message {
@@ -295,7 +283,7 @@
       }
     </style>
   </head>
-  <body>
+  <body class="list-page">
     <header id="header"></header>
 
     <div class="page-header">
@@ -305,7 +293,7 @@
       </div>
     </div>
 
-    <main id="listContainer">
+    <main id="main">
       <div class="empty-message">Loading products...</div>
     </main>
 
@@ -364,6 +352,8 @@
         <button id="btnSave" class="btn-primary">Save</button>
       </div>
     </div>
+
+    <footer id="footer"></footer>
 
     <script type="module">
       import * as products from "./js/products.mjs";

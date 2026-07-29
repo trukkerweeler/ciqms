@@ -428,13 +428,7 @@ function createTableBody(data, headers) {
 function createTableContainer() {
   const tableContainer = document.createElement("div");
   tableContainer.className = "table-container";
-  tableContainer.style.maxHeight = "calc(80vh - 60px)";
-  tableContainer.style.overflowY = "auto";
-  tableContainer.style.overflowX = "auto";
-  tableContainer.style.border = "1px solid #ddd";
-  tableContainer.style.borderRadius = "4px";
   tableContainer.style.marginTop = "10px";
-  tableContainer.style.marginBottom = "80px";
 
   return tableContainer;
 }

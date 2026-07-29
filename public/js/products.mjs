@@ -14,7 +14,7 @@ const API_URL = "/products";
  * Initialize and load products
  */
 export async function initializeProducts() {
-  const container = document.getElementById("listContainer");
+  const container = document.getElementById("main");
 
   try {
     const response = await fetch(API_URL);
@@ -43,7 +43,7 @@ export async function initializeProducts() {
  * Render products as table
  */
 function renderProducts(products) {
-  const container = document.getElementById("listContainer");
+  const container = document.getElementById("main");
 
   const html = `
     <table>
@@ -90,7 +90,7 @@ function renderProducts(products) {
     </table>
   `;
 
-  container.innerHTML = html;
+  container.innerHTML = `<div class="table-container">${html}</div>`;
 }
 
 /**

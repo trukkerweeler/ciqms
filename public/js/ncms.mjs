@@ -146,10 +146,9 @@ document.addEventListener("DOMContentLoaded", async function () {
   user = await getSessionUser();
   config = await getConfig();
   setupEventListeners();
-  // Add event listener for closed toggle
-  const showClosedToggle = document.getElementById("showClosedToggle");
-  if (showClosedToggle) {
-    showClosedToggle.addEventListener("change", () => {
+  const showClosedFilter = document.getElementById("showClosedFilter");
+  if (showClosedFilter) {
+    showClosedFilter.addEventListener("change", () => {
       applyFilters();
     });
   }
@@ -449,8 +448,8 @@ async function loadNcmData() {
 }
 
 function applyFilters() {
-  const showClosedToggle = document.getElementById("showClosedToggle");
-  const closedNOnly = showClosedToggle ? showClosedToggle.checked : false;
+  const showClosedFilter = document.getElementById("showClosedFilter");
+  const statusValue = showClosedFilter ? showClosedFilter.value : "open";
   const filterNCMType = document.getElementById("filterNCMType");
   const selectedNCMType = filterNCMType ? filterNCMType.value : "";
   const filterSubject = document.getElementById("filterSubject");
@@ -458,9 +457,10 @@ function applyFilters() {
 
   let filteredData = allNcmData;
 
-  // Filter by closed status
-  if (closedNOnly) {
-    filteredData = filteredData.filter((item) => item.CLOSED === "N");
+  if (statusValue === "open") {
+    filteredData = filteredData.filter((item) => item.CLOSED !== "Y");
+  } else if (statusValue === "closed") {
+    filteredData = filteredData.filter((item) => item.CLOSED === "Y");
   }
 
   // Filter by NCM Type

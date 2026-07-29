@@ -14,17 +14,9 @@
     <link rel="icon" href="images/ci-logo.png" />
     <title>Nonconformance (CI QMS)</title>
   </head>
-  <body
-    style="
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    "
-  >
+  <body class="list-page">
     <header id="header" style="flex-shrink: 0"></header>
-    <div class="recordsaddrecordheading" style="flex-shrink: 0">
+    <div class="recordsaddrecordheading">
       <h1>Nonconformance</h1>
       <button
         class="addrecordheadingbutton button"
@@ -35,35 +27,23 @@
       </button>
     </div>
 
-    <div id="subjectFilter" style="flex-shrink: 0">
-      <div class="filter-controls">
-        <label class="toggle-switch">
-          <input type="checkbox" id="showClosedToggle" />
-          <span class="slider"></span>
-          <span class="toggle-label">Show Open Records</span>
-        </label>
-        <div
-          style="display: flex; gap: 1rem; flex-wrap: wrap; margin-top: 0.5rem"
-        >
-          <div style="display: flex; align-items: center; gap: 0.5rem">
-            <label for="filterNCMType">NCM Type:</label>
-            <select id="filterNCMType" style="padding: 0.25rem 0.5rem">
-              <option value="">All Types</option>
-            </select>
-          </div>
-          <div style="display: flex; align-items: center; gap: 0.5rem">
-            <label for="filterSubject">Subject:</label>
-            <select id="filterSubject" style="padding: 0.25rem 0.5rem">
-              <option value="">All Subjects</option>
-            </select>
-          </div>
-        </div>
-      </div>
+    <div id="subjectFilter" class="filter-bar">
+      <label for="showClosedFilter">Status:</label>
+      <select id="showClosedFilter">
+        <option value="open">Open</option>
+        <option value="closed">Closed</option>
+        <option value="all">All</option>
+      </select>
+      <label for="filterNCMType">NCM Type:</label>
+      <select id="filterNCMType">
+        <option value="">All Types</option>
+      </select>
+      <label for="filterSubject">Subject:</label>
+      <select id="filterSubject">
+        <option value="">All Subjects</option>
+      </select>
     </div>
-    <main
-      id="main"
-      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
-    >
+    <main id="main">
       <!-- Add NCM Dialog -->
       <dialog id="addNcmDialog" class="dialog">
         <form id="addNcmForm" class="form">

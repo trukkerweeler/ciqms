@@ -14,17 +14,9 @@
     <link rel="icon" href="images/ci-logo.png" />
     <title>Suppliers (CIQMS)</title>
   </head>
-  <body
-    style="
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    "
-  >
+  <body class="list-page">
     <header id="header" style="flex-shrink: 0"></header>
-    <div class="recordsaddrecordheading" style="flex-shrink: 0">
+    <div class="recordsaddrecordheading">
       <h1>Suppliers</h1>
       <button
         class="addrecordheadingbutton button"
@@ -34,29 +26,14 @@
         +
       </button>
     </div>
-    <div
-      style="
-        display: flex;
-        align-items: center;
-        gap: 5px;
-        margin-bottom: 5px;
-        padding: 0 20px;
-        flex-shrink: 0;
-      "
-    >
-      <label for="statusFilter" style="font-weight: bold">Show:</label>
-      <select
-        id="statusFilter"
-        style="padding: 5px 10px; border-radius: 4px; border: 1px solid #ccc"
-      >
+    <div class="filter-bar">
+      <label for="statusFilter">Show:</label>
+      <select id="statusFilter">
         <option value="all">All</option>
         <option value="active">Active</option>
       </select>
     </div>
-    <main
-      id="main"
-      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
-    >
+    <main id="main">
       <!-- Add Supplier Dialog -->
       <dialog id="addSupplierDialog" class="dialog">
         <div class="dialog-header">

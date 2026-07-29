@@ -15,21 +15,9 @@
     <title>Correctives (CI QMS)</title>
   </head>
 
-  <body
-    style="
-      display: flex;
-      flex-direction: column;
-      height: 100%;
-      margin: 0;
-      padding: 0;
-    "
-  >
+  <body class="list-page">
     <header id="header" style="flex-shrink: 0"></header>
-    <div
-      class="recordsaddrecordheading"
-      id="addncmheading"
-      style="flex-shrink: 0"
-    >
+    <div class="recordsaddrecordheading" id="addncmheading">
       <h1>Corrective Records</h1>
       <button
         class="addrecordheadingbutton"
@@ -39,10 +27,7 @@
         +
       </button>
     </div>
-    <main
-      id="main"
-      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
-    ></main>
+    <main id="main"></main>
 
     <dialog create-corrective-dialog class="dialog">
       <form id="corrective-form" class="form">

@@ -309,9 +309,6 @@ function displaySupplierTable(data) {
   // Create table container for scrolling
   const tableContainer = document.createElement("div");
   tableContainer.setAttribute("class", "table-container");
-  tableContainer.style.flex = "1";
-  tableContainer.style.overflowY = "auto";
-  tableContainer.style.marginBottom = "0.5rem";
 
   const table = document.createElement("table");
   table.className = "data-table";

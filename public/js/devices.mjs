@@ -168,11 +168,7 @@ function getRecords() {
       ];
 
       let tableContainer = document.createElement("div");
-      tableContainer.style.overflowX = "auto";
       tableContainer.className = "table-container";
-      tableContainer.style.maxHeight = "calc(75vh - 60px)";
-      tableContainer.style.overflowY = "auto";
-      tableContainer.style.marginBottom = "2rem";
 
       // Create table with proper DOM structure for resizable columns
       const table = document.createElement("table");

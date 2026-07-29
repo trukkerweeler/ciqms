@@ -14,17 +14,7 @@
     <link rel="icon" href="images/ci-logo.png" />
     <title>Inputs (CIQMS)</title>
   </head>
-  <body
-    style="
-      display: flex;
-      flex-direction: column;
-      height: 100vh;
-      margin: 0;
-      padding: 0;
-      padding-bottom: 60px;
-      box-sizing: border-box;
-    "
-  >
+  <body class="list-page">
     <header id="header" style="flex-shrink: 0"></header>
     <div class="recordsaddrecordheading" style="flex-shrink: 0">
       <h1>Input Records</h1>
@@ -36,7 +26,7 @@
         +
       </button>
     </div>
-    <div id="subjectFilter" style="flex-shrink: 0">
+    <div id="subjectFilter" class="filter-bar">
       <label for="subject">Filter by Subject:</label>
       <input type="text" id="subject" />
 
@@ -48,10 +38,7 @@
         </label>
       </div>
     </div>
-    <main
-      id="main"
-      style="display: flex; flex-direction: column; flex: 1; overflow: hidden"
-    >
+    <main id="main">
       <!-- Add Input Dialog -->
       <dialog id="addInputDialog" class="dialog">
         <div class="dialog-header">
