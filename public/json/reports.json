@@ -152,6 +152,11 @@
           "h2": "Chemical Tank Trends",
           "a": "Go to Chemical Tank Trend Reports",
           "html": "reports-chem.html"
+        },
+        {
+          "h2": "Weld Operations (Monthly)",
+          "a": "Go to Monthly Weld Operations Report",
+          "html": "operation-jobs-weld-report.html"
         }
       ]
     },

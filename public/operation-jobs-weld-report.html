@@ -1,0 +1,89 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Monthly weld operations report grouped by day, operation, part, job, and customer."
+    />
+    <meta name="author" content="CIQMS" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/reports.css" />
+    <link rel="stylesheet" href="/css/operation-jobs-weld-report.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Operation Jobs - Weld Operations Report</title>
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <main id="main" class="ops-report-main">
+      <section class="ops-report-panel">
+        <h1>Weld Operations Report</h1>
+        <p class="ops-report-subtitle">
+          Monthly completed operations filtered by operation code.
+        </p>
+
+        <form id="report-form" class="ops-report-form">
+          <label for="year-input">Year</label>
+          <select id="year-input" name="year" required></select>
+
+          <label for="month-input">Month</label>
+          <select id="month-input" name="month" required></select>
+
+          <label for="sort-input">Sort</label>
+          <select id="sort-input" name="sort">
+            <option value="asc">Date Ascending</option>
+            <option value="desc">Date Descending</option>
+          </select>
+
+          <button id="run-btn" type="submit">Run Report</button>
+        </form>
+
+        <div id="status" class="ops-report-status" aria-live="polite"></div>
+      </section>
+
+      <section id="meta-section" class="ops-section" style="display: none">
+        <h2>Criteria</h2>
+        <div id="criteria"></div>
+        <h3>Operation Codes</h3>
+        <div id="op-codes" class="ops-code-list"></div>
+      </section>
+
+      <section id="rows-section" class="ops-section" style="display: none">
+        <h2>Detailed Rows</h2>
+        <div class="ops-table-wrap">
+          <table id="rows-table">
+            <thead>
+              <tr>
+                <th>Completed</th>
+                <th>Job</th>
+                <th>Suffix</th>
+                <th>Seq</th>
+                <th>Operation</th>
+                <th>Description</th>
+                <th>Part</th>
+                <th>Part Description</th>
+                <th>Customer</th>
+                <th>Qty</th>
+                <th>Units Complete</th>
+                <th>Units Scrap</th>
+                <th>Source</th>
+              </tr>
+            </thead>
+            <tbody id="rows-body"></tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer"></footer>
+
+    <script type="module" src="/js/operation-jobs-weld-report.mjs"></script>
+  </body>
+</html>

@@ -267,6 +267,55 @@ If a sub-operation row (e.g., SEQ 1250) has no corresponding base operation in `
 
 ---
 
+## Monthly WELD Operations Report (Moved)
+
+Endpoint:
+
+`GET /operation-jobs/weld-operations-report?month=YYYY-MM&sort=asc|desc`
+
+Examples:
+
+- `/operation-jobs/weld-operations-report?month=2026-07`
+- `/operation-jobs/weld-operations-report?month=2026-07&sort=desc`
+
+### Behavior
+
+- Pulls rows from both `JOB_OPERATIONS` (active) and `JOB_HIST_OPS` (archived)
+- Includes only rows where `DESCRIPTION` contains `WELD` (case-insensitive)
+- Excludes internal transfer sequence rows with `SEQ >= 990000`
+- Converts `DATE_COMPLETED` (compact DB string) to ISO date (`YYYY-MM-DD`) in API output
+- Filters by user-defined calendar month using `[month start, next month start)`
+- Sorts by completed date (then job/suffix/seq for stable ordering)
+
+### Included Detail Fields
+
+- source table (`JOB_OPERATIONS` or `JOB_HIST_OPS`)
+- job, suffix, seq
+- operation (for future operation-code filtering)
+- description
+- date completed (raw + ISO)
+- part and part description
+- customer
+- router
+- LMO
+- units complete and units scrap
+
+### Included Summaries
+
+- by day
+- by operation
+- by part
+- by job-suffix
+- by customer
+
+### Notes
+
+- If `month` is omitted, the endpoint defaults to the previous calendar month.
+- Response includes `operationCodes` as a unique sorted list for quick filter design.
+- Backend script name: `routes/operation-jobs-weld-ops.vbs`.
+
+---
+
 # 📋 **SQL Rules & Query Patterns**
 
 ## SUFFIX Must Be Quoted
