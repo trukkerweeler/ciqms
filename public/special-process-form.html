@@ -1,0 +1,105 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Special Process Form</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/special-process-form.css" />
+    <link rel="icon" href="./images/ci-logo.png" />
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1 id="pageTitle">Special Process Form</h1>
+        <!-- <p class="muted" id="pageSubtitle">
+          Web form starter based on the Excel template.
+        </p> -->
+        <form id="specialProcessForm">
+          <div class="form-layout">
+            <div class="form-main">
+              <div class="section-box">
+                <h3>Process</h3>
+                <div id="processFlow" class="process-flow"></div>
+              </div>
+            </div>
+            <div class="form-sidebar">
+              <div class="field">
+                <label for="workOrder">Work Order</label>
+                <input
+                  id="workOrder"
+                  name="workOrder"
+                  required
+                  placeholder="e.g. 123456-000"
+                  style="width: 100%"
+                />
+                <button
+                  class="btn"
+                  type="button"
+                  id="woLookupBtn"
+                  style="width: 100%"
+                >
+                  &#128269; Search
+                </button>
+              </div>
+              <div class="field">
+                <label for="partNumber">Part Number</label>
+                <input id="partNumber" name="partNumber" required />
+              </div>
+              <input type="hidden" id="processType" name="processType" />
+              <input type="hidden" id="formInstanceId" name="formInstanceId" />
+              <input
+                type="hidden"
+                id="partDescription"
+                name="partDescription"
+              />
+              <div class="inline-fields">
+                <div class="field">
+                  <label for="qtyAccepted">Qty Accept</label>
+                  <input
+                    id="qtyAccepted"
+                    name="qtyAccepted"
+                    type="number"
+                    required
+                    style="width: 60px"
+                  />
+                </div>
+                <div class="field">
+                  <label for="qtyRejected">Qty Reject</label>
+                  <input
+                    id="qtyRejected"
+                    name="qtyRejected"
+                    type="number"
+                    required
+                    style="width: 60px"
+                  />
+                </div>
+              </div>
+              <div class="field">
+                <label for="notes">Notes</label>
+                <textarea id="notes" name="notes" rows="4"></textarea>
+              </div>
+              <div class="field">
+                <label>Technician</label>
+                <div id="currentUserDisplay" class="readonly-field"></div>
+              </div>
+              <div class="actions" style="margin-top: 8px">
+                <button class="btn" type="submit">Save</button>
+                <button class="btn secondary" type="button" id="backButton">
+                  Back
+                </button>
+              </div>
+            </div>
+          </div>
+        </form>
+        <div id="summary" class="summary" hidden></div>
+        <!-- <div class="note">
+          This starter form captures the core fields from the Excel sheet and
+          can be extended with additional parameters once the full workbook is
+          reviewed.
+        </div> -->
+      </section>
+    </main>
+    <script type="module" src="js/special-process-form.mjs"></script>
+  </body>
+</html>

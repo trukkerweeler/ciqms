@@ -1,0 +1,147 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Special Process Records</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" href="./images/ci-logo.png" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f6f8fb;
+      }
+      main {
+        max-width: 1240px;
+        margin: 0 auto;
+      }
+      .card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+      }
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+      .header h1 {
+        margin: 0;
+      }
+      .actions {
+        display: flex;
+        gap: 8px;
+      }
+      .btn {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 0;
+        background: #2e7d32;
+        color: white;
+        text-decoration: none;
+        cursor: pointer;
+      }
+      .btn.secondary {
+        background: #4b5563;
+      }
+      .muted {
+        color: #6b7280;
+        font-size: 13px;
+      }
+      .table-wrap {
+        overflow-x: auto;
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+      }
+      table {
+        width: 100%;
+        border-collapse: collapse;
+        background: white;
+      }
+      th,
+      td {
+        text-align: left;
+        padding: 8px 10px;
+        border-bottom: 1px solid #e2e8f0;
+        font-size: 13px;
+        white-space: nowrap;
+      }
+      th {
+        position: sticky;
+        top: 0;
+        background: #f8fafc;
+        z-index: 1;
+      }
+      .pill {
+        display: inline-block;
+        padding: 2px 8px;
+        border-radius: 999px;
+        font-size: 12px;
+        font-weight: bold;
+      }
+      .pill.chem-film {
+        background: #eef6ff;
+        color: #1e40af;
+      }
+      .pill.passivation {
+        background: #ecfdf5;
+        color: #166534;
+      }
+      .empty {
+        padding: 18px;
+        text-align: center;
+        color: #6b7280;
+      }
+      @media (max-width: 900px) {
+        body {
+          padding: 12px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <div class="header">
+          <h1>Special Process Records</h1>
+          <div class="actions">
+            <button class="btn" type="button" id="refreshBtn">Refresh</button>
+            <a class="btn secondary" href="special-process-forms.html"
+              >Back To Forms</a
+            >
+          </div>
+        </div>
+        <p class="muted">Records are sorted by most recently updated first.</p>
+        <div class="table-wrap">
+          <table>
+            <thead>
+              <tr>
+                <th>Updated</th>
+                <th>Work Order</th>
+                <th>Process</th>
+                <th>Form</th>
+                <th>Part Number</th>
+                <th>Qty A/R</th>
+                <th>Status</th>
+                <th>Saved By</th>
+                <th>Open</th>
+              </tr>
+            </thead>
+            <tbody id="recordsBody">
+              <tr>
+                <td colspan="9" class="empty">Loading records...</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </section>
+    </main>
+    <script type="module" src="js/special-process-records.mjs"></script>
+  </body>
+</html>

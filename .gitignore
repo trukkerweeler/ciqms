@@ -38,3 +38,7 @@ coverage/
 # Logs
 logs/
 *.log
+
+# Excel 
+*.xlsx
+*.xls

@@ -1,0 +1,122 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Process Builder</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f6f8fb;
+      }
+      main {
+        max-width: 1200px;
+        margin: 0 auto;
+      }
+      .card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 16px;
+      }
+      .grid {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+        gap: 12px;
+      }
+      .field {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+      }
+      .field.compact {
+        min-width: 140px;
+      }
+      .field-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 10px;
+      }
+      .checkbox {
+        justify-content: flex-end;
+      }
+      .step-card {
+        border: 1px solid #e2e8f0;
+        border-radius: 8px;
+        padding: 12px;
+        background: #fcfdff;
+        margin-bottom: 12px;
+      }
+      .step-head {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: end;
+        margin-bottom: 10px;
+      }
+      .btn {
+        padding: 8px 12px;
+        border-radius: 6px;
+        border: 0;
+        background: #2e7d32;
+        color: white;
+        cursor: pointer;
+      }
+      .btn.secondary {
+        background: #4b5563;
+      }
+      .btn.small {
+        padding: 6px 10px;
+        font-size: 13px;
+      }
+      input,
+      select,
+      textarea {
+        padding: 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+      }
+      pre {
+        white-space: pre-wrap;
+        background: #111827;
+        color: #f9fafb;
+        padding: 12px;
+        border-radius: 8px;
+        overflow: auto;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <h1>Process Builder</h1>
+        <p>Build a reusable process template for special-process forms.</p>
+        <div id="headerForm"></div>
+        <div style="margin-top: 12px; display: flex; gap: 8px; flex-wrap: wrap">
+          <button class="btn" id="addStepButton" type="button">Add Step</button>
+          <button class="btn secondary" id="copyJsonButton" type="button">
+            Copy JSON
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2>Steps</h2>
+        <div id="stepsContainer"></div>
+      </section>
+
+      <section class="card">
+        <h2>Preview JSON</h2>
+        <pre id="preview"></pre>
+      </section>
+    </main>
+
+    <script type="module" src="js/process-builder.mjs"></script>
+  </body>
+</html>

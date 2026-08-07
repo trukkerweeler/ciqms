@@ -1,0 +1,102 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Special Process Forms</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="icon" href="./images/ci-logo.png" />
+    <style>
+      body {
+        font-family: Arial, sans-serif;
+        margin: 0;
+        padding: 24px;
+        background: #f6f8fb;
+      }
+      main {
+        max-width: 960px;
+        margin: 0 auto;
+      }
+      .card {
+        background: white;
+        border-radius: 10px;
+        padding: 20px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        margin-bottom: 16px;
+      }
+      .card h1 {
+        margin-top: 0;
+      }
+      .form-list {
+        display: grid;
+        gap: 12px;
+      }
+      .form-item {
+        border: 1px solid #dfe4ea;
+        border-radius: 8px;
+        padding: 14px 16px;
+        background: #fcfdff;
+      }
+      .form-item h3 {
+        margin: 0 0 6px;
+      }
+      .form-item p {
+        margin: 0 0 8px;
+        color: #57606a;
+      }
+      .pill {
+        display: inline-block;
+        padding: 4px 8px;
+        border-radius: 999px;
+        background: #e8f5e9;
+        color: #2e7d32;
+        font-size: 12px;
+        font-weight: bold;
+        margin-right: 8px;
+      }
+      .btn {
+        display: inline-block;
+        padding: 8px 12px;
+        border-radius: 6px;
+        background: #2e7d32;
+        color: white;
+        text-decoration: none;
+      }
+      .btn.secondary {
+        background: #4b5563;
+      }
+      .muted {
+        color: #6b7280;
+        font-size: 13px;
+      }
+      .note {
+        background: #fff8e1;
+        border-left: 4px solid #f59e0b;
+        padding: 10px 12px;
+        border-radius: 4px;
+        margin-top: 10px;
+      }
+      .header-actions {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 10px;
+      }
+    </style>
+  </head>
+  <body>
+    <main>
+      <section class="card">
+        <div class="header-actions">
+          <h1>Special Process Forms</h1>
+          <a class="btn secondary" href="special-process-records.html"
+            >View Saved Records</a
+          >
+        </div>
+        <div id="formList" class="form-list"></div>
+      </section>
+    </main>
+    <script type="module" src="js/special-process-forms.mjs"></script>
+  </body>
+</html>
