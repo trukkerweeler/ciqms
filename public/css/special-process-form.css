@@ -38,8 +38,8 @@ main {
   margin-top: 12px;
 }
 .section-box.process-theme-citric {
-  background: #fff6eb;
-  border-color: #f2c38b;
+  background: #fff0df;
+  border-color: #e9b173;
 }
 .section-box.process-theme-nitric {
   background: #eef7ff;
@@ -63,8 +63,8 @@ main {
   border-color: #cbd5e1;
 }
 .section-box.process-theme-chemfilm-gold {
-  background: #fffbea;
-  border-color: #d4a017;
+  background: linear-gradient(135deg, #fff4dc 0%, #f3d7a5 45%, #d8a35e 100%);
+  border-color: #b97a2a;
 }
 .section-box h3 {
   margin: 0 0 10px;

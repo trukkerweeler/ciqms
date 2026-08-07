@@ -63,7 +63,7 @@ Else
     WScript.Quit
 End If
 
-conn.Open "DSN=Global_CII;UID=tkent;PWD=A1rplane"
+conn.Open "DSN=" & dsn & ";UID=" & uid & ";PWD=" & pwd
 
 If Err.Number <> 0 Then
     MsgBox "Connection failed: " & Err.Description

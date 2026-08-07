@@ -6,6 +6,17 @@ On Error Resume Next
 
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set WshShell = CreateObject("WScript.Shell")
+
+' Prefer process environment variables passed by Node (supports deployed server).
+dsn = Trim(WshShell.ExpandEnvironmentStrings("%GLOBAL_DSN%"))
+uid = Trim(WshShell.ExpandEnvironmentStrings("%GLOBAL_UID%"))
+pwd = Trim(WshShell.ExpandEnvironmentStrings("%GLOBAL_PWD%"))
+
+If dsn = "%GLOBAL_DSN%" Then dsn = ""
+If uid = "%GLOBAL_UID%" Then uid = ""
+If pwd = "%GLOBAL_PWD%" Then pwd = ""
+
+If dsn = "" Or uid = "" Or pwd = "" Then
 DocumentsPath = WshShell.SpecialFolders("MyDocuments")
 CIQMSPath = DocumentsPath & "\CIQMS"
 If UCase(WshShell.ExpandEnvironmentStrings("%COMPUTERNAME%")) = "QUALITY-MGR" Then
@@ -34,6 +45,7 @@ Do While Not file.AtEndOfStream
   If Left(line, 11) = "GLOBAL_PWD=" Then pwd = Mid(line, 12)
 Loop
 file.Close
+End If
 
 If dsn = "" Or uid = "" Or pwd = "" Then
   WScript.StdOut.Write "{""error"":""Missing GLOBAL_DSN/UID/PWD in .env""}"
