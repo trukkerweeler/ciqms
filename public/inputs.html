@@ -13,6 +13,15 @@
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="icon" href="images/ci-logo.png" />
     <title>Inputs (CIQMS)</title>
+    <style>
+      /* Narrower fields don't need half the modal width */
+      #addInputForm .form-grid {
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) !important;
+      }
+      #addInputForm .form-group.full-width {
+        grid-column: 1 / -1;
+      }
+    </style>
   </head>
   <body class="list-page">
     <header id="header" style="flex-shrink: 0"></header>
@@ -41,10 +50,10 @@
     <main id="main">
       <!-- Add Input Dialog -->
       <dialog id="addInputDialog" class="dialog">
-        <div class="dialog-header">
-          <h2>Add New Input</h2>
-        </div>
         <form id="addInputForm" class="form">
+          <div class="form-header">
+            <h2>Add New Input</h2>
+          </div>
           <div class="form-grid">
             <div class="form-group">
               <label for="INPUT_DATE">Action Date</label>

@@ -1,7 +1,9 @@
-const express = require("express");
+﻿const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
 const nodemailer = require("nodemailer");
+const fs = require("fs");
+const path = require("path");
 
 // ==================================================
 // Send email using nodemailer
@@ -733,7 +735,7 @@ router.get("/pm-mgmt-review", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("❌ DB connection failed:", err.stack);
+      console.error("âŒ DB connection failed:", err.stack);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -794,22 +796,26 @@ router.get("/pm-mgmt-review", (req, res) => {
         .join(" UNION ALL ");
 
       if (!queries || queries.length === 0) {
-        console.error("❌ No queries generated for date range");
+        console.error("âŒ No queries generated for date range");
         return res.json({ labels: [], expired: [], no_entries: [] });
       }
 
-      console.log("📊 Executing PM review query for", months.length, "months");
+      console.log(
+        "ðŸ“Š Executing PM review query for",
+        months.length,
+        "months",
+      );
 
       connection.query(queries, (err, rows) => {
         if (err) {
-          console.error("❌ Query failed:", err);
+          console.error("âŒ Query failed:", err);
           res.status(500).json({ error: "Query execution failed" });
         } else {
-          console.log("📊 Query returned", rows ? rows.length : 0, "rows");
+          console.log("ðŸ“Š Query returned", rows ? rows.length : 0, "rows");
           const labels = rows.map((row) => row.month_name);
           const expired = rows.map((row) => row.expired_count || 0);
           const no_entries = rows.map((row) => row.no_entries_count || 0);
-          console.log("📊 Returning data:", {
+          console.log("ðŸ“Š Returning data:", {
             labelsCount: labels.length,
             expiredCount: expired.length,
             no_entriesCount: no_entries.length,
@@ -819,7 +825,7 @@ router.get("/pm-mgmt-review", (req, res) => {
         connection.end();
       });
     } catch (error) {
-      console.error("❌ Error in PM mgmt review endpoint:", error);
+      console.error("âŒ Error in PM mgmt review endpoint:", error);
       res.status(500).json({ error: "Server error" });
       connection.end();
     }
@@ -856,7 +862,7 @@ router.get("/pm-no-entries-detail", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("❌ DB connection failed:", err.stack);
+      console.error("âŒ DB connection failed:", err.stack);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -873,7 +879,7 @@ router.get("/pm-no-entries-detail", (req, res) => {
     connection.query(sql, [startStr, endStr], (err, rows) => {
       connection.end();
       if (err) {
-        console.error("❌ pm-no-entries-detail query failed:", err);
+        console.error("âŒ pm-no-entries-detail query failed:", err);
         return res.status(500).json({ error: "Query execution failed" });
       }
       const items = rows.map((r) => ({
@@ -1020,7 +1026,7 @@ router.put("/:id", (req, res) => {
         const response = { data: rows };
         if (req.capsWarning) {
           response.warning =
-            "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization.";
+            "âš ï¸ All caps is considered YELLING in professional communication. Please use normal capitalization.";
         }
         res.json(response);
 
@@ -1192,7 +1198,7 @@ router.put("/detail/:id", (req, res) => {
         const response = { data: rows };
         if (req.capsWarning) {
           response.warning =
-            "⚠️ All caps is considered YELLING in professional communication. Please use normal capitalization.";
+            "âš ï¸ All caps is considered YELLING in professional communication. Please use normal capitalization.";
         }
         res.json(response);
       });

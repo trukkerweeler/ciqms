@@ -396,6 +396,14 @@ try {
   logError("AUTH", error, "Error loading auth routes");
 }
 
+try {
+  const filingLocationsRoutes = require("./routes/filingLocations");
+  app.use("/api/filing-locations", filingLocationsRoutes);
+  console.log("Loaded route: /api/filing-locations from filingLocations.js");
+} catch (error) {
+  logError("FILINGS", error, "Error loading filingLocations routes");
+}
+
 process.on("unhandledRejection", (reason) => {
   logError("UNHANDLED_REJECTION", reason, "Promise rejection was not caught");
 });

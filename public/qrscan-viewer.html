@@ -1,0 +1,274 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>QR Scan Viewer</title>
+    <link rel="stylesheet" href="/css/styles.css" />
+    <style>
+      body {
+        margin: 0;
+        padding: 20px;
+        background: #f4f6f8;
+        color: #1f2937;
+        font-family: Arial, sans-serif;
+      }
+
+      .container {
+        max-width: 1400px;
+        margin: 0 auto;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        gap: 12px;
+        margin-bottom: 16px;
+      }
+
+      .pager {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        gap: 12px;
+        margin-bottom: 12px;
+      }
+
+      .pager button {
+        padding: 10px 14px;
+        border: 1px solid #2563eb;
+        border-radius: 8px;
+        background: linear-gradient(135deg, #2563eb, #1d4ed8);
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+        box-shadow: 0 2px 6px rgba(37, 99, 235, 0.25);
+        min-width: 120px;
+      }
+
+      .pager button:hover:not(:disabled) {
+        background: linear-gradient(135deg, #1d4ed8, #1e40af);
+        transform: translateY(-1px);
+      }
+
+      .pager button:disabled {
+        opacity: 0.5;
+        cursor: not-allowed;
+        box-shadow: none;
+      }
+
+      .counter {
+        font-weight: 600;
+      }
+
+      .card {
+        background: #fff;
+        border-radius: 8px;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+        padding: 16px;
+      }
+
+      .list {
+        display: grid;
+        gap: 12px;
+      }
+
+      .item {
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        padding: 12px;
+      }
+
+      .meta {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 12px;
+        margin-bottom: 8px;
+        font-size: 0.95rem;
+      }
+
+      iframe {
+        width: 100%;
+        min-height: 70vh;
+        border: 1px solid #d1d5db;
+        border-radius: 6px;
+        background: #fff;
+      }
+
+      .status {
+        padding: 8px 12px;
+        border-radius: 6px;
+        display: inline-flex;
+        align-items: center;
+        margin: 0;
+        font-weight: 600;
+        min-height: 38px;
+      }
+
+      .status.matched {
+        background: #dcfce7;
+        color: #166534;
+      }
+
+      .status.unmatched {
+        background: #fee2e2;
+        color: #991b1b;
+      }
+
+      .action-panel {
+        display: flex;
+        flex-wrap: nowrap;
+        gap: 8px;
+        align-items: center;
+        justify-content: center;
+        margin: 0 0 8px 0;
+        min-height: 40px;
+      }
+
+      .action-panel select,
+      .action-panel input.destination-path {
+        height: 38px;
+        box-sizing: border-box;
+        margin: 0;
+        line-height: 1.2;
+      }
+
+      .action-panel select {
+        padding: 7px 9px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        min-width: 200px;
+        flex: 0 0 200px;
+      }
+
+      .action-panel input.destination-path {
+        padding: 7px 9px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        min-width: 280px;
+        font-size: 0.85rem;
+        flex: 1 1 280px;
+      }
+
+      .action-panel button {
+        padding: 8px 14px;
+        border: 1px solid #2563eb;
+        border-radius: 6px;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .action-panel button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .save-message {
+        font-size: 0.95rem;
+        color: #0f766e;
+        font-weight: 600;
+      }
+
+      .save-footer {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: flex-end;
+        gap: 8px;
+        margin: 8px 0 10px 0;
+        padding-right: 1rem;
+      }
+
+      .measurement-panel {
+        margin-top: 0;
+        padding: 10px 12px;
+        border: 1px solid #d1d5db;
+        border-radius: 8px;
+        background: #f8fafc;
+      }
+
+      .measurement-header-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 10px;
+        align-items: center;
+        width: 100%;
+      }
+
+      .measurement-panel h4 {
+        margin: 0;
+        font-size: 1rem;
+        white-space: nowrap;
+      }
+
+      .measurement-grid {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        align-items: center;
+        margin-left: auto;
+      }
+
+      .measurement-field {
+        display: flex;
+        flex-direction: row;
+        align-items: center;
+        gap: 6px;
+        min-width: 0;
+      }
+
+      .measurement-field label {
+        font-weight: 600;
+        white-space: nowrap;
+      }
+
+      .measurement-field input {
+        padding: 5px 8px;
+        border: 1px solid #cbd5e1;
+        border-radius: 6px;
+        width: 92px;
+        min-width: 92px;
+        height: 30px;
+        box-sizing: border-box;
+      }
+
+      .measurement-actions {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        margin-left: 8px;
+      }
+
+      .measurement-actions button {
+        padding: 8px 12px;
+        border: 1px solid #2563eb;
+        border-radius: 6px;
+        background: #2563eb;
+        color: #fff;
+        cursor: pointer;
+        font-weight: 600;
+      }
+
+      .measurement-status {
+        font-size: 0.85rem;
+        color: #64748b;
+        min-height: 1.25rem;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="header">
+        <h1>QR Scan Viewer</h1>
+        <a href="/inputs.html" class="button">Back to Inputs</a>
+      </div>
+
+      <div id="results" class="list"></div>
+    </div>
+
+    <script type="module" src="/js/qrscan-viewer.mjs"></script>
+  </body>
+</html>
