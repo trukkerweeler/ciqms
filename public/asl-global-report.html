@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="ASL vs Global supplier comparison report"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/asl-global-report.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>ASL vs Global Supplier Report</title>
+  </head>
+  <body class="list-page">
+    <header id="header"></header>
+
+    <main id="main" class="report-main">
+      <section class="recordsaddrecordheading report-heading">
+        <h1>ASL vs Global Supplier Report</h1>
+      </section>
+
+      <section class="filters" aria-label="Date filters">
+        <label for="startDate">Start Date</label>
+        <input id="startDate" type="date" />
+
+        <label for="endDate">End Date</label>
+        <input id="endDate" type="date" />
+
+        <button id="runReportBtn" class="button" type="button">
+          Run Report
+        </button>
+      </section>
+
+      <section id="status" class="status" aria-live="polite"></section>
+      <section id="summary" class="summary-grid"></section>
+
+      <section>
+        <h2>Matched Suppliers (ASL + Global)</h2>
+        <div id="matchedTableWrap" class="table-wrap"></div>
+      </section>
+
+      <section>
+        <h2>Global Only Suppliers (not on ASL)</h2>
+        <div id="globalOnlyTableWrap" class="table-wrap"></div>
+      </section>
+
+      <section>
+        <h2>Unmatched PO-Line Records (Global vendor not on ASL)</h2>
+        <button
+          id="toggleUnmatchedBtn"
+          class="button"
+          type="button"
+          aria-expanded="false"
+        >
+          Show Unmatched PO-Line Records
+        </button>
+        <div id="globalOnlyLinesContainer" class="is-hidden">
+          <div id="globalOnlyLinesTableWrap" class="table-wrap"></div>
+        </div>
+      </section>
+    </main>
+
+    <footer id="footer"></footer>
+    <script type="module" src="/js/asl-global-report.mjs"></script>
+  </body>
+</html>

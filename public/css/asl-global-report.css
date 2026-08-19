@@ -1,0 +1,136 @@
+/* Use page-level scrolling for this long report page. */
+body.list-page {
+  height: auto;
+  min-height: 100dvh;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding-bottom: 70px;
+}
+
+body.list-page #main.report-main {
+  display: block;
+  overflow: visible;
+}
+
+.report-main {
+  padding: 1rem;
+}
+
+.report-heading {
+  margin-bottom: 0.75rem;
+}
+
+.filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 0.6rem;
+  margin-bottom: 1rem;
+}
+
+.filters label {
+  font-weight: 600;
+}
+
+.filters input[type="date"] {
+  min-width: 170px;
+}
+
+.status {
+  min-height: 1.25rem;
+  margin-bottom: 0.75rem;
+  font-weight: 600;
+}
+
+.status.error {
+  color: #a40000;
+}
+
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 0.5rem;
+  margin-bottom: 1.25rem;
+}
+
+.summary-card {
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  padding: 0.65rem 0.75rem;
+  background: #fff;
+}
+
+.summary-card h3 {
+  font-size: 0.85rem;
+  margin: 0 0 0.3rem;
+  color: #555;
+}
+
+.summary-card p {
+  margin: 0;
+  font-size: 1.05rem;
+  font-weight: 700;
+}
+
+.table-wrap {
+  margin-bottom: 1.2rem;
+}
+
+.table-container {
+  overflow: auto;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: #fff;
+}
+
+.data-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.data-table th,
+.data-table td {
+  padding: 0.45rem 0.55rem;
+  border-bottom: 1px solid #eee;
+  text-align: left;
+  white-space: nowrap;
+}
+
+.data-table thead th {
+  position: sticky;
+  top: 0;
+  background: #f6f8fa;
+  z-index: 1;
+}
+
+.empty {
+  margin: 0.25rem 0 0.8rem;
+  font-style: italic;
+}
+
+#toggleUnmatchedBtn {
+  margin-bottom: 0.75rem;
+}
+
+.is-hidden {
+  display: none;
+}
+
+/* Global-only supplier name column: widen to prevent overflow. */
+#globalOnlyTableWrap .data-table th:nth-child(2),
+#globalOnlyTableWrap .data-table td:nth-child(2) {
+  width: 16rem !important;
+}
+
+/* Widen key investigative fields in unmatched PO-line results. */
+#globalOnlyLinesTableWrap .data-table th:nth-child(1),
+#globalOnlyLinesTableWrap .data-table td:nth-child(1) {
+  width: 7.5rem !important;
+}
+
+#globalOnlyLinesTableWrap .data-table th:nth-child(4),
+#globalOnlyLinesTableWrap .data-table td:nth-child(4),
+#globalOnlyLinesTableWrap .data-table th:nth-child(5),
+#globalOnlyLinesTableWrap .data-table td:nth-child(5) {
+  width: 16rem !important;
+}

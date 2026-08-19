@@ -127,6 +127,11 @@
           "h2": "Supplier Performance Scorecard",
           "a": "Go to Supplier Performance Scorecard",
           "html": "supplier-scorecard.html"
+        },
+        {
+          "h2": "ASL vs Global Supplier Report",
+          "a": "Go to ASL vs Global Supplier Report",
+          "html": "asl-global-report.html"
         }
       ]
     },
