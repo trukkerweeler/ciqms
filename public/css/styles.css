@@ -6,6 +6,9 @@
   --accent-color: #f44336;
   --accent-color-light: #e57373;
   --accent-color-dark: #d32f2f;
+  /* Nav hover tones derived from the brand crimson background */
+  --nav-hover-bg: #a91730;
+  --nav-hover-bg-light: #8d1128;
   --text-color: #333;
   --text-color-light: #fff;
   --text-color-dark: #000;
@@ -165,7 +168,7 @@ html {
 }
 
 .nav-toggle:hover {
-  background-color: var(--accent-color);
+  background-color: var(--nav-hover-bg);
   transform: translateY(-1px);
 }
 
@@ -194,7 +197,7 @@ html {
   z-index: 10000;
   border-radius: var(--border-radius);
   box-shadow: var(--shadow);
-  top: calc(100% + 8px);
+  top: 100%;
   left: 0;
   opacity: 0;
   transform: translateY(-10px);
@@ -205,15 +208,39 @@ html {
   display: flex;
   flex-direction: column;
   list-style: none;
-  padding: 0;
+  padding: 0.25rem 0;
   margin: 0;
 }
 
+/* Invisible bridge so the cursor can cross the offset without closing the menu */
+.submenu::before {
+  content: "";
+  position: absolute;
+  top: -8px;
+  left: 0;
+  right: 0;
+  height: 8px;
+}
+
+/* header.html contains placeholder <ul class="submenu"></ul> elements */
+.submenu:empty {
+  display: none !important;
+}
+
 .submenu .submenu {
-  top: 0;
+  top: -0.25rem;
   left: 100%;
-  margin-left: 8px;
+  margin-left: 0;
   transform: translateX(-10px);
+}
+
+.submenu .submenu::before {
+  top: 0;
+  bottom: 0;
+  left: -8px;
+  right: auto;
+  width: 8px;
+  height: auto;
 }
 
 .submenu li {
@@ -225,7 +252,9 @@ html {
 
 .submenu a {
   color: var(--text-color-light);
-  padding: 12px 16px;
+  font-size: 0.95rem;
+  line-height: 1.4;
+  padding: 0.5rem 0.9rem;
   text-decoration: none;
   display: block;
   width: 100%;
@@ -234,24 +263,23 @@ html {
 }
 
 .submenu a:hover {
-  background-color: var(--text-color);
+  background-color: var(--nav-hover-bg-light);
   color: var(--text-color-light);
 }
 
 .submenu a:active {
-  background-color: var(--text-color);
+  background-color: var(--nav-hover-bg-light);
   color: var(--text-color-light);
 }
 
-#main-nav ul li:hover > .submenu,
-#main-nav ul li:hover .submenu {
+#main-nav ul li:hover > .submenu:not(:empty) {
   visibility: visible !important;
   opacity: 1 !important;
   transform: translateY(0) !important;
   display: flex !important;
 }
 
-.submenu li:hover > .submenu {
+.submenu li:hover > .submenu:not(:empty) {
   visibility: visible !important;
   opacity: 1 !important;
   transform: translateX(0) !important;
@@ -271,7 +299,8 @@ html {
 }
 
 #main-nav a:hover {
-  background-color: var(--accent-color);
+  background-color: var(--nav-hover-bg);
+  color: var(--text-color-light);
   transform: translateY(-1px);
 }
 
@@ -2032,7 +2061,7 @@ footer div p {
   }
 
   #main-nav a:hover {
-    background-color: var(--accent-color);
+    background-color: var(--nav-hover-bg);
     padding-left: 1.5rem;
   }
 
@@ -2047,7 +2076,7 @@ footer div p {
     transition: all 0.3s ease;
   }
 
-  #main-nav ul li:hover .submenu {
+  #main-nav ul li:hover > .submenu:not(:empty) {
     display: block;
   }
 
@@ -2059,7 +2088,7 @@ footer div p {
 
   .submenu a:hover {
     padding-left: 2.5rem;
-    background-color: var(--accent-color-light);
+    background-color: var(--nav-hover-bg-light);
   }
 
   #login {
@@ -2317,6 +2346,48 @@ footer div p {
 .table-container thead th:nth-child(9),
 .table-container tbody td:nth-child(9) {
   width: 68px;
+  white-space: nowrap;
+}
+
+#supplierTableContainer table {
+  min-width: 760px;
+}
+
+#supplierTableContainer thead th:nth-child(1),
+#supplierTableContainer tbody td:nth-child(1) {
+  width: 72px;
+}
+
+#supplierTableContainer thead th:nth-child(2),
+#supplierTableContainer tbody td:nth-child(2) {
+  width: 180px;
+}
+
+#supplierTableContainer thead th:nth-child(3),
+#supplierTableContainer tbody td:nth-child(3) {
+  width: 150px;
+}
+
+#supplierTableContainer thead th:nth-child(4),
+#supplierTableContainer tbody td:nth-child(4) {
+  width: 110px;
+}
+
+#supplierTableContainer thead th:nth-child(5),
+#supplierTableContainer tbody td:nth-child(5) {
+  width: 56px;
+}
+
+#supplierTableContainer thead th:nth-child(6),
+#supplierTableContainer tbody td:nth-child(6) {
+  width: 52px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+#supplierTableContainer thead th:nth-child(7),
+#supplierTableContainer tbody td:nth-child(7) {
+  width: 90px;
   white-space: nowrap;
 }
 
