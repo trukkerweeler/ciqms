@@ -80,8 +80,20 @@
                 <textarea id="notes" name="notes" rows="4"></textarea>
               </div>
               <div class="field">
-                <label>Technician</label>
-                <div id="currentUserDisplay" class="readonly-field"></div>
+                <label for="technician">Technician</label>
+                <select id="technician" name="technician" style="width: 100%">
+                  <option value="OGOLUBOVIC" selected>OGOLUBOVIC</option>
+                  <option value="LNASSIAH">LNASSIAH</option>
+                </select>
+              </div>
+              <div class="field">
+                <label for="processDate">Date</label>
+                <input
+                  id="processDate"
+                  name="processDate"
+                  type="date"
+                  style="width: 100%"
+                />
               </div>
               <div class="actions" style="margin-top: 8px">
                 <button class="btn" type="submit">Save</button>

@@ -65,12 +65,19 @@ function normalizeSequenceCode(value) {
   return text.replace(/^#+\s*/, "").toUpperCase();
 }
 
+function normalizeProcessDate(value) {
+  const text = String(value || "").trim();
+  return /^\d{4}-\d{2}-\d{2}$/.test(text) ? text : null;
+}
+
 async function saveRecord(connection, payload, req) {
   const workOrder = parseWorkOrder(payload.workOrderRaw);
-  const actor = currentUser(req) || payloadUser(payload);
+  const actor = payloadUser(payload) || currentUser(req);
   const processType = payload.processType || "chem-film";
   const sequenceCode = normalizeSequenceCode(payload.sequenceCode);
   const localNow = toLocalMySqlDateTime();
+  const processDate =
+    normalizeProcessDate(payload.processDate) || localNow.slice(0, 10);
   let formInstanceId = String(payload.formInstanceId || "").trim();
   let existing = [];
 
@@ -108,6 +115,7 @@ async function saveRecord(connection, payload, req) {
            WORK_ORDER_RAW = ?, WORK_ORDER_JOB = ?, WORK_ORDER_SUFFIX = ?,
            PART_NUMBER = ?, PART_DESCRIPTION = ?,
            QTY_ACCEPTED = ?, QTY_REJECTED = ?, NOTES = ?, PROCESS_TYPE = ?,
+           PROCESS_DATE = ?,
            STATUS = 'SAVED', UPDATED_BY = ?, UPDATED_AT = ?
        WHERE FORM_RECORD_ID = ?`,
       [
@@ -124,6 +132,7 @@ async function saveRecord(connection, payload, req) {
         Number(payload.qtyRejected || 0),
         payload.notes || null,
         processType,
+        processDate,
         actor,
         localNow,
         formRecordId,
@@ -136,9 +145,9 @@ async function saveRecord(connection, payload, req) {
          FORM_DEFINITION_ID, FORM_INSTANCE_ID, SERIES, SEQUENCE_CODE, FORM_LABEL,
          WORK_ORDER_RAW, WORK_ORDER_JOB, WORK_ORDER_SUFFIX,
          PART_NUMBER, PART_DESCRIPTION,
-         QTY_ACCEPTED, QTY_REJECTED, NOTES, PROCESS_TYPE, STATUS,
+         QTY_ACCEPTED, QTY_REJECTED, NOTES, PROCESS_TYPE, PROCESS_DATE, STATUS,
          CREATED_BY, CREATED_AT, UPDATED_BY, UPDATED_AT
-      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SAVED', ?, ?, ?, ?)`,
+      ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'SAVED', ?, ?, ?, ?)`,
       [
         payload.formDefinitionId,
         formInstanceId,
@@ -154,6 +163,7 @@ async function saveRecord(connection, payload, req) {
         Number(payload.qtyRejected || 0),
         payload.notes || null,
         processType,
+        processDate,
         actor,
         localNow,
         actor,
@@ -276,6 +286,7 @@ router.get("/", async (req, res) => {
            PART_DESCRIPTION,
            QTY_ACCEPTED,
            QTY_REJECTED,
+           PROCESS_DATE,
            STATUS,
            CREATED_BY,
            CREATED_AT,

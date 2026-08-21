@@ -3,14 +3,14 @@ import {
   specialProcessFormDefinitions,
   getFormDisplayName,
   getFormFieldGroups,
-  getDefaultTechnicianValue,
   formatProcessRangeSummary,
   getStepRequirement,
   shouldShowStepInput,
   getProcessTheme,
 } from "./special-process-form-names.mjs";
-import { getCurrentUser } from "./auth-utils.mjs";
-import { getApiUrl, getSessionUser } from "./utils.mjs";
+// Login/computer based technician lookup retained for reference:
+// import { getCurrentUser } from "./auth-utils.mjs";
+import { getApiUrl } from "./utils.mjs";
 
 const params = new URLSearchParams(window.location.search);
 const formId = params.get("id");
@@ -24,6 +24,8 @@ const summaryEl = document.getElementById("summary");
 const backButton = document.getElementById("backButton");
 const formInstanceInput = document.getElementById("formInstanceId");
 const partDescriptionInput = document.getElementById("partDescription");
+const technicianSelect = document.getElementById("technician");
+const processDateInput = document.getElementById("processDate");
 let resolvedUserName = "";
 
 function collectStepValues(definition) {
@@ -146,6 +148,15 @@ async function loadSavedIfRequested(definition) {
     if (notesInput) {
       notesInput.value = header.NOTES || "";
     }
+    if (technicianSelect && header.CREATED_BY) {
+      technicianSelect.value = header.CREATED_BY;
+      resolvedUserName = technicianSelect.value;
+    }
+    if (processDateInput) {
+      processDateInput.value = header.PROCESS_DATE
+        ? String(header.PROCESS_DATE).slice(0, 10)
+        : todayIsoDate();
+    }
     if (formInstanceInput) {
       formInstanceInput.value = header.FORM_INSTANCE_ID || instanceId;
     }
@@ -157,20 +168,37 @@ async function loadSavedIfRequested(definition) {
   }
 }
 
+function todayIsoDate() {
+  const now = new Date();
+  const pad2 = (value) => String(value).padStart(2, "0");
+  return `${now.getFullYear()}-${pad2(now.getMonth() + 1)}-${pad2(now.getDate())}`;
+}
+
 async function populateUserDefaults() {
-  const authUser = await getCurrentUser();
-  const sessionUser = await getSessionUser();
-  const currentUser = authUser || sessionUser || "";
-  resolvedUserName = getDefaultTechnicianValue(currentUser);
-  const technicianInput = document.getElementById("field-technician");
-  if (technicianInput) {
-    technicianInput.value = resolvedUserName;
+  // Technician is now chosen from the sidebar dropdown instead of login/computer.
+  // const authUser = await getCurrentUser();
+  // const sessionUser = await getSessionUser();
+  // const currentUser = authUser || sessionUser || "";
+  // resolvedUserName = getDefaultTechnicianValue(currentUser);
+  // const technicianInput = document.getElementById("field-technician");
+  // if (technicianInput) {
+  //   technicianInput.value = resolvedUserName;
+  // }
+  // const userDisplay = document.getElementById("currentUserDisplay");
+  // if (userDisplay) {
+  //   const name = resolvedUserName;
+  //   userDisplay.textContent = name || "Not signed in";
+  //   if (!name) userDisplay.style.color = "#9ca3af";
+  // }
+  if (technicianSelect) {
+    if (!technicianSelect.value) technicianSelect.value = "OGOLUBOVIC";
+    resolvedUserName = technicianSelect.value;
+    technicianSelect.addEventListener("change", () => {
+      resolvedUserName = technicianSelect.value;
+    });
   }
-  const userDisplay = document.getElementById("currentUserDisplay");
-  if (userDisplay) {
-    const name = resolvedUserName;
-    userDisplay.textContent = name || "Not signed in";
-    if (!name) userDisplay.style.color = "#9ca3af";
+  if (processDateInput && !processDateInput.value) {
+    processDateInput.value = todayIsoDate();
   }
 }
 
@@ -371,9 +399,9 @@ if (!form) {
         qtyRejected: values.qtyRejected || 0,
         notes: values.notes || "",
         processType: values.processType || "chem-film",
-        createdBy: resolvedUserName || "",
-        technician:
-          document.getElementById("currentUserDisplay")?.textContent || "",
+        createdBy: technicianSelect?.value || resolvedUserName || "",
+        technician: technicianSelect?.value || "",
+        processDate: processDateInput?.value || "",
         stepValues: collectStepValues(definition),
       };
 
@@ -401,6 +429,12 @@ if (!form) {
         `;
 
         formEl.reset();
+        if (technicianSelect) {
+          technicianSelect.value = resolvedUserName || "OGOLUBOVIC";
+        }
+        if (processDateInput) {
+          processDateInput.value = todayIsoDate();
+        }
         if (processTypeInput) {
           processTypeInput.value =
             form.kind === "chem-film" ? "chem-film" : "passivation";
