@@ -1,0 +1,655 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avery 15667 Label Sheet</title>
+    <style>
+      :root {
+        --page-width: 8.5in;
+        --page-height: 11in;
+        --left-margin: 0.19in;
+        --top-margin: 0.5in;
+        --label-width: 1.75in;
+        --label-height: 0.5in;
+        --column-gap: 0.25in;
+        --row-gap: 0in;
+        --sheet-width: calc((4 * var(--label-width)) + (3 * var(--column-gap)));
+        --sheet-height: calc(
+          (20 * var(--label-height)) + (19 * var(--row-gap))
+        );
+        --panel-bg: #f3f4f6;
+        --sidebar-bg: #ffffff;
+        --sheet-bg: #e5e7eb;
+        --border: #c7ccd6;
+        --text: #1f2937;
+        --muted: #4b5563;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --empty: #f9fafb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0in;
+        padding: 0in;
+        width: 100%;
+      }
+
+      body {
+        font-family: Tahoma, Arial, Helvetica, sans-serif;
+        background: #eef2f7;
+        color: var(--text);
+      }
+
+      .page {
+        display: block;
+        min-height: 100vh;
+        padding: 0.25in;
+      }
+
+      .sidebar {
+        width: 100%;
+        background: var(--sidebar-bg);
+        border: 0.01in solid var(--border);
+        border-radius: 0.125in;
+        padding: 0.2in;
+        box-shadow: 0 0.06in 0.2in rgba(15, 23, 42, 0.06);
+        display: flex;
+        align-items: flex-end;
+        flex-wrap: wrap;
+        gap: 0.16in;
+      }
+
+      .sidebar h1 {
+        align-self: center;
+        margin: 0in 0.12in 0in 0in;
+        font-size: 0.24in;
+      }
+
+      .field {
+        flex: 1 1 2.2in;
+        max-width: 3in;
+        margin: 0in;
+      }
+
+      .field label {
+        display: block;
+        margin-bottom: 0.08in;
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 0.13in;
+      }
+
+      .field input {
+        width: 100%;
+        padding: 0.1in 0.125in;
+        border: 0.01in solid var(--border);
+        border-radius: 0.08in;
+        font-size: 0.14in;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        gap: 0.08in;
+        margin: 0in;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 0.08in;
+        padding: 0.1in 0.16in;
+        font-weight: 700;
+        cursor: pointer;
+        background: var(--accent);
+        color: white;
+        font-size: 0.12in;
+        margin: 0in;
+      }
+
+      button.secondary {
+        background: #e5e7eb;
+        color: var(--text);
+      }
+
+      button.print-btn {
+        background: #0f766e;
+      }
+
+      .selected-count {
+        align-self: center;
+        padding: 0.12in 0.14in;
+        background: var(--accent-soft);
+        border: 0.01in solid #bfdbfe;
+        border-radius: 0.08in;
+        font-weight: 700;
+        color: var(--text);
+        font-size: 0.13in;
+      }
+
+      .sheet-panel {
+        display: block;
+        margin-top: 0.25in;
+        background: var(--sheet-bg);
+        border: 0.01in solid var(--border);
+        border-radius: 0.12in;
+        padding: 0.2in;
+        overflow: auto;
+      }
+
+      .sheet-grid {
+        display: grid;
+        grid-template-columns: 0.7in repeat(4, var(--label-width));
+        grid-template-rows: auto;
+        column-gap: var(--column-gap);
+        row-gap: var(--row-gap);
+        width: fit-content;
+        margin: 0in auto;
+      }
+
+      .corner,
+      .header-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0.35in;
+        background: rgba(255, 255, 255, 0.7);
+        border: 0.01in solid var(--border);
+        border-radius: 0.08in;
+        font-weight: 700;
+        color: var(--muted);
+        padding: 0in 0.08in;
+        font-size: 0.1in;
+      }
+
+      .row-header {
+        justify-content: flex-start;
+        padding-left: 0.12in;
+      }
+
+      .header-toggle input,
+      .cell-toggle {
+        width: 0.16in;
+        height: 0.16in;
+        margin: 0in;
+        cursor: pointer;
+      }
+
+      .label-slot {
+        width: var(--label-width);
+        height: var(--label-height);
+        background: var(--empty);
+        border: 0.02in solid var(--border);
+        border-radius: 0.08in;
+        padding: 0.06in;
+        display: block;
+        position: relative;
+      }
+
+      .label-slot.is-selected {
+        background: #ffffff;
+        border-color: #a8b5c7;
+      }
+
+      .label-slot.is-empty {
+        opacity: 0.45;
+      }
+
+      .cell-toggle {
+        position: absolute;
+        top: 0.04in;
+        left: 0.04in;
+        z-index: 1;
+      }
+
+      .label-body {
+        width: 100%;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        text-align: center;
+        min-height: 0.28in;
+        font-size: 0.1197in;
+        line-height: 1.2;
+        color: var(--text);
+      }
+
+      .label-slot.is-empty .label-body {
+        display: none;
+      }
+
+      .label-line {
+        width: 100%;
+        overflow-wrap: anywhere;
+        font-weight: 400;
+      }
+
+      @media print {
+        @page {
+          size: 8.5in 11in;
+          margin: 0in;
+        }
+
+        html,
+        body {
+          margin: 0in;
+          padding: 0in;
+          width: var(--page-width);
+          height: var(--page-height);
+          background: white;
+        }
+
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .sidebar,
+        .button-row,
+        .selected-count,
+        .sheet-panel .corner,
+        .sheet-panel .header-toggle,
+        .sheet-panel .row-header {
+          display: none !important;
+        }
+
+        .page {
+          display: block;
+          width: var(--page-width);
+          height: var(--page-height);
+          margin: 0in;
+          padding: 0in;
+          background: white;
+        }
+
+        .sheet-panel {
+          position: absolute;
+          left: 0in;
+          top: 0in;
+          width: var(--page-width);
+          height: var(--page-height);
+          margin: 0in;
+          padding: 0in;
+          border: none;
+          background: white;
+          overflow: visible;
+        }
+
+        .sheet-grid {
+          position: absolute;
+          left: var(--left-margin);
+          top: var(--top-margin);
+          display: grid;
+          grid-template-columns: repeat(4, var(--label-width));
+          grid-template-rows: repeat(20, var(--label-height));
+          column-gap: var(--column-gap);
+          row-gap: var(--row-gap);
+          width: var(--sheet-width);
+          height: var(--sheet-height);
+          margin: 0in;
+          padding: 0in;
+          border: none;
+          background: white;
+        }
+
+        .label-slot {
+          width: var(--label-width);
+          height: var(--label-height);
+          min-height: var(--label-height);
+          border: none;
+          border-radius: 0in;
+          background: white;
+          padding: 0.04in;
+          display: flex;
+          align-items: center;
+          justify-content: center;
+          text-align: center;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        .cell-toggle {
+          display: none !important;
+        }
+
+        .label-body {
+          height: auto;
+          min-height: 0.3in;
+          font-size: 0.1197in;
+          line-height: 1.1;
+          font-weight: 400;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <aside class="sidebar">
+        <h1>Avery 15667</h1>
+
+        <div class="field">
+          <label for="partNumber">Part Number</label>
+          <input id="partNumber" type="text" value="ABC-123" />
+        </div>
+
+        <div class="field">
+          <label for="jobNumber">Job Number</label>
+          <input id="jobNumber" type="text" value="123456" />
+        </div>
+
+        <div class="button-row">
+          <button id="selectAllBtn" type="button">Select All</button>
+          <button id="clearAllBtn" class="secondary" type="button">
+            Clear All
+          </button>
+          <button id="printBtn" class="print-btn" type="button">
+            Print Labels
+          </button>
+        </div>
+
+        <div class="selected-count">
+          Selected labels: <span id="selectedCount">30</span>
+        </div>
+      </aside>
+
+      <main class="sheet-panel">
+        <div id="sheet" class="sheet-grid" aria-live="polite"></div>
+      </main>
+    </div>
+
+    <script>
+      const rows = 20;
+      const cols = 4;
+      const selectedState = Array.from({ length: rows }, () =>
+        Array(cols).fill(true),
+      );
+
+      const partNumberInput = document.getElementById("partNumber");
+      const jobNumberInput = document.getElementById("jobNumber");
+      const selectedCountEl = document.getElementById("selectedCount");
+      const sheetEl = document.getElementById("sheet");
+
+      function getSelectedCount() {
+        return selectedState.reduce(
+          (total, row) => total + row.filter(Boolean).length,
+          0,
+        );
+      }
+
+      function allSelectedInRow(rowIndex) {
+        return selectedState[rowIndex].every(Boolean);
+      }
+
+      function allSelectedInColumn(colIndex) {
+        return selectedState.every((row) => row[colIndex]);
+      }
+
+      function renderSheet() {
+        const partValue = partNumberInput.value.trim();
+        const jobValue = jobNumberInput.value.trim();
+        sheetEl.innerHTML = "";
+
+        const corner = document.createElement("div");
+        corner.className = "corner";
+        corner.textContent = "Row / Col";
+        sheetEl.appendChild(corner);
+
+        for (let col = 0; col < cols; col += 1) {
+          const header = document.createElement("label");
+          header.className = "header-toggle";
+          header.innerHTML = `
+            <input class="col-toggle" type="checkbox" data-col="${col}" ${
+              allSelectedInColumn(col) ? "checked" : ""
+            } />
+            <span>Col ${col + 1}</span>
+          `;
+          sheetEl.appendChild(header);
+        }
+
+        for (let row = 0; row < rows; row += 1) {
+          const rowHeader = document.createElement("label");
+          rowHeader.className = "header-toggle row-header";
+          rowHeader.innerHTML = `
+            <input class="row-toggle" type="checkbox" data-row="${row}" ${
+              allSelectedInRow(row) ? "checked" : ""
+            } />
+            <span>Row ${row + 1}</span>
+          `;
+          sheetEl.appendChild(rowHeader);
+
+          for (let col = 0; col < cols; col += 1) {
+            const slot = document.createElement("div");
+            slot.className = `label-slot ${selectedState[row][col] ? "is-selected" : "is-empty"}`;
+
+            const cellToggle = document.createElement("input");
+            cellToggle.type = "checkbox";
+            cellToggle.className = "cell-toggle";
+            cellToggle.checked = selectedState[row][col];
+            cellToggle.dataset.row = String(row);
+            cellToggle.dataset.col = String(col);
+
+            const labelBody = document.createElement("div");
+            labelBody.className = "label-body";
+
+            if (selectedState[row][col]) {
+              if (partValue) {
+                const partLine = document.createElement("div");
+                partLine.className = "label-line";
+                partLine.textContent = partValue;
+                labelBody.appendChild(partLine);
+              }
+
+              if (jobValue) {
+                const jobLine = document.createElement("div");
+                jobLine.className = "label-line";
+                jobLine.textContent = jobValue;
+                labelBody.appendChild(jobLine);
+              }
+            }
+
+            slot.appendChild(cellToggle);
+            slot.appendChild(labelBody);
+            sheetEl.appendChild(slot);
+          }
+        }
+
+        selectedCountEl.textContent = String(getSelectedCount());
+      }
+
+      document.addEventListener("change", (event) => {
+        const target = event.target;
+
+        if (target.matches(".cell-toggle")) {
+          const rowIndex = Number(target.dataset.row);
+          const colIndex = Number(target.dataset.col);
+          selectedState[rowIndex][colIndex] = target.checked;
+          renderSheet();
+          return;
+        }
+
+        if (target.matches(".row-toggle")) {
+          const rowIndex = Number(target.dataset.row);
+          selectedState[rowIndex].fill(target.checked);
+          renderSheet();
+          return;
+        }
+
+        if (target.matches(".col-toggle")) {
+          const colIndex = Number(target.dataset.col);
+          selectedState.forEach((row) => {
+            row[colIndex] = target.checked;
+          });
+          renderSheet();
+        }
+      });
+
+      partNumberInput.addEventListener("input", renderSheet);
+      jobNumberInput.addEventListener("input", renderSheet);
+
+      document.getElementById("selectAllBtn").addEventListener("click", () => {
+        selectedState.forEach((row) => row.fill(true));
+        renderSheet();
+      });
+
+      document.getElementById("clearAllBtn").addEventListener("click", () => {
+        selectedState.forEach((row) => row.fill(false));
+        renderSheet();
+      });
+
+      function buildPrintWindow() {
+        const printGrid = sheetEl.cloneNode(true);
+        printGrid
+          .querySelectorAll(".corner, .header-toggle, .row-header")
+          .forEach((el) => {
+            el.remove();
+          });
+
+        const partValue = partNumberInput.value.trim();
+        const jobValue = jobNumberInput.value.trim();
+
+        printGrid.querySelectorAll(".label-slot").forEach((slot) => {
+          const labelBody = slot.querySelector(".label-body");
+          const rowIndex = Number(
+            slot.querySelector(".cell-toggle")?.dataset?.row ?? 0,
+          );
+          const colIndex = Number(
+            slot.querySelector(".cell-toggle")?.dataset?.col ?? 0,
+          );
+          const isSelected = selectedState[rowIndex]?.[colIndex];
+          labelBody.innerHTML = "";
+
+          if (isSelected) {
+            if (partValue) {
+              const partLine = document.createElement("div");
+              partLine.className = "print-label-line";
+              partLine.textContent = partValue;
+              labelBody.appendChild(partLine);
+            }
+
+            if (jobValue) {
+              const jobLine = document.createElement("div");
+              jobLine.className = "print-label-line";
+              jobLine.textContent = jobValue;
+              labelBody.appendChild(jobLine);
+            }
+          }
+        });
+
+        printGrid.querySelectorAll(".cell-toggle").forEach((toggle) => {
+          toggle.remove();
+        });
+
+        const printWindow = window.open("", "_blank", "width=900,height=900");
+        if (!printWindow) {
+          alert("Popup blocked. Please allow popups for print preview.");
+          return;
+        }
+
+        printWindow.document.write(`
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <title>Avery 15667 Print Preview</title>
+              <style>
+                @page {
+                  size: 8.5in 11in;
+                  margin: 0in;
+                }
+
+                * { box-sizing: border-box; }
+
+                html, body {
+                  margin: 0in;
+                  padding: 0in;
+                  width: 8.5in;
+                  height: 11in;
+                  background: white;
+                  font-family: Tahoma, Arial, Helvetica, sans-serif;
+                }
+
+                body {
+                  position: relative;
+                  -webkit-print-color-adjust: exact;
+                  print-color-adjust: exact;
+                }
+
+                .sheet-grid {
+                  position: absolute;
+                  left: 0.19in;
+                  top: 0.5in;
+                  display: grid;
+                  grid-template-columns: repeat(4, 1.75in);
+                  grid-template-rows: repeat(20, 0.5in);
+                  column-gap: 0.25in;
+                  row-gap: 0in;
+                  width: 7.94in;
+                  height: 10in;
+                  margin: 0in;
+                  padding: 0in;
+                }
+
+                .label-slot {
+                  width: 1.75in;
+                  height: 0.5in;
+                  min-height: 0.5in;
+                  border: none;
+                  background: white;
+                  padding: 0.04in;
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  text-align: center;
+                  page-break-inside: avoid;
+                  break-inside: avoid;
+                }
+
+                .label-body {
+                  width: 100%;
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  text-align: center;
+                  font-size: 0.1197in;
+                  line-height: 1.1;
+                  font-weight: 400;
+                  color: #111827;
+                }
+
+                .print-label-line {
+                  width: 100%;
+                  white-space: normal;
+                  overflow-wrap: anywhere;
+                }
+              </style>
+            </head>
+            <body>
+              ${printGrid.outerHTML}
+            </body>
+          </html>
+        `);
+
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
+        }, 250);
+      }
+
+      document
+        .getElementById("printBtn")
+        .addEventListener("click", buildPrintWindow);
+      renderSheet();
+    </script>
+  </body>
+</html>

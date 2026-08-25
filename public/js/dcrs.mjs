@@ -20,6 +20,9 @@ const DATE_FIELDS = [
   "DECISION_DATE",
   "REQUEST_DATE",
 ];
+const CLOSED_FILTER_NAME = "closedDcrFilter";
+
+let dcrRecords = [];
 
 // Helper functions
 const formatDate = (dateString) =>
@@ -94,6 +97,35 @@ const createRequest = (requestData) =>
 const fetchRecords = () =>
   fetch(BASE_URL, { method: "GET" }).then(checkResponse);
 
+const isClosedRecord = (record) =>
+  (record?.CLOSED ?? "").toString().trim().toUpperCase() === "Y";
+
+const getClosedFilterValue = () =>
+  document.querySelector(`input[name="${CLOSED_FILTER_NAME}"]:checked`)
+    ?.value ?? "hide";
+
+const getTextFilterValue = () =>
+  document.getElementById("dcrFilter")?.value.toLowerCase() ?? "";
+
+const filterRecords = (records) => {
+  const showClosed = getClosedFilterValue() === "show";
+  const filterValue = getTextFilterValue();
+
+  return records.filter((record) => {
+    if (!showClosed && isClosedRecord(record)) {
+      return false;
+    }
+
+    if (!filterValue) {
+      return true;
+    }
+
+    return Object.values(record).some((value) =>
+      (value ?? "").toString().toLowerCase().includes(filterValue),
+    );
+  });
+};
+
 // Table rendering functions
 const createTableHeader = (record) => {
   const thead = document.createElement("thead");
@@ -129,6 +161,15 @@ const createTableRow = (record) => {
   return tr;
 };
 
+const createNoRecordsRow = (columnCount) => {
+  const tr = document.createElement("tr");
+  const td = document.createElement("td");
+  td.colSpan = columnCount;
+  td.textContent = "No matching DCR records found.";
+  tr.appendChild(td);
+  return tr;
+};
+
 const createFilterInput = () => {
   const filterInput = document.createElement("input");
   Object.assign(filterInput, {
@@ -146,23 +187,21 @@ const createFilterInput = () => {
   return filterInput;
 };
 
-const attachFilterListener = (filterInput, tableBody, records) => {
-  filterInput.addEventListener("input", (e) => {
-    const filterValue = e.target.value.toLowerCase();
-    const filteredData = records.filter((record) =>
-      Object.values(record).some((value) =>
-        (value ?? "").toString().toLowerCase().includes(filterValue),
-      ),
-    );
+const updateTableRows = (tableBody, records) => {
+  tableBody.innerHTML = "";
+  const filteredData = filterRecords(records);
 
-    tableBody.innerHTML = "";
-    filteredData.forEach((record) => {
-      tableBody.appendChild(createTableRow(record));
-    });
+  if (!filteredData.length) {
+    tableBody.appendChild(createNoRecordsRow(Object.keys(records[0]).length));
+    return;
+  }
+
+  filteredData.forEach((record) => {
+    tableBody.appendChild(createTableRow(record));
   });
 };
 
-const renderTable = (records, allRecords = null) => {
+const renderTable = (records) => {
   const main = document.querySelector("main");
 
   if (!records?.length) {
@@ -170,25 +209,20 @@ const renderTable = (records, allRecords = null) => {
     return;
   }
 
-  // Create filter container
-  let filterContainer = getDialog("filterContainer");
-  if (!filterContainer) {
-    filterContainer = document.createElement("div");
-    filterContainer.id = "filterContainer";
-    Object.assign(filterContainer.style, {
-      padding: "10px",
-      borderBottom: "1px solid #ddd",
-    });
-
-    const filterInput = createFilterInput();
-    filterContainer.appendChild(filterInput);
-    main.appendChild(filterContainer);
+  // Add text filter to the status filter row
+  const filterContainer = getDialog("dcrStatusFilter");
+  let filterInput = document.getElementById("dcrFilter");
+  if (filterContainer && !filterInput) {
+    filterInput = createFilterInput();
+    const statusLabel = filterContainer.querySelector("label:nth-of-type(2)");
+    filterContainer.insertBefore(filterInput, statusLabel);
   }
 
   // Create table wrapper
   const tableWrapper = document.createElement("div");
   Object.assign(tableWrapper.style, {
-    height: "calc(75vh - 60px)",
+    height: "calc(100vh - 240px)",
+    maxHeight: "62vh",
     overflowY: "auto",
     overflowX: "auto",
     border: "1px solid #ddd",
@@ -201,25 +235,26 @@ const renderTable = (records, allRecords = null) => {
 
   const tbody = document.createElement("tbody");
   tbody.id = "dcrTableBody";
-  records.forEach((record) => {
-    tbody.appendChild(createTableRow(record));
-  });
+  updateTableRows(tbody, records);
   table.appendChild(tbody);
 
   tableWrapper.appendChild(table);
   main.appendChild(tableWrapper);
 
   // Attach filter
-  const filterInput = document.getElementById("dcrFilter");
-  const dataToFilter = allRecords || records;
-  attachFilterListener(filterInput, tbody, dataToFilter);
+  if (filterInput) {
+    filterInput.oninput = () => {
+      updateTableRows(tbody, records);
+    };
+  }
 };
 
 const getRecords = async () => {
   try {
     const records = await fetchRecords();
+    dcrRecords = records;
     document.querySelector("main").innerHTML = "";
-    renderTable(records, records);
+    renderTable(records);
   } catch (error) {
     console.error("Error fetching records:", error);
     document.querySelector("main").innerHTML =
@@ -267,6 +302,17 @@ const setupEventListeners = () => {
   const cancelBtn = getDialog("cancelRequestDialog");
   const docRequestForm = getDialog("docRequestForm");
   const dialog = getDialog("docRequestDialog");
+
+  document
+    .querySelectorAll(`input[name="${CLOSED_FILTER_NAME}"]`)
+    .forEach((filterOption) => {
+      filterOption.addEventListener("change", () => {
+        const tableBody = document.getElementById("dcrTableBody");
+        if (tableBody && dcrRecords.length) {
+          updateTableRows(tableBody, dcrRecords);
+        }
+      });
+    });
 
   addRequestBtn?.addEventListener("click", (e) => {
     e.preventDefault();
