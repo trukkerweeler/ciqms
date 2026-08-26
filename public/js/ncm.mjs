@@ -68,6 +68,18 @@ async function fetchNCMTypes() {
   }
 }
 
+async function fetchCustomers() {
+  try {
+    const customersUrl = `${apiUrl}/ncm/customers`;
+    const response = await fetch(customersUrl, { method: "GET" });
+    const customers = await response.json();
+    return customers;
+  } catch (error) {
+    console.error("Error fetching customers:", error);
+    return [];
+  }
+}
+
 // Validation helper for username fields (ending with _BY or _TO)
 function validateUsernameField(fieldName, fieldValue) {
   const fieldDisplayName = fieldName.replace(/-/g, " ").toLowerCase();
@@ -888,13 +900,24 @@ async function renderNCMDetail(
       event.preventDefault();
       const trendDialog = document.querySelector("#trendDialog");
 
+      // Populate customer dropdown before setting the selected value
+      const customerSelect = document.getElementById("CUSTOMER_ID");
+      const customers = await fetchCustomers();
+      customerSelect.innerHTML = '<option value="">--Select--</option>';
+      customers.forEach((customer) => {
+        const option = document.createElement("option");
+        option.value = customer.CUSTOMER;
+        option.textContent = `${customer.CUSTOMER} - ${customer.NAME_CUSTOMER || ""}`;
+        customerSelect.appendChild(option);
+      });
+
       const trendUrl = `${apiUrl}/trend/${iid}`;
       try {
         const response = await fetch(trendUrl);
         const trendData = await response.json();
         if (trendData.length > 0) {
           const data = trendData[0];
-          document.getElementById("CUSTOMER_ID").value = data.CUSTOMER_ID || "";
+          customerSelect.value = (data.CUSTOMER_ID || "").trim();
           document.getElementById("SUPPLIER_ID").value = data.SUPPLIER_ID || "";
           document.getElementById("PROCESS_ID").value = data.PROCESS_ID || "";
           document.getElementById("AREA_NUMBER").value = data.AREA_NUMBER || "";

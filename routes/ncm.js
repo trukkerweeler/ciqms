@@ -841,6 +841,55 @@ router.get("/subjects", (req, res) => {
   });
 });
 
+// ==================================================
+// Get customers from global CUSTOMER_MASTER table (MUST be before /:id route)
+// Uses 32-bit VBScript/ODBC per docs/GLOBAL_DATABASE_PAGES.md (live Global DB, not the MySQL mirror)
+router.get("/customers", (req, res) => {
+  const { spawn } = require("child_process");
+  const vbsFilePath = path.join(__dirname, "ncm-customers.vbs");
+  const cscriptPath = process.env.SYSTEMROOT
+    ? path.join(process.env.SYSTEMROOT, "SysWOW64", "cscript.exe")
+    : "cscript.exe";
+
+  const child = spawn(cscriptPath, ["//Nologo", vbsFilePath]);
+
+  let output = "";
+  let errorOutput = "";
+
+  child.stdout.on("data", (data) => {
+    output += data.toString();
+  });
+
+  child.stderr.on("data", (data) => {
+    errorOutput += data.toString();
+  });
+
+  child.on("close", (code) => {
+    if (code !== 0 || errorOutput) {
+      console.error(
+        `[ncm.js /customers] VBScript failed (code=${code}): ${errorOutput.trim()}`,
+      );
+      return res.status(500).json({ error: "Error retrieving customers" });
+    }
+
+    try {
+      const sanitized = output.replace(/[\u0000-\u001F\u007F-\u009F]/g, "");
+      const data = JSON.parse(sanitized);
+      if (data && data.error) {
+        console.error("[ncm.js /customers] VBScript error:", data.error);
+        return res.status(500).json({ error: data.error });
+      }
+      res.json(data);
+    } catch (parseError) {
+      console.error(
+        "[ncm.js /customers] Error parsing VBScript output:",
+        parseError.message,
+      );
+      return res.status(500).json({ error: "Invalid response format" });
+    }
+  });
+});
+
 // Simple test route to verify routing is working (MUST be before /:id route)
 router.get("/test", (req, res) => {
   console.log("=== TEST ROUTE HIT ===");

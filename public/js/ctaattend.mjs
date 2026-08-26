@@ -188,12 +188,16 @@ async function saveTraining(event) {
       .replace("T", " ");
 
     try {
-      // Get attendees from PEOPLE_ID textarea, split by comma, trim, and filter out blanks
+      // Get attendees from PEOPLE_ID textarea, split on commas, spaces, and/or newlines, trim, dedupe, and filter out blanks
       const attendeesRaw = formData.get("PEOPLE_ID") || "";
-      const attendees = attendeesRaw
-        .split(",")
-        .map((x) => x.trim().toUpperCase())
-        .filter((x) => x);
+      const attendees = [
+        ...new Set(
+          attendeesRaw
+            .split(/[\s,]+/)
+            .map((x) => x.trim().toUpperCase())
+            .filter((x) => x),
+        ),
+      ];
       if (attendees.length === 0) {
         alert("Please enter at least one attendee.");
         return;
