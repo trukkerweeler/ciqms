@@ -35,7 +35,7 @@ document.addEventListener("DOMContentLoaded", async () => {
     .then(([projectResponse, recurringResponse]) =>
       Promise.all([projectResponse.json(), recurringResponse.json()]),
     )
-    .then(([record, recurringSubjectsData]) => {
+    .then(async ([record, recurringSubjectsData]) => {
       recurringSubjects = recurringSubjectsData;
 
       // console.log(record);
@@ -45,6 +45,22 @@ document.addEventListener("DOMContentLoaded", async () => {
         main.appendChild(message);
         return;
       }
+
+      const resourcesBySubject = {};
+      const subjects = [
+        ...new Set(record.map((row) => row.SUBJECT).filter(Boolean)),
+      ];
+      await Promise.all(
+        subjects.map(async (subject) => {
+          const resourceResponse = await fetch(
+            `${apiUrl}/resources/subject/${encodeURIComponent(subject)}`,
+          );
+          if (!resourceResponse.ok) {
+            throw new Error(`Failed to load resources for ${subject}`);
+          }
+          resourcesBySubject[subject] = await resourceResponse.json();
+        }),
+      );
 
       const fieldList = [
         "INPUT_ID",
@@ -217,6 +233,9 @@ document.addEventListener("DOMContentLoaded", async () => {
             header.appendChild(th);
           }
         }
+        const resourcesHeader = document.createElement("th");
+        resourcesHeader.textContent = "RESOURCES";
+        header.appendChild(resourcesHeader);
         thead.appendChild(header);
 
         // Create the table body
@@ -248,13 +267,26 @@ document.addEventListener("DOMContentLoaded", async () => {
               }
             }
           }
+          const resourcesCell = document.createElement("td");
+          const resources = resourcesBySubject[row.SUBJECT] || [];
+          resourcesCell.textContent = resources.length
+            ? resources
+                .map((resource) => {
+                  const quantity = resource.REQUIRED_QUANTITY
+                    ? ` (Qty: ${resource.REQUIRED_QUANTITY})`
+                    : "";
+                  return `${resource.NAME}${quantity}`;
+                })
+                .join(", ")
+            : "";
+          tr.appendChild(resourcesCell);
           tbody.appendChild(tr);
 
           // get the response text
           const responseText = row.RESPONSE_TEXT;
           const rtr = document.createElement("tr");
           const rtd = document.createElement("td");
-          rtd.setAttribute("colspan", "6");
+          rtd.setAttribute("colspan", String(fieldList.length + 1));
           rtd.setAttribute("class", "response");
           if (responseText !== null) {
             // fix the carriage returns

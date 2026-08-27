@@ -32,6 +32,7 @@ const apiUrls = {
   csr: `${apiUrl}/csr/`,
   ssr: `${apiUrl}/ssr/`,
   acert: `${apiUrl}/acert/`,
+  resources: `${apiUrl}/resources/`,
 };
 
 // Store current record subject for context
@@ -93,6 +94,143 @@ async function safeParseJson(response) {
     return null;
   }
 }
+
+async function loadSubjectResources(subject) {
+  const response = await fetch(
+    `${apiUrls.resources}subject/${encodeURIComponent(subject)}`,
+  );
+  if (!response.ok) throw new Error("Failed to load subject resources");
+  return response.json();
+}
+
+function renderSubjectResources(resources) {
+  const list = document.getElementById("resourceList");
+  if (!list) return;
+  list.innerHTML = "";
+
+  if (!resources.length) {
+    list.textContent = "No resources assigned to this subject.";
+    return;
+  }
+
+  resources.forEach((resource, index) => {
+    const row = document.createElement("div");
+    row.style.display = "flex";
+    row.style.gap = "0.5rem";
+    row.style.alignItems = "center";
+    row.style.marginBottom = "0.5rem";
+    row.style.padding = "4px 6px";
+    row.style.borderRadius = "3px";
+    if (index % 2 === 1) row.style.backgroundColor = "rgba(0,0,0,0.05)";
+
+    const text = document.createElement("span");
+    text.style.flex = "1";
+    const quantity = resource.REQUIRED_QUANTITY
+      ? `, Qty: ${resource.REQUIRED_QUANTITY}`
+      : "";
+    text.textContent = `${resource.NAME} (${resource.TYPE}${quantity})`;
+
+    const removeButton = document.createElement("button");
+    removeButton.type = "button";
+    removeButton.className = "btn btn-cancel";
+    removeButton.textContent = "🗑";
+    removeButton.title = "Remove resource";
+    removeButton.style.marginLeft = "auto";
+    removeButton.addEventListener("click", async () => {
+      const subject = document.getElementById("resourceDialog").dataset.subject;
+      const response = await fetch(
+        `${apiUrls.resources}requirements/${encodeURIComponent(subject)}/${resource.ID}`,
+        { method: "DELETE" },
+      );
+      if (!response.ok) {
+        alert("Failed to remove resource");
+        return;
+      }
+      renderSubjectResources(await loadSubjectResources(subject));
+    });
+
+    row.append(text, removeButton);
+    list.appendChild(row);
+  });
+}
+
+async function openResourceDialog(subject) {
+  const dialog = document.getElementById("resourceDialog");
+  if (!dialog) return;
+  dialog.dataset.subject = subject;
+  document.getElementById("resourceDialogTitle").textContent =
+    `Subject Resources: ${subject}`;
+  dialog.showModal();
+  try {
+    renderSubjectResources(await loadSubjectResources(subject));
+  } catch (error) {
+    console.error("Error loading subject resources:", error);
+    const list = document.getElementById("resourceList");
+    if (list) list.textContent = "Could not load resources.";
+  }
+}
+
+document
+  .getElementById("closeResourceDialog")
+  ?.addEventListener("click", () => {
+    document.getElementById("resourceDialog")?.close();
+  });
+
+document
+  .getElementById("openAddResourceDialog")
+  ?.addEventListener("click", () => {
+    document.getElementById("resourceForm")?.reset();
+    document.getElementById("addResourceDialog")?.showModal();
+  });
+
+document.getElementById("cancelAddResource")?.addEventListener("click", () => {
+  document.getElementById("addResourceDialog")?.close();
+});
+
+document
+  .getElementById("resourceForm")
+  ?.addEventListener("submit", async (event) => {
+    event.preventDefault();
+    const subject = document.getElementById("resourceDialog").dataset.subject;
+    const resourceData = {
+      NAME: document.getElementById("RESOURCE_NAME").value.trim(),
+      TYPE: document.getElementById("RESOURCE_TYPE").value,
+      NOTES: document.getElementById("RESOURCE_NOTES").value.trim(),
+    };
+
+    try {
+      const resourceResponse = await fetch(apiUrls.resources, {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(resourceData),
+      });
+      if (!resourceResponse.ok) throw new Error("Failed to create resource");
+      const resource = await resourceResponse.json();
+
+      const requirementResponse = await fetch(
+        `${apiUrls.resources}requirements`,
+        {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            SUBJECT_ID: subject,
+            RESOURCE_ID: resource.ID,
+            REQUIRED_QUANTITY:
+              document.getElementById("REQUIRED_QUANTITY").value || null,
+          }),
+        },
+      );
+      if (!requirementResponse.ok) {
+        throw new Error("Failed to assign resource to subject");
+      }
+
+      document.getElementById("addResourceDialog")?.close();
+      renderSubjectResources(await loadSubjectResources(subject));
+    } catch (error) {
+      console.error("Error adding subject resource:", error);
+      alert(error.message);
+    }
+  });
 
 // Validation helper for username fields (ending with _BY or _TO)
 function validateUsernameField(fieldName, fieldValue) {
@@ -1121,6 +1259,23 @@ fetch(url, { method: "GET" })
       btnFollowUp.style.alignItems = "center";
       btnFollowUp.style.justifyContent = "center";
 
+      const btnResources = createElement("button", {
+        className: "btn btnEdit",
+        id: "btnResources",
+        text: "Resources",
+        type: "button",
+      });
+      btnResources.style.textTransform = "capitalize";
+      btnResources.style.borderRadius = "0.25rem";
+      btnResources.style.display = "flex";
+      btnResources.style.alignItems = "center";
+      btnResources.style.justifyContent = "center";
+      btnResources.style.paddingRight = "4px"; // match .btnEdit's padding-left so padding is symmetric
+      btnResources.addEventListener("click", () =>
+        openResourceDialog(currentSubject),
+      );
+
+      detailButtons.appendChild(btnResources);
       detailButtons.appendChild(btnFollowUp);
       detailButtons.appendChild(btnEditDetail);
 

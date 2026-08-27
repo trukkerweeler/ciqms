@@ -788,6 +788,66 @@
       </form>
     </dialog>
 
+    <dialog id="resourceDialog" class="editDialog">
+      <div class="dialogTitle" id="resourceDialogTitle">Subject Resources</div>
+      <div id="resourceList" style="grid-column: span 2"></div>
+      <button
+        class="btnDialog"
+        id="openAddResourceDialog"
+        type="button"
+        style="grid-column: span 1"
+      >
+        Add Resource
+      </button>
+      <button
+        class="btnDialog"
+        id="closeResourceDialog"
+        type="button"
+        style="grid-column: span 1"
+      >
+        Close
+      </button>
+    </dialog>
+
+    <dialog id="addResourceDialog" class="editDialog">
+      <div class="dialogTitle">Add Resource</div>
+      <form class="dialogForm" id="resourceForm">
+        <label for="RESOURCE_NAME">Name:</label>
+        <input type="text" id="RESOURCE_NAME" required />
+        <label for="RESOURCE_TYPE">Type:</label>
+        <select id="RESOURCE_TYPE" required>
+          <option value="EQUIPMENT">Equipment</option>
+          <option value="FACILITY">Facility</option>
+          <option value="CONDITION">Condition</option>
+          <option value="PERSON">Person</option>
+          <option value="MATERIAL">Material</option>
+        </select>
+        <label for="REQUIRED_QUANTITY">Required quantity:</label>
+        <input type="number" id="REQUIRED_QUANTITY" min="0" step="0.001" />
+        <label for="RESOURCE_NOTES">Notes:</label>
+        <textarea
+          id="RESOURCE_NOTES"
+          rows="3"
+          style="grid-column: span 2"
+        ></textarea>
+        <button
+          class="btnDialog"
+          id="cancelAddResource"
+          type="button"
+          style="grid-column: span 1"
+        >
+          Cancel
+        </button>
+        <button
+          class="btnDialog dialogSaveBtn"
+          type="submit"
+          style="grid-column: span 1"
+        >
+          Save
+        </button>
+      </form>
+    </dialog>
+
     <main id="main"></main>
     <footer id="footer"></footer>
   </body>
