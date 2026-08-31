@@ -198,6 +198,19 @@ console.log("[ctapersonskills.mjs] Loading...");
       updateSearchButtonState();
     });
 
+    // Populate person filter from actual PERSON_SKILLS records (not all PEOPLE)
+    const filterPersonSelect = document.getElementById("filterPerson");
+    filterPersonSelect.innerHTML = '<option value="">All</option>';
+    const uniquePeople = [
+      ...new Set(personSkillsData.map((ps) => ps.PEOPLE_ID)),
+    ].sort();
+    uniquePeople.forEach((id) => {
+      const option = document.createElement("option");
+      option.value = id;
+      option.textContent = id;
+      filterPersonSelect.appendChild(option);
+    });
+
     // Populate job filter dropdown with unique job titles
     const filterJobSelect = document.getElementById("filterJob");
     filterJobSelect.innerHTML = '<option value="">All</option>';
@@ -411,47 +424,89 @@ console.log("[ctapersonskills.mjs] Loading...");
       return;
     }
 
-    const table = document.createElement("table");
-    table.className = "table table-striped table-bordered table-hover";
+    // Group by PEOPLE_ID, preserving encounter order
+    const byPerson = {};
+    const personOrder = [];
+    data.forEach((item) => {
+      if (!byPerson[item.PEOPLE_ID]) {
+        byPerson[item.PEOPLE_ID] = [];
+        personOrder.push(item.PEOPLE_ID);
+      }
+      byPerson[item.PEOPLE_ID].push(item);
+    });
 
-    // Header
+    const table = document.createElement("table");
+    table.className = "table table-bordered table-hover";
+
     const thead = document.createElement("thead");
     thead.innerHTML = `
-    <tr>
-      <th>Person</th>
-      <th>Job Skill</th>
-      <th>Competency Level</th>
-      <th>Certification Date</th>
-      <th>Certified By</th>
-      <th>Notes</th>
-      <th>Assigned Date</th>
-      <th>Actions</th>
-    </tr>
-  `;
+      <tr>
+        <th>Job Skill</th>
+        <th>Competency Level</th>
+        <th>Certification Date</th>
+        <th>Certified By</th>
+        <th>Notes</th>
+        <th>Assigned Date</th>
+        <th>Actions</th>
+      </tr>
+    `;
     table.appendChild(thead);
 
-    // Body
     const tbody = document.createElement("tbody");
-    data.forEach((item, index) => {
-      const row = document.createElement("tr");
-      row.innerHTML = `
-      <td><strong>${item.PEOPLE_ID || ""}</strong></td>
-      <td>${item.JOB_TITLE || ""}</td>
-      <td>
-        <span class="badge" style="background-color: ${getCompetencyColor(item.COMPETENCY)}; padding: 4px 8px; border-radius: 3px; color: white;">
-          ${item.COMPETENCY || ""}
-        </span>
-      </td>
-      <td>${item.CERT_DATE ? new Date(item.CERT_DATE).toLocaleDateString() : "-"}</td>
-      <td>${item.CERT_BY || "-"}</td>
-      <td>${item.NOTES || "-"}</td>
-      <td>${item.ASSIGN_DATE ? new Date(item.ASSIGN_DATE).toLocaleDateString() : ""}</td>
-      <td>
-        <button class="button-small" onclick="deletePersonSkill(${index})">Delete</button>
-      </td>
-    `;
-      tbody.appendChild(row);
+
+    personOrder.forEach((personId) => {
+      const items = byPerson[personId];
+
+      // Person group header row — click to collapse/expand
+      const headerRow = document.createElement("tr");
+      headerRow.style.cssText =
+        "background:#e8f0f7; cursor:pointer; user-select:none;";
+      headerRow.innerHTML = `
+        <td colspan="7" style="font-weight:bold; padding:8px 12px; border-left:4px solid #1a6496;">
+          <span class="person-toggle" style="margin-right:8px; font-size:0.8em;">&#9660;</span>
+          ${personId}
+          <span style="font-weight:normal; color:#555; margin-left:10px; font-size:0.88em;">
+            ${items.length} role${items.length !== 1 ? "s" : ""}
+          </span>
+        </td>
+      `;
+      tbody.appendChild(headerRow);
+
+      const childRows = [];
+      items.forEach((item) => {
+        // Use ID lookup so delete works correctly even when list is filtered
+        const globalIndex = personSkillsData.findIndex(
+          (ps) => ps.PERSON_SKILL_ID === item.PERSON_SKILL_ID,
+        );
+        const row = document.createElement("tr");
+        row.innerHTML = `
+          <td style="padding-left:28px;">${item.JOB_TITLE || ""}</td>
+          <td>
+            <span class="badge" style="background-color:${getCompetencyColor(item.COMPETENCY)}; padding:4px 8px; border-radius:3px; color:white;">
+              ${item.COMPETENCY || ""}
+            </span>
+          </td>
+          <td>${item.CERT_DATE ? new Date(item.CERT_DATE).toLocaleDateString() : "-"}</td>
+          <td>${item.CERT_BY || "-"}</td>
+          <td>${item.NOTES || "-"}</td>
+          <td>${item.ASSIGN_DATE ? new Date(item.ASSIGN_DATE).toLocaleDateString() : ""}</td>
+          <td>
+            <button class="button-small" onclick="deletePersonSkill(${globalIndex})">Delete</button>
+          </td>
+        `;
+        childRows.push(row);
+        tbody.appendChild(row);
+      });
+
+      headerRow.addEventListener("click", () => {
+        const toggle = headerRow.querySelector(".person-toggle");
+        const isCollapsed = headerRow.dataset.collapsed === "true";
+        childRows.forEach((r) => (r.style.display = isCollapsed ? "" : "none"));
+        headerRow.dataset.collapsed = isCollapsed ? "false" : "true";
+        toggle.innerHTML = isCollapsed ? "&#9660;" : "&#9654;";
+      });
     });
+
     table.appendChild(tbody);
 
     const wrapper = document.createElement("div");

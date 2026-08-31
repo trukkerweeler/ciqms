@@ -5,11 +5,10 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Skills Management" />
     <link rel="stylesheet" href="/css/styles.css" />
-    <link rel="stylesheet" href="/css/table.css" />
     <title>Skills (CIQMS)</title>
   </head>
 
-  <body>
+  <body style="overflow: hidden; height: 100vh">
     <header id="header"></header>
     <div class="recordsaddrecordheading">
       <h1>Skills</h1>
@@ -83,9 +82,11 @@
                 <option value="">-- Select Category --</option>
                 <option value="Technical">Technical</option>
                 <option value="Quality">Quality</option>
+                <option value="Manufacturing">Manufacturing</option>
                 <option value="Administrative">Administrative</option>
                 <option value="Soft Skill">Soft Skill</option>
                 <option value="Certification">Certification</option>
+                <option value="EHS">Environment, Health, and Safety</option>
               </select>
             </div>
 
@@ -151,7 +152,7 @@
       <div
         id="skillsContainer"
         class="table-container"
-        style="max-height: 60vh; overflow-y: auto"
+        style="max-height: calc(100vh - 185px); overflow-y: auto"
       ></div>
     </main>
     <footer id="footer"></footer>

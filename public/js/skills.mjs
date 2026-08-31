@@ -11,6 +11,7 @@ console.log("[skills.mjs] Loading...");
   let currentUser = null;
   let isEditing = false;
   let editingSkillId = null;
+  let showInactive = false;
 
   async function initializeSkills() {
     console.log("[skills.mjs] Initializing");
@@ -177,33 +178,66 @@ console.log("[skills.mjs] Loading...");
       return;
     }
 
+    const visible = showInactive ? data : data.filter((s) => s.STATUS !== "I");
+
+    // Toggle control
+    const toggleWrap = document.createElement("div");
+    toggleWrap.style.cssText = "margin-bottom:8px; font-size:0.9em;";
+    const cb = document.createElement("input");
+    cb.type = "checkbox";
+    cb.id = "showInactiveCb";
+    cb.checked = showInactive;
+    cb.style.marginRight = "6px";
+    cb.addEventListener("change", () => {
+      showInactive = cb.checked;
+      renderSkillsTable(skillsData);
+    });
+    const lbl = document.createElement("label");
+    lbl.htmlFor = "showInactiveCb";
+    lbl.textContent = "Show inactive";
+    toggleWrap.appendChild(cb);
+    toggleWrap.appendChild(lbl);
+    container.appendChild(toggleWrap);
+
+    if (visible.length === 0) {
+      container.insertAdjacentHTML(
+        "beforeend",
+        "<p>No active skills found.</p>",
+      );
+      return;
+    }
+
     const table = document.createElement("table");
     table.className = "table table-striped table-bordered table-hover";
+    table.style.tableLayout = "fixed";
+    table.style.width = "100%";
 
-    // Header
     const thead = document.createElement("thead");
     thead.innerHTML = `
       <tr>
-        <th>Skill ID</th>
-        <th>Name</th>
-        <th>Category</th>
-        <th>Revision</th>
-        <th>Issue Date</th>
-        <th>Created By</th>
-        <th>Created Date</th>
-        <th>Actions</th>
+        <th style="width:10%">Skill ID</th>
+        <th style="width:23%">Name</th>
+        <th style="width:17%">Category</th>
+        <th style="width:6%">Revision</th>
+        <th style="width:9%">Issue Date</th>
+        <th style="width:8%">Created By</th>
+        <th style="width:9%">Created Date</th>
+        <th style="width:18%">Actions</th>
       </tr>
     `;
     table.appendChild(thead);
 
     // Body
     const tbody = document.createElement("tbody");
-    data.forEach((item, index) => {
+    visible.forEach((item, index) => {
+      const globalIndex = skillsData.indexOf(item);
+      const inactive = item.STATUS === "I";
       const row = document.createElement("tr");
+      if (inactive) row.style.opacity = "0.45";
       row.innerHTML = `
         <td><strong>${item.SKILL_ID || ""}</strong></td>
-        <td>${item.NAME || ""}</td>
-        <td>${item.CATEGORY || "-"}</td>
+        <td style="word-wrap:break-word">${item.NAME || ""}${inactive ? ' <em style="font-size:0.8em;color:#888">(inactive)</em>' : ""}</td>
+        <td style="word-wrap:break-word">${item.CATEGORY || "-"}</td>
         <td>${item.REVISION_LEVEL || "-"}</td>
         <td>${
           item.ISSUE_DATE ? new Date(item.ISSUE_DATE).toLocaleDateString() : "-"
@@ -215,8 +249,8 @@ console.log("[skills.mjs] Loading...");
             : ""
         }</td>
         <td style="white-space: nowrap;">
-          <button class="button-small" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="editSkill(${index})">Edit</button>
-          <button class="button-small" style="padding: 4px 8px; font-size: 12px;" onclick="deleteSkill(${index})">Delete</button>
+          <button class="button-small" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="editSkill(${globalIndex})">Edit</button>
+          <button class="button-small" style="padding: 4px 8px; font-size: 12px;" onclick="deleteSkill(${globalIndex})">Delete</button>
         </td>
       `;
       tbody.appendChild(row);

@@ -38,21 +38,43 @@ console.log("[ctajobskills.mjs] Loading...");
       const data = await response.json();
       skillsData = data || [];
       console.log("[ctajobskills.mjs] Loaded", skillsData.length, "skills");
+      populateCategoryFilter();
       populateSkillDropdown();
     } catch (error) {
       console.error("Error loading skills:", error);
     }
   }
 
-  function populateSkillDropdown() {
+  function populateSkillDropdown(categoryFilter) {
     const select = document.getElementById("skillId");
     select.innerHTML = '<option value="">-- Select Skill --</option>';
-    skillsData.forEach((skill) => {
+    const filtered = categoryFilter
+      ? skillsData.filter((s) => s.CATEGORY === categoryFilter)
+      : skillsData;
+    filtered.forEach((skill) => {
       const option = document.createElement("option");
       option.value = skill.SKILL_ID;
       const categoryLabel = skill.CATEGORY ? ` [${skill.CATEGORY}]` : "";
       option.textContent = `${skill.NAME}${categoryLabel}`;
       select.appendChild(option);
+    });
+  }
+
+  function populateCategoryFilter() {
+    const catSelect = document.getElementById("skillCategoryFilter");
+    if (!catSelect) return;
+    catSelect.innerHTML = '<option value="">-- All Categories --</option>';
+    const categories = [
+      ...new Set(skillsData.map((s) => s.CATEGORY).filter(Boolean)),
+    ].sort();
+    categories.forEach((cat) => {
+      const option = document.createElement("option");
+      option.value = cat;
+      option.textContent = cat;
+      catSelect.appendChild(option);
+    });
+    catSelect.addEventListener("change", () => {
+      populateSkillDropdown(catSelect.value);
     });
   }
 
@@ -195,19 +217,21 @@ console.log("[ctajobskills.mjs] Loading...");
 
     const table = document.createElement("table");
     table.className = "table table-striped table-bordered table-hover";
+    table.style.tableLayout = "fixed";
+    table.style.width = "100%";
 
     // Header
     const thead = document.createElement("thead");
     thead.innerHTML = `
     <tr>
-      <th>Job Title</th>
-      <th>Skill Name</th>
-      <th>Skill ID</th>
-      <th>Category</th>
-      <th>Required Level</th>
-      <th>Created By</th>
-      <th>Created Date</th>
-      <th>Actions</th>
+      <th style="width:16%">Job Title</th>
+      <th style="width:22%">Skill Name</th>
+      <th style="width:14%">Skill ID</th>
+      <th style="width:14%">Category</th>
+      <th style="width:10%">Required Level</th>
+      <th style="width:7%">Created By</th>
+      <th style="width:9%">Created Date</th>
+      <th style="width:8%">Actions</th>
     </tr>
   `;
     table.appendChild(thead);
