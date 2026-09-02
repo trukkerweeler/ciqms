@@ -317,7 +317,7 @@ fs.readdirSync(routesDir)
     }
 
     // Skip files that are not route modules
-    if (["auth"].includes(routeName)) {
+    if (["auth", "docSearch"].includes(routeName)) {
       routeLoadSummary.skippedAuth += 1;
       if (LOG_ROUTES_VERBOSE) {
         console.log(`[ROUTES] Skipped ${file} (auth handled separately)`);
@@ -402,6 +402,14 @@ try {
   console.log("Loaded route: /api/filing-locations from filingLocations.js");
 } catch (error) {
   logError("FILINGS", error, "Error loading filingLocations routes");
+}
+
+try {
+  const docSearchRoutes = require("./routes/docSearch");
+  app.use("/", docSearchRoutes);
+  console.log("Loaded route: /index-docs, /search from docSearch.js");
+} catch (error) {
+  logError("DOCSEARCH", error, "Error loading docSearch routes");
 }
 
 process.on("unhandledRejection", (reason) => {

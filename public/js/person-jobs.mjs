@@ -106,7 +106,7 @@ console.log("[person-jobs.mjs] Loading...");
 
   function populateJobSkillDropdown() {
     const select = document.getElementById("jobTitle");
-    select.innerHTML = '<option value="">-- Select Job Skill --</option>';
+    select.innerHTML = '<option value="">-- Select Job Title --</option>';
     // Show all unique job titles initially
     const uniqueSkills = [...new Set(jobSkillsData.map((s) => s.JOB_TITLE))];
     uniqueSkills.forEach((skill) => {
@@ -238,7 +238,7 @@ console.log("[person-jobs.mjs] Loading...");
 
   async function performAttendanceSearch() {
     if (!selectedPersonId || !selectedJobTitle) {
-      alert("Please select both a Person and a Job Skill");
+      alert("Please select both a Person and a Job Title");
       return;
     }
 
@@ -281,7 +281,7 @@ console.log("[person-jobs.mjs] Loading...");
 
     if (!data || data.length === 0) {
       resultsContainer.innerHTML =
-        "<p>No attendance records found for the selected person and skill.</p>";
+        "<p>No attendance records found for the selected person and job title.</p>";
       resultsSection.style.display = "block";
       return;
     }
@@ -371,7 +371,7 @@ console.log("[person-jobs.mjs] Loading...");
       const NOTES = formData.get("notes").trim();
 
       if (!PEOPLE_ID || !JOB_TITLE || !COMPETENCY) {
-        alert("Person, Job Skill, and Competency Level are required");
+        alert("Person, Job Title, and Competency Level are required");
         return;
       }
 
@@ -405,7 +405,7 @@ console.log("[person-jobs.mjs] Loading...");
       await loadPersonSkillsData();
     } catch (error) {
       console.error("Error creating person skill:", error);
-      alert("Error assigning skill. Please try again.");
+      alert("Error assigning job. Please try again.");
     }
   }
 
@@ -415,7 +415,7 @@ console.log("[person-jobs.mjs] Loading...");
 
     if (!data || data.length === 0) {
       container.innerHTML =
-        "<p>No person skills found. Click + to assign one.</p>";
+        "<p>No person jobs found. Click + to assign one.</p>";
       return;
     }
 
@@ -436,7 +436,7 @@ console.log("[person-jobs.mjs] Loading...");
     const thead = document.createElement("thead");
     thead.innerHTML = `
       <tr>
-        <th>Job Skill</th>
+        <th>Job Title</th>
         <th>Competency Level</th>
         <th>Certification Date</th>
         <th>Certified By</th>

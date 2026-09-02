@@ -18,17 +18,17 @@
       <button
         class="addrecordheadingbutton button"
         id="addPersonSkillBtn"
-        title="Assign Person Skill"
+        title="Assign Person Job"
       >
         +
       </button>
     </div>
 
     <main id="main">
-      <!-- Assign Person Skill Dialog -->
+      <!-- Assign Person Job Dialog -->
       <dialog id="addPersonSkillDialog" class="dialog">
         <div class="dialog-header">
-          <h2>Assign Person Skill</h2>
+          <h2>Assign Person Job</h2>
         </div>
         <form id="personSkillForm" class="form">
           <div class="form-grid">
@@ -40,9 +40,9 @@
             </div>
 
             <div class="form-group">
-              <label for="jobTitle" class="required">Job Skill</label>
+              <label for="jobTitle" class="required">Job Title</label>
               <select id="jobTitle" name="jobTitle" required>
-                <option value="">-- Select Job Skill --</option>
+                <option value="">-- Select Job Title --</option>
               </select>
             </div>
 
@@ -97,7 +97,7 @@
             >
               Cancel
             </button>
-            <button type="submit" class="button primary">Assign Skill</button>
+            <button type="submit" class="button primary">Assign Job</button>
           </div>
         </form>
       </dialog>
@@ -109,7 +109,7 @@
           <option value="">All</option>
         </select>
 
-        <label id="filterJobLabel" for="filterJob">Filter by Job Skill:</label>
+        <label id="filterJobLabel" for="filterJob">Filter by Job Title:</label>
         <select id="filterJob">
           <option value="">All</option>
         </select>
@@ -127,7 +127,7 @@
         </div>
       </div>
 
-      <!-- Person Skills Table -->
+      <!-- Person Jobs Table -->
       <div id="personSkillsContainer" class="table-container">
         <!-- Table will be generated here -->
       </div>

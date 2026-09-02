@@ -5,7 +5,8 @@
   "main": "server.js",
   "scripts": {
     "dev": "nodemon --env-file=.env server.js",
-    "test-history": "node --env-file=.env test-item-history.js"
+    "test-history": "node --env-file=.env test-item-history.js",
+    "index-docs": "node --env-file=.env scripts/index-qms-documents.js"
   },
   "keywords": [],
   "author": "",
