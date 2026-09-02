@@ -1,0 +1,120 @@
+body.skills-page {
+  height: 100vh;
+  overflow: hidden;
+}
+
+#skillDialog {
+  max-height: 90vh;
+  overflow: auto;
+}
+
+#skillDialog .dialog-content {
+  padding: 1rem;
+}
+
+#skillDialog #dialogTitle {
+  margin: 0 0 0.75rem;
+  font-size: 1.25rem;
+}
+
+#skillForm {
+  display: grid;
+  gap: 0.5rem;
+}
+
+#skillForm .form-group {
+  margin: 0;
+}
+
+#skillForm label {
+  font-size: 0.9rem;
+}
+
+#skillForm input,
+#skillForm select {
+  padding: 0.4rem;
+  font-size: 0.9rem;
+}
+
+#skillForm .form-actions {
+  display: flex;
+  gap: 0.5rem;
+  margin-top: 0.5rem;
+}
+
+#skillForm .form-actions .button {
+  flex: 1;
+  padding: 0.4rem;
+  font-size: 0.9rem;
+}
+
+#skillsContainer {
+  max-height: calc(100vh - 185px);
+  overflow-y: auto;
+}
+
+.inactive-toggle {
+  margin-bottom: 8px;
+  font-size: 0.9em;
+}
+
+.inactive-toggle input {
+  margin-right: 6px;
+}
+
+#skillsContainer .skills-table {
+  width: 100%;
+  table-layout: fixed;
+}
+
+#skillsContainer .skills-table th:nth-child(1) {
+  width: 10%;
+}
+#skillsContainer .skills-table th:nth-child(2) {
+  width: 23%;
+}
+#skillsContainer .skills-table th:nth-child(3) {
+  width: 17%;
+}
+#skillsContainer .skills-table th:nth-child(4) {
+  width: 6%;
+}
+#skillsContainer .skills-table th:nth-child(5) {
+  width: 9%;
+}
+#skillsContainer .skills-table th:nth-child(6) {
+  width: 8%;
+}
+#skillsContainer .skills-table th:nth-child(7) {
+  width: 9%;
+}
+#skillsContainer .skills-table th:nth-child(8) {
+  width: 18%;
+}
+
+#skillsContainer .skills-table td:nth-child(2),
+#skillsContainer .skills-table td:nth-child(3) {
+  overflow-wrap: break-word;
+}
+
+.inactive-skill {
+  opacity: 0.45;
+}
+
+.inactive-label {
+  color: #888;
+  font-size: 0.8em;
+}
+
+.skill-actions {
+  white-space: nowrap;
+}
+
+.skill-action {
+  padding: 4px 8px;
+  font-size: 12px;
+}
+
+.skill-action-edit {
+  margin-right: 4px;
+}

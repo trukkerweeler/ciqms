@@ -32,7 +32,10 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
   loadPeople().then((people) => populatePeopleDropdown(people));
 
   employeeSelect.addEventListener("change", () => {
-    if (employeeSelect.value) loadPersonMatrix(employeeSelect.value);
+    if (!employeeSelect.value) return;
+    const selected = employeeSelect.options[employeeSelect.selectedIndex];
+    const personLabel = selected ? selected.textContent : employeeSelect.value;
+    loadPersonMatrix(employeeSelect.value, personLabel);
   });
 
   // --- All employees panel ---
@@ -61,7 +64,7 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
     });
   }
 
-  async function loadPersonMatrix(personId) {
+  async function loadPersonMatrix(personId, personLabel) {
     const container = document.getElementById("matrixContainer");
     container.innerHTML = '<p class="loading">Loading matrix&hellip;</p>';
     try {
@@ -70,7 +73,7 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
       );
       if (!res.ok) throw new Error(`HTTP ${res.status}`);
       const data = await res.json();
-      renderPersonMatrix(personId, data);
+      renderPersonMatrix(personId, personLabel, data);
     } catch (e) {
       console.error("[trainingmatrix.mjs] Error loading matrix:", e);
       container.innerHTML =
@@ -78,13 +81,13 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
     }
   }
 
-  function renderPersonMatrix(personId, rows) {
+  function renderPersonMatrix(personId, personLabel, rows) {
     const container = document.getElementById("matrixContainer");
     container.innerHTML = "";
 
     if (!rows || rows.length === 0) {
       container.innerHTML = `<p>No job assignments found for <strong>${personId}</strong>.
-        Assign job skills via <a href="/ctapersonskills.html">Person Skills</a>.</p>`;
+        Assign job skills via <a href="/person-jobs.html">Person Jobs</a>.</p>`;
       return;
     }
 
@@ -110,7 +113,7 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
     const header = document.createElement("div");
     header.className = "matrix-employee-header";
     header.innerHTML = `
-      <h2>${personId}</h2>
+      <h2>${personLabel || personId}</h2>
       <div class="matrix-summary">
         <span>Jobs assigned: <strong>${Object.keys(byJob).length}</strong></span>
         <span>Skills required: <strong>${totalSkills}</strong></span>
@@ -138,7 +141,7 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
           <h3>${jobTitle}</h3>
           <div>
             Recorded competency: <strong>${job.competency || "&mdash;"}</strong>${certInfo}
-            <span class="pct-badge ${pctClass(jobPct)}" style="margin-left:14px">${jobPct}%</span>
+            <span class="pct-badge job-pct ${pctClass(jobPct)}">${jobPct}%</span>
           </div>
         </div>
       `;
@@ -174,22 +177,22 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
           const recIdx = COMPETENCY_LEVELS.indexOf(job.competency);
           if (recIdx >= 0 && reqIdx >= 0 && recIdx < reqIdx) {
             gapFlag =
-              ' <span title="Recorded competency is below required level" style="color:#e67e22">\u26a0</span>';
+              ' <span class="competency-gap" title="Recorded competency is below required level">\u26a0</span>';
           }
         }
 
-        const statusIcon = trained
-          ? '<span class="status-icon trained" title="Training on record">\u2713</span>'
-          : '<span class="status-icon not-trained" title="No training record">\u2717</span>';
+        const statusPill = trained
+          ? '<span class="status-pill trained" title="Training on record">Trained</span>'
+          : '<span class="status-pill missing" title="No training record">No Record</span>';
 
         tr.innerHTML = `
           <td><strong>${skill.SKILL_NAME || skill.SKILL_ID}</strong><br>
-              <small style="color:#888">${skill.SKILL_ID || ""}</small></td>
+              <small class="skill-id">${skill.SKILL_ID || ""}</small></td>
           <td>${skill.CATEGORY || "&mdash;"}</td>
           <td>${skill.REQUIRED_LEVEL || "&mdash;"}${gapFlag}</td>
           <td>${lastDate}</td>
           <td>${skill.LAST_INSTRUCTOR || "&mdash;"}</td>
-          <td>${statusIcon}</td>
+          <td>${statusPill}</td>
         `;
         tbody.appendChild(tr);
       });
@@ -223,12 +226,12 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
 
     if (!rows || rows.length === 0) {
       container.innerHTML = `<p>No employee job assignments found.
-        Use <a href="/ctapersonskills.html">Person Skills</a> to assign jobs to employees.</p>`;
+        Use <a href="/person-jobs.html">Person Jobs</a> to assign jobs to employees.</p>`;
       return;
     }
 
     const note = document.createElement("p");
-    note.style.cssText = "color:#555; font-size:0.9em; margin-bottom:12px";
+    note.className = "matrix-instruction";
     note.textContent =
       "Click any row to view that employee\u2019s detailed matrix.";
     container.appendChild(note);
@@ -237,7 +240,8 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
     wrap.className = "table-container";
 
     const table = document.createElement("table");
-    table.className = "table table-striped table-bordered table-hover";
+    table.className =
+      "table table-striped table-bordered table-hover all-matrix-table";
     table.innerHTML = `
       <thead>
         <tr>
@@ -262,12 +266,12 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
       const pct = req > 0 ? Math.round((trained / req) * 100) : 0;
       const name = [row.FIRST_NAME, row.LAST_NAME].filter(Boolean).join(" ");
 
-      const statusIcon =
+      const statusPill =
         pct === 100
-          ? '<span class="status-icon trained">\u2713</span>'
+          ? '<span class="status-pill complete">Complete</span>'
           : pct > 0
-            ? '<span class="status-icon partial">\u25d1</span>'
-            : '<span class="status-icon not-trained">\u2717</span>';
+            ? '<span class="status-pill partial">Partial</span>'
+            : '<span class="status-pill missing">Missing</span>';
 
       tr.innerHTML = `
         <td><strong>${row.PEOPLE_ID}</strong>${name ? `<br><small>${name}</small>` : ""}</td>
@@ -279,16 +283,18 @@ const COMPETENCY_LEVELS = ["Basic", "Intermediate", "Advanced", "Expert"];
           <div class="progress-bar-wrap">
             <div class="progress-bar-fill ${pctClass(pct)}" style="width:${pct}%"></div>
           </div>
-          <span style="font-size:0.85em">${pct}%</span>
+          <span class="completion-value">${pct}%</span>
         </td>
-        <td>${statusIcon}</td>
+        <td>${statusPill}</td>
       `;
 
       tr.addEventListener("click", () => {
         // Switch to employee tab and load this person
         document.querySelector('[data-panel="employeePanel"]').click();
         employeeSelect.value = row.PEOPLE_ID;
-        loadPersonMatrix(row.PEOPLE_ID);
+        const selected = employeeSelect.options[employeeSelect.selectedIndex];
+        const personLabel = selected ? selected.textContent : row.PEOPLE_ID;
+        loadPersonMatrix(row.PEOPLE_ID, personLabel);
       });
 
       tbody.appendChild(tr);

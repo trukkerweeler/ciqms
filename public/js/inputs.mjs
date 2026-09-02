@@ -181,7 +181,7 @@ async function loadPeopleOptions() {
     const assigneeSelect = document.getElementById("ASSIGNED_TO");
     if (!assigneeSelect) return;
 
-    const response = await fetch(`${apiUrl}/ctapersonskills/people/active`);
+    const response = await fetch(`${apiUrl}/person-jobs/people/active`);
     if (!response.ok) {
       console.error("Failed to load people for assignee select");
       return;

@@ -156,7 +156,7 @@ document.addEventListener("DOMContentLoaded", async () => {
 
   // Populate the ASSIGNED_TO dropdown with active people
   const select = document.getElementById("ASSIGNED_TO");
-  const peopleRes = await fetch(`${apiUrl}/ctapersonskills/people/active`);
+  const peopleRes = await fetch(`${apiUrl}/person-jobs/people/active`);
   const people = await peopleRes.json();
   for (const person of people) {
     const opt = document.createElement("option");

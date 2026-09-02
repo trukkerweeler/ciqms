@@ -127,11 +127,15 @@ const filterRecords = (records) => {
 };
 
 // Table rendering functions
+const getColumnClass = (key) =>
+  `dcr-col-${key.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`;
+
 const createTableHeader = (record) => {
   const thead = document.createElement("thead");
   const headerRow = document.createElement("tr");
   Object.keys(record).forEach((key) => {
     const th = document.createElement("th");
+    th.className = getColumnClass(key);
     th.textContent = key;
     headerRow.appendChild(th);
   });
@@ -141,6 +145,7 @@ const createTableHeader = (record) => {
 
 const createTableCell = (key, value) => {
   const td = document.createElement("td");
+  td.className = getColumnClass(key);
 
   if (DATE_FIELDS.includes(key)) {
     td.textContent = formatDate(value);
@@ -148,6 +153,10 @@ const createTableCell = (key, value) => {
     td.innerHTML = `<a href="./dcr.html?id=${value}">${value}</a>`;
   } else {
     td.textContent = value ?? "";
+  }
+
+  if (key === "REQUEST_TEXT") {
+    td.title = value ?? "";
   }
 
   return td;
@@ -177,13 +186,7 @@ const createFilterInput = () => {
     type: "text",
     placeholder: "Filter records...",
   });
-  Object.assign(filterInput.style, {
-    width: "300px",
-    padding: "8px",
-    fontSize: "14px",
-    borderRadius: "4px",
-    border: "1px solid #ccc",
-  });
+  filterInput.className = "dcr-text-filter";
   return filterInput;
 };
 
@@ -220,13 +223,7 @@ const renderTable = (records) => {
 
   // Create table wrapper
   const tableWrapper = document.createElement("div");
-  Object.assign(tableWrapper.style, {
-    height: "calc(100vh - 240px)",
-    maxHeight: "62vh",
-    overflowY: "auto",
-    overflowX: "auto",
-    border: "1px solid #ddd",
-  });
+  tableWrapper.className = "table-container";
 
   // Create table
   const table = document.createElement("table");

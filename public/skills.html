@@ -5,10 +5,11 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="Skills Management" />
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/skills.css" />
     <title>Skills (CIQMS)</title>
   </head>
 
-  <body style="overflow: hidden; height: 100vh">
+  <body class="skills-page">
     <header id="header"></header>
     <div class="recordsaddrecordheading">
       <h1>Skills</h1>
@@ -23,23 +24,12 @@
 
     <main id="main">
       <!-- Add/Edit Skill Dialog -->
-      <dialog
-        id="skillDialog"
-        class="dialog"
-        style="max-height: 90vh; overflow: auto"
-      >
-        <div class="dialog-content" style="padding: 1rem">
-          <h2
-            id="dialogTitle"
-            style="margin: 0 0 0.75rem 0; font-size: 1.25rem"
-          >
-            Add New Skill
-          </h2>
-          <form id="skillForm" class="form" style="display: grid; gap: 0.5rem">
-            <div class="form-group" style="margin: 0">
-              <label for="skillId" class="required" style="font-size: 0.9rem"
-                >Skill ID</label
-              >
+      <dialog id="skillDialog" class="dialog">
+        <div class="dialog-content">
+          <h2 id="dialogTitle">Add New Skill</h2>
+          <form id="skillForm" class="form">
+            <div class="form-group">
+              <label for="skillId" class="required">Skill ID</label>
               <input
                 type="text"
                 id="skillId"
@@ -47,14 +37,11 @@
                 placeholder="e.g., SKL001"
                 maxlength="16"
                 required
-                style="padding: 0.4rem; font-size: 0.9rem"
               />
             </div>
 
-            <div class="form-group" style="margin: 0">
-              <label for="skillName" class="required" style="font-size: 0.9rem"
-                >Skill Name</label
-              >
+            <div class="form-group">
+              <label for="skillName" class="required">Skill Name</label>
               <input
                 type="text"
                 id="skillName"
@@ -62,23 +49,12 @@
                 placeholder="e.g., CMM Operation"
                 maxlength="60"
                 required
-                style="padding: 0.4rem; font-size: 0.9rem"
               />
             </div>
 
-            <div class="form-group" style="margin: 0">
-              <label
-                for="skillCategory"
-                class="required"
-                style="font-size: 0.9rem"
-                >Category</label
-              >
-              <select
-                id="skillCategory"
-                name="skillCategory"
-                required
-                style="padding: 0.4rem; font-size: 0.9rem"
-              >
+            <div class="form-group">
+              <label for="skillCategory" class="required">Category</label>
+              <select id="skillCategory" name="skillCategory" required>
                 <option value="">-- Select Category --</option>
                 <option value="Technical">Technical</option>
                 <option value="Quality">Quality</option>
@@ -90,48 +66,27 @@
               </select>
             </div>
 
-            <div class="form-group" style="margin: 0">
-              <label
-                for="skillStatus"
-                class="required"
-                style="font-size: 0.9rem"
-                >Status</label
-              >
-              <select
-                id="skillStatus"
-                name="skillStatus"
-                required
-                style="padding: 0.4rem; font-size: 0.9rem"
-              >
+            <div class="form-group">
+              <label for="skillStatus" class="required">Status</label>
+              <select id="skillStatus" name="skillStatus" required>
                 <option value="A">Active</option>
                 <option value="I">Inactive</option>
               </select>
             </div>
 
-            <div class="form-group" style="margin: 0">
-              <label for="revisionLevel" style="font-size: 0.9rem"
-                >Revision Level</label
-              >
+            <div class="form-group">
+              <label for="revisionLevel">Revision Level</label>
               <input
                 type="text"
                 id="revisionLevel"
                 name="revisionLevel"
                 placeholder="e.g., 1.0"
                 maxlength="5"
-                style="padding: 0.4rem; font-size: 0.9rem"
               />
             </div>
 
-            <div
-              class="form-actions"
-              style="display: flex; gap: 0.5rem; margin-top: 0.5rem"
-            >
-              <button
-                type="submit"
-                class="button primary"
-                id="submitBtn"
-                style="flex: 1; padding: 0.4rem; font-size: 0.9rem"
-              >
+            <div class="form-actions">
+              <button type="submit" class="button primary" id="submitBtn">
                 Add Skill
               </button>
               <button
@@ -139,7 +94,6 @@
                 class="button secondary"
                 id="cancelBtn"
                 onclick="document.getElementById('skillDialog').close()"
-                style="flex: 1; padding: 0.4rem; font-size: 0.9rem"
               >
                 Cancel
               </button>
@@ -149,11 +103,7 @@
       </dialog>
 
       <!-- Skills Table -->
-      <div
-        id="skillsContainer"
-        class="table-container"
-        style="max-height: calc(100vh - 185px); overflow-y: auto"
-      ></div>
+      <div id="skillsContainer" class="table-container"></div>
     </main>
     <footer id="footer"></footer>
 

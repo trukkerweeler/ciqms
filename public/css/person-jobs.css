@@ -1,0 +1,82 @@
+#personSkillsContainer > table {
+  margin-bottom: 0;
+}
+
+.person-jobs-filter {
+  margin-bottom: 15px;
+  gap: 10px;
+}
+
+.person-jobs-filter > label {
+  font-weight: bold;
+}
+
+.person-jobs-filter #filterJobLabel,
+.person-jobs-filter #searchAttendanceBtn {
+  margin-left: 20px;
+}
+
+.person-jobs-filter select {
+  border: 1px solid #ccc;
+  border-radius: 4px;
+}
+
+#attendanceResultsSection {
+  display: none;
+  margin-top: 30px;
+}
+
+.attendance-results-scroll {
+  max-height: calc(80vh - 200px);
+}
+
+.person-group-row {
+  background: #e8f0f7;
+  cursor: pointer;
+  user-select: none;
+}
+
+.person-group-cell {
+  padding: 8px 12px;
+  border-left: 4px solid #1a6496;
+  font-weight: bold;
+}
+
+.person-toggle {
+  margin-right: 8px;
+  font-size: 0.8em;
+}
+
+.person-role-count {
+  margin-left: 10px;
+  color: #555;
+  font-size: 0.88em;
+  font-weight: normal;
+}
+
+.person-job-title {
+  padding-left: 28px;
+}
+
+.competency-badge {
+  display: inline-block;
+  padding: 4px 8px;
+  border-radius: 3px;
+  color: #fff;
+}
+
+.competency-basic {
+  background: #ffa500;
+}
+.competency-intermediate {
+  background: #4169e1;
+}
+.competency-advanced {
+  background: #228b22;
+}
+.competency-expert {
+  background: #8b008b;
+}
+.competency-unknown {
+  background: #808080;
+}

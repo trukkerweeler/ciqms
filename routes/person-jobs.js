@@ -19,7 +19,7 @@ router.get("/", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -42,12 +42,12 @@ router.get("/", (req, res) => {
       connection.end();
 
       if (error) {
-        console.error("[ctapersonskills.js] Query error:", error);
+        console.error("[person-jobs.js] Query error:", error);
         return res.status(500).json({ error: "Failed to fetch person skills" });
       }
 
       console.log(
-        "[ctapersonskills.js] Retrieved",
+        "[person-jobs.js] Retrieved",
         results.length,
         "person skills",
       );
@@ -63,7 +63,7 @@ router.get("/person/:name", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -87,7 +87,7 @@ router.get("/person/:name", (req, res) => {
       connection.end();
 
       if (error) {
-        console.error("[ctapersonskills.js] Query error:", error);
+        console.error("[person-jobs.js] Query error:", error);
         return res.status(500).json({ error: "Failed to fetch person skills" });
       }
 
@@ -118,7 +118,7 @@ router.post("/", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -143,12 +143,12 @@ router.post("/", (req, res) => {
       connection.end();
 
       if (error) {
-        console.error("[ctapersonskills.js] Insert error:", error);
+        console.error("[person-jobs.js] Insert error:", error);
         return res.status(500).json({ error: "Failed to create person skill" });
       }
 
       console.log(
-        "[ctapersonskills.js] Created person skill with ID:",
+        "[person-jobs.js] Created person skill with ID:",
         results.insertId,
       );
       res.json({
@@ -178,7 +178,7 @@ router.put("/:id", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -200,7 +200,7 @@ router.put("/:id", (req, res) => {
       connection.end();
 
       if (error) {
-        console.error("[ctapersonskills.js] Update error:", error);
+        console.error("[person-jobs.js] Update error:", error);
         return res.status(500).json({ error: "Failed to update person skill" });
       }
 
@@ -208,7 +208,7 @@ router.put("/:id", (req, res) => {
         return res.status(404).json({ error: "Person skill not found" });
       }
 
-      console.log("[ctapersonskills.js] Updated person skill with ID:", id);
+      console.log("[person-jobs.js] Updated person skill with ID:", id);
       res.json({ message: "Person skill updated successfully" });
     });
   });
@@ -221,7 +221,7 @@ router.delete("/:id", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -231,7 +231,7 @@ router.delete("/:id", (req, res) => {
       connection.end();
 
       if (error) {
-        console.error("[ctapersonskills.js] Delete error:", error);
+        console.error("[person-jobs.js] Delete error:", error);
         return res.status(500).json({ error: "Failed to delete person skill" });
       }
 
@@ -239,7 +239,7 @@ router.delete("/:id", (req, res) => {
         return res.status(404).json({ error: "Person skill not found" });
       }
 
-      console.log("[ctapersonskills.js] Deleted person skill with ID:", id);
+      console.log("[person-jobs.js] Deleted person skill with ID:", id);
       res.json({ message: "Person skill deleted successfully" });
     });
   });
@@ -251,7 +251,7 @@ router.get("/people/active", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -270,12 +270,12 @@ router.get("/people/active", (req, res) => {
       connection.end();
 
       if (error) {
-        console.error("[ctapersonskills.js] Query error:", error);
+        console.error("[person-jobs.js] Query error:", error);
         return res.status(500).json({ error: "Failed to fetch people" });
       }
 
       console.log(
-        "[ctapersonskills.js] Retrieved",
+        "[person-jobs.js] Retrieved",
         results.length,
         "active people",
       );
@@ -290,7 +290,7 @@ router.get("/jobs/unique", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -304,12 +304,12 @@ router.get("/jobs/unique", (req, res) => {
       connection.end();
 
       if (error) {
-        console.error("[ctapersonskills.js] Query error:", error);
+        console.error("[person-jobs.js] Query error:", error);
         return res.status(500).json({ error: "Failed to fetch job titles" });
       }
 
       console.log(
-        "[ctapersonskills.js] Retrieved",
+        "[person-jobs.js] Retrieved",
         results.length,
         "unique job titles",
       );
@@ -332,7 +332,7 @@ router.get("/search/attendance/:personId/:jobTitle", (req, res) => {
 
   connection.connect((err) => {
     if (err) {
-      console.error("[ctapersonskills.js] Database connection error:", err);
+      console.error("[person-jobs.js] Database connection error:", err);
       return res.status(500).json({ error: "Database connection failed" });
     }
 
@@ -346,7 +346,7 @@ router.get("/search/attendance/:personId/:jobTitle", (req, res) => {
     connection.query(skillQuery, [jobTitle], (error, skills) => {
       if (error) {
         connection.end();
-        console.error("[ctapersonskills.js] Query error:", error);
+        console.error("[person-jobs.js] Query error:", error);
         return res.status(500).json({ error: "Failed to fetch job skills" });
       }
 
@@ -385,14 +385,14 @@ router.get("/search/attendance/:personId/:jobTitle", (req, res) => {
         connection.end();
 
         if (error) {
-          console.error("[ctapersonskills.js] Query error:", error);
+          console.error("[person-jobs.js] Query error:", error);
           return res
             .status(500)
             .json({ error: "Failed to fetch attendance records" });
         }
 
         console.log(
-          "[ctapersonskills.js] Retrieved",
+          "[person-jobs.js] Retrieved",
           results.length,
           "attendance records for",
           personId,

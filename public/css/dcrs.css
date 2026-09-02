@@ -1,0 +1,38 @@
+#dcrTable th,
+#dcrTable td {
+  width: auto;
+  padding: 0.18rem 0.35rem;
+  line-height: 1.15;
+}
+
+#dcrTable .dcr-col-request-text {
+  width: 38%;
+  text-align: left;
+}
+
+#dcrTable td.dcr-col-request-text {
+  overflow-wrap: break-word;
+  white-space: normal;
+}
+
+#dcrTable .dcr-col-assigned-to {
+  width: 72px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+#document_id,
+#createby,
+#assto {
+  text-transform: uppercase;
+}
+
+.filter-bar .dcr-text-filter {
+  width: 300px;
+  height: auto;
+  padding: 8px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  font-size: 14px;
+}

@@ -4,16 +4,17 @@
     <meta charset="UTF-8" />
     <meta http-equiv="X-UA-Compatible" content="IE=edge" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="description" content="Person Skills Management" />
+    <meta name="description" content="Person Jobs" />
     <meta name="author" content="Tim Kent" />
     <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/person-jobs.css" />
     <link rel="icon" href="images/ci-logo.png" />
-    <title>Person Skills (CIQMS)</title>
+    <title>Person Jobs (CIQMS)</title>
   </head>
-  <body>
+  <body class="list-page">
     <header id="header"></header>
     <div class="recordsaddrecordheading">
-      <h1>Person Skills</h1>
+      <h1>Person Jobs</h1>
       <button
         class="addrecordheadingbutton button"
         id="addPersonSkillBtn"
@@ -102,58 +103,24 @@
       </dialog>
 
       <!-- Filter Controls -->
-      <div
-        style="
-          margin-bottom: 15px;
-          display: flex;
-          gap: 10px;
-          align-items: center;
-          flex-wrap: wrap;
-        "
-      >
-        <label for="filterPerson" style="font-weight: bold"
-          >Filter by Person:</label
-        >
-        <select
-          id="filterPerson"
-          style="
-            padding: 0.4rem 0.6rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-          "
-        >
+      <div class="filter-bar person-jobs-filter">
+        <label for="filterPerson">Filter by Person:</label>
+        <select id="filterPerson">
           <option value="">All</option>
         </select>
 
-        <label for="filterJob" style="font-weight: bold; margin-left: 20px"
-          >Filter by Job Skill:</label
-        >
-        <select
-          id="filterJob"
-          style="
-            padding: 0.4rem 0.6rem;
-            border: 1px solid #ccc;
-            border-radius: 4px;
-          "
-        >
+        <label id="filterJobLabel" for="filterJob">Filter by Job Skill:</label>
+        <select id="filterJob">
           <option value="">All</option>
         </select>
 
-        <button
-          id="searchAttendanceBtn"
-          class="button primary"
-          style="margin-left: 20px"
-          disabled
-        >
+        <button id="searchAttendanceBtn" class="button primary" disabled>
           Search
         </button>
       </div>
 
       <!-- Attendance Results Section -->
-      <div
-        id="attendanceResultsSection"
-        style="display: none; margin-top: 30px"
-      >
+      <div id="attendanceResultsSection">
         <h3>Attendance Records</h3>
         <div id="attendanceResultsContainer" class="table-container">
           <!-- Results table will be generated here -->
@@ -168,5 +135,5 @@
 
     <footer id="footer"></footer>
   </body>
-  <script type="module" src="/js/ctapersonskills.mjs"></script>
+  <script type="module" src="/js/person-jobs.mjs?v=20260901-1"></script>
 </html>

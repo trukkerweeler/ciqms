@@ -1,16 +1,16 @@
 import { loadHeaderFooter, getSessionUser, getApiUrl } from "./utils.mjs";
 
-console.log("[ctapersonskills.mjs] Loading...");
+console.log("[person-jobs.mjs] Loading...");
 
 (async () => {
   await loadHeaderFooter();
 
   const apiUrl = await getApiUrl();
-  const url = `${apiUrl}/ctapersonskills`;
+  const url = `${apiUrl}/person-jobs`;
   const jobSkillsUrl = `${apiUrl}/ctajobskills`;
-  const peopleUrl = `${apiUrl}/ctapersonskills/people/active`;
-  const uniqueJobsUrl = `${apiUrl}/ctapersonskills/jobs/unique`;
-  const attendanceSearchUrl = `${apiUrl}/ctapersonskills/search/attendance`;
+  const peopleUrl = `${apiUrl}/person-jobs/people/active`;
+  const uniqueJobsUrl = `${apiUrl}/person-jobs/jobs/unique`;
+  const attendanceSearchUrl = `${apiUrl}/person-jobs/search/attendance`;
 
   let personSkillsData = [];
   let jobSkillsData = [];
@@ -21,10 +21,10 @@ console.log("[ctapersonskills.mjs] Loading...");
 
   // Initialize
   async function initializePersonSkills() {
-    console.log("[ctapersonskills.mjs] Initializing");
+    console.log("[person-jobs.mjs] Initializing");
     try {
       currentUser = await getSessionUser();
-      console.log("[ctapersonskills.mjs] Current user:", currentUser);
+      console.log("[person-jobs.mjs] Current user:", currentUser);
 
       // Load all data in parallel
       await Promise.all([
@@ -46,14 +46,14 @@ console.log("[ctapersonskills.mjs] Loading...");
 
   async function loadPersonSkillsData() {
     try {
-      console.log("[ctapersonskills.mjs] Fetching person skills from:", url);
+      console.log("[person-jobs.mjs] Fetching person skills from:", url);
       const response = await fetch(url, { method: "GET" });
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       personSkillsData = data || [];
       console.log(
-        "[ctapersonskills.mjs] Loaded",
+        "[person-jobs.mjs] Loaded",
         personSkillsData.length,
         "person skills",
       );
@@ -67,17 +67,14 @@ console.log("[ctapersonskills.mjs] Loading...");
 
   async function loadJobSkillsData() {
     try {
-      console.log(
-        "[ctapersonskills.mjs] Fetching job skills from:",
-        jobSkillsUrl,
-      );
+      console.log("[person-jobs.mjs] Fetching job skills from:", jobSkillsUrl);
       const response = await fetch(jobSkillsUrl, { method: "GET" });
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
       const data = await response.json();
       jobSkillsData = data || [];
       console.log(
-        "[ctapersonskills.mjs] Loaded",
+        "[person-jobs.mjs] Loaded",
         jobSkillsData.length,
         "job skills",
       );
@@ -89,7 +86,7 @@ console.log("[ctapersonskills.mjs] Loading...");
 
   async function loadPeopleData() {
     try {
-      console.log("[ctapersonskills.mjs] Fetching people from:", peopleUrl);
+      console.log("[person-jobs.mjs] Fetching people from:", peopleUrl);
       const response = await fetch(peopleUrl, { method: "GET" });
       if (!response.ok)
         throw new Error(`HTTP error! status: ${response.status}`);
@@ -97,7 +94,7 @@ console.log("[ctapersonskills.mjs] Loading...");
       // Store full people data with ID and name
       peopleData = data || [];
       console.log(
-        "[ctapersonskills.mjs] Loaded",
+        "[person-jobs.mjs] Loaded",
         peopleData.length,
         "active people",
       );
@@ -147,7 +144,7 @@ console.log("[ctapersonskills.mjs] Loading...");
     const form = document.getElementById("personSkillForm");
 
     if (!dialog || !addBtn || !cancelBtn || !form) {
-      console.warn("[ctapersonskills.mjs] Some dialog elements not found");
+      console.warn("[person-jobs.mjs] Some dialog elements not found");
       return;
     }
 
@@ -226,7 +223,7 @@ console.log("[ctapersonskills.mjs] Loading...");
   function setupSearchHandlers() {
     const searchBtn = document.getElementById("searchAttendanceBtn");
     if (!searchBtn) {
-      console.warn("[ctapersonskills.mjs] Search button not found");
+      console.warn("[person-jobs.mjs] Search button not found");
       return;
     }
 
@@ -254,7 +251,7 @@ console.log("[ctapersonskills.mjs] Loading...");
       personSkillsContainer.style.display = "none";
 
       // selectedPersonId and selectedJobTitle are already set from the filter dropdowns
-      console.log("[ctapersonskills.mjs] Searching attendance for:", {
+      console.log("[person-jobs.mjs] Searching attendance for:", {
         personId: selectedPersonId,
         jobTitle: selectedJobTitle,
       });
@@ -335,9 +332,7 @@ console.log("[ctapersonskills.mjs] Loading...");
     table.appendChild(tbody);
 
     const wrapper = document.createElement("div");
-    wrapper.className = "table-container";
-    wrapper.style.maxHeight = "calc(80vh - 200px)";
-    wrapper.style.overflowY = "auto";
+    wrapper.className = "table-container attendance-results-scroll";
     wrapper.appendChild(table);
     resultsContainer.appendChild(wrapper);
     resultsSection.style.display = "block";
@@ -391,7 +386,7 @@ console.log("[ctapersonskills.mjs] Loading...");
         REQUESTED_BY: currentUser,
       };
 
-      console.log("[ctapersonskills.mjs] Submitting:", personSkillData);
+      console.log("[person-jobs.mjs] Submitting:", personSkillData);
 
       const response = await fetch(url, {
         method: "POST",
@@ -405,7 +400,7 @@ console.log("[ctapersonskills.mjs] Loading...");
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log("[ctapersonskills.mjs] Successfully created person skill");
+      console.log("[person-jobs.mjs] Successfully created person skill");
       closeDialog(dialog, form);
       await loadPersonSkillsData();
     } catch (error) {
@@ -459,13 +454,12 @@ console.log("[ctapersonskills.mjs] Loading...");
 
       // Person group header row — click to collapse/expand
       const headerRow = document.createElement("tr");
-      headerRow.style.cssText =
-        "background:#e8f0f7; cursor:pointer; user-select:none;";
+      headerRow.className = "person-group-row";
       headerRow.innerHTML = `
-        <td colspan="7" style="font-weight:bold; padding:8px 12px; border-left:4px solid #1a6496;">
-          <span class="person-toggle" style="margin-right:8px; font-size:0.8em;">&#9660;</span>
+        <td colspan="7" class="person-group-cell">
+          <span class="person-toggle">&#9660;</span>
           ${personId}
-          <span style="font-weight:normal; color:#555; margin-left:10px; font-size:0.88em;">
+          <span class="person-role-count">
             ${items.length} role${items.length !== 1 ? "s" : ""}
           </span>
         </td>
@@ -480,9 +474,9 @@ console.log("[ctapersonskills.mjs] Loading...");
         );
         const row = document.createElement("tr");
         row.innerHTML = `
-          <td style="padding-left:28px;">${item.JOB_TITLE || ""}</td>
+          <td class="person-job-title">${item.JOB_TITLE || ""}</td>
           <td>
-            <span class="badge" style="background-color:${getCompetencyColor(item.COMPETENCY)}; padding:4px 8px; border-radius:3px; color:white;">
+            <span class="competency-badge ${getCompetencyClass(item.COMPETENCY)}">
               ${item.COMPETENCY || ""}
             </span>
           </td>
@@ -508,23 +502,11 @@ console.log("[ctapersonskills.mjs] Loading...");
     });
 
     table.appendChild(tbody);
-
-    const wrapper = document.createElement("div");
-    wrapper.className = "table-container";
-    wrapper.style.maxHeight = "calc(80vh - 200px)";
-    wrapper.style.overflowY = "auto";
-    wrapper.appendChild(table);
-    container.appendChild(wrapper);
+    container.appendChild(table);
   }
 
-  function getCompetencyColor(level) {
-    const colors = {
-      Basic: "#FFA500",
-      Intermediate: "#4169E1",
-      Advanced: "#228B22",
-      Expert: "#8B008B",
-    };
-    return colors[level] || "#808080";
+  function getCompetencyClass(level) {
+    return `competency-${(level || "unknown").toLowerCase()}`;
   }
 
   async function deletePersonSkill(index) {
@@ -549,7 +531,7 @@ console.log("[ctapersonskills.mjs] Loading...");
         throw new Error(`HTTP error! status: ${response.status}`);
       }
 
-      console.log("[ctapersonskills.mjs] Successfully deleted person skill");
+      console.log("[person-jobs.mjs] Successfully deleted person skill");
       await loadPersonSkillsData();
     } catch (error) {
       console.error("Error deleting person skill:", error);

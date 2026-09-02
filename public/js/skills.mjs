@@ -182,12 +182,11 @@ console.log("[skills.mjs] Loading...");
 
     // Toggle control
     const toggleWrap = document.createElement("div");
-    toggleWrap.style.cssText = "margin-bottom:8px; font-size:0.9em;";
+    toggleWrap.className = "inactive-toggle";
     const cb = document.createElement("input");
     cb.type = "checkbox";
     cb.id = "showInactiveCb";
     cb.checked = showInactive;
-    cb.style.marginRight = "6px";
     cb.addEventListener("change", () => {
       showInactive = cb.checked;
       renderSkillsTable(skillsData);
@@ -208,21 +207,20 @@ console.log("[skills.mjs] Loading...");
     }
 
     const table = document.createElement("table");
-    table.className = "table table-striped table-bordered table-hover";
-    table.style.tableLayout = "fixed";
-    table.style.width = "100%";
+    table.className =
+      "table table-striped table-bordered table-hover skills-table";
 
     const thead = document.createElement("thead");
     thead.innerHTML = `
       <tr>
-        <th style="width:10%">Skill ID</th>
-        <th style="width:23%">Name</th>
-        <th style="width:17%">Category</th>
-        <th style="width:6%">Revision</th>
-        <th style="width:9%">Issue Date</th>
-        <th style="width:8%">Created By</th>
-        <th style="width:9%">Created Date</th>
-        <th style="width:18%">Actions</th>
+        <th>Skill ID</th>
+        <th>Name</th>
+        <th>Category</th>
+        <th>Revision</th>
+        <th>Issue Date</th>
+        <th>Created By</th>
+        <th>Created Date</th>
+        <th>Actions</th>
       </tr>
     `;
     table.appendChild(thead);
@@ -233,11 +231,11 @@ console.log("[skills.mjs] Loading...");
       const globalIndex = skillsData.indexOf(item);
       const inactive = item.STATUS === "I";
       const row = document.createElement("tr");
-      if (inactive) row.style.opacity = "0.45";
+      if (inactive) row.classList.add("inactive-skill");
       row.innerHTML = `
         <td><strong>${item.SKILL_ID || ""}</strong></td>
-        <td style="word-wrap:break-word">${item.NAME || ""}${inactive ? ' <em style="font-size:0.8em;color:#888">(inactive)</em>' : ""}</td>
-        <td style="word-wrap:break-word">${item.CATEGORY || "-"}</td>
+        <td>${item.NAME || ""}${inactive ? ' <em class="inactive-label">(inactive)</em>' : ""}</td>
+        <td>${item.CATEGORY || "-"}</td>
         <td>${item.REVISION_LEVEL || "-"}</td>
         <td>${
           item.ISSUE_DATE ? new Date(item.ISSUE_DATE).toLocaleDateString() : "-"
@@ -248,9 +246,9 @@ console.log("[skills.mjs] Loading...");
             ? new Date(item.CREATED_DATE).toLocaleDateString()
             : ""
         }</td>
-        <td style="white-space: nowrap;">
-          <button class="button-small" style="padding: 4px 8px; font-size: 12px; margin-right: 4px;" onclick="editSkill(${globalIndex})">Edit</button>
-          <button class="button-small" style="padding: 4px 8px; font-size: 12px;" onclick="deleteSkill(${globalIndex})">Delete</button>
+        <td class="skill-actions">
+          <button class="button-small skill-action skill-action-edit" onclick="editSkill(${globalIndex})">Edit</button>
+          <button class="button-small skill-action" onclick="deleteSkill(${globalIndex})">Delete</button>
         </td>
       `;
       tbody.appendChild(row);
