@@ -19,10 +19,22 @@ async function main() {
 
   const results = await indexDirectory(absoluteDir);
 
+  console.log("\n=== Indexing Summary ===");
   console.log(`Processed: ${results.processed}`);
   console.log(`Indexed:   ${results.indexed}`);
+  console.log(`Skipped:   ${results.skipped.length}`);
+  console.log(`Errors:    ${results.errors.length}`);
+
+  if (results.skipped.length > 0) {
+    console.log("\n--- Skipped files ---");
+    results.skipped.forEach((s) => {
+      const sizeMb = (s.size / (1024 * 1024)).toFixed(1);
+      console.log(`  - [${s.reason}] ${s.filePath} (${sizeMb} MB)`);
+    });
+  }
+
   if (results.errors.length > 0) {
-    console.log(`Errors:    ${results.errors.length}`);
+    console.log("\n--- Errors ---");
     results.errors.forEach((e) =>
       console.log(`  - ${e.filePath}: ${e.message}`),
     );

@@ -273,8 +273,7 @@ function renderChecklistItems(records, container, summarySpan) {
       switch (key) {
         case "CHECKLIST_ID": {
           const p = createElement("p", {
-            classes: ["chkdet"],
-            id: "checklist_id",
+            classes: ["chkdet", "checklist-id"],
             text: `Checklist Id: ${value}`,
           });
           rowdiv.appendChild(p);
@@ -283,7 +282,7 @@ function renderChecklistItems(records, container, summarySpan) {
 
         case "QUESTION": {
           const p = createElement("p", {
-            id: "question",
+            classes: ["question"],
             text: `${key}: ${value}`,
           });
           rowdiv.appendChild(p);
@@ -306,7 +305,7 @@ function renderChecklistItems(records, container, summarySpan) {
             obsContent.classList.add("obs-empty");
           }
 
-          const p = createElement("p", { id: "observation" });
+          const p = createElement("p", { classes: ["observation"] });
           p.appendChild(obsLabel);
           p.appendChild(obsContent);
 
@@ -325,7 +324,7 @@ function renderChecklistItems(records, container, summarySpan) {
         case "REFERENCE": {
           const p = createElement("p", {
             classes: ["chkdet"],
-            id: "reference",
+            classes: ["reference"],
             text: `Ref.: ${value || ""}`,
           });
           rowdiv.appendChild(p);
@@ -548,8 +547,14 @@ function resetAndCloseObsDialog(
  * Setup observation dialog listener
  */
 function setupObservationListener(id, apiUrls, summarySpan) {
+  let dialogAbortController;
+
   document.addEventListener("click", async (e) => {
     if (!e.target.classList.contains("btnEditObs")) return;
+
+    dialogAbortController?.abort();
+    dialogAbortController = new AbortController();
+    const { signal } = dialogAbortController;
 
     const checklistId = e.target.getAttribute("data-checklist-id");
     const editObsDialog = document.querySelector("#editobservation");
@@ -560,7 +565,7 @@ function setupObservationListener(id, apiUrls, summarySpan) {
     // Display the corresponding question
     const rowDiv = e.target.closest(".rowdiv");
     if (rowDiv) {
-      const questionElement = rowDiv.querySelector("#question");
+      const questionElement = rowDiv.querySelector(".question");
       if (questionElement) {
         const cleanQuestion = questionElement.textContent.replace(
           /^QUESTION:\s*/,
@@ -648,9 +653,10 @@ function setupObservationListener(id, apiUrls, summarySpan) {
     };
 
     const handleRevise = () => {
-      btnSaveObservation.addEventListener("click", handleSaveObservation);
+      btnSaveObservation.addEventListener("click", handleSaveObservation, {
+        signal,
+      });
       showEditMode();
-      btnReviseObservation.removeEventListener("click", handleRevise);
     };
 
     const handleClose = () => {
@@ -660,7 +666,6 @@ function setupObservationListener(id, apiUrls, summarySpan) {
         obsDialogActions,
         validationResult,
       );
-      btnCloseObservation.removeEventListener("click", handleClose);
     };
 
     const handleCancel = () => {
@@ -670,13 +675,14 @@ function setupObservationListener(id, apiUrls, summarySpan) {
         obsDialogActions,
         validationResult,
       );
-      btnCancelObservation.removeEventListener("click", handleCancel);
     };
 
-    btnCancelObservation.addEventListener("click", handleCancel);
-    btnReviseObservation.addEventListener("click", handleRevise);
-    btnCloseObservation.addEventListener("click", handleClose);
-    btnSaveObservation.addEventListener("click", handleSaveObservation);
+    btnCancelObservation.addEventListener("click", handleCancel, { signal });
+    btnReviseObservation.addEventListener("click", handleRevise, { signal });
+    btnCloseObservation.addEventListener("click", handleClose, { signal });
+    btnSaveObservation.addEventListener("click", handleSaveObservation, {
+      signal,
+    });
   });
 }
 

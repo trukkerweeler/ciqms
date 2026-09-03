@@ -7,7 +7,12 @@ const {
   extractTextAndMetadata,
   checkHealth: checkTikaHealth,
 } = require("./tika");
-const { ensureIndex, indexDocuments } = require("./searchIndex");
+const {
+  ensureIndex,
+  indexDocuments,
+  listAllDocumentIds,
+  deleteDocuments,
+} = require("./searchIndex");
 
 const SUPPORTED_EXTENSIONS = new Set([
   ".pdf",
@@ -22,6 +27,13 @@ const SUPPORTED_EXTENSIONS = new Set([
 // Files to always ignore: Office lock files and OS metadata, never real QMS content.
 const IGNORED_FILENAMES = new Set(["thumbs.db", "desktop.ini"]);
 const MAX_FILE_SIZE_BYTES = 50 * 1024 * 1024; // skip anything over 50MB to avoid stalling Tika
+
+// Only top-level QMS section folders named like "04420 - Quality Manual" are indexed.
+const SECTION_FOLDER_PATTERN = /^\d{5} - /;
+
+// Section folders that should be indexed non-recursively: files directly inside are indexed,
+// but their subfolders are skipped entirely.
+const NON_RECURSIVE_FOLDERS = new Set(["07130 - Infrastructure"]);
 
 function isIndexable(entryName) {
   const lower = entryName.toLowerCase();
@@ -45,10 +57,24 @@ async function assertDirectoryReadable(dir) {
 }
 
 /**
+ * List immediate subdirectories of `rootDir` whose name matches SECTION_FOLDER_PATTERN.
+ * Everything else directly under `rootDir` is ignored.
+ */
+async function listSectionDirs(rootDir) {
+  const entries = await fs.readdir(rootDir, { withFileTypes: true });
+  return entries
+    .filter(
+      (entry) => entry.isDirectory() && SECTION_FOLDER_PATTERN.test(entry.name),
+    )
+    .map((entry) => path.join(rootDir, entry.name));
+}
+
+/**
  * Recursively list files under a directory that match SUPPORTED_EXTENSIONS.
  * Oversized files are skipped but reported via `skipped` so they aren't silently dropped.
+ * @param {boolean} recursive when false, subfolders are ignored (top-level files only).
  */
-async function walkDirectory(dir, skipped = []) {
+async function walkDirectory(dir, skipped = [], recursive = true) {
   const entries = await fs.readdir(dir, { withFileTypes: true });
   const files = [];
 
@@ -56,7 +82,9 @@ async function walkDirectory(dir, skipped = []) {
     const fullPath = path.join(dir, entry.name);
 
     if (entry.isDirectory()) {
-      files.push(...(await walkDirectory(fullPath, skipped)));
+      if (recursive) {
+        files.push(...(await walkDirectory(fullPath, skipped)));
+      }
     } else if (isIndexable(entry.name)) {
       const stats = await fs.stat(fullPath);
       if (stats.size <= MAX_FILE_SIZE_BYTES) {
@@ -72,6 +100,60 @@ async function walkDirectory(dir, skipped = []) {
   }
 
   return files;
+}
+
+/**
+ * Pull QMS-specific fields (form number, revision, controlled/uncontrolled, etc.) out of a
+ * document's extracted text using simple pattern matching — no AI, just regex heuristics.
+ */
+function extractQmsMetadata(text) {
+  const lines = text
+    .split("\n")
+    .map((l) => l.trim())
+    .filter(Boolean);
+
+  const title = lines[0] || null;
+
+  const formNumber = (text.match(
+    /(QP|WI|F|FM|FR|OP|PR)[-\s]?\d{2,4}[-\s]?\d{2,4}/i,
+  ) || [null])[0];
+
+  const revision = (text.match(/Rev(?:ision)?\s*([A-Z]|\d+(\.\d+)?)/i) || [
+    null,
+  ])[0];
+
+  const controlled = /CONTROLLED COPY/i.test(text);
+  const uncontrolled = /UNCONTROLLED COPY/i.test(text);
+
+  const effectiveDate = (text.match(
+    /Effective\s*Date[:\s]*([A-Za-z0-9\/-]+)/i,
+  ) || [null, null])[1];
+
+  const clauseRefs = [
+    ...text.matchAll(/AS9100\s*(?:Rev\s*[A-D])?\s*(\d+\.\d+(\.\d+)?)/gi),
+  ].map((m) => m[1]);
+
+  const department =
+    ["Quality", "Engineering", "Production", "Purchasing", "Maintenance"].find(
+      (dep) => text.includes(dep),
+    ) || null;
+
+  let docType = null;
+  if (formNumber && /^QP/i.test(formNumber)) docType = "Procedure";
+  else if (formNumber && /^WI/i.test(formNumber)) docType = "Work Instruction";
+  else if (formNumber && /^F/i.test(formNumber)) docType = "Form";
+
+  return {
+    title,
+    formNumber,
+    revision,
+    controlled,
+    uncontrolled,
+    effectiveDate,
+    clauseRefs,
+    department,
+    docType,
+  };
 }
 
 /**
@@ -95,22 +177,39 @@ async function indexDirectory(directory, batchSize = 25) {
   await ensureIndex();
 
   const skipped = [];
-  const files = await walkDirectory(directory, skipped);
+  const sectionDirs = await listSectionDirs(directory);
+  const files = [];
+  for (const sectionDir of sectionDirs) {
+    const recursive = !NON_RECURSIVE_FOLDERS.has(path.basename(sectionDir));
+    files.push(...(await walkDirectory(sectionDir, skipped, recursive)));
+  }
   const results = { processed: 0, indexed: 0, skipped, errors: [] };
+  const currentIds = new Set();
   let batch = [];
 
   for (const filePath of files) {
     try {
-      const { fileName, text, metadata } =
-        await extractTextAndMetadata(filePath);
+      const {
+        fileName,
+        text,
+        metadata: tikaMetadata,
+      } = await extractTextAndMetadata(filePath);
+
+      const metadata = {
+        filePath,
+        contentType: tikaMetadata["Content-Type"] || null,
+        indexedAt: new Date().toISOString(),
+        ...extractQmsMetadata(text),
+      };
+
+      const id = crypto.createHash("sha1").update(filePath).digest("hex");
+      currentIds.add(id);
 
       batch.push({
-        id: crypto.createHash("sha1").update(filePath).digest("hex"),
-        fileName,
-        filePath,
+        id,
+        filename: fileName,
         text,
-        contentType: metadata["Content-Type"] || null,
-        indexedAt: new Date().toISOString(),
+        ...metadata,
       });
 
       results.processed += 1;
@@ -130,7 +229,21 @@ async function indexDirectory(directory, batchSize = 25) {
     results.indexed += batch.length;
   }
 
+  // Prune stale documents: anything already in the index that wasn't part of this run
+  // (e.g. a file that's since been excluded by the folder filter, moved, or deleted).
+  const existingIds = await listAllDocumentIds();
+  const staleIds = existingIds.filter((id) => !currentIds.has(id));
+  await deleteDocuments(staleIds);
+  results.removedStale = staleIds.length;
+
   return results;
 }
 
-module.exports = { walkDirectory, indexDirectory, SUPPORTED_EXTENSIONS };
+module.exports = {
+  walkDirectory,
+  indexDirectory,
+  listSectionDirs,
+  extractQmsMetadata,
+  SUPPORTED_EXTENSIONS,
+  SECTION_FOLDER_PATTERN,
+};

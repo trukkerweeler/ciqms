@@ -30,7 +30,9 @@ async function checkHealth() {
 }
 
 /**
- * Create the index if it doesn't already exist (no-op if it does).
+ * Create the index if it doesn't already exist (no-op if it does), then apply the
+ * ranking/searchable/filterable settings so form number, revision, etc. are boosted over
+ * plain full-text matches.
  */
 async function ensureIndex() {
   const response = await fetch(`${MEILI_HOST}/indexes`, {
@@ -45,6 +47,99 @@ async function ensureIndex() {
     throw new Error(
       `Failed to create index ${MEILI_INDEX}: ${response.status} ${body}`,
     );
+  }
+
+  const settingsResponse = await fetch(
+    `${MEILI_HOST}/indexes/${MEILI_INDEX}/settings`,
+    {
+      method: "PATCH",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        rankingRules: [
+          "exactness",
+          "attribute",
+          "words",
+          "proximity",
+          "typo",
+          "sort",
+        ],
+        searchableAttributes: [
+          "title",
+          "formNumber",
+          "revision",
+          "clauseRefs",
+          "department",
+          "docType",
+          "text",
+        ],
+        filterableAttributes: [
+          "revision",
+          "department",
+          "docType",
+          "controlled",
+          "effectiveDate",
+        ],
+      }),
+    },
+  );
+
+  if (!settingsResponse.ok) {
+    const body = await settingsResponse.text();
+    throw new Error(
+      `Failed to apply settings to index ${MEILI_INDEX}: ${settingsResponse.status} ${body}`,
+    );
+  }
+}
+
+/**
+ * List the `id` of every document currently in the index (paginated fetch).
+ * @returns {Promise<string[]>}
+ */
+async function listAllDocumentIds() {
+  const ids = [];
+  const limit = 1000;
+  let offset = 0;
+
+  for (;;) {
+    const response = await fetch(
+      `${MEILI_HOST}/indexes/${MEILI_INDEX}/documents?fields=id&limit=${limit}&offset=${offset}`,
+      { method: "GET", headers: authHeaders() },
+    );
+
+    if (!response.ok) {
+      const body = await response.text();
+      throw new Error(`Failed to list documents: ${response.status} ${body}`);
+    }
+
+    const page = await response.json();
+    page.results.forEach((doc) => ids.push(doc.id));
+
+    if (page.results.length < limit) break;
+    offset += limit;
+  }
+
+  return ids;
+}
+
+/**
+ * Delete documents by id (no-op if `ids` is empty).
+ * @param {string[]} ids
+ */
+async function deleteDocuments(ids) {
+  if (ids.length === 0) return;
+
+  const response = await fetch(
+    `${MEILI_HOST}/indexes/${MEILI_INDEX}/documents/delete-batch`,
+    {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify(ids),
+    },
+  );
+
+  if (!response.ok) {
+    const body = await response.text();
+    throw new Error(`Failed to delete documents: ${response.status} ${body}`);
   }
 }
 
@@ -97,6 +192,8 @@ async function search(query, limit = 20) {
 module.exports = {
   ensureIndex,
   indexDocuments,
+  listAllDocumentIds,
+  deleteDocuments,
   search,
   checkHealth,
   MEILI_INDEX,
