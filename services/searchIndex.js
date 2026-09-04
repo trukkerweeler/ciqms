@@ -168,13 +168,31 @@ async function indexDocuments(documents) {
 /**
  * Search indexed documents by keyword.
  * @param {string} query
- * @param {number} limit
+ * @param {{limit?: number, offset?: number, filter?: string}} options
  */
-async function search(query, limit = 20) {
+async function search(query, options = {}) {
+  const limit = options.limit ?? 20;
+  const offset = options.offset ?? 0;
   const response = await fetch(`${MEILI_HOST}/indexes/${MEILI_INDEX}/search`, {
     method: "POST",
     headers: authHeaders(),
-    body: JSON.stringify({ q: query, limit }),
+    body: JSON.stringify({
+      q: query,
+      limit,
+      offset,
+      filter: options.filter,
+      attributesToCrop: ["text"],
+      cropLength: 80,
+      attributesToHighlight: [
+        "title",
+        "formNumber",
+        "revision",
+        "clauseRefs",
+        "department",
+        "docType",
+        "text",
+      ],
+    }),
   });
 
   if (!response.ok) {

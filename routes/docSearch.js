@@ -29,17 +29,40 @@ router.post("/index-docs", async (req, res) => {
   }
 });
 
-// GET /search?q=keyword&limit=20
+// GET /search?q=keyword&limit=20&offset=0&department=Quality&docType=Procedure
 router.get("/search", async (req, res) => {
   const query = req.query.q;
-  const limit = Number(req.query.limit) || 20;
+  const limit = Math.min(Math.max(Number(req.query.limit) || 20, 1), 100);
+  const offset = Math.max(Number(req.query.offset) || 0, 0);
 
   if (!query) {
     return res.status(400).json({ error: "Query parameter 'q' is required" });
   }
 
   try {
-    const results = await search(query, limit);
+    const filterableFields = [
+      "revision",
+      "department",
+      "docType",
+      "controlled",
+      "effectiveDate",
+    ];
+    const filters = filterableFields
+      .filter((field) => req.query[field] !== undefined)
+      .map((field) => {
+        const rawValue = String(req.query[field]);
+        if (field === "controlled") {
+          return `${field} = ${rawValue.toLowerCase() === "true"}`;
+        }
+        const value = rawValue.replace(/\\/g, "\\\\").replace(/'/g, "\\'");
+        return `${field} = '${value}'`;
+      });
+
+    const results = await search(query, {
+      limit,
+      offset,
+      filter: filters.length > 0 ? filters.join(" AND ") : undefined,
+    });
     res.json(results);
   } catch (error) {
     console.error("[/search] error:", error);

@@ -22,6 +22,17 @@
         gap: 0.5rem;
         margin-bottom: 1.5rem;
       }
+      #filterForm {
+        display: grid;
+        grid-template-columns: repeat(4, minmax(0, 1fr));
+        gap: 0.5rem;
+        margin-bottom: 1rem;
+      }
+      #filterForm input,
+      #filterForm select {
+        min-width: 0;
+        padding: 0.45rem;
+      }
       #q {
         flex: 1;
         padding: 0.5rem;
@@ -53,6 +64,28 @@
         line-height: 1.4;
         color: #333;
         white-space: pre-wrap;
+      }
+      .result .snippet em,
+      .result h3 em {
+        background: #fff0a8;
+        font-style: normal;
+      }
+      .metadata {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.35rem 0.75rem;
+        margin: 0.5rem 0;
+        color: #555;
+        font-size: 0.8rem;
+      }
+      .open-file {
+        font-size: 0.85rem;
+      }
+      #pagination {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-top: 1rem;
       }
       .meta {
         font-size: 0.75rem;
@@ -97,6 +130,16 @@
       />
       <button type="submit">Search</button>
     </form>
+    <form id="filterForm">
+      <input id="department" placeholder="Department" />
+      <input id="docType" placeholder="Document type" />
+      <input id="revision" placeholder="Revision" />
+      <select id="controlled">
+        <option value="">Controlled status</option>
+        <option value="true">Controlled</option>
+        <option value="false">Uncontrolled</option>
+      </select>
+    </form>
     <div id="results"></div>
 
     <script>
@@ -104,6 +147,8 @@
       const resultsEl = document.getElementById("results");
       const reindexBtn = document.getElementById("reindexBtn");
       const reindexStatus = document.getElementById("reindexStatus");
+      const pageSize = 20;
+      let currentOffset = 0;
 
       reindexBtn.addEventListener("click", async () => {
         reindexBtn.disabled = true;
@@ -138,19 +183,57 @@
         );
       }
 
-      form.addEventListener("submit", async (e) => {
-        e.preventDefault();
+      function escapeHtml(value) {
+        return String(value ?? "")
+          .replaceAll("&", "&amp;")
+          .replaceAll("<", "&lt;")
+          .replaceAll(">", "&gt;")
+          .replaceAll('"', "&quot;")
+          .replaceAll("'", "&#039;");
+      }
+
+      function safeHighlight(value) {
+        return escapeHtml(value)
+          .replaceAll("&lt;em&gt;", "<em>")
+          .replaceAll("&lt;/em&gt;", "</em>");
+      }
+
+      function fileUrl(filePath) {
+        if (!filePath || !filePath.startsWith("\\\\")) return null;
+        return `file:${filePath.replaceAll("\\", "/")}`;
+      }
+
+      function renderPagination(data) {
+        const total = data.estimatedTotalHits ?? 0;
+        if (total <= pageSize && currentOffset === 0) return "";
+        return `<div id="pagination">
+          <button id="previousPage" type="button" ${currentOffset === 0 ? "disabled" : ""}>Previous</button>
+          <span>Showing ${total === 0 ? 0 : currentOffset + 1}-${Math.min(currentOffset + pageSize, total)} of about ${total}</span>
+          <button id="nextPage" type="button" ${currentOffset + pageSize >= total ? "disabled" : ""}>Next</button>
+        </div>`;
+      }
+
+      async function runSearch() {
         const query = document.getElementById("q").value.trim();
         if (!query) return;
 
         resultsEl.innerHTML = "<p>Searching...</p>";
+        const params = new URLSearchParams({
+          q: query,
+          limit: pageSize,
+          offset: currentOffset,
+        });
+        ["department", "docType", "revision", "controlled"].forEach((field) => {
+          const value = document.getElementById(field).value.trim();
+          if (value) params.set(field, value);
+        });
 
         try {
-          const res = await fetch(`/search?q=${encodeURIComponent(query)}`);
+          const res = await fetch(`/search?${params}`);
           const data = await res.json();
 
           if (!res.ok) {
-            resultsEl.innerHTML = `<p class="error">${data.error || "Search failed"}</p>`;
+            resultsEl.innerHTML = `<p class="error">${escapeHtml(data.error || "Search failed")}</p>`;
             return;
           }
 
@@ -161,20 +244,56 @@
 
           resultsEl.innerHTML =
             data.hits
-              .map(
-                (hit) => `
-        <div class="result">
-          <h3>${hit.filename || "(unnamed file)"}</h3>
-          <div class="path">${hit.filePath || ""}</div>
-          <div class="snippet">${snippet(hit.text, query)}</div>
-        </div>`,
-              )
+              .map((hit) => {
+                const formatted = hit._formatted || {};
+                const displayTitle = formatted.title
+                  ? safeHighlight(formatted.title)
+                  : escapeHtml(hit.filename || "(unnamed file)");
+                const displayText = formatted.text
+                  ? safeHighlight(formatted.text)
+                  : escapeHtml(hit.text || "");
+                const url = fileUrl(hit.filePath);
+                return `<div class="result">
+              <h3>${displayTitle}</h3>
+              <div class="path">${escapeHtml(hit.filePath || "")}</div>
+              <div class="metadata">
+                ${hit.docType ? `<span>Type: ${escapeHtml(hit.docType)}</span>` : ""}
+                ${hit.revision ? `<span>Revision: ${escapeHtml(hit.revision)}</span>` : ""}
+                ${hit.department ? `<span>Department: ${escapeHtml(hit.department)}</span>` : ""}
+                ${hit.clauseRefs?.length ? `<span>Clauses: ${escapeHtml(hit.clauseRefs.join(", "))}</span>` : ""}
+              </div>
+              <div class="snippet">${displayText}</div>
+              ${url ? `<p><a class="open-file" href="${escapeHtml(url)}">Open file</a></p>` : ""}
+            </div>`;
+              })
               .join("") +
-            `<div class="meta">${data.estimatedTotalHits ?? data.hits.length} result(s) in ${data.processingTimeMs ?? "?"}ms</div>`;
+            `<div class="meta">${data.estimatedTotalHits ?? data.hits.length} result(s) in ${data.processingTimeMs ?? "?"}ms</div>` +
+            renderPagination(data);
+
+          document
+            .getElementById("previousPage")
+            ?.addEventListener("click", () => {
+              currentOffset = Math.max(0, currentOffset - pageSize);
+              runSearch();
+            });
+          document.getElementById("nextPage")?.addEventListener("click", () => {
+            currentOffset += pageSize;
+            runSearch();
+          });
         } catch (error) {
-          resultsEl.innerHTML = `<p class="error">${error.message}</p>`;
+          resultsEl.innerHTML = `<p class="error">${escapeHtml(error.message)}</p>`;
         }
+      }
+
+      form.addEventListener("submit", async (e) => {
+        e.preventDefault();
+        currentOffset = 0;
+        runSearch();
       });
+
+      document
+        .getElementById("filterForm")
+        .addEventListener("submit", (e) => e.preventDefault());
     </script>
   </body>
 </html>
