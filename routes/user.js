@@ -3,6 +3,17 @@ const router = express.Router();
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
 
+// Return the authenticated username for frontend record attribution.
+router.get("/me", (req, res) => {
+  const username = req.session?.user?.username || req.session?.user_id;
+
+  if (!username) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  res.json({ username });
+});
+
 // Create a record
 router.post("/:id", async (req, res) => {
   try {

@@ -173,11 +173,12 @@ const ipUserMapping = {
   // Example format:
   // "192.168.1.100": "john.smith",
   // "192.168.1.101": "jane.doe",
+  // "192.168.1.74": "AMIDDLETON", removed 9/9/2026
   // Add your IP mappings below
+  "192.168.1.51": "AMIDDLETON",
   "192.168.1.60": "OGOLUBOVIC",
   "192.168.1.68": "ZEISS",
   "192.168.1.69": "TKENT",
-  "192.168.1.74": "AMIDDLETON",
   "192.168.1.76": "CHARRISON",
   "192.168.1.77": "BOBBI",
   "192.168.1.80": "QC2",

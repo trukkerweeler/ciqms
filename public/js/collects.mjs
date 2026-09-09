@@ -580,13 +580,26 @@ document.addEventListener("DOMContentLoaded", async () => {
         },
         body: JSON.stringify(data),
       })
-        .then((response) => {
-          if (!response.ok) {
+        .then(async (response) => {
+          const responseText = await response.text();
+          let result = null;
+
+          try {
+            result = responseText ? JSON.parse(responseText) : null;
+          } catch {
             throw new Error(
               `Failed to create record: ${response.status} ${response.statusText}`,
             );
           }
-          return response.json();
+
+          if (!response.ok) {
+            throw new Error(
+              result?.error ||
+                `Failed to create record: ${response.status} ${response.statusText}`,
+            );
+          }
+
+          return result;
         })
         .then((result) => {
           if (result.success && result.record) {
