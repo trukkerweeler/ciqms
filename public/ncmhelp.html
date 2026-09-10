@@ -60,12 +60,100 @@
       strong {
         color: #0066cc;
       }
+      #ncmHelpTableContainer {
+        margin-bottom: 2.5rem;
+      }
+      #ncmHelpTableContainer table {
+        width: 100%;
+      }
+      #ncmHelpTableContainer td,
+      #ncmHelpTableContainer th {
+        vertical-align: top;
+        text-align: left;
+        padding: 0.75rem;
+      }
+      #ncmHelpTableContainer td a {
+        white-space: nowrap;
+      }
     </style>
   </head>
   <body>
     <header id="header"></header>
 
+    <div class="recordsaddrecordheading">
+      <h1>NCM Help &amp; Reference Guide</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addNcmHelpBtn"
+        title="Add NCM help or training record"
+      >
+        +
+      </button>
+    </div>
+
     <main id="main">
+      <section id="ncmTrainingHelp">
+        <h2 class="dialogTitle">NCM Training Videos &amp; References</h2>
+        <p>
+          Use these records for NCM training videos, work instructions, and
+          other practical references.
+        </p>
+        <div id="ncmHelpTableContainer" class="table-container">
+          <p>Loading NCM training resources...</p>
+        </div>
+      </section>
+
+      <dialog id="addNcmHelpDialog" class="dialog">
+        <form id="addNcmHelpForm" class="form">
+          <div class="form-header">
+            <h2>Add NCM Help Record</h2>
+          </div>
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="ncmHelpSubject"
+                >Subject <span class="required">*</span></label
+              >
+              <input id="ncmHelpSubject" name="SUBJECT" type="text" required />
+            </div>
+            <div class="form-group full-width">
+              <label for="ncmHelpDescription"
+                >Description <span class="required">*</span></label
+              >
+              <textarea
+                id="ncmHelpDescription"
+                name="DESCRIPTION"
+                rows="3"
+                required
+              ></textarea>
+            </div>
+            <div class="form-group full-width">
+              <label for="ncmHelpFile">Video or document</label>
+              <input
+                id="ncmHelpFile"
+                type="file"
+                accept=".pdf,.doc,.docx,.txt,.mp4,.avi,.mov,.wmv,.jpg,.jpeg,.png,.gif"
+              />
+              <input
+                id="ncmHelpLink"
+                name="LINK"
+                type="text"
+                placeholder="Or enter a hosted URL/path"
+              />
+            </div>
+          </div>
+          <div class="dialog-actions">
+            <button id="saveNcmHelpBtn" type="submit" class="btn btn-primary">
+              <span class="btn-icon">✓</span>
+              Save Help Record
+            </button>
+            <button id="closeNcmHelpBtn" type="button" class="btn btn-cancel">
+              <span class="btn-icon">✕</span>
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
       <section id="trendHelp">
         <h2 class="dialogTitle">📝 NCM Description Guidelines</h2>
         <p>
@@ -151,7 +239,8 @@
             <strong>EOL</strong> – End of Life
             <p class="codeinstrns">
               Use when a calibrated instrument has reached its end of life or is
-              no longer suitable for use and requires retirement or replacement (Eg: Hardness block used up).
+              no longer suitable for use and requires retirement or replacement
+              (Eg: Hardness block used up).
             </p>
           </li>
         </ul>

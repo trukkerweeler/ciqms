@@ -220,6 +220,17 @@ document.addEventListener("DOMContentLoaded", async function () {
 });
 
 function setupEventListeners() {
+  const requestorOptions = document.getElementById("requestorOptions");
+  if (requestorOptions) {
+    Object.keys(users)
+      .filter((requestor) => requestor !== "DEFAULT" && requestor !== "QC")
+      .forEach((requestor) => {
+        const option = document.createElement("option");
+        option.value = requestor;
+        requestorOptions.appendChild(option);
+      });
+  }
+
   // Add NCM button
   const addNcmBtn = document.getElementById("addNcmBtn");
   if (addNcmBtn) {
