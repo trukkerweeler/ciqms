@@ -146,9 +146,14 @@
         padding: 7px 9px;
         border: 1px solid #cbd5e1;
         border-radius: 6px;
-        min-width: 280px;
+        min-width: 420px;
         font-size: 0.85rem;
-        flex: 1 1 280px;
+        flex: 1 1 540px;
+      }
+
+      .action-panel input.destination-path.missing {
+        background: #fee2e2;
+        border-color: #fca5a5;
       }
 
       .action-panel button {
@@ -257,6 +262,12 @@
         color: #64748b;
         min-height: 1.25rem;
       }
+
+      .queue-note {
+        margin: -8px 0 16px;
+        color: #64748b;
+        font-size: 0.9rem;
+      }
     </style>
   </head>
   <body>
@@ -265,6 +276,12 @@
         <h1>QR Scan Viewer</h1>
         <a href="/inputs.html" class="button">Back to Inputs</a>
       </div>
+
+      <p class="queue-note">
+        Queue source: <strong>FILING/autofiler2.py</strong> &middot;
+        <code>qr_scan.jsonl</code> &middot; See
+        <code>docs/QR_SCAN_VIEWER.md</code> for the workflow.
+      </p>
 
       <div id="results" class="list"></div>
     </div>

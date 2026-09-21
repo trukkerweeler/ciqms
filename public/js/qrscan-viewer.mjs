@@ -11,6 +11,13 @@ function escapeHtml(value) {
     .replace(/'/g, "&#39;");
 }
 
+function getLocalDateString(date = new Date()) {
+  const year = date.getFullYear();
+  const month = String(date.getMonth() + 1).padStart(2, "0");
+  const day = String(date.getDate()).padStart(2, "0");
+  return `${year}-${month}-${day}`;
+}
+
 function renderCurrentEntry() {
   resultsEl.innerHTML = "";
 
@@ -58,16 +65,19 @@ function renderCurrentEntry() {
       <span>•</span>
       <strong>Month:</strong> ${escapeHtml(entry.monthLabel || "")}
       <span>•</span>
-      <strong>Input ID:</strong> ${escapeHtml(entry.inputId || "(none)")}
-      <span>•</span>
-      <strong>Input Date:</strong> ${escapeHtml(entry.inputDate || "")}
+      <strong>Open inputs:</strong> ${escapeHtml(entry.inputCandidates?.length || 0)}
     </div>
     <div style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin:0 0 8px 0;min-height:40px;">
-      <div class="${entry.inputId ? "status matched" : "status unmatched"}">
-        ${entry.inputId ? "Matched input record" : "No matching input record"}
+      <div class="${entry.inputCandidates?.length ? "status matched" : "status unmatched"}">
+        ${entry.inputCandidates?.length ? "Select the input ID for this document" : "No open input records found"}
       </div>
       <div class="action-panel">
-      <input class="destination-path" type="text" placeholder="Destination path (optional)" value="${escapeHtml(entry.destinationPath || "")}" style="flex:1 1 360px;min-width:280px;height:38px;box-sizing:border-box;line-height:1.2;margin:0;" />
+      <label for="inputId" style="font-weight:600;white-space:nowrap;">Input ID</label>
+      <select id="inputId" class="input-id-select" aria-label="Input ID" required style="flex:0 0 160px;height:38px;box-sizing:border-box;line-height:1.2;margin:0;">
+        <option value="">Select input ID...</option>
+        ${(entry.inputCandidates || []).map((candidate) => `<option value="${escapeHtml(candidate.INPUT_ID)}">${escapeHtml(candidate.INPUT_ID)}</option>`).join("")}
+      </select>
+      <input class="destination-path${entry.destinationPath ? "" : " missing"}" type="text" placeholder="Destination path (optional)" value="${escapeHtml(entry.destinationPath || "")}" style="flex:1 1 540px;min-width:420px;height:38px;box-sizing:border-box;line-height:1.2;margin:0;" />
       <select class="pm-select" aria-label="Disposition" style="flex:0 0 200px;height:38px;box-sizing:border-box;line-height:1.2;margin:0;">
         <option value="">Select disposition…</option>
         ${
@@ -79,11 +89,12 @@ function renderCurrentEntry() {
           `
             : `
             <option value="Scanned and filed">Scanned and filed</option>
-            <option value="Expired">Expired</option>
-            <option value="Not done">Not done</option>
+            <option value="Expired, not done">Expired, not done</option>
           `
         }
       </select>
+      <label for="responseDate" style="font-weight:600;white-space:nowrap;">Response date</label>
+      <input id="responseDate" class="response-date" type="date" aria-label="Response date" value="${getLocalDateString()}" required style="height:38px;box-sizing:border-box;padding:7px 9px;border:1px solid #cbd5e1;border-radius:6px;" />
     </div>
     ${(() => {
       const subjectCode = (entry.subject || entry.qrData || "")
@@ -258,20 +269,35 @@ function renderCurrentEntry() {
       return "";
     })()}
     <div class="save-footer">
-      <button class="save-btn" type="button" ${!entry.inputId ? "disabled" : ""}>Save &amp; File</button>
+      <button class="save-btn" type="button" ${!entry.inputCandidates?.length ? "disabled" : ""}>Save &amp; File</button>
       <span class="save-message"></span>
     </div>
     <iframe src="${entry.pdfViewerUrl}" title="PDF viewer"></iframe>
   `;
 
+  const destinationInput = item.querySelector(".destination-path");
+  destinationInput?.addEventListener("input", () => {
+    destinationInput.classList.toggle(
+      "missing",
+      !destinationInput.value.trim(),
+    );
+  });
+
   const saveButton = item.querySelector(".save-btn");
   if (saveButton) {
     saveButton.addEventListener("click", async () => {
       const select = item.querySelector(".pm-select");
+      const inputIdSelect = item.querySelector(".input-id-select");
       const destinationInput = item.querySelector(".destination-path");
+      const responseDateInput = item.querySelector(".response-date");
       const statusMessage = item.querySelector(".save-message");
       const measurementStatus = item.querySelector(".measurement-status");
       const selectedOption = select?.value?.trim();
+      const selectedInputId = inputIdSelect?.value?.trim();
+      const selectedCandidate = (entry.inputCandidates || []).find(
+        (candidate) => String(candidate.INPUT_ID) === selectedInputId,
+      );
+      const responseDate = responseDateInput?.value?.trim();
       const percentInput = item.querySelector("#measurementPercent");
       const fahrenheitInput = item.querySelector("#measurementFahrenheit");
       const secondsInput = item.querySelector("#measurementSeconds");
@@ -315,9 +341,13 @@ function renderCurrentEntry() {
         return;
       }
 
-      if (hasMeasurementValues && !entry.inputId) {
-        statusMessage.textContent =
-          "No input record is available for this item.";
+      if (!selectedInputId) {
+        statusMessage.textContent = "Please select an input ID first.";
+        return;
+      }
+
+      if (!responseDate) {
+        statusMessage.textContent = "Please choose a response date first.";
         return;
       }
 
@@ -330,7 +360,7 @@ function renderCurrentEntry() {
       try {
         if (hasMeasurementValues) {
           const response = await fetch(
-            `/input/collect/${encodeURIComponent(entry.inputId)}`,
+            `/input/collect/${encodeURIComponent(selectedInputId)}`,
             {
               method: "POST",
               headers: { "Content-Type": "application/json" },
@@ -350,14 +380,15 @@ function renderCurrentEntry() {
           method: "POST",
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({
-            inputId: entry.inputId,
+            inputId: selectedInputId,
             qrData: entry.qrData,
             subject: entry.subject || entry.qrData || "",
-            inputDate: entry.inputDate || "",
+            inputDate: selectedCandidate?.INPUT_DATE || "",
             originalFile: entry.originalFile,
             sourceName: entry.sourceName,
             pdfPath: entry.pdfPath,
             selectedOption,
+            responseDate,
             destinationPath: destinationInput?.value?.trim() || "",
             user:
               localStorage.getItem("currentUser") ||

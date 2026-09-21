@@ -387,6 +387,17 @@ router.get("/", (req, res) => {
         }
       })
       .filter(Boolean);
+    const seenQueueEntries = new Set();
+    const uniqueEntries = entries.filter((entry) => {
+      const sourceKey = String(
+        entry.pdfPath || entry.originalFile || entry.qrData || "",
+      )
+        .trim()
+        .toLowerCase();
+      if (!sourceKey || seenQueueEntries.has(sourceKey)) return false;
+      seenQueueEntries.add(sourceKey);
+      return true;
+    });
 
     const connection = mysql.createConnection({
       host: process.env.DB_HOST,
@@ -405,57 +416,74 @@ router.get("/", (req, res) => {
         return;
       }
 
-      if (entries.length === 0) {
+      if (uniqueEntries.length === 0) {
         res.json([]);
         connection.end();
         return;
       }
 
       const results = [];
-      let completed = 0;
 
-      entries.forEach((entry, index) => {
+      function processEntry(index) {
+        if (index >= uniqueEntries.length) {
+          res.json(results);
+          connection.end();
+          return;
+        }
+
+        const entry = uniqueEntries[index];
         const qrCode = (entry.qrData || "").toString().trim();
         const sourceName = entry.originalFile || entry.pdfPath || "";
         const dateInfo = parseDateFromFilename(sourceName, entry.timestamp);
+        if (!qrCode) {
+          const pdfPath = entry.pdfPath || "";
+          results[index] = {
+            ...entry,
+            sourceName,
+            month: dateInfo.month,
+            year: dateInfo.year,
+            monthLabel: `${dateInfo.year}-${String(dateInfo.month).padStart(2, "0")}`,
+            inputId: null,
+            inputCandidates: [],
+            inputDate: null,
+            subject: null,
+            pdfMissing: pdfPath ? !fs.existsSync(pdfPath) : false,
+            destinationPath: "",
+            pdfViewerUrl: `/qrscan/view?file=${encodeURIComponent(pdfPath)}`,
+          };
+          processEntry(index + 1);
+          return;
+        }
+        const query = `SELECT INPUT_ID, INPUT_DATE, SUBJECT FROM PEOPLE_INPUT WHERE SUBJECT LIKE ? AND (CLOSED = 'N' OR CLOSED IS NULL) ORDER BY INPUT_DATE DESC`;
 
-        const query = `SELECT INPUT_ID, INPUT_DATE, SUBJECT FROM PEOPLE_INPUT WHERE SUBJECT LIKE ? AND DATE(INPUT_DATE) < ? ORDER BY INPUT_DATE DESC LIMIT 1`;
+        connection.query(query, [`%${qrCode}%`], (queryErr, rows) => {
+          if (queryErr) {
+            console.error(
+              `Failed to query QR scan match for ${qrCode}: ${queryErr.message}`,
+            );
+          }
 
-        connection.query(
-          query,
-          [`%${qrCode}%`, dateInfo.dateString],
-          (queryErr, rows) => {
-            if (queryErr) {
-              console.error(
-                `Failed to query QR scan match for ${qrCode}: ${queryErr.message}`,
-              );
-            }
+          const pdfPath = entry.pdfPath || "";
+          results[index] = {
+            ...entry,
+            sourceName,
+            month: dateInfo.month,
+            year: dateInfo.year,
+            monthLabel: `${dateInfo.year}-${String(dateInfo.month).padStart(2, "0")}`,
+            inputId: null,
+            inputCandidates: rows || [],
+            inputDate: null,
+            subject: qrCode || null,
+            pdfMissing: pdfPath ? !fs.existsSync(pdfPath) : false,
+            destinationPath: getFilingLocation(qrCode || ""),
+            pdfViewerUrl: `/qrscan/view?file=${encodeURIComponent(pdfPath)}`,
+          };
 
-            const match = rows && rows[0] ? rows[0] : null;
-            const subject = match ? match.SUBJECT : null;
-            const pdfPath = entry.pdfPath || "";
-            results[index] = {
-              ...entry,
-              sourceName,
-              month: dateInfo.month,
-              year: dateInfo.year,
-              monthLabel: `${dateInfo.year}-${String(dateInfo.month).padStart(2, "0")}`,
-              inputId: match ? match.INPUT_ID : null,
-              inputDate: match ? match.INPUT_DATE : null,
-              subject,
-              pdfMissing: pdfPath ? !fs.existsSync(pdfPath) : false,
-              destinationPath: getFilingLocation(subject || ""),
-              pdfViewerUrl: `/qrscan/view?file=${encodeURIComponent(pdfPath)}`,
-            };
+          processEntry(index + 1);
+        });
+      }
 
-            completed += 1;
-            if (completed === entries.length) {
-              res.json(results);
-              connection.end();
-            }
-          },
-        );
-      });
+      processEntry(0);
     });
   } catch (error) {
     console.error("Error in QR scan endpoint:", error);
@@ -520,6 +548,7 @@ router.post("/process", (req, res) => {
     const payload = req.body || {};
     const inputId = payload.inputId;
     const selectedOption = payload.selectedOption;
+    const responseDate = String(payload.responseDate || "").trim();
     const modifiedBy = payload.MODIFIED_BY || payload.user || "SYSTEM";
     const destinationPath = payload.destinationPath || "";
     const sourcePath = payload.pdfPath || payload.sourcePath || "";
@@ -540,10 +569,14 @@ router.post("/process", (req, res) => {
       ? path.win32.join(destinationPath, qmsFileName)
       : "";
 
-    if (!inputId || !selectedOption) {
-      res
-        .status(400)
-        .json({ error: "inputId and selectedOption are required" });
+    if (
+      !inputId ||
+      !selectedOption ||
+      !/^\d{4}-\d{2}-\d{2}$/.test(responseDate)
+    ) {
+      res.status(400).json({
+        error: "inputId, selectedOption, and a valid responseDate are required",
+      });
       return;
     }
 
@@ -588,11 +621,11 @@ router.post("/process", (req, res) => {
             return;
           }
 
-          const updateQuery = `UPDATE PEOPLE_INPUT SET CLOSED = 'Y', CLOSED_DATE = ?, MODIFIED_BY = ?, MODIFIED_DATE = ? WHERE INPUT_ID = ?`;
+          const updateQuery = `UPDATE PEOPLE_INPUT SET CLOSED = 'Y', CLOSED_DATE = ?, RESPONSE_DATE = ?, MODIFIED_BY = ?, MODIFIED_DATE = ? WHERE INPUT_ID = ?`;
 
           connection.query(
             updateQuery,
-            [closedDate, modifiedBy, closedDate, inputId],
+            [closedDate, responseDate, modifiedBy, closedDate, inputId],
             (updateErr) => {
               if (updateErr) {
                 console.error(
