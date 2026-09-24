@@ -120,6 +120,7 @@ router.post("/login", async (req, res) => {
 
           if (passwordMatch) {
             req.session.user = { username: user.USER_ID };
+            req.session.user_id = user.USER_ID;
             connection.end();
             res.json({
               message: "Logged in",

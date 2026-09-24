@@ -232,14 +232,15 @@ export async function getUserValue() {
 }
 
 // get authenticated user from server session
-export async function getSessionUser() {
+export async function getSessionUser(apiBaseUrl = "") {
   try {
-    const response = await fetch("/user/me", {
+    const endpoint = apiBaseUrl ? `${apiBaseUrl}/user/me` : "/user/me";
+    const response = await fetch(endpoint, {
       credentials: "include", // Include cookies for session
     });
     if (response.ok) {
       const data = await response.json();
-      return data.username;
+      return data.username || data.user?.username || null;
     } else {
       console.error("Failed to get session user:", response.status);
       return null;

@@ -189,17 +189,53 @@ const ipUserMapping = {
 // Default user for development mode (localhost testing)
 const devDefaultUser = "TKENT";
 
+function getClientIpCandidates(req) {
+  const rawAddresses = [
+    req.ip,
+    req.connection?.remoteAddress,
+    req.socket?.remoteAddress,
+  ].filter(Boolean);
+
+  return [
+    ...new Set(
+      rawAddresses.flatMap((address) => [
+        address,
+        address.replace(/^::ffff:/, ""),
+      ]),
+    ),
+  ];
+}
+
+function resolveUserFromIp(req) {
+  const clientIpCandidates = getClientIpCandidates(req);
+  const matchedIp = clientIpCandidates.find(
+    (address) => ipUserMapping[address],
+  );
+
+  return {
+    clientIpCandidates,
+    matchedIp: matchedIp || null,
+    username: matchedIp ? ipUserMapping[matchedIp] : null,
+  };
+}
+
 // Middleware: Set user from session or IP mapping
 app.use((req, res, next) => {
-  // Get user from existing session
-  if (req.session && req.session.user_id) {
-    req.user = req.session.user_id;
+  // Support both session formats used by the legacy and current login routes.
+  const sessionUser =
+    req.session?.user?.username || req.session?.user_id || null;
+  if (sessionUser) {
+    req.user = sessionUser;
+    // Keep the legacy session field populated for routes that still use it.
+    if (req.session && !req.session.user_id) {
+      req.session.user_id = sessionUser;
+    }
   }
 
   // Fallback: Try to identify by IP if no session user
+  const ipResolution = resolveUserFromIp(req);
   if (!req.user) {
-    const clientIP = req.ip || req.connection.remoteAddress || "unknown";
-    req.user = ipUserMapping[clientIP] || null;
+    req.user = ipResolution.username;
 
     // If IP mapping found, set it in session for consistency
     if (req.user && req.session) {
@@ -210,6 +246,17 @@ app.use((req, res, next) => {
   // Dev mode: Use default user if still no user identified
   if (!req.user && isDevelopment) {
     req.user = devDefaultUser;
+  }
+
+  if (req.path === "/user/me" || req.originalUrl.startsWith("/user/me")) {
+    console.log("[IDENTITY]", {
+      path: req.originalUrl,
+      sessionUser: sessionUser || null,
+      clientIpCandidates: ipResolution.clientIpCandidates,
+      matchedIp: ipResolution.matchedIp,
+      resolvedUser: req.user || null,
+      environment: nodeEnv,
+    });
   }
 
   next();

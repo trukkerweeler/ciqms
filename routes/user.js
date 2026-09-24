@@ -5,7 +5,8 @@ const bcrypt = require("bcrypt");
 
 // Return the authenticated username for frontend record attribution.
 router.get("/me", (req, res) => {
-  const username = req.session?.user?.username || req.session?.user_id;
+  const username =
+    req.session?.user?.username || req.session?.user_id || req.user;
 
   if (!username) {
     return res.status(401).json({ error: "Not authenticated" });

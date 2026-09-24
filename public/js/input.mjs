@@ -1449,23 +1449,30 @@ fetch(url, { method: "GET" })
           .addEventListener("click", async (event) => {
             event.preventDefault();
 
+            const responseUser = (await getSessionUser(apiUrl)) || user;
+            if (!responseUser) {
+              alert(
+                "Unable to determine the current username. Response was not saved.",
+              );
+              return;
+            }
             const oldResponseText =
               document.querySelector("#responseNote").innerHTML;
             const newResponseText =
               document.querySelector("#newTextResp").value;
             const responseText = timestampText(
-              user,
+              responseUser,
               newResponseText,
               oldResponseText,
             );
 
             const data = {
               INPUT_ID: iid,
-              INPUT_USER: user,
+              INPUT_USER: responseUser,
               RESPONSE_TEXT: responseText,
               RESPONSE_DATE: newResponseDateInput.value,
-              RESPONSE_BY: user,
-              MODIFIED_BY: user,
+              RESPONSE_BY: responseUser,
+              MODIFIED_BY: responseUser,
               MODIFIED_DATE: getDateTime(),
             };
 
@@ -1511,17 +1518,24 @@ fetch(url, { method: "GET" })
               return;
             }
 
+            const actionUser = (await getSessionUser(apiUrl)) || user;
+            if (!actionUser) {
+              alert(
+                "Unable to determine the current username. Action was not saved.",
+              );
+              return;
+            }
             const oldActionText =
               document.querySelector("#actionNote").innerHTML;
             const actionText = timestampText(
-              user,
+              actionUser,
               newActionText,
               oldActionText,
             ).replace(/\n/g, "<br>");
 
             const data = {
               INPUT_ID: iid,
-              INPUT_USER: user,
+              INPUT_USER: actionUser,
               INPUT_TEXT: actionText,
             };
 
@@ -1569,21 +1583,28 @@ fetch(url, { method: "GET" })
 
             const newFollowUpText =
               document.querySelector("#newTextFollowup").value;
+            const followUpUser = (await getSessionUser(apiUrl)) || user;
+            if (!followUpUser) {
+              alert(
+                "Unable to determine the current username. Follow-up was not saved.",
+              );
+              return;
+            }
             const oldFollowUpText =
               document.querySelector("#followUpNote").innerHTML;
             const followUpText = timestampText(
-              user,
+              followUpUser,
               newFollowUpText,
               oldFollowUpText,
             );
 
             const data = {
               INPUT_ID: iid,
-              INPUT_USER: user,
+              INPUT_USER: followUpUser,
               FOLLOWUP_TEXT: followUpText,
               FOLLOWUP_DATE: newFollowUpDateInput.value,
-              FOLLOWUP_BY: user,
-              MODIFIED_BY: user,
+              FOLLOWUP_BY: followUpUser,
+              MODIFIED_BY: followUpUser,
               MODIFIED_DATE: getDateTime(),
             };
 
