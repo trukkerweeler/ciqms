@@ -392,9 +392,17 @@ function setupDetailEditListener(btnEditDetail, auditData, id, apiUrls) {
  * Setup add question listener
  */
 function setupAddQuestionListener(btnAddQust, id, urlParams, apiUrls) {
+  const addQdialog = document.querySelector("#addquestion");
+  const addQuestionForm = document.getElementById("addQuestionForm");
+  const btnCancelNewQuestion = document.getElementById("cancelnewquestion");
+
+  btnCancelNewQuestion.addEventListener("click", () => {
+    addQuestionForm.reset();
+    addQdialog.close();
+  });
+
   btnAddQust.addEventListener("click", async (e) => {
     e.preventDefault();
-    const addQdialog = document.querySelector("#addquestion");
     addQdialog.showModal();
 
     const btnSaveNewQuestion = document.getElementById("savenewquestion");
@@ -415,6 +423,16 @@ function setupAddQuestionListener(btnAddQust, id, urlParams, apiUrls) {
           const lines = newQuestion.split("\n");
           newReference = lines[0];
           newQuestion = lines.slice(1).join("\n");
+        }
+
+        newQuestion = newQuestion.trim();
+        newReference = newReference.trim();
+
+        if (!newQuestion || !newReference) {
+          alert(
+            "Enter both a checklist question and a reference before saving.",
+          );
+          return;
         }
 
         const newRecord = {

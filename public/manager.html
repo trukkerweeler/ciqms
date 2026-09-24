@@ -39,6 +39,10 @@
     <dialog id="addquestion" class="editDialog">
       <form id="addQuestionForm" class="form">
         <h2 class="formh2">Add Question</h2>
+        <p class="add-question-reminder">
+          You are saving a new checklist item. Complete both fields before
+          saving.
+        </p>
         <!-- <label for="standard">Standard</label> -->
         <!-- <input type="text" id="newstandard" name="standard" required> -->
         <label for="reference">Reference</label>
@@ -53,7 +57,10 @@
           wrap="soft"
           required
         ></textarea>
-        <button type="submit" id="savenewquestion">Save New Question</button>
+        <div class="add-question-actions">
+          <button type="button" id="cancelnewquestion">Cancel</button>
+          <button type="submit" id="savenewquestion">Save New Question</button>
+        </div>
       </form>
     </dialog>
 
