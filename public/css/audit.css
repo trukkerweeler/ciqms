@@ -482,6 +482,7 @@ h1 {
   grid-row-start: 5;
   grid-column-start: 1;
   border: #000 1px solid;
+  border-top: 0;
   text-align: left;
   font-weight: 600;
   font-size: small;
@@ -490,6 +491,23 @@ h1 {
   padding-right: 100px;
   min-height: 2rem;
   position: relative;
+}
+
+.rowdiv .question {
+  grid-column: span 1/6;
+  grid-row-start: 3;
+  grid-column-start: 1;
+  border: #000 1px solid;
+  text-align: left;
+  font-weight: 600;
+  font-size: small;
+  line-height: 1.35;
+  padding: 5px 5px 8px;
+  margin: 0;
+  min-height: 2rem;
+  box-sizing: border-box;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 
 .observations .obs-label {
@@ -765,13 +783,13 @@ dialog form {
 }
 
 @media print {
-  /* ===== FONT SCALING: double the base print size ===== */
+  /* ===== KEEP PRINT TEXT CLOSE TO THE ON-SCREEN SCALE ===== */
   html,
   body {
-    font-size: 18pt !important;
+    font-size: 11pt !important;
   }
 
-  /* Override all "small" font-size rules so they scale with the doubled base */
+  /* Normalize inherited text sizing and allow natural wrapping for print. */
   *,
   p,
   span,
