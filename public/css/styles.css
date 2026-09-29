@@ -1766,8 +1766,18 @@ footer div p {
   box-sizing: border-box;
 }
 
+.editDialog:not([open]) {
+  display: none !important;
+  visibility: hidden !important;
+  pointer-events: none !important;
+}
+
+.editDialog:not([open]) > form {
+  display: none !important;
+}
+
 .editDialog[open] {
-  display: grid;
+  display: grid !important;
 }
 
 .editDialog .dialogTitle {

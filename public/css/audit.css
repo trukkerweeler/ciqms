@@ -477,6 +477,20 @@ h1 {
   padding-left: 5px;
 }
 
+.rowdiv .checklist-id,
+.rowdiv .reference,
+.rowdiv .observation-score {
+  grid-row: 2;
+  margin: 0;
+  font-weight: 600;
+  font-size: small;
+  padding-left: 5px;
+}
+
+.rowdiv .observation-score {
+  color: #1e8e3e;
+}
+
 .observations {
   grid-column: span 1/6;
   grid-row-start: 5;
@@ -702,7 +716,6 @@ dialog form {
 }
 
 #addquestion {
-  display: block !important;
   width: min(92vw, 620px);
   min-width: 0;
   padding: 0;

@@ -32,6 +32,9 @@ function getFieldDisplayName(fieldName) {
 }
 
 const COL_WIDTHS_KEY = "scheduleColWidths";
+const MIN_COL_WIDTHS = {
+  AUDIT_MANAGER_ID: 70,
+};
 
 function saveColWidths(fields, cols) {
   const saved = {};
@@ -65,7 +68,9 @@ function makeColumnsResizable(table, fields) {
     handle.classList.add("resizing");
 
     function onMouseMove(e) {
-      const newWidth = Math.max(40, startWidth + (e.clientX - startX));
+      const field = fields[colIndex];
+      const minWidth = MIN_COL_WIDTHS[field] || 40;
+      const newWidth = Math.max(minWidth, startWidth + (e.clientX - startX));
       col.style.width = newWidth + "px";
     }
 
@@ -127,11 +132,11 @@ document.addEventListener("DOMContentLoaded", async () => {
         const table = document.createElement("table");
         table.classList.add("schedule-table");
 
-        // Initial column widths (px) — AUDITEE1 narrow, SUBJECT wide
+        // Initial column widths (px)
         const defaultWidths = {
-          AUDIT_MANAGER_ID: 60,
+          AUDIT_MANAGER_ID: 70,
           STANDARD: 90,
-          SUBJECT: 260,
+          SUBJECT: 100,
           SCHEDULED_DATE: 100,
           LEAD_AUDITOR: 110,
           AUDITEE1: 80,
@@ -141,6 +146,9 @@ document.addEventListener("DOMContentLoaded", async () => {
         // Merge with any saved widths from previous session
         const savedWidths = loadColWidths();
         const colWidths = Object.assign({}, defaultWidths, savedWidths);
+        Object.entries(MIN_COL_WIDTHS).forEach(([key, minWidth]) => {
+          colWidths[key] = Math.max(colWidths[key], minWidth);
+        });
 
         const colgroup = document.createElement("colgroup");
         for (let key of myFields) {

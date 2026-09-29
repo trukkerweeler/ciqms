@@ -224,7 +224,7 @@ router.post("/obsn", async (req, res) => {
       sectionType: "OBSERVATION",
       validation,
       promptName,
-      promptVersion: "v1",
+      promptVersion: "v2",
       modelId,
       validatedBy: "SYSTEM",
       validationStatus: status,
@@ -237,7 +237,7 @@ router.post("/obsn", async (req, res) => {
       sectionType: "OBSERVATION",
       validation,
       promptName,
-      promptVersion: "v1",
+      promptVersion: "v2",
       modelId,
       validatedBy: "SYSTEM",
       validationStatus: status,
@@ -372,9 +372,13 @@ router.get("/:id", (req, res) => {
       // left join AUDT_CHKL_RFNC acr on am.AUDIT_MANAGER_ID = acr.AUDIT_MANAGER_ID
       // where am.AUDIT_MANAGER_ID = '${req.params.id}'`;
 
-      const query = `SELECT am.*, acq.QUESTION, aco.OBSERVATION, acr.REFERENCE, acq.CHECKLIST_ID from AUDT_CHKL_QUST acq 
+      const query = `SELECT am.*, acq.QUESTION, aco.OBSERVATION, acr.REFERENCE, acq.CHECKLIST_ID,
+        avr.SCORE AS OBSERVATION_SCORE from AUDT_CHKL_QUST acq
         left join AUDT_CHKL_OBSN aco on acq.CHECKLIST_ID = aco.CHECKLIST_ID and aco.AUDIT_MANAGER_ID = acq.AUDIT_MANAGER_ID
         left join AUDT_CHKL_RFNC acr on acq.CHECKLIST_ID = acr.CHECKLIST_ID and acr.AUDIT_MANAGER_ID = acq.AUDIT_MANAGER_ID
+        left join AI_VALIDATION_RESULT avr on avr.MODULE_TYPE = 'MANAGER_OBS'
+          and avr.RECORD_ID = CONCAT(acq.AUDIT_MANAGER_ID, ':', acq.CHECKLIST_ID)
+          and avr.SECTION_TYPE = 'OBSERVATION'
         join AUDIT_MANAGER am on acq.AUDIT_MANAGER_ID = am.AUDIT_MANAGER_ID
         where acq.AUDIT_MANAGER_ID = '${req.params.id}'`;
 

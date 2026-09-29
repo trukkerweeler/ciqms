@@ -60,7 +60,32 @@ const clearElement = (element) => {
 /**
  * Update summary span with question counts
  */
-const updateChecklistSummary = (summarySpan) => {
+const updateCloseButtonState = (
+  btnClose,
+  unansweredQuestions,
+  isAuditClosed,
+) => {
+  if (!btnClose) return;
+
+  const isIncomplete = unansweredQuestions > 0;
+  btnClose.disabled = isAuditClosed || isIncomplete;
+
+  if (btnClose.disabled) {
+    Object.assign(btnClose.style, {
+      opacity: "0.5",
+      cursor: "not-allowed",
+    });
+    btnClose.title = isAuditClosed
+      ? "This audit is already closed."
+      : "Answer all checklist questions before closing the audit.";
+  } else {
+    btnClose.style.removeProperty("opacity");
+    btnClose.style.removeProperty("cursor");
+    btnClose.removeAttribute("title");
+  }
+};
+
+const updateChecklistSummary = (summarySpan, btnClose, isAuditClosed) => {
   const allRows = document.querySelectorAll(".rowdiv");
   const totalQuestions = allRows.length;
   const answeredQuestions = Array.from(allRows).filter((row) => {
@@ -73,6 +98,7 @@ const updateChecklistSummary = (summarySpan) => {
   }).length;
   const unansweredQuestions = totalQuestions - answeredQuestions;
   summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
+  updateCloseButtonState(btnClose, unansweredQuestions, isAuditClosed);
 };
 
 // ===== MAIN INITIALIZATION =====
@@ -131,11 +157,7 @@ async function renderAuditDetails(
 
   const isAuditClosed = auditData.CLOSED === "Yes";
   if (isAuditClosed) {
-    btnClose.disabled = true;
-    Object.assign(btnClose.style, {
-      opacity: "0.5",
-      cursor: "not-allowed",
-    });
+    updateCloseButtonState(btnClose, 0, isAuditClosed);
   }
 
   divMainTitle.appendChild(h1);
@@ -233,7 +255,13 @@ async function renderAuditDetails(
   // ===== LOAD CHECKLIST ITEMS =====
   try {
     const records = await fetchJson(`${apiUrls.checklist}${id}`);
-    renderChecklistItems(records, checklistItemsContainer, summarySpan);
+    renderChecklistItems(
+      records,
+      checklistItemsContainer,
+      summarySpan,
+      btnClose,
+      isAuditClosed,
+    );
   } catch (error) {
     console.error("Error loading checklist:", error);
   }
@@ -241,19 +269,26 @@ async function renderAuditDetails(
   // ===== EVENT LISTENERS =====
   setupDetailEditListener(btnEditDetail, auditData, id, apiUrls);
   setupAddQuestionListener(btnAddQust, id, urlParams, apiUrls);
-  setupObservationListener(id, apiUrls, summarySpan);
+  setupObservationListener(id, apiUrls, summarySpan, btnClose, isAuditClosed);
   setupCloseAuditListener(btnClose, apiUrls, auditData, isAuditClosed);
 }
 
 /**
  * Render checklist items
  */
-function renderChecklistItems(records, container, summarySpan) {
+function renderChecklistItems(
+  records,
+  container,
+  summarySpan,
+  btnClose,
+  isAuditClosed,
+) {
   const checklistFields = [
     "CHECKLIST_ID",
     "QUESTION",
     "OBSERVATION",
     "REFERENCE",
+    "OBSERVATION_SCORE",
   ];
 
   const totalQuestions = records.length;
@@ -263,6 +298,7 @@ function renderChecklistItems(records, container, summarySpan) {
   const unansweredQuestions = totalQuestions - answeredQuestions;
 
   summarySpan.textContent = `Total Questions: ${totalQuestions} | Answered: ${answeredQuestions} | Unanswered: ${unansweredQuestions}`;
+  updateCloseButtonState(btnClose, unansweredQuestions, isAuditClosed);
 
   records.forEach((record) => {
     const rowdiv = createElement("div", { classes: ["rowdiv"] });
@@ -323,11 +359,26 @@ function renderChecklistItems(records, container, summarySpan) {
 
         case "REFERENCE": {
           const p = createElement("p", {
-            classes: ["chkdet"],
             classes: ["reference"],
             text: `Ref.: ${value || ""}`,
           });
           rowdiv.appendChild(p);
+          break;
+        }
+
+        case "OBSERVATION_SCORE": {
+          if (
+            value !== null &&
+            value !== undefined &&
+            value !== "" &&
+            Number.isFinite(Number(value))
+          ) {
+            const p = createElement("p", {
+              classes: ["observation-score"],
+              text: `Observation score: ${value}/100`,
+            });
+            rowdiv.appendChild(p);
+          }
           break;
         }
       }
@@ -564,7 +615,13 @@ function resetAndCloseObsDialog(
 /**
  * Setup observation dialog listener
  */
-function setupObservationListener(id, apiUrls, summarySpan) {
+function setupObservationListener(
+  id,
+  apiUrls,
+  summarySpan,
+  btnClose,
+  isAuditClosed,
+) {
   let dialogAbortController;
 
   document.addEventListener("click", async (e) => {
@@ -650,7 +707,7 @@ function setupObservationListener(id, apiUrls, summarySpan) {
           }
         });
 
-        updateChecklistSummary(summarySpan);
+        updateChecklistSummary(summarySpan, btnClose, isAuditClosed);
 
         if (result && result.validation) {
           showResultMode(result.validation);
