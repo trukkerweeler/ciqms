@@ -18,6 +18,51 @@
   <body>
     <header id="header"></header>
     <main id="main"></main>
+    <!-- Daily audit evidence guidance -->
+    <dialog id="managerGuidanceDialog" class="manager-guidance-dialog">
+      <form id="managerGuidanceForm" method="dialog">
+        <h2>Audit evidence guidance</h2>
+        <p class="manager-guidance-intro">
+          Confirm each item before continuing to the Audit Manager.
+        </p>
+        <div class="manager-guidance-list">
+          <label>
+            <input type="checkbox" required />
+            <span>
+              Objective evidence should reference a specific procedure or
+              record. If the question asks for a procedure, use a procedure
+              reference; do not use an AS9100 reference.
+            </span>
+          </label>
+          <label>
+            <input type="checkbox" required />
+            <span>
+              Records include action items (AI0001234), corrective actions (CAR
+              0001254), document change requests (DCR 0000119), tool IDs
+              (CI-140), jobs (122166-000), and other records.
+            </span>
+          </label>
+          <label>
+            <input type="checkbox" required />
+            <span>
+              If using a record from the Records directory, include the network
+              location of the record.
+            </span>
+          </label>
+          <label>
+            <input type="checkbox" required />
+            <span>
+              If a corrective action persists from the previous year, it does
+              not need to be rehashed. Simply say "CAR 0001254 persists" or "DCR
+              0000119 persists".
+            </span>
+          </label>
+        </div>
+        <button type="submit" id="continueManagerGuidance" disabled>
+          Continue
+        </button>
+      </form>
+    </dialog>
     <!-- Edit audit dialog -->
     <dialog id="editaudit" class="editDialog">
       <form id="editAuditForm" class="form">

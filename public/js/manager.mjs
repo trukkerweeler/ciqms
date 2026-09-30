@@ -101,6 +101,39 @@ const updateChecklistSummary = (summarySpan, btnClose, isAuditClosed) => {
   updateCloseButtonState(btnClose, unansweredQuestions, isAuditClosed);
 };
 
+const setupDailyManagerGuidance = (user) => {
+  const dialog = document.getElementById("managerGuidanceDialog");
+  const form = document.getElementById("managerGuidanceForm");
+  const continueButton = document.getElementById("continueManagerGuidance");
+  const checkboxes = Array.from(
+    form?.querySelectorAll('input[type="checkbox"]') || [],
+  );
+
+  if (!dialog || !form || !continueButton || !user) return;
+
+  const now = new Date();
+  const today = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
+    .map((part) => String(part).padStart(2, "0"))
+    .join("-");
+  const storageKey = `manager-guidance:${user}:${today}`;
+  if (localStorage.getItem(storageKey) === "acknowledged") return;
+
+  const updateContinueButton = () => {
+    continueButton.disabled = !checkboxes.every((checkbox) => checkbox.checked);
+  };
+
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", updateContinueButton);
+  });
+
+  form.addEventListener("submit", () => {
+    localStorage.setItem(storageKey, "acknowledged");
+  });
+
+  dialog.addEventListener("cancel", (event) => event.preventDefault());
+  dialog.showModal();
+};
+
 // ===== MAIN INITIALIZATION =====
 
 async function initManager() {
@@ -108,6 +141,7 @@ async function initManager() {
     loadHeaderFooter();
 
     const user = await getSessionUser();
+    setupDailyManagerGuidance(user);
     const apiUrl = await getApiUrl();
     const urlParams = new URLSearchParams(window.location.search);
     const id = urlParams.get("id");
