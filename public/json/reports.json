@@ -94,6 +94,11 @@
       "group": "Quality Trends",
       "items": [
         {
+          "h2": "Job Operation Reminders",
+          "a": "Go to Job Operation Reminders",
+          "html": "shop-reminder.html"
+        },
+        {
           "h2": "Open Corrective Action Trend (13 Months)",
           "a": "Go to Open Corrective Action Trend Report",
           "html": "carptopen13.html"
@@ -153,6 +158,11 @@
     {
       "group": "Special Processes",
       "items": [
+        {
+          "h2": "Shop Operation Reminders",
+          "a": "Go to Shop Operation Reminders",
+          "html": "shop-reminders-op.html"
+        },
         {
           "h2": "Chemical Tank Trends",
           "a": "Go to Chemical Tank Trend Reports",

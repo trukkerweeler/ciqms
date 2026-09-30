@@ -1,0 +1,297 @@
+:root {
+  --jobber-ink: #17232d;
+  --jobber-muted: #52616b;
+  --jobber-line: #cbd4d8;
+  --jobber-paper: #f4f1e9;
+  --jobber-card: #fffdf8;
+  --jobber-accent: #bf4d2f;
+  --jobber-accent-dark: #86331f;
+}
+
+body:has(.jobber-page) {
+  background: var(--jobber-paper);
+  color: var(--jobber-ink);
+}
+
+.jobber-page {
+  width: min(100% - 2rem, 1100px);
+  margin: 0 auto;
+  padding: 4rem 0 5rem;
+}
+
+.jobber-header {
+  max-width: 680px;
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.75rem;
+  color: var(--jobber-accent-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.jobber-header h1 {
+  margin: 0;
+  color: var(--jobber-ink);
+  font-family: Georgia, serif;
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+}
+
+.intro {
+  margin: 1rem 0 0;
+  color: var(--jobber-muted);
+  font-size: 1.05rem;
+}
+
+.header-action {
+  margin-top: 1.25rem;
+  padding: 0.7rem 1rem;
+  border: 0;
+  background: var(--jobber-ink);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.header-action:hover,
+.header-action:focus-visible {
+  background: var(--jobber-accent-dark);
+}
+
+.lookup-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+  padding: 1.25rem;
+  background: var(--jobber-card);
+  border: 1px solid var(--jobber-line);
+  border-left: 5px solid var(--jobber-accent);
+}
+
+.lookup-form label {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 150px;
+  color: var(--jobber-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+}
+
+.lookup-form input {
+  width: 100%;
+  box-sizing: border-box;
+  padding: 0.7rem;
+  border: 1px solid var(--jobber-line);
+  background: white;
+  color: var(--jobber-ink);
+  font: inherit;
+  font-size: 1rem;
+}
+
+.lookup-form button {
+  padding: 0.75rem 1rem;
+  border: 0;
+  background: var(--jobber-accent);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+.lookup-form button:hover,
+.lookup-form button:focus-visible {
+  background: var(--jobber-accent-dark);
+}
+
+.status {
+  min-height: 1.5rem;
+  margin: 1.25rem 0;
+  color: var(--jobber-muted);
+}
+
+.status.error {
+  color: #a2271c;
+  font-weight: 700;
+}
+
+.status.success {
+  color: #2c663f;
+}
+
+.results {
+  overflow-x: auto;
+}
+
+.results h2 {
+  color: var(--jobber-ink);
+  font-family: Georgia, serif;
+  font-size: 1.6rem;
+}
+
+.operations-table {
+  width: 100%;
+  min-width: 650px;
+  border-collapse: collapse;
+  background: var(--jobber-card);
+  box-shadow: 0 8px 24px rgba(23, 35, 45, 0.08);
+}
+
+.operations-table th,
+.operations-table td {
+  padding: 0.85rem 1rem;
+  border-bottom: 1px solid var(--jobber-line);
+  text-align: left;
+}
+
+.operations-table th {
+  background: var(--jobber-ink);
+  color: white;
+  font-size: 0.8rem;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.operations-table tbody tr:hover {
+  background: #f8e8dc;
+}
+
+.operation-code {
+  color: var(--jobber-accent-dark);
+  font-weight: 700;
+}
+
+.reminder-cell {
+  color: var(--jobber-muted);
+  font-style: italic;
+}
+
+.empty-state {
+  padding: 1rem;
+  border: 1px dashed var(--jobber-line);
+  color: var(--jobber-muted);
+}
+
+.reminder-editor {
+  margin-top: 2rem;
+  padding: 1.5rem;
+  background: var(--jobber-card);
+  border: 1px solid var(--jobber-line);
+  border-top: 4px solid var(--jobber-accent);
+}
+
+.editor-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.editor-heading h2 {
+  margin: 0;
+  color: var(--jobber-ink);
+  font-family: Georgia, serif;
+}
+
+#reminder-form {
+  display: grid;
+  gap: 1rem;
+  max-width: 760px;
+}
+
+#reminder-form label {
+  display: grid;
+  gap: 0.4rem;
+  color: var(--jobber-muted);
+  font-size: 0.8rem;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+#reminder-form input:not([type="checkbox"]),
+#reminder-form textarea {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--jobber-line);
+  background: white;
+  color: var(--jobber-ink);
+  font: inherit;
+}
+
+#reminder-form textarea {
+  resize: vertical;
+}
+
+.active-toggle {
+  display: flex !important;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 0.5rem !important;
+  width: max-content;
+  text-transform: none !important;
+}
+
+.active-toggle input {
+  width: 1rem;
+  height: 1rem;
+}
+
+#reminder-form button,
+.secondary-button {
+  width: max-content;
+  padding: 0.55rem 0.8rem;
+  border: 0;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+#reminder-form button,
+.header-action {
+  background: var(--jobber-accent);
+  color: white;
+}
+
+.secondary-button {
+  background: transparent;
+  border: 1px solid var(--jobber-line);
+  color: var(--jobber-ink);
+}
+
+.reminder-item {
+  display: grid;
+  gap: 0.2rem;
+  margin-bottom: 0.55rem;
+  color: var(--jobber-ink);
+  font-style: normal;
+}
+
+.reminder-item:last-of-type {
+  margin-bottom: 0;
+}
+
+@media (max-width: 600px) {
+  .jobber-page {
+    padding-top: 2.5rem;
+  }
+
+  .lookup-form {
+    display: grid;
+  }
+
+  .lookup-form button {
+    width: 100%;
+  }
+
+  .editor-heading {
+    display: grid;
+  }
+}

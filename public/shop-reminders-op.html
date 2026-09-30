@@ -1,0 +1,85 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Shop Operation Reminders</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/shop-reminders-op.css" />
+  </head>
+  <body>
+    <main class="shop-reminders-page">
+      <header class="shop-reminders-header">
+        <p class="eyebrow">SHOP / REMINDER ADMINISTRATION</p>
+        <h1>Operation reminders</h1>
+        <p class="intro">
+          Create, revise, filter, and retire inspection reminders by operation
+          code.
+        </p>
+        <button id="open-add-reminder" class="header-action" type="button">
+          Add reminder
+        </button>
+      </header>
+
+      <dialog id="add-reminder-dialog" aria-labelledby="add-reminder-heading">
+        <div class="dialog-heading">
+          <div>
+            <p class="eyebrow">NEW RECORD</p>
+            <h2 id="add-reminder-heading">Add reminder</h2>
+          </div>
+          <button
+            id="close-add-reminder"
+            class="secondary-button"
+            type="button"
+          >
+            Cancel
+          </button>
+        </div>
+        <form id="add-reminder-form" class="add-form">
+          <label>
+            Operation code
+            <input id="add-operation-code" maxlength="50" required />
+          </label>
+          <label class="wide-field">
+            Reminder text
+            <textarea
+              id="add-reminder-text"
+              rows="3"
+              maxlength="2000"
+              required
+            ></textarea>
+          </label>
+          <button type="submit">Save reminder</button>
+        </form>
+      </dialog>
+
+      <section class="control-panel" aria-labelledby="filter-heading">
+        <div class="section-heading filter-heading">
+          <div>
+            <p class="eyebrow">RECORDS</p>
+            <h2 id="filter-heading">Filter reminders</h2>
+          </div>
+          <span id="record-count" class="record-count"></span>
+        </div>
+        <form id="filter-form" class="filter-form">
+          <label>
+            Operation code
+            <input id="operation-filter" placeholder="Search operation code" />
+          </label>
+          <button type="submit">Filter</button>
+          <button id="clear-filter" class="secondary-button" type="button">
+            Clear
+          </button>
+        </form>
+      </section>
+
+      <p id="status" class="status" role="status"></p>
+      <section
+        id="reminder-results"
+        class="results"
+        aria-live="polite"
+      ></section>
+    </main>
+    <script type="module" src="js/shop-reminders-op.mjs"></script>
+  </body>
+</html>

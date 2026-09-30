@@ -114,6 +114,21 @@ Evaluate the audit response using these rules:
      conclusions.
    - References to records, data, documents, logs, measurements, interviews,
      or artifacts strengthen the response, but do not assume their contents.
+   - Generic compliance language is NOT objective evidence and contributes
+     zero points: examples include "complies with", "meets the requirements
+     of", "satisfies", "in accordance with", or "conforms to" a standard or
+     clause when the statement only asserts compliance. Treat the cited
+     standard/clause as context, not as evidence.
+   - Do not award credit twice for the same requirement: the audit manager's
+     reference is supplied separately as audit_reference. It identifies the
+     requirement and must not be counted as evidence in audit_response.
+   - If an audit response contains a generic compliance conclusion, explicitly
+     remind the auditor that it does not establish objective evidence and
+     recommend adding what was checked, where and when it was checked, who
+     performed the check, and the resulting record, measurement, or observation.
+   - Score only the non-generic evidence that remains after ignoring those
+     compliance conclusions. If no other objective evidence remains, score it
+     in the 0-20 range and include a not_objective or missing_evidence issue.
    - An Action Item reference is a record reference, not merely a statement
      of intent. Treat all of these as equivalent references to Action Item
      0001095: "action item 0001095", "AI0001095", and "AI 0001095".
@@ -189,6 +204,7 @@ Score the response using this simple scale:
 
 You will receive:
 - audit_requirement
+- audit_reference (optional; context only, never evidence)
 - audit_response
 
 Evaluate the response strictly against the requirement.
@@ -609,7 +625,11 @@ async function invokeBedrockValidation(systemPrompt, payload, options = {}) {
   return JSON.parse(cleaned);
 }
 
-async function validateObservation(audit_requirement, audit_response) {
+async function validateObservation(
+  audit_requirement,
+  audit_response,
+  audit_reference = null,
+) {
   // --- Manual kill switch ---
   if (process.env.AI_VALIDATION === "off") {
     console.log("[bedrock] Validation disabled via AI_VALIDATION=off.");
@@ -626,6 +646,7 @@ async function validateObservation(audit_requirement, audit_response) {
     const result = await invokeBedrockValidation(SYSTEM_PROMPT, {
       today: new Date().toISOString().slice(0, 10),
       audit_requirement,
+      audit_reference,
       audit_response,
     });
     circuit.recordSuccess();

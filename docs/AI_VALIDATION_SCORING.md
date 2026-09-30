@@ -106,6 +106,17 @@ MANAGER observation:
 - RECORD_ID: AUDIT_MANAGER_ID + ':' + CHECKLIST_ID
 - SECTION_TYPE: OBSERVATION
 
+Observation scoring rule:
+
+- Generic conclusions such as "complies with", "meets the requirements of",
+  "satisfies", or "conforms to" a standard or clause are not objective
+  evidence and contribute zero points.
+- The manager's REFERENCE field is supplied to the validator as context only;
+  it identifies the requirement and is never scored as evidence.
+- The validator should remind the auditor to document what was checked, where
+  and when it was checked, who performed the check, and the resulting record,
+  measurement, or observation.
+
 ## Write Pattern
 
 Use upsert on unique key (MODULE_TYPE, RECORD_ID, SECTION_TYPE).

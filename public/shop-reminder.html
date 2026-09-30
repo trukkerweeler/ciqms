@@ -1,0 +1,49 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Job Operation Reminders</title>
+    <link rel="stylesheet" href="css/styles.css" />
+    <link rel="stylesheet" href="css/shop-reminder.css" />
+  </head>
+  <body>
+    <main class="jobber-page">
+      <header class="jobber-header">
+        <p class="eyebrow">QUALITY / TRAVELER REVIEW</p>
+        <h1>Job operation reminders</h1>
+        <p class="intro">
+          Look up the operations on a traveler before inspection.
+        </p>
+      </header>
+
+      <form id="jobber-form" class="lookup-form">
+        <label>
+          JOB
+          <input
+            id="job"
+            name="job"
+            inputmode="numeric"
+            pattern="[0-9]+"
+            required
+          />
+        </label>
+        <label>
+          SUFFIX
+          <input
+            id="suffix"
+            name="suffix"
+            inputmode="numeric"
+            pattern="[0-9]+"
+            required
+          />
+        </label>
+        <button type="submit">Review operations</button>
+      </form>
+
+      <p id="status" class="status" role="status"></p>
+      <section id="results" class="results" aria-live="polite"></section>
+    </main>
+    <script type="module" src="js/shop-reminder.mjs"></script>
+  </body>
+</html>

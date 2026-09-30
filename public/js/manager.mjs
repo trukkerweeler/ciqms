@@ -577,7 +577,8 @@ function displayValidationResult(v) {
   } else if (v.is_valid) {
     const li = document.createElement("li");
     li.style.cssText = "color:#1e8e3e; list-style:none;";
-    li.textContent = "No issues found — observation meets the standard.";
+    li.textContent =
+      "No issues found — the observation documents objective evidence.";
     issues.appendChild(li);
   }
 

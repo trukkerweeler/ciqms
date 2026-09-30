@@ -1,0 +1,298 @@
+:root {
+  --shop-ink: #1d2a2e;
+  --shop-muted: #58686b;
+  --shop-line: #c9d3d1;
+  --shop-paper: #eef2ed;
+  --shop-card: #fffefa;
+  --shop-accent: #2c7463;
+  --shop-accent-dark: #1c5146;
+  --shop-danger: #a53e35;
+}
+
+body:has(.shop-reminders-page) {
+  background: var(--shop-paper);
+  color: var(--shop-ink);
+}
+
+.shop-reminders-page {
+  width: min(100% - 2rem, 1250px);
+  margin: 0 auto;
+  padding: 3.5rem 0 5rem;
+}
+
+.shop-reminders-header {
+  max-width: 760px;
+  margin-bottom: 2rem;
+}
+
+.eyebrow {
+  margin: 0 0 0.7rem;
+  color: var(--shop-accent-dark);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+}
+
+.shop-reminders-header h1,
+.section-heading h2 {
+  margin: 0;
+  color: var(--shop-ink);
+  font-family: Georgia, serif;
+}
+
+.shop-reminders-header h1 {
+  font-size: clamp(2rem, 5vw, 4rem);
+  line-height: 1;
+}
+
+.intro {
+  margin: 1rem 0 0;
+  color: var(--shop-muted);
+  font-size: 1.05rem;
+}
+
+.header-action {
+  margin-top: 1.25rem;
+}
+
+dialog {
+  width: min(100% - 2rem, 720px);
+  padding: 1.5rem;
+  border: 1px solid var(--shop-line);
+  background: var(--shop-card);
+  color: var(--shop-ink);
+  box-shadow: 0 20px 60px rgba(29, 42, 46, 0.25);
+}
+
+dialog::backdrop {
+  background: rgba(29, 42, 46, 0.55);
+}
+
+.dialog-heading {
+  display: flex;
+  align-items: start;
+  justify-content: space-between;
+  gap: 1rem;
+  margin-bottom: 1rem;
+}
+
+.dialog-heading h2 {
+  margin: 0;
+  color: var(--shop-ink);
+  font-family: Georgia, serif;
+}
+
+.control-panel {
+  margin-bottom: 1.25rem;
+  padding: 1.25rem;
+  background: var(--shop-card);
+  border: 1px solid var(--shop-line);
+  border-left: 5px solid var(--shop-accent);
+}
+
+.section-heading {
+  margin-bottom: 1rem;
+}
+
+.filter-heading {
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 1rem;
+}
+
+.record-count {
+  color: var(--shop-muted);
+  font-size: 0.9rem;
+}
+
+.add-form,
+.filter-form {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: end;
+  gap: 1rem;
+}
+
+.add-form label,
+.filter-form label {
+  display: grid;
+  gap: 0.4rem;
+  min-width: 220px;
+  color: var(--shop-muted);
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.add-form .wide-field {
+  flex: 1 1 420px;
+}
+
+.add-form input,
+.add-form textarea,
+.filter-form input,
+.inline-operation-code,
+.inline-reminder-text {
+  box-sizing: border-box;
+  width: 100%;
+  padding: 0.7rem;
+  border: 1px solid var(--shop-line);
+  background: white;
+  color: var(--shop-ink);
+  font: inherit;
+}
+
+.add-form textarea,
+.inline-reminder-text {
+  resize: vertical;
+}
+
+button {
+  padding: 0.7rem 1rem;
+  border: 0;
+  background: var(--shop-accent);
+  color: white;
+  cursor: pointer;
+  font: inherit;
+  font-weight: 700;
+}
+
+button:hover,
+button:focus-visible {
+  background: var(--shop-accent-dark);
+}
+
+.secondary-button {
+  background: transparent;
+  border: 1px solid var(--shop-line);
+  color: var(--shop-ink);
+}
+
+.secondary-button:hover,
+.secondary-button:focus-visible {
+  background: #dfe9e5;
+  color: var(--shop-ink);
+}
+
+.status {
+  min-height: 1.5rem;
+  margin: 1rem 0;
+  color: var(--shop-muted);
+}
+
+.status.loading {
+  color: var(--shop-accent-dark);
+}
+
+.status.success {
+  color: #2d684d;
+}
+
+.status.error {
+  color: var(--shop-danger);
+  font-weight: 700;
+}
+
+.results {
+  overflow-x: auto;
+}
+
+.reminders-table {
+  width: 100%;
+  min-width: 950px;
+  border-collapse: collapse;
+  background: var(--shop-card);
+  box-shadow: 0 8px 24px rgba(29, 42, 46, 0.08);
+}
+
+.reminders-table th,
+.reminders-table td {
+  padding: 0.75rem 0.85rem;
+  border-bottom: 1px solid var(--shop-line);
+  text-align: left;
+  vertical-align: top;
+}
+
+.reminders-table th {
+  background: var(--shop-ink);
+  color: white;
+  font-size: 0.75rem;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+}
+
+.reminders-table tbody tr:hover {
+  background: #edf4ef;
+}
+
+.jobber-id,
+.revision,
+.operation-code {
+  white-space: nowrap;
+}
+
+.operation-code {
+  color: var(--shop-accent-dark);
+  font-weight: 700;
+}
+
+.active-status {
+  color: #2d684d;
+  font-weight: 700;
+  white-space: nowrap;
+}
+
+.row-actions {
+  white-space: nowrap;
+}
+
+.row-button {
+  margin: 0 0.35rem 0.35rem 0;
+  padding: 0.45rem 0.65rem;
+  font-size: 0.8rem;
+}
+
+.danger-button {
+  background: var(--shop-danger);
+}
+
+.danger-button:hover,
+.danger-button:focus-visible {
+  background: #7f2c27;
+}
+
+.inline-active {
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+  white-space: nowrap;
+}
+
+.inline-active input {
+  width: 1rem;
+  height: 1rem;
+}
+
+.empty-state {
+  padding: 1rem;
+  border: 1px dashed var(--shop-line);
+  color: var(--shop-muted);
+}
+
+@media (max-width: 700px) {
+  .shop-reminders-page {
+    padding-top: 2.5rem;
+  }
+
+  .add-form,
+  .filter-form {
+    display: grid;
+  }
+
+  .add-form button,
+  .filter-form button {
+    width: 100%;
+  }
+}

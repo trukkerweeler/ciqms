@@ -274,7 +274,12 @@ router.post("/obsn", async (req, res) => {
     // Fetch the question for this checklist item
     const questionRows = await new Promise((resolve, reject) => {
       connection.query(
-        "SELECT QUESTION FROM AUDT_CHKL_QUST WHERE AUDIT_MANAGER_ID = ? AND CHECKLIST_ID = ?",
+        `SELECT acq.QUESTION, acr.REFERENCE
+         FROM AUDT_CHKL_QUST acq
+         LEFT JOIN AUDT_CHKL_RFNC acr
+           ON acr.AUDIT_MANAGER_ID = acq.AUDIT_MANAGER_ID
+          AND acr.CHECKLIST_ID = acq.CHECKLIST_ID
+         WHERE acq.AUDIT_MANAGER_ID = ? AND acq.CHECKLIST_ID = ?`,
         [AUDIT_MANAGER_ID, CHECKLIST_ID],
         (err, rows) => (err ? reject(err) : resolve(rows)),
       );
@@ -315,6 +320,7 @@ router.post("/obsn", async (req, res) => {
         validation = await validateObservation(
           questionRows[0].QUESTION,
           OBSERVATION,
+          questionRows[0].REFERENCE,
         );
         await persistObservationValidation({ validation, status: "SUCCESS" });
       } catch (bedrockErr) {
