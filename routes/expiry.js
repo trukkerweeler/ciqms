@@ -187,7 +187,7 @@ router.post("/", (req, res) => {
         req.body.PO,
         req.body.PRODUCT_ID,
         req.body.DESCRIPTION,
-        req.body.MFG_DATE,
+        req.body.MFG_DATE || null,
         req.body.RECV_DATE,
         req.body.EXPIRY_DATE,
         req.body.LOT,

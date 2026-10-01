@@ -19,6 +19,7 @@ let showConsumed = false;
 async function initializeExpirys() {
   console.log("[expirys.mjs] Initializing");
   user = await getSessionUser();
+  setupDailyExpiryGuidance(user);
   setupEventListeners();
   await loadExpiryData();
 }
@@ -55,9 +56,9 @@ function setupEventListeners() {
     });
   }
 
-  const saveDispositionBtn = document.getElementById("saveDispositionBtn");
-  if (saveDispositionBtn) {
-    saveDispositionBtn.addEventListener("click", saveDisposition);
+  const dispositionForm = document.getElementById("dispositionForm");
+  if (dispositionForm) {
+    dispositionForm.addEventListener("submit", saveDisposition);
   }
 
   const toggleConsumedBtn = document.getElementById("toggleConsumedBtn");
@@ -88,6 +89,39 @@ function setupEventListeners() {
       }
     });
   }
+}
+
+function setupDailyExpiryGuidance(currentUser) {
+  const dialog = document.getElementById("expiryGuidanceDialog");
+  const form = document.getElementById("expiryGuidanceForm");
+  const continueButton = document.getElementById("continueExpiryGuidance");
+  const checkboxes = Array.from(
+    form?.querySelectorAll('input[type="checkbox"]') || [],
+  );
+
+  if (!dialog || !form || !continueButton || !currentUser) return;
+
+  const now = new Date();
+  const today = [now.getFullYear(), now.getMonth() + 1, now.getDate()]
+    .map((part) => String(part).padStart(2, "0"))
+    .join("-");
+  const storageKey = `expiry-guidance:${currentUser}:${today}`;
+  if (localStorage.getItem(storageKey) === "acknowledged") return;
+
+  const updateContinueButton = () => {
+    continueButton.disabled = !checkboxes.every((checkbox) => checkbox.checked);
+  };
+
+  checkboxes.forEach((checkbox) => {
+    checkbox.addEventListener("change", updateContinueButton);
+  });
+
+  form.addEventListener("submit", () => {
+    localStorage.setItem(storageKey, "acknowledged");
+  });
+
+  dialog.addEventListener("cancel", (event) => event.preventDefault());
+  dialog.showModal();
 }
 
 function openAddExpiryDialog() {
@@ -231,6 +265,12 @@ function displayExpiryTable(data) {
 
   data.forEach((item) => {
     const row = document.createElement("tr");
+    const isScrap = item.DISPOSITION === "SCRAP";
+    const consumedChecked = item.CONSUMED === "Y" && !isScrap;
+
+    if (item.DISPOSITION) {
+      row.classList.add("disposition-row");
+    }
 
     if (item.DISPOSITION === "SCRAP") {
       row.classList.add("scrap-row");
@@ -278,7 +318,7 @@ function displayExpiryTable(data) {
         class: "col-disposition",
       },
       {
-        content: `<input type="checkbox" class="consumed-toggle" ${item.CONSUMED === "Y" ? "checked" : ""} onchange="toggleConsumed('${item.EXPIRATION_ID}', this)">`,
+        content: `<input type="checkbox" class="consumed-toggle" ${consumedChecked ? "checked" : ""} ${isScrap ? "disabled" : ""} onchange="toggleConsumed('${item.EXPIRATION_ID}', this)">`,
         class: "col-consumed",
       },
       {
@@ -311,7 +351,7 @@ function displayExpiryTable(data) {
 function applyConsumedFilter() {
   const rows = document.querySelectorAll("#expiryTableBody tr");
   rows.forEach((row) => {
-    if (row.classList.contains("consumed-row")) {
+    if (row.classList.contains("disposition-row")) {
       row.style.display = showConsumed ? "" : "none";
     }
   });
@@ -321,7 +361,7 @@ function updateConsumedToggleLabel() {
   const countEl = document.getElementById("consumedCount");
   if (!countEl) return;
   const count = document.querySelectorAll(
-    "#expiryTableBody tr.consumed-row",
+    "#expiryTableBody tr.disposition-row",
   ).length;
   countEl.textContent = count;
 }
@@ -400,7 +440,8 @@ window.editDisposition = async function (expirationId) {
   }
 };
 
-async function saveDisposition() {
+async function saveDisposition(event) {
+  event.preventDefault();
   const expirationId = document.getElementById("editExpirationId").value;
   const disposition = document.getElementById("editDisposition").value;
   const comment = document.getElementById("editComment").value;
@@ -431,6 +472,7 @@ async function saveDisposition() {
       body: JSON.stringify({
         DISPOSITION: disposition,
         COMMENT: finalComment,
+        ...(disposition === "SCRAP" ? { CONSUMED: "N" } : {}),
       }),
     });
 
@@ -457,6 +499,12 @@ window.toggleConsumed = async function (expirationId, checkbox) {
     if (!currentResponse.ok) throw new Error("Failed to fetch record");
     const currentData = await currentResponse.json();
     const record = Array.isArray(currentData) ? currentData[0] : currentData;
+    const newDisposition =
+      newConsumed === "Y"
+        ? "C"
+        : record.DISPOSITION === "C"
+          ? ""
+          : record.DISPOSITION || "";
 
     let comment = record.COMMENT || "";
     const now = new Date();
@@ -477,7 +525,7 @@ window.toggleConsumed = async function (expirationId, checkbox) {
       method: "PUT",
       headers: { "Content-Type": "application/json" },
       body: JSON.stringify({
-        DISPOSITION: record.DISPOSITION || "",
+        DISPOSITION: newDisposition,
         COMMENT: comment,
         CONSUMED: newConsumed,
       }),
@@ -486,14 +534,12 @@ window.toggleConsumed = async function (expirationId, checkbox) {
     if (response.ok) {
       const row = checkbox.closest("tr");
       row.classList.toggle("consumed-row", newConsumed === "Y");
+      row.classList.toggle("disposition-row", newDisposition !== "");
+      const dispositionCell = row.querySelector("td.col-disposition");
+      if (dispositionCell) dispositionCell.textContent = newDisposition;
       const commentCell = row.querySelector("td.col-comment");
       if (commentCell) commentCell.textContent = comment;
-      // Hide immediately if consumed and filter is active; show if unchecked
-      if (newConsumed === "Y" && !showConsumed) {
-        row.style.display = "none";
-      } else {
-        row.style.display = "";
-      }
+      row.style.display = newDisposition && !showConsumed ? "none" : "";
       updateConsumedToggleLabel();
     } else {
       checkbox.checked = !checkbox.checked;

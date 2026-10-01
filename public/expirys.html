@@ -17,14 +17,50 @@
   </head>
   <body class="list-page">
     <header id="header"></header>
+    <dialog id="expiryGuidanceDialog" class="expiry-guidance-dialog">
+      <form id="expiryGuidanceForm" method="dialog">
+        <h2>Expiry record reminders</h2>
+        <p class="expiry-guidance-intro">
+          Confirm each item before continuing to the expiry records.
+        </p>
+        <div class="expiry-guidance-list">
+          <label>
+            <input type="checkbox" required />
+            <span>
+              For scrap dispositions, state whether the material went to the
+              dumpster, was removed from the facility, or include another
+              specific clarification.
+            </span>
+          </label>
+          <label>
+            <input type="checkbox" required />
+            <span>
+              Check Consumed only when the product was actually consumed.
+            </span>
+          </label>
+          <label>
+            <input type="checkbox" required />
+            <span>
+              A scrap disposition must never have a Consumed checkmark.
+            </span>
+          </label>
+        </div>
+        <button type="submit" id="continueExpiryGuidance" disabled>
+          Continue
+        </button>
+      </form>
+    </dialog>
     <div class="page-heading">
       <div class="page-heading-left">
         <h1>Expiry Records</h1>
-        <label class="toggle-switch" title="Show/hide consumed records">
+        <label
+          class="toggle-switch"
+          title="Show/hide records with a disposition"
+        >
           <input type="checkbox" id="toggleConsumedBtn" />
           <span class="toggle-slider"></span>
           <span class="toggle-label"
-            >Show Consumed (<span id="consumedCount">0</span>)</span
+            >Show Dispositioned (<span id="consumedCount">0</span>)</span
           >
         </label>
       </div>
