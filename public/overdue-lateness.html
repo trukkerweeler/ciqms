@@ -1,0 +1,33 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Open manufacturing jobs past their due date" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/overdue-lateness.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Overdue Job Lateness</title>
+  </head>
+  <body class="list-page">
+    <header id="header"></header>
+    <main id="main" class="report-main">
+      <section class="recordsaddrecordheading report-heading">
+        <h1>Overdue Job Lateness</h1>
+        <p>Open jobs with remaining quantity, measured against the job due date.</p>
+      </section>
+      <section class="filters" aria-label="Report filters">
+        <label for="asOfDate">As of</label>
+        <input id="asOfDate" type="date" />
+        <button id="runReportBtn" class="button" type="button">Run Report</button>
+      </section>
+      <section id="status" class="status" aria-live="polite"></section>
+      <section id="summary" class="summary-grid"></section>
+      <section>
+        <div id="jobsTableWrap" class="table-wrap"></div>
+      </section>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module" src="/js/overdue-lateness.mjs"></script>
+  </body>
+</html>

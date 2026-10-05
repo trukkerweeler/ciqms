@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Child jobs with closed parent jobs" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/closed-parent-child-jobs.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Child Jobs with Closed Parents</title>
+  </head>
+  <body class="list-page">
+    <header id="header"></header>
+    <main id="main" class="report-main">
+      <section class="recordsaddrecordheading report-heading">
+        <h1>Child Jobs with Closed Parents</h1>
+        <p>Child jobs whose matching suffix-000 parent job is closed.</p>
+      </section>
+      <section id="status" class="status" aria-live="polite"></section>
+      <section id="summary" class="summary-grid"></section>
+      <section>
+        <div id="jobsTableWrap" class="table-wrap"></div>
+      </section>
+    </main>
+    <footer id="footer"></footer>
+    <script type="module" src="/js/closed-parent-child-jobs.mjs"></script>
+  </body>
+</html>
