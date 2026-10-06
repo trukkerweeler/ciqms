@@ -66,7 +66,9 @@ router.get("/search", async (req, res) => {
     res.json(results);
   } catch (error) {
     console.error("[/search] error:", error);
-    res.status(500).json({ error: error.message });
+    res
+      .status(error.code === "MEILI_UNAVAILABLE" ? 503 : 500)
+      .json({ error: error.message });
   }
 });
 

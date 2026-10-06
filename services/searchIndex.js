@@ -173,27 +173,39 @@ async function indexDocuments(documents) {
 async function search(query, options = {}) {
   const limit = options.limit ?? 20;
   const offset = options.offset ?? 0;
-  const response = await fetch(`${MEILI_HOST}/indexes/${MEILI_INDEX}/search`, {
-    method: "POST",
-    headers: authHeaders(),
-    body: JSON.stringify({
-      q: query,
-      limit,
-      offset,
-      filter: options.filter,
-      attributesToCrop: ["text"],
-      cropLength: 80,
-      attributesToHighlight: [
-        "title",
-        "formNumber",
-        "revision",
-        "clauseRefs",
-        "department",
-        "docType",
-        "text",
-      ],
-    }),
-  });
+  let response;
+  try {
+    response = await fetch(`${MEILI_HOST}/indexes/${MEILI_INDEX}/search`, {
+      method: "POST",
+      headers: authHeaders(),
+      body: JSON.stringify({
+        q: query,
+        limit,
+        offset,
+        filter: options.filter,
+        attributesToCrop: ["text"],
+        cropLength: 80,
+        attributesToHighlight: [
+          "title",
+          "formNumber",
+          "revision",
+          "clauseRefs",
+          "department",
+          "docType",
+          "text",
+        ],
+      }),
+    });
+  } catch (error) {
+    if (error?.cause?.code === "ECONNREFUSED") {
+      const unavailableError = new Error(
+        `Unable to connect to Meilisearch at ${MEILI_HOST} - did you start the meili server?`,
+      );
+      unavailableError.code = "MEILI_UNAVAILABLE";
+      throw unavailableError;
+    }
+    throw error;
+  }
 
   if (!response.ok) {
     const body = await response.text();

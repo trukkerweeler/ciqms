@@ -49,3 +49,4 @@ logs/
 # Local vendor binaries
 vendor/meilisearch-windows-amd64.exe
 vendor/tika-server-standard-*.jar
+vendor/meilisearch-data/
