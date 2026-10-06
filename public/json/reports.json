@@ -184,6 +184,21 @@
           "html": "topfive.html"
         }
       ]
+    },
+    {
+      "group": "Global",
+      "items": [
+        {
+          "h2": "Child Jobs with Closed Parents",
+          "a": "Go to Child Jobs with Closed Parents Report",
+          "html": "closed-parent-child-jobs.html"
+        },
+        {
+          "h2": "Overdue Job Lateness",
+          "a": "Go to Overdue Job Lateness Report",
+          "html": "overdue-lateness.html"
+        }
+      ]
     }
   ]
 }

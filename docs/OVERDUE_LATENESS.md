@@ -1,8 +1,8 @@
 # Overdue Job Lateness Report
 
-The `/overdue-lateness.html` page reports open manufacturing jobs that still
-have remaining quantity and compares each job's due date with a selectable
-as-of date.
+The `/overdue-lateness.html` page reports a current-date snapshot of
+manufacturing jobs that still have remaining quantity and compares each job's
+due date with the snapshot date.
 
 ## Data source
 
@@ -15,9 +15,14 @@ VBScript bridge:
 - `QTY_ORDER` and `QTY_COMPLETED`: remaining quantity
 - `DATE_OPENED`, `DATE_DUE`, `DATE_CLOSED`: timing and open/closed status
 
-A job is included when it has a usable due date, is not closed, and
-`QTY_ORDER - QTY_COMPLETED` is greater than zero. `daysOverdue` is calculated
-in Node.js as the positive difference between the as-of date and `DATE_DUE`.
+A job is included when it has a usable due date and was not closed on or before
+the snapshot date. Jobs closed after that date are included as open for the
+report, even if their current remaining quantity is zero. `daysOverdue` is
+calculated in Node.js as the positive difference between the snapshot date and
+`DATE_DUE`.
+
+Quantities come from the current `JOB_HEADER` snapshot; the report cannot
+reconstruct historical quantities for jobs that were later completed.
 
 Global date values are strings. The route currently accepts the formats
 documented in `globalschema.md`, including `MMDDYY` and `YYYYMMDD`.

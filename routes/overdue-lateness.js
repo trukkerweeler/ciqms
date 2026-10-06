@@ -108,7 +108,13 @@ router.get("/", async (req, res) => {
         const remainingQty = Math.max(0, qtyOrder - qtyCompleted);
         const closedDate = parseGlobalDate(row.DATE_CLOSED);
 
-        if (!dueDate || closedDate || remainingQty <= 0) return null;
+        if (
+          !dueDate ||
+          (closedDate && closedDate <= asOfDate) ||
+          (remainingQty <= 0 && (!closedDate || closedDate <= asOfDate))
+        ) {
+          return null;
+        }
 
         const latenessDays = Math.floor(
           (asOfDate.getTime() - dueDate.getTime()) / 86400000,

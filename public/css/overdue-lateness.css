@@ -16,11 +16,18 @@ body.list-page #main.report-main {
 }
 
 .report-heading {
+  display: block;
   margin-bottom: 0.75rem;
 }
 
-.report-heading p {
-  margin: 0.25rem 0 0;
+.report-heading h1 {
+  white-space: nowrap;
+}
+
+@media (max-width: 600px) {
+  .report-heading h1 {
+    white-space: normal;
+  }
 }
 
 .filters {

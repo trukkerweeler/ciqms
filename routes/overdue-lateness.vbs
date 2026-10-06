@@ -1,4 +1,4 @@
-' Return open JOB_HEADER rows with a due date for the overdue-lateness report.
+' Return JOB_HEADER rows with a due date so the route can apply as-of status.
 Dim conn, rs, fso, file, WshShell, DocumentsPath, CIQMSPath
 Dim dsn, uid, pwd, line, sqlQuery
 On Error Resume Next
@@ -45,9 +45,7 @@ On Error GoTo 0
 sqlQuery = "SELECT JOB, SUFFIX, PART, CUSTOMER, SALES_ORDER, SALES_ORDER_LINE, " & _
   "QTY_ORDER, QTY_COMPLETED, DATE_OPENED, DATE_DUE, DATE_CLOSED " & _
   "FROM JOB_HEADER " & _
-  "WHERE DATE_DUE IS NOT NULL AND RTRIM(DATE_DUE) <> '' " & _
-  "AND (DATE_CLOSED IS NULL OR RTRIM(DATE_CLOSED) = '' OR " & _
-  "DATE_CLOSED IN ('0', '000000', '00000000'))"
+  "WHERE DATE_DUE IS NOT NULL AND RTRIM(DATE_DUE) <> ''"
 
 Set rs = conn.Execute(sqlQuery)
 If Err.Number <> 0 Then

@@ -4,13 +4,6 @@ loadHeaderFooter();
 
 const apiUrl = await getApiUrl();
 
-function formatToday() {
-  const now = new Date();
-  return `${now.getFullYear()}-${String(now.getMonth() + 1).padStart(2, "0")}-${String(
-    now.getDate(),
-  ).padStart(2, "0")}`;
-}
-
 function escapeHtml(value) {
   return String(value ?? "")
     .replaceAll("&", "&amp;")
@@ -75,24 +68,19 @@ function renderJobs(jobs) {
     </div>`;
 }
 
-async function runReport() {
-  const asOfDate = document.getElementById("asOfDate").value;
+async function loadSnapshot() {
   setStatus("Loading report...");
   try {
-    const response = await fetch(
-      `${apiUrl}/overdue-lateness?asOfDate=${encodeURIComponent(asOfDate)}`,
-    );
+    const response = await fetch(`${apiUrl}/overdue-lateness`);
     const data = await response.json();
     if (!response.ok || data.error) throw new Error(data.error || `HTTP ${response.status}`);
     renderSummary(data.summary);
     renderJobs(data.jobs);
-    setStatus(`Report loaded as of ${data.asOfDate}.`);
+    setStatus(`Snapshot loaded for ${data.asOfDate}.`);
   } catch (error) {
     console.error("[overdue-lateness]", error);
     setStatus(`Failed to load report: ${error.message}`, true);
   }
 }
 
-document.getElementById("asOfDate").value = formatToday();
-document.getElementById("runReportBtn").addEventListener("click", runReport);
-runReport();
+loadSnapshot();
