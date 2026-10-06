@@ -1,4 +1,8 @@
+import { getSessionUser } from "./utils.mjs";
+
 const resultsEl = document.getElementById("results");
+const runAutofilerButton = document.getElementById("runAutofilerButton");
+const autofilerStatus = document.getElementById("autofilerStatus");
 let entries = [];
 let currentIndex = 0;
 
@@ -16,6 +20,42 @@ function getLocalDateString(date = new Date()) {
   const month = String(date.getMonth() + 1).padStart(2, "0");
   const day = String(date.getDate()).padStart(2, "0");
   return `${year}-${month}-${day}`;
+}
+
+function formatAutofilerOutput(output) {
+  const text = String(output || "").trim();
+  if (!text) return "";
+  const maxLength = 500;
+  return text.length > maxLength ? ` ${text.slice(-maxLength)}` : ` ${text}`;
+}
+
+async function runAutofiler() {
+  runAutofilerButton.disabled = true;
+  autofilerStatus.className = "autofiler-status";
+  autofilerStatus.textContent = "Running autofiler…";
+
+  try {
+    const response = await fetch("/qrscan/run-autofiler", { method: "POST" });
+    const payload = await response.json().catch(() => ({}));
+
+    if (!response.ok || !payload.success) {
+      throw new Error(
+        payload.error ||
+          payload.message ||
+          `Autofiler failed with status ${response.status}`,
+      );
+    }
+
+    autofilerStatus.className = "autofiler-status success";
+    autofilerStatus.textContent =
+      `${payload.message || "Autofiler completed."}${formatAutofilerOutput(payload.stdout)}`;
+    await loadData();
+  } catch (error) {
+    autofilerStatus.className = "autofiler-status error";
+    autofilerStatus.textContent = error.message;
+  } finally {
+    runAutofilerButton.disabled = false;
+  }
 }
 
 function renderCurrentEntry() {
@@ -471,4 +511,19 @@ async function loadData() {
   }
 }
 
-loadData();
+runAutofilerButton?.addEventListener("click", runAutofiler);
+async function initializePage() {
+  const currentUser = await getSessionUser();
+  const isTkEnt = String(currentUser || "").toUpperCase() === "TKENT";
+
+  if (!isTkEnt) {
+    runAutofilerButton?.remove();
+    autofilerStatus?.remove();
+  } else {
+    runAutofilerButton?.addEventListener("click", runAutofiler);
+  }
+
+  await loadData();
+}
+
+initializePage();

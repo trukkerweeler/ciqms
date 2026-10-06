@@ -27,6 +27,41 @@
         margin-bottom: 16px;
       }
 
+      .header-actions {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .run-autofiler-button {
+        padding: 10px 14px;
+        border: 1px solid #2563eb;
+        border-radius: 8px;
+        background: #2563eb;
+        color: #fff;
+        font-weight: 700;
+        cursor: pointer;
+      }
+
+      .run-autofiler-button:disabled {
+        opacity: 0.6;
+        cursor: not-allowed;
+      }
+
+      .autofiler-status {
+        min-height: 1.25rem;
+        margin: 0 0 12px;
+        font-weight: 600;
+      }
+
+      .autofiler-status.success {
+        color: #166534;
+      }
+
+      .autofiler-status.error {
+        color: #991b1b;
+      }
+
       .pager {
         display: flex;
         align-items: center;
@@ -274,8 +309,15 @@
     <div class="container">
       <div class="header">
         <h1>QR Scan Viewer</h1>
-        <a href="/inputs.html" class="button">Back to Inputs</a>
+        <div class="header-actions">
+          <button id="runAutofilerButton" class="run-autofiler-button" type="button">
+            Run Autofiler
+          </button>
+          <a href="/inputs.html" class="button">Back to Inputs</a>
+        </div>
       </div>
+
+      <p id="autofilerStatus" class="autofiler-status" aria-live="polite"></p>
 
       <p class="queue-note">
         Queue source: <strong>FILING/autofiler2.py</strong> &middot;

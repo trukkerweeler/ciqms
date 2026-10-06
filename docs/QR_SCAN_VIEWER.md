@@ -33,12 +33,13 @@ The exact producer fields are owned by `FILING/autofiler2.py`. When changing tha
 ## Viewer workflow
 
 1. Open `/qrscan-viewer.html`.
-2. The browser requests `GET /qrscan`.
-3. CIQMS reads and parses each JSONL line.
-4. Each scan is matched to the most recent `PEOPLE_INPUT` record whose subject contains the QR value and whose date is before the date parsed from the scan filename.
-5. The viewer displays the matching record and the PDF in an iframe.
-6. The user selects a disposition and optionally enters measurement values and a destination path.
-7. `POST /qrscan/process` saves the response, closes the input, copies the PDF to the filing destination, removes the queue entry, and deletes the source PDF after the copy is confirmed.
+2. Click **Run Autofiler** to run `FILING/autofiler2.py`. The page waits for the process to finish, displays its completion status, and reloads the queue.
+3. The browser requests `GET /qrscan`.
+4. CIQMS reads and parses each JSONL line.
+5. Each scan is matched to the most recent `PEOPLE_INPUT` record whose subject contains the QR value and whose date is before the date parsed from the scan filename.
+6. The viewer displays the matching record and the PDF in an iframe.
+7. The user selects a disposition and optionally enters measurement values and a destination path.
+8. `POST /qrscan/process` saves the response, closes the input, copies the PDF to the filing destination, removes the queue entry, and deletes the source PDF after the copy is confirmed.
 
 The viewer removes the item from its local list immediately after a successful process response. Refreshing the page reloads the remaining JSONL entries from disk.
 

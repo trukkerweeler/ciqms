@@ -3,7 +3,9 @@ const router = express.Router();
 const mysql = require("mysql2");
 const fs = require("fs");
 const path = require("path");
-const { execSync } = require("child_process");
+const { execSync, spawn } = require("child_process");
+const autofilerScriptPath = "C:\\Users\\TimK\\Documents\\FILING\\autofiler2.py";
+let autofilerProcessRunning = false;
 
 // ==================================================
 // Filing-location helpers
@@ -358,6 +360,78 @@ function copyFileToDestination(sourcePath = "", destinationPath = "") {
     return { copiedFile: false, targetPath: "", error: err.message };
   }
 }
+
+// ==================================================
+// POST /qrscan/run-autofiler — run the FILING queue producer
+// ==================================================
+router.post("/run-autofiler", (req, res) => {
+  const requestingUser = String(
+    req.session?.user_id || req.user || "",
+  ).toUpperCase();
+  if (requestingUser !== "TKENT") {
+    return res.status(403).json({
+      success: false,
+      error: "Only user TKENT may run the autofiler script.",
+    });
+  }
+
+  if (autofilerProcessRunning) {
+    return res.status(409).json({
+      success: false,
+      error: "The autofiler script is already running.",
+    });
+  }
+
+  if (!fs.existsSync(autofilerScriptPath)) {
+    return res.status(404).json({
+      success: false,
+      error: `Autofiler script was not found: ${autofilerScriptPath}`,
+    });
+  }
+
+  autofilerProcessRunning = true;
+  const pythonCommand = process.env.PYTHON_PATH || "python";
+  const child = spawn(pythonCommand, [autofilerScriptPath], {
+    cwd: path.dirname(autofilerScriptPath),
+    windowsHide: true,
+  });
+  let stdout = "";
+  let stderr = "";
+  let responseSent = false;
+
+  child.stdout.on("data", (data) => {
+    stdout += data.toString();
+  });
+  child.stderr.on("data", (data) => {
+    stderr += data.toString();
+  });
+  child.on("error", (error) => {
+    if (responseSent) return;
+    responseSent = true;
+    autofilerProcessRunning = false;
+    res.status(500).json({
+      success: false,
+      error: `Unable to start autofiler script: ${error.message}`,
+      stdout,
+      stderr,
+    });
+  });
+  child.on("close", (code) => {
+    if (responseSent) return;
+    responseSent = true;
+    autofilerProcessRunning = false;
+    const success = code === 0;
+    res.status(success ? 200 : 500).json({
+      success,
+      exitCode: code,
+      message: success
+        ? "Autofiler script completed successfully."
+        : "Autofiler script failed.",
+      stdout,
+      stderr,
+    });
+  });
+});
 
 // ==================================================
 // GET /qrscan — list queue entries with matched input records
