@@ -265,18 +265,20 @@ function displayExpiryTable(data) {
 
   data.forEach((item) => {
     const row = document.createElement("tr");
-    const isScrap = item.DISPOSITION === "SCRAP";
-    const consumedChecked = item.CONSUMED === "Y" && !isScrap;
+    const isConsumed = item.CONSUMED === "Y";
+    const disposition =
+      isConsumed || item.DISPOSITION === "C" ? "" : item.DISPOSITION || "";
+    const consumedChecked = isConsumed;
 
-    if (item.DISPOSITION) {
+    if (disposition) {
       row.classList.add("disposition-row");
     }
 
-    if (item.DISPOSITION === "SCRAP") {
+    if (disposition === "SCRAP") {
       row.classList.add("scrap-row");
-    } else if (item.DISPOSITION === "USE") {
+    } else if (disposition === "USE") {
       row.classList.add("use-row");
-    } else if (item.CONSUMED === "Y") {
+    } else if (consumedChecked) {
       row.classList.add("consumed-row");
     }
 
@@ -314,11 +316,11 @@ function displayExpiryTable(data) {
         class: "col-mfg-date",
       },
       {
-        content: item.DISPOSITION || "",
+        content: disposition,
         class: "col-disposition",
       },
       {
-        content: `<input type="checkbox" class="consumed-toggle" ${consumedChecked ? "checked" : ""} ${isScrap ? "disabled" : ""} onchange="toggleConsumed('${item.EXPIRATION_ID}', this)">`,
+        content: `<input type="checkbox" class="consumed-toggle" ${consumedChecked ? "checked" : ""} ${disposition ? "disabled" : ""} onchange="toggleConsumed('${item.EXPIRATION_ID}', this)">`,
         class: "col-consumed",
       },
       {
@@ -430,7 +432,11 @@ window.editDisposition = async function (expirationId) {
     const record = Array.isArray(data) ? data[0] : data;
 
     document.getElementById("editExpirationId").value = expirationId;
-    document.getElementById("editDisposition").value = record.DISPOSITION || "";
+    const isConsumed = record.CONSUMED === "Y";
+    const dispositionSelect = document.getElementById("editDisposition");
+    dispositionSelect.value =
+      isConsumed || record.DISPOSITION === "C" ? "" : record.DISPOSITION || "";
+    dispositionSelect.disabled = isConsumed;
     document.getElementById("editComment").value = record.COMMENT || "";
 
     document.getElementById("dispositionDialog").showModal();
@@ -472,7 +478,7 @@ async function saveDisposition(event) {
       body: JSON.stringify({
         DISPOSITION: disposition,
         COMMENT: finalComment,
-        ...(disposition === "SCRAP" ? { CONSUMED: "N" } : {}),
+        ...(disposition ? { CONSUMED: "N" } : {}),
       }),
     });
 
@@ -501,8 +507,8 @@ window.toggleConsumed = async function (expirationId, checkbox) {
     const record = Array.isArray(currentData) ? currentData[0] : currentData;
     const newDisposition =
       newConsumed === "Y"
-        ? "C"
-        : record.DISPOSITION === "C"
+        ? ""
+        : record.CONSUMED === "Y" || record.DISPOSITION === "C"
           ? ""
           : record.DISPOSITION || "";
 
@@ -535,11 +541,14 @@ window.toggleConsumed = async function (expirationId, checkbox) {
       const row = checkbox.closest("tr");
       row.classList.toggle("consumed-row", newConsumed === "Y");
       row.classList.toggle("disposition-row", newDisposition !== "");
+      row.classList.toggle("scrap-row", newDisposition === "SCRAP");
+      row.classList.toggle("use-row", newDisposition === "USE");
       const dispositionCell = row.querySelector("td.col-disposition");
       if (dispositionCell) dispositionCell.textContent = newDisposition;
       const commentCell = row.querySelector("td.col-comment");
       if (commentCell) commentCell.textContent = comment;
       row.style.display = newDisposition && !showConsumed ? "none" : "";
+      checkbox.disabled = Boolean(newDisposition);
       updateConsumedToggleLabel();
     } else {
       checkbox.checked = !checkbox.checked;
