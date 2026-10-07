@@ -29,6 +29,18 @@ function formatAutofilerOutput(output) {
   return text.length > maxLength ? ` ${text.slice(-maxLength)}` : ` ${text}`;
 }
 
+function formatAutofilerError(payload, status) {
+  const message = String(payload.error || "").trim();
+  const details = [payload.stderr, payload.stdout]
+    .map((value) => String(value || "").trim())
+    .find(Boolean);
+  const fallback = message || `Autofiler failed with status ${status}`;
+  if (!details) return fallback;
+  const maxLength = 1000;
+  const output = details.length > maxLength ? details.slice(-maxLength) : details;
+  return `${fallback}: ${output}`;
+}
+
 async function runAutofiler() {
   runAutofilerButton.disabled = true;
   autofilerStatus.className = "autofiler-status";
@@ -39,11 +51,7 @@ async function runAutofiler() {
     const payload = await response.json().catch(() => ({}));
 
     if (!response.ok || !payload.success) {
-      throw new Error(
-        payload.error ||
-          payload.message ||
-          `Autofiler failed with status ${response.status}`,
-      );
+      throw new Error(formatAutofilerError(payload, response.status));
     }
 
     autofilerStatus.className = "autofiler-status success";
@@ -511,7 +519,6 @@ async function loadData() {
   }
 }
 
-runAutofilerButton?.addEventListener("click", runAutofiler);
 async function initializePage() {
   const currentUser = await getSessionUser();
   const isTkEnt = String(currentUser || "").toUpperCase() === "TKENT";

@@ -67,18 +67,20 @@ router.post('/:iid', (req, res) => {
             , VALUE
             , SAMPLE_DATE
             , PEOPLE_ID
-            ) values ('${req.body[key].COLLECT_ID}'
-                , '${req.params.iid}'
-                , '${req.body[key].CUSTOMER_ID}'
-                , '${req.body[key].UNIT}'
-                , '${req.body[key].VALUE}'
-                , '${req.body[key].SAMPLE_DATE}'
-                , '${req.body[key].INPUT_USER}'
-            )`;
+            ) values (?, ?, ?, ?, ?, ?, ?)`;
 
-            // console.log(query);
+        const data = req.body[key];
+        const params = [
+            data.COLLECT_ID,
+            req.params.iid,
+            data.CUSTOMER_ID,
+            data.UNIT,
+            data.VALUE,
+            data.SAMPLE_DATE,
+            data.INPUT_USER,
+        ].map((v) => (v === undefined ? null : v));
 
-        connection.query(query, (err, rows, fields) => {
+        connection.query(query, params, (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for NINETYONETWENTY insert: ' + err);
                 res.sendStatus(500);
@@ -87,9 +89,9 @@ router.post('/:iid', (req, res) => {
             res.json(rows);
         });
 
-        const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = '${req.body[key].COLLECT_ID}' WHERE TABLE_NAME = 'NINETYONETWENTY'`;
+        const updateQuery = `UPDATE SYSTEM_IDS SET CURRENT_ID = ? WHERE TABLE_NAME = 'NINETYONETWENTY'`;
 
-        connection.query(updateQuery, (err, rows, fields) => {
+        connection.query(updateQuery, [params[0]], (err, rows, fields) => {
             if (err) {
                 console.log('Failed to query for system id update: ' + err);
                 res.sendStatus(500);
