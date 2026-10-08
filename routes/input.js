@@ -658,6 +658,52 @@ router.get("/openrepairs", (req, res) => {
 });
 
 // ==================================================
+// Get open PM action items more than 30 days overdue
+router.get("/pm-open-overdue", (req, res) => {
+  const connection = mysql.createConnection({
+    host: process.env.DB_HOST,
+    user: process.env.DB_USER,
+    password: process.env.DB_PASS,
+    port: 3306,
+    database: "quality",
+  });
+
+  connection.connect((connectError) => {
+    if (connectError) {
+      console.error("Error connecting for overdue PM action items:", connectError);
+      res.status(500).json({ error: "Database connection failed" });
+      return;
+    }
+
+    const query = `SELECT
+        pi.INPUT_ID,
+        pi.INPUT_DATE,
+        pi.SUBJECT,
+        pi.ASSIGNED_TO,
+        pi.PROJECT_ID,
+        pit.INPUT_TEXT,
+        pi.DUE_DATE,
+        pi.CLOSED
+      FROM PEOPLE_INPUT pi
+      LEFT JOIN PPL_INPT_TEXT pit ON pi.INPUT_ID = pit.INPUT_ID
+      WHERE pi.CLOSED = 'N'
+        AND pi.SUBJECT REGEXP '^PM[0-9]{2}$'
+        AND pi.DUE_DATE < DATE_SUB(CURDATE(), INTERVAL 30 DAY)
+      ORDER BY pi.DUE_DATE ASC, pi.SUBJECT ASC`;
+
+    connection.query(query, (queryError, rows) => {
+      connection.end();
+      if (queryError) {
+        console.error("Failed to query overdue PM action items:", queryError);
+        res.status(500).json({ error: "Failed to load overdue PM action items" });
+        return;
+      }
+      res.json(rows);
+    });
+  });
+});
+
+// ==================================================
 // Get PM program issues - filtered for project 8511, excluding REP type, recurring, and specific subjects
 router.get("/pmprogramissues", (req, res) => {
   try {

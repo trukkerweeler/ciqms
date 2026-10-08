@@ -22,6 +22,11 @@
           "h2": "PM Program Trend",
           "a": "Go to PM Program Trend Report",
           "html": "pm-mgmt-review.html"
+        },
+        {
+          "h2": "Open PM Items Over 30 Days Overdue",
+          "a": "Go to Open PM Items Over 30 Days Overdue Report",
+          "html": "pm-open-overdue.html"
         }
       ]
     },
@@ -182,6 +187,11 @@
           "h2": "Top 5 Customers",
           "a": "Go to Top 5 Customers Report",
           "html": "topfive.html"
+        },
+        {
+          "h2": "Customer Satisfaction",
+          "a": "Go to Customer Satisfaction Report",
+          "html": "custsat.html"
         }
       ]
     },

@@ -1,0 +1,51 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Customer Satisfaction Report - Customer Performance Trends"
+    />
+    <meta name="author" content="Tim Kent" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/custsat.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <script src="https://cdn.jsdelivr.net/npm/chart.js@4.4.0/dist/chart.umd.min.js"></script>
+    <title>Customer Satisfaction Report</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <main id="main">
+      <div class="recordsaddrecordheading">
+        <h1>Customer Satisfaction Report</h1>
+      </div>
+
+      <div class="period-toggle no-print">
+        <span class="period-toggle-label">Report type:</span>
+        <label>
+          <input type="radio" name="period" value="rolling12" checked />
+          Periodic Review (last 12 months)
+        </label>
+        <label>
+          <input type="radio" name="period" value="prev-cy" />
+          Management Review (previous calendar year)
+        </label>
+        <button id="saveAllBtn" class="export-btn" type="button">
+          &#x2B07; Save All PNGs
+        </button>
+        <button id="printBtn" class="export-btn" type="button">Print</button>
+      </div>
+
+      <div id="custsatStatus" class="custsat-status"></div>
+      <div id="custsatContainer"></div>
+    </main>
+    <footer id="footer"></footer>
+  </body>
+  <script type="module" src="/js/custsat.mjs"></script>
+</html>

@@ -1,0 +1,67 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta
+      name="description"
+      content="Open PM action items more than 30 days overdue"
+    />
+    <meta name="author" content="CIQMS" />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Abel&family=Tapestry&display=swap"
+    />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="stylesheet" href="/css/open-repairs-report.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>Open PM Action Items Overdue More Than 30 Days</title>
+  </head>
+  <body>
+    <header id="header"></header>
+
+    <main id="main" class="report-main">
+      <div class="report-container">
+        <div class="report-header">
+          <h1>Open PM Action Items Overdue More Than 30 Days</h1>
+          <p class="report-subtitle">
+            Open action items with PMxx subjects (PM followed by two digits)
+            and due dates more
+            than 30 days past due
+          </p>
+          <div class="report-timestamp" id="reportTimestamp"></div>
+        </div>
+
+        <div class="report-filters">
+          <div class="filter-group">
+            <label for="searchInput">Search Action Items:</label>
+            <input
+              type="text"
+              id="searchInput"
+              placeholder="Search by subject, ID, assignee, or details..."
+            />
+          </div>
+          <div class="filter-actions">
+            <button id="printBtn" class="action-btn print-btn">Print</button>
+            <button id="exportBtn" class="action-btn export-btn">Export</button>
+          </div>
+        </div>
+
+        <div id="pmOverdueTableContainer" class="table-wrapper">
+          <p class="no-data-message">Loading overdue PM action items...</p>
+        </div>
+
+        <div class="report-footer">
+          <p>
+            This is an automatically generated, read-only report. Items due
+            exactly 30 days ago are not included.
+          </p>
+        </div>
+      </div>
+    </main>
+
+    <footer id="footer"></footer>
+    <script type="module" src="/js/pm-open-overdue.mjs"></script>
+  </body>
+</html>
