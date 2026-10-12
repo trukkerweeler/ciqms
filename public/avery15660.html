@@ -1,0 +1,700 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Avery 15660 Label Sheet</title>
+    <style>
+      :root {
+        --page-width: 8.5in;
+        --page-height: 11in;
+        --left-margin: 0.1875in;
+        --top-margin: 0.5in;
+        --label-width: 2.625in;
+        --label-height: 1in;
+        --column-gap: 0.125in;
+        --row-gap: 0in;
+        --sheet-width: calc((3 * var(--label-width)) + (2 * var(--column-gap)));
+        --sheet-height: calc(
+          (10 * var(--label-height)) + (9 * var(--row-gap))
+        );
+        --sidebar-bg: #ffffff;
+        --sheet-bg: #e5e7eb;
+        --border: #c7ccd6;
+        --text: #1f2937;
+        --muted: #4b5563;
+        --accent: #2563eb;
+        --accent-soft: #dbeafe;
+        --empty: #f9fafb;
+      }
+
+      * {
+        box-sizing: border-box;
+      }
+
+      html,
+      body {
+        margin: 0;
+        padding: 0;
+        width: 100%;
+      }
+
+      body {
+        font-family: Tahoma, Arial, Helvetica, sans-serif;
+        background: #eef2f7;
+        color: var(--text);
+      }
+
+      .page {
+        display: grid;
+        grid-template-columns: minmax(2.25in, 2.6in) minmax(0, 1fr);
+        align-items: start;
+        gap: 0.2in;
+        min-height: 100vh;
+        padding: 0.2in;
+      }
+
+      .sidebar {
+        position: sticky;
+        top: 0.2in;
+        display: flex;
+        flex-direction: column;
+        gap: 0.14in;
+        padding: 0.18in;
+        background: var(--sidebar-bg);
+        border: 0.01in solid var(--border);
+        border-radius: 0.125in;
+        box-shadow: 0 0.06in 0.2in rgba(15, 23, 42, 0.06);
+      }
+
+      .sidebar h1 {
+        margin: 0;
+        font-size: 0.24in;
+      }
+
+      .sidebar p {
+        margin: -0.08in 0 0;
+        color: var(--muted);
+        font-size: 0.12in;
+        line-height: 1.4;
+      }
+
+      .field {
+        margin: 0;
+      }
+
+      .field-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin-bottom: 0.05in;
+      }
+
+      .field-header label {
+        font-weight: 700;
+        color: var(--muted);
+        font-size: 0.13in;
+      }
+
+      .field-header .bold-toggle {
+        display: flex;
+        align-items: center;
+        gap: 0.05in;
+        font-size: 0.12in;
+        cursor: pointer;
+      }
+
+      .field-header .bold-toggle input {
+        width: 0.16in;
+        height: 0.16in;
+        margin: 0;
+        cursor: pointer;
+      }
+
+      .field input {
+        width: 100%;
+        padding: 0.09in 0.1in;
+        border: 0.01in solid var(--border);
+        border-radius: 0.06in;
+        font: inherit;
+        font-size: 0.14in;
+      }
+
+      .button-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 0.08in;
+      }
+
+      button {
+        appearance: none;
+        border: none;
+        border-radius: 0.08in;
+        padding: 0.1in 0.13in;
+        font-weight: 700;
+        cursor: pointer;
+        background: var(--accent);
+        color: white;
+        font-size: 0.12in;
+      }
+
+      button.secondary {
+        background: #e5e7eb;
+        color: var(--text);
+      }
+
+      button.print-btn {
+        background: #0f766e;
+      }
+
+      .selected-count {
+        padding: 0.1in;
+        background: var(--accent-soft);
+        border: 0.01in solid #bfdbfe;
+        border-radius: 0.08in;
+        font-weight: 700;
+        font-size: 0.13in;
+      }
+
+      .sheet-panel {
+        min-width: 0;
+        overflow: auto;
+        padding: 0.16in;
+        background: var(--sheet-bg);
+        border: 0.01in solid var(--border);
+        border-radius: 0.12in;
+      }
+
+      .sheet-grid {
+        display: grid;
+        grid-template-columns: 0.65in repeat(3, var(--label-width));
+        grid-template-rows: auto;
+        column-gap: var(--column-gap);
+        row-gap: var(--row-gap);
+        width: fit-content;
+        margin: 0 auto;
+      }
+
+      .corner,
+      .header-toggle {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        min-height: 0.35in;
+        padding: 0 0.06in;
+        background: rgba(255, 255, 255, 0.7);
+        border: 0.01in solid var(--border);
+        border-radius: 0.08in;
+        color: var(--muted);
+        font-size: 0.1in;
+        font-weight: 700;
+      }
+
+      .row-header {
+        justify-content: flex-start;
+        padding-left: 0.1in;
+      }
+
+      .header-toggle input,
+      .cell-toggle {
+        width: 0.16in;
+        height: 0.16in;
+        margin: 0 0.04in 0 0;
+        cursor: pointer;
+      }
+
+      .label-slot {
+        position: relative;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: var(--label-width);
+        height: var(--label-height);
+        padding: 0.08in;
+        background: var(--empty);
+        border: 0.02in solid var(--border);
+        border-radius: 0.08in;
+      }
+
+      .label-slot.is-selected {
+        background: #ffffff;
+        border-color: #a8b5c7;
+      }
+
+      .label-slot.is-empty {
+        opacity: 0.45;
+      }
+
+      .cell-toggle {
+        position: absolute;
+        top: 0.04in;
+        left: 0.04in;
+        z-index: 1;
+        margin: 0;
+      }
+
+      .label-body {
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        width: 100%;
+        min-height: 0.3in;
+        color: var(--text);
+        font-size: 0.13in;
+        line-height: 1.1;
+        text-align: center;
+      }
+
+      .label-slot.is-empty .label-body {
+        display: none;
+      }
+
+      .label-line {
+        width: 100%;
+        overflow-wrap: anywhere;
+        font-weight: 400;
+      }
+
+      .label-line.is-bold {
+        font-weight: 700;
+      }
+
+      @media (max-width: 850px) {
+        .page {
+          grid-template-columns: minmax(2in, 2.2in) minmax(0, 1fr);
+          gap: 0.12in;
+          padding: 0.12in;
+        }
+      }
+
+      @media (max-width: 1000px) {
+        .page {
+          grid-template-columns: minmax(2in, 2.2in) minmax(0, 1fr);
+        }
+
+        .sheet-grid {
+          zoom: 0.54;
+        }
+      }
+
+      @media print {
+        @page {
+          size: 8.5in 11in;
+          margin: 0;
+        }
+
+        html,
+        body {
+          width: var(--page-width);
+          height: var(--page-height);
+          margin: 0;
+          padding: 0;
+          background: white;
+        }
+
+        body {
+          -webkit-print-color-adjust: exact;
+          print-color-adjust: exact;
+        }
+
+        .sidebar,
+        .sheet-panel .corner,
+        .sheet-panel .header-toggle {
+          display: none !important;
+        }
+
+        .page {
+          display: block;
+          width: var(--page-width);
+          height: var(--page-height);
+          margin: 0;
+          padding: 0;
+          background: white;
+        }
+
+        .sheet-panel {
+          position: absolute;
+          top: 0;
+          left: 0;
+          width: var(--page-width);
+          height: var(--page-height);
+          margin: 0;
+          padding: 0;
+          overflow: visible;
+          border: none;
+          background: white;
+        }
+
+        .sheet-grid {
+          position: absolute;
+          top: var(--top-margin);
+          left: var(--left-margin);
+          display: grid;
+          zoom: 1;
+          grid-template-columns: repeat(3, var(--label-width));
+          grid-template-rows: repeat(10, var(--label-height));
+          column-gap: var(--column-gap);
+          row-gap: var(--row-gap);
+          width: var(--sheet-width);
+          height: var(--sheet-height);
+          margin: 0;
+          padding: 0;
+        }
+
+        .label-slot {
+          width: var(--label-width);
+          height: var(--label-height);
+          min-height: var(--label-height);
+          padding: 0.08in;
+          border: none;
+          border-radius: 0;
+          background: white;
+          page-break-inside: avoid;
+          break-inside: avoid;
+        }
+
+        .cell-toggle {
+          display: none !important;
+        }
+
+        .label-body {
+          min-height: 0.3in;
+          font-size: 0.13in;
+          line-height: 1.1;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="page">
+      <aside class="sidebar">
+        <h1>Avery 15660</h1>
+        <p>Enter up to five lines to repeat on each selected label.</p>
+
+        <div class="field">
+          <div class="field-header">
+            <label for="line1">Line 1</label>
+            <label class="bold-toggle">
+              <input id="bold1" type="checkbox" /> Bold
+            </label>
+          </div>
+          <input id="line1" type="text" autocomplete="off" />
+        </div>
+        <div class="field">
+          <div class="field-header">
+            <label for="line2">Line 2</label>
+            <label class="bold-toggle">
+              <input id="bold2" type="checkbox" /> Bold
+            </label>
+          </div>
+          <input id="line2" type="text" autocomplete="off" />
+        </div>
+        <div class="field">
+          <div class="field-header">
+            <label for="line3">Line 3</label>
+            <label class="bold-toggle">
+              <input id="bold3" type="checkbox" /> Bold
+            </label>
+          </div>
+          <input id="line3" type="text" autocomplete="off" />
+        </div>
+        <div class="field">
+          <div class="field-header">
+            <label for="line4">Line 4</label>
+            <label class="bold-toggle">
+              <input id="bold4" type="checkbox" /> Bold
+            </label>
+          </div>
+          <input id="line4" type="text" autocomplete="off" />
+        </div>
+        <div class="field">
+          <div class="field-header">
+            <label for="line5">Line 5</label>
+            <label class="bold-toggle">
+              <input id="bold5" type="checkbox" /> Bold
+            </label>
+          </div>
+          <input id="line5" type="text" autocomplete="off" />
+        </div>
+
+        <div class="button-row">
+          <button id="selectAllBtn" type="button">Select All</button>
+          <button id="clearAllBtn" class="secondary" type="button">
+            Clear All
+          </button>
+        </div>
+        <button id="printBtn" class="print-btn" type="button">
+          Print Labels
+        </button>
+        <div class="selected-count">
+          Selected labels: <span id="selectedCount">30</span>
+        </div>
+      </aside>
+
+      <main class="sheet-panel">
+        <div id="sheet" class="sheet-grid" aria-live="polite"></div>
+      </main>
+    </div>
+
+    <script>
+      const rows = 10;
+      const cols = 3;
+      const selectedState = Array.from({ length: rows }, () =>
+        Array(cols).fill(true),
+      );
+
+      const lineInputs = Array.from({ length: 5 }, (_, index) =>
+        document.getElementById(`line${index + 1}`),
+      );
+      const boldInputs = Array.from({ length: 5 }, (_, index) =>
+        document.getElementById(`bold${index + 1}`),
+      );
+      const selectedCountEl = document.getElementById("selectedCount");
+      const sheetEl = document.getElementById("sheet");
+
+      function getLines() {
+        return lineInputs.map((input, index) => ({
+          text: input.value.trim(),
+          bold: boldInputs[index].checked,
+        }));
+      }
+
+      function getSelectedCount() {
+        return selectedState.reduce(
+          (total, row) => total + row.filter(Boolean).length,
+          0,
+        );
+      }
+
+      function allSelectedInRow(rowIndex) {
+        return selectedState[rowIndex].every(Boolean);
+      }
+
+      function allSelectedInColumn(colIndex) {
+        return selectedState.every((row) => row[colIndex]);
+      }
+
+      function createLabelBody(lines, className) {
+        const body = document.createElement("div");
+        body.className = className;
+
+        lines
+          .filter((line) => line.text)
+          .forEach((line) => {
+          const lineElement = document.createElement("div");
+          lineElement.className = line.bold ? "label-line is-bold" : "label-line";
+          lineElement.textContent = line.text;
+          body.appendChild(lineElement);
+        });
+
+        return body;
+      }
+
+      function renderSheet() {
+        const lines = getLines();
+        sheetEl.innerHTML = "";
+
+        const corner = document.createElement("div");
+        corner.className = "corner";
+        corner.textContent = "Row / Col";
+        sheetEl.appendChild(corner);
+
+        for (let col = 0; col < cols; col += 1) {
+          const header = document.createElement("label");
+          header.className = "header-toggle";
+          header.innerHTML = `
+            <input class="col-toggle" type="checkbox" data-col="${col}" ${
+              allSelectedInColumn(col) ? "checked" : ""
+            } />
+            <span>Col ${col + 1}</span>
+          `;
+          sheetEl.appendChild(header);
+        }
+
+        for (let row = 0; row < rows; row += 1) {
+          const rowHeader = document.createElement("label");
+          rowHeader.className = "header-toggle row-header";
+          rowHeader.innerHTML = `
+            <input class="row-toggle" type="checkbox" data-row="${row}" ${
+              allSelectedInRow(row) ? "checked" : ""
+            } />
+            <span>Row ${row + 1}</span>
+          `;
+          sheetEl.appendChild(rowHeader);
+
+          for (let col = 0; col < cols; col += 1) {
+            const isSelected = selectedState[row][col];
+            const slot = document.createElement("div");
+            slot.className = `label-slot ${isSelected ? "is-selected" : "is-empty"}`;
+
+            const cellToggle = document.createElement("input");
+            cellToggle.type = "checkbox";
+            cellToggle.className = "cell-toggle";
+            cellToggle.checked = isSelected;
+            cellToggle.dataset.row = String(row);
+            cellToggle.dataset.col = String(col);
+
+            slot.appendChild(cellToggle);
+            if (isSelected) {
+              slot.appendChild(createLabelBody(lines, "label-body"));
+            }
+            sheetEl.appendChild(slot);
+          }
+        }
+
+        selectedCountEl.textContent = String(getSelectedCount());
+      }
+
+      document.addEventListener("change", (event) => {
+        const target = event.target;
+
+        if (target.matches(".cell-toggle")) {
+          const rowIndex = Number(target.dataset.row);
+          const colIndex = Number(target.dataset.col);
+          selectedState[rowIndex][colIndex] = target.checked;
+          renderSheet();
+          return;
+        }
+
+        if (target.matches(".row-toggle")) {
+          const rowIndex = Number(target.dataset.row);
+          selectedState[rowIndex].fill(target.checked);
+          renderSheet();
+          return;
+        }
+
+        if (target.matches(".col-toggle")) {
+          const colIndex = Number(target.dataset.col);
+          selectedState.forEach((row) => {
+            row[colIndex] = target.checked;
+          });
+          renderSheet();
+        }
+      });
+
+      lineInputs.forEach((input) => {
+        input.addEventListener("input", renderSheet);
+      });
+      boldInputs.forEach((input) => {
+        input.addEventListener("change", renderSheet);
+      });
+
+      document.getElementById("selectAllBtn").addEventListener("click", () => {
+        selectedState.forEach((row) => row.fill(true));
+        renderSheet();
+      });
+
+      document.getElementById("clearAllBtn").addEventListener("click", () => {
+        selectedState.forEach((row) => row.fill(false));
+        renderSheet();
+      });
+
+      function buildPrintWindow() {
+        const printGrid = sheetEl.cloneNode(true);
+        printGrid
+          .querySelectorAll(".corner, .header-toggle, .row-header")
+          .forEach((element) => element.remove());
+
+        printGrid.querySelectorAll(".label-slot").forEach((slot) => {
+          const toggle = slot.querySelector(".cell-toggle");
+          const rowIndex = Number(toggle.dataset.row);
+          const colIndex = Number(toggle.dataset.col);
+          const isSelected = selectedState[rowIndex][colIndex];
+          toggle.remove();
+          slot.innerHTML = "";
+          slot.classList.remove("is-empty", "is-selected");
+
+          if (isSelected) {
+            slot.appendChild(createLabelBody(getLines(), "label-body"));
+          }
+        });
+
+        const printWindow = window.open("", "_blank", "width=900,height=900");
+        if (!printWindow) {
+          alert("Popup blocked. Please allow popups for print preview.");
+          return;
+        }
+
+        printWindow.document.write(`
+          <!doctype html>
+          <html>
+            <head>
+              <meta charset="UTF-8" />
+              <title>Avery 15660 Print Preview</title>
+              <style>
+                @page { size: 8.5in 11in; margin: 0; }
+                * { box-sizing: border-box; }
+                html, body {
+                  width: 8.5in;
+                  height: 11in;
+                  margin: 0;
+                  padding: 0;
+                  background: white;
+                  font-family: Tahoma, Arial, Helvetica, sans-serif;
+                }
+                .sheet-grid {
+                  position: absolute;
+                  top: 0.5in;
+                  left: 0.1875in;
+                  display: grid;
+                  grid-template-columns: repeat(3, 2.625in);
+                  grid-template-rows: repeat(10, 1in);
+                  column-gap: 0.125in;
+                  row-gap: 0;
+                  width: 8.125in;
+                  height: 10in;
+                  margin: 0;
+                  padding: 0;
+                }
+                .label-slot {
+                  display: flex;
+                  align-items: center;
+                  justify-content: center;
+                  width: 2.625in;
+                  height: 1in;
+                  padding: 0.08in;
+                  background: white;
+                  page-break-inside: avoid;
+                  break-inside: avoid;
+                }
+                .label-body {
+                  display: flex;
+                  flex-direction: column;
+                  justify-content: center;
+                  align-items: center;
+                  width: 100%;
+                  min-height: 0.3in;
+                  color: #111827;
+                  font-size: 0.13in;
+                  line-height: 1.1;
+                  text-align: center;
+                }
+                .label-line {
+                  width: 100%;
+                  overflow-wrap: anywhere;
+                  font-weight: 400;
+                }
+                .label-line.is-bold {
+                  font-weight: 700;
+                }
+              </style>
+            </head>
+            <body>${printGrid.outerHTML}</body>
+          </html>
+        `);
+
+        printWindow.document.close();
+        setTimeout(() => {
+          printWindow.focus();
+          printWindow.print();
+        }, 250);
+      }
+
+      document
+        .getElementById("printBtn")
+        .addEventListener("click", buildPrintWindow);
+      renderSheet();
+    </script>
+  </body>
+</html>
