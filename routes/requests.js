@@ -486,64 +486,69 @@ router.put("/close/:id", async (req, res) => {
           connection.end();
           return;
         }
-        // res.json(rows);
-      });
-      //   update document revision and date
-      const query2 = `UPDATE DOCUMENTS SET REVISION_LEVEL = ?, ISSUE_DATE = ? WHERE DOCUMENT_ID = ?`;
-      const values2 = [
-        req.body.REVISION_LEVEL,
-        req.body.REVISION_DATE,
-        req.body.DOCUMENT_ID,
-      ];
-      connection.query(query2, values2, async (err, rows, fields) => {
-        if (err) {
-          console.log("Failed to query for doc change revision level: " + err);
-          res.sendStatus(500);
+
+        if (req.body.DECISION !== "A") {
           connection.end();
+          res.sendStatus(200);
           return;
         }
 
-        // Send email if decision is Approved (A) - fire and forget (don't wait for email to complete)
-        if (req.body.DECISION === "A") {
-          // Start email send but don't await it
-          (async () => {
-            try {
-              const transporter = nodemailer.createTransport({
-                host: process.env.SMTP_HOST,
-                port: Number(process.env.SMTP_PORT),
-                secure: true,
-                auth: {
-                  user: process.env.SMTP_USER,
-                  pass: process.env.SMTP_PASS,
-                },
-              });
+        const query2 = `UPDATE DOCUMENTS SET REVISION_LEVEL = ?, ISSUE_DATE = ? WHERE DOCUMENT_ID = ?`;
+        const values2 = [
+          req.body.REVISION_LEVEL,
+          req.body.REVISION_DATE,
+          req.body.DOCUMENT_ID,
+        ];
+        connection.query(query2, values2, async (err, rows, fields) => {
+          if (err) {
+            console.log("Failed to query for doc change revision level: " + err);
+            res.sendStatus(500);
+            connection.end();
+            return;
+          }
 
-              // Compose recipients with fallbacks so 'To' is never blank in the sent message
-              const toRcpts = [process.env.EMAIL_GM, process.env.EMAIL_QM]
-                .filter(Boolean)
-                .filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
-              const toHeader = toRcpts.length
-                ? toRcpts.join(", ")
-                : process.env.SMTP_FROM || "";
+          // Send email if decision is Approved (A) - fire and forget (don't wait for email to complete)
+          if (req.body.DECISION === "A") {
+            // Start email send but don't await it
+            (async () => {
+              try {
+                const transporter = nodemailer.createTransport({
+                  host: process.env.SMTP_HOST,
+                  port: Number(process.env.SMTP_PORT),
+                  secure: true,
+                  auth: {
+                    user: process.env.SMTP_USER,
+                    pass: process.env.SMTP_PASS,
+                  },
+                });
 
-              const mailOptions = {
-                to: toHeader,
-                from: process.env.SMTP_FROM,
-                subject: `DCR Approved: ${req.params.id} - ${req.body.DOCUMENT_ID}`,
-                text: `Document Change Request ${req.params.id} has been approved.\n\nDocument: ${req.body.DOCUMENT_ID}\nNew Revision: ${req.body.REVISION_LEVEL}\nRevision Date: ${req.body.REVISION_DATE}\nApproved By: ${req.body.MODIFIED_BY}\n\nPlease log in to the QMS system to view the details.`,
-                bcc: "<tim.kent@ci-aviation.com>",
-              };
+                // Compose recipients with fallbacks so 'To' is never blank in the sent message
+                const toRcpts = [process.env.EMAIL_GM, process.env.EMAIL_QM]
+                  .filter(Boolean)
+                  .filter((email, index, self) => self.indexOf(email) === index); // Remove duplicates
+                const toHeader = toRcpts.length
+                  ? toRcpts.join(", ")
+                  : process.env.SMTP_FROM || "";
 
-              await transporter.sendMail(mailOptions);
-              console.log("Approval email sent to GM and QM");
-            } catch (emailError) {
-              console.log("Error sending approval email:", emailError);
-            }
-          })();
-        }
+                const mailOptions = {
+                  to: toHeader,
+                  from: process.env.SMTP_FROM,
+                  subject: `DCR Approved: ${req.params.id} - ${req.body.DOCUMENT_ID}`,
+                  text: `Document Change Request ${req.params.id} has been approved.\n\nDocument: ${req.body.DOCUMENT_ID}\nNew Revision: ${req.body.REVISION_LEVEL}\nRevision Date: ${req.body.REVISION_DATE}\nApproved By: ${req.body.MODIFIED_BY}\n\nPlease log in to the QMS system to view the details.`,
+                  bcc: "<tim.kent@ci-aviation.com>",
+                };
 
-        connection.end();
-        res.sendStatus(200);
+                await transporter.sendMail(mailOptions);
+                console.log("Approval email sent to GM and QM");
+              } catch (emailError) {
+                console.log("Error sending approval email:", emailError);
+              }
+            })();
+          }
+
+          connection.end();
+          res.sendStatus(200);
+        });
       });
     });
   } catch (err) {

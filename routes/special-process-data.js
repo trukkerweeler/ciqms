@@ -236,6 +236,19 @@ async function handleSave(req, res) {
       .json({ error: "formDefinitionId and workOrderRaw are required" });
   }
 
+  const qtyAccepted = Number(payload.qtyAccepted || 0);
+  const qtyRejected = Number(payload.qtyRejected || 0);
+  if (
+    !Number.isFinite(qtyAccepted) ||
+    qtyAccepted < 0 ||
+    !Number.isFinite(qtyRejected) ||
+    qtyRejected < 0
+  ) {
+    return res
+      .status(400)
+      .json({ error: "Qty Accept and Qty Reject cannot be negative numbers" });
+  }
+
   const connection = createConnection();
   connection.connect(async (err) => {
     if (err) {

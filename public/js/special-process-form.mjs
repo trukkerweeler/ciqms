@@ -380,6 +380,21 @@ if (!form) {
 
   populateUserDefaults();
 
+  for (const id of ["qtyAccepted", "qtyRejected"]) {
+    const qtyField = document.getElementById(id);
+    if (!qtyField) continue;
+    qtyField.addEventListener("keydown", (event) => {
+      if (event.key === "-" || event.key === "Subtract") {
+        event.preventDefault();
+      }
+    });
+    qtyField.addEventListener("input", () => {
+      if (qtyField.value.startsWith("-")) {
+        qtyField.value = qtyField.value.replace(/^-+/, "");
+      }
+    });
+  }
+
   if (formEl) {
     formEl.addEventListener("submit", async (event) => {
       event.preventDefault();
