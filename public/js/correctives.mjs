@@ -414,7 +414,9 @@ function createTable(data) {
   table.style.marginBottom = "0";
   table.id = "correctivesTable";
 
-  const headers = Object.keys(data[0]);
+  const headers = Object.keys(data[0]).filter(
+    (header) => header !== "CREATE_DATE",
+  );
 
   // Create colgroup with resizable column support
   const colgroup = document.createElement("colgroup");
@@ -560,6 +562,9 @@ function createTableContainer() {
  */
 function getHeaderDisplayName(header) {
   const headerAliases = {
+    CORRECTIVE_DATE: "CORR_DATE",
+    CORRECTIVE_ID: "CORR_ID",
+    CORRECTION_DATE: "CORRN_DATE",
     USER_DEFINED_1: "UD1",
     USER_DEFINED_2: "UD2",
   };
