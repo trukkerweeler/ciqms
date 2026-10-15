@@ -18,10 +18,15 @@
 
 .ops-report-form {
   display: grid;
-  grid-template-columns: auto 120px auto 180px auto 200px auto;
+  grid-template-columns: auto 220px auto 120px auto 180px auto 200px auto;
   gap: 0.6rem;
   align-items: center;
   margin-top: 0.8rem;
+}
+
+#family-input {
+  width: 220px;
+  max-width: 100%;
 }
 
 #year-input {

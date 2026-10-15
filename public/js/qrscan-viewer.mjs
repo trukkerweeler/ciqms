@@ -450,9 +450,20 @@ function renderCurrentEntry() {
           throw new Error(payload.error || "Save failed");
         }
 
+        const warnings = [];
+        if (!payload.copiedFile) {
+          warnings.push(
+            `The PDF was NOT copied to the filing location${payload.fileCopyError ? `: ${payload.fileCopyError}` : "."}`,
+          );
+        } else if (!payload.sourceDeleted) {
+          warnings.push(
+            `The PDF was filed, but the original is still in TKSCANS${payload.sourceDeleteError ? `: ${payload.sourceDeleteError}` : "."}`,
+          );
+        }
+
         const finishMessage = hasMeasurementValues
           ? "Saved and filed: measurement recorded, disposition applied, and queue item removed."
-          : payload.movedFile
+          : payload.copiedFile
             ? "Saved and filed: removed from queue and copied successfully."
             : "Saved and filed: removed from queue.";
         statusMessage.textContent = finishMessage;
@@ -477,6 +488,11 @@ function renderCurrentEntry() {
           currentIndex = entries.length > 0 ? entries.length - 1 : 0;
         }
         renderCurrentEntry();
+        if (warnings.length > 0) {
+          alert(
+            `Input ${selectedInputId} was saved and closed, but:\n\n${warnings.join("\n")}`,
+          );
+        }
       } catch (error) {
         saveButton.disabled = false;
         statusMessage.textContent = error.message;

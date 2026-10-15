@@ -235,7 +235,7 @@ function parseDateFromFilename(fileName, fallbackTimestamp = "") {
 }
 
 // ==================================================
-// File-copy helpers (source is NEVER deleted)
+// File-copy helpers (source is deleted by /process only after a verified copy)
 // ==================================================
 
 function normalizeWindowsPath(filePath = "") {
@@ -719,6 +719,8 @@ router.post("/process", (req, res) => {
               let resolvedDestinationPath = "";
               let fileCopyError = "";
               let removedFromJsonl = false;
+              let sourceDeleted = false;
+              let sourceDeleteError = "";
 
               try {
                 const copyResult = copyFileToDestination(
@@ -766,34 +768,45 @@ router.post("/process", (req, res) => {
                   );
 
                   // Delete source only after copy is confirmed and queue entry removed
-                  if (
-                    removedFromJsonl &&
-                    sourcePath &&
-                    resolvedDestinationPath
-                  ) {
+                  if (!removedFromJsonl) {
+                    sourceDeleteError =
+                      "Queue entry was not found, so the source PDF was not deleted";
+                  } else if (!sourcePath || !resolvedDestinationPath) {
+                    sourceDeleteError =
+                      "Missing source or destination path, so the source PDF was not deleted";
+                  } else {
                     const normalizedSource = normalizeWindowsPath(sourcePath);
                     const normalizedDest = normalizeWindowsPath(
                       resolvedDestinationPath,
                     );
-                    const sourceResolved = path.resolve(normalizedSource);
-                    const destResolved = path.resolve(normalizedDest);
                     if (
-                      sourceResolved !== destResolved &&
-                      fs.existsSync(normalizedDest) &&
-                      fs.existsSync(normalizedSource)
+                      path.resolve(normalizedSource) ===
+                      path.resolve(normalizedDest)
                     ) {
+                      sourceDeleteError =
+                        "Source and destination are the same file";
+                    } else if (!fs.existsSync(normalizedDest)) {
+                      sourceDeleteError = `Filed copy could not be verified at ${normalizedDest}; source PDF kept`;
+                    } else if (!fs.existsSync(normalizedSource)) {
+                      // Already gone; nothing to clean up
+                      sourceDeleted = true;
+                    } else {
                       try {
                         fs.unlinkSync(normalizedSource);
+                        sourceDeleted = true;
                       } catch (delErr) {
-                        console.error(
-                          "Failed to delete source after copy:",
-                          delErr.message,
-                        );
+                        sourceDeleteError = `Could not delete source PDF: ${delErr.message}`;
                       }
                     }
                   }
+                  if (sourceDeleteError) {
+                    console.error(
+                      `QR scan source cleanup (input ${inputId}): ${sourceDeleteError}`,
+                    );
+                  }
                 }
               } catch (fileErr) {
+                sourceDeleteError = `Failed to update scan queue: ${fileErr.message}`;
                 console.error(
                   "Failed to update QR scan file state:",
                   fileErr.message,
@@ -805,6 +818,8 @@ router.post("/process", (req, res) => {
                 success: true,
                 copiedFile,
                 removedFromJsonl,
+                sourceDeleted,
+                sourceDeleteError,
                 fileCopyError,
                 inputId,
                 selectedOption,

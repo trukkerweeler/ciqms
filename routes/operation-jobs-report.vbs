@@ -1,20 +1,23 @@
-' operation-jobs-weld-ops.vbs
-' Usage: cscript //Nologo operation-jobs-weld-ops.vbs <startDate> <endDateExclusive>
-' Returns weld operations completed in the given date window across active + archived operations.
+' operation-jobs-report.vbs
+' Usage: cscript //Nologo operation-jobs-report.vbs <startDate> <endDateExclusive> <operationCodes>
+' Returns selected process-family operations completed in the date window.
 
 Option Explicit
 On Error Resume Next
 
 Dim conn, rs, fso, file, WshShell, DocumentsPath, CIQMSPath
-Dim dsn, uid, pwd, startDate, endDate, sqlQuery
+Dim dsn, uid, pwd, startDate, endDate, operationFilterSql
+Dim activeRows, historyRows, rowsJson, queryError
+Dim operationCodesInput, operationParts, operationCode, operationIndex, codePattern
 
-If WScript.Arguments.Count < 2 Then
-  WScript.StdOut.Write "{""success"":false,""error"":""Usage: operation-jobs-weld-ops.vbs <startDate> <endDateExclusive>""}"
+If WScript.Arguments.Count < 3 Then
+  WScript.StdOut.Write "{""success"":false,""error"":""Usage: operation-jobs-report.vbs <startDate> <endDateExclusive> <operationCodes>""}"
   WScript.Quit 1
 End If
 
 startDate = Trim(CStr(WScript.Arguments(0)))
 endDate = Trim(CStr(WScript.Arguments(1)))
+operationCodesInput = Trim(CStr(WScript.Arguments(2)))
 
 If Not IsValidDateArg(startDate) Or Not IsValidDateArg(endDate) Then
   WScript.StdOut.Write "{""success"":false,""error"":""Invalid date arguments. Expected YYMMDD or YYYYMMDD.""}"
@@ -25,6 +28,26 @@ If Len(startDate) <> Len(endDate) Then
   WScript.StdOut.Write "{""success"":false,""error"":""Date arguments must use the same length format.""}"
   WScript.Quit 1
 End If
+
+If operationCodesInput = "" Then
+  WScript.StdOut.Write "{""success"":false,""error"":""At least one operation code is required.""}"
+  WScript.Quit 1
+End If
+
+operationParts = Split(operationCodesInput, ",")
+Set codePattern = New RegExp
+codePattern.Pattern = "^[A-Za-z0-9]+$"
+operationFilterSql = ""
+
+For operationIndex = 0 To UBound(operationParts)
+  operationCode = Trim(CStr(operationParts(operationIndex)))
+  If Not codePattern.Test(operationCode) Then
+    WScript.StdOut.Write "{""success"":false,""error"":""Invalid operation code.""}"
+    WScript.Quit 1
+  End If
+  If operationIndex > 0 Then operationFilterSql = operationFilterSql & ","
+  operationFilterSql = operationFilterSql & "'" & operationCode & "'"
+Next
 
 Set fso = CreateObject("Scripting.FileSystemObject")
 Set WshShell = CreateObject("WScript.Shell")
@@ -96,38 +119,61 @@ If Err.Number <> 0 Then
 End If
 On Error GoTo 0
 
-sqlQuery = _
-  "SELECT * FROM (" & _
-  "  SELECT 'JOB_OPERATIONS' AS SOURCE_TABLE, " & _
-  "    jo.JOB, jo.SUFFIX, jo.SEQ, jo.OPERATION, jo.DESCRIPTION, jo.DATE_COMPLETED, " & _
-  "    jo.PART, '' AS PART_DESCRIPTION, '' AS CUSTOMER, jo.ROUTER, jo.UNITS_OPEN, jo.UNITS_COMPLETE, jo.UNITS_SCRAP, jo.LMO " & _
-  "  FROM JOB_OPERATIONS jo " & _
-  "  WHERE jo.OPERATION IN ('SPOTW','FUSION') " & _
-  "    AND jo.DATE_COMPLETED > '" & startDate & "' " & _
-  "    AND jo.DATE_COMPLETED < '" & endDate & "' " & _
-  "    AND jo.SEQ < 990000 " & _
-  " UNION ALL " & _
-  "  SELECT 'JOB_HIST_OPS' AS SOURCE_TABLE, " & _
-  "    jo.JOB, jo.SUFFIX, jo.SEQ, jo.OPERATION, jo.DESCRIPTION, jo.DATE_COMPLETED, " & _
-  "    jo.PART, '' AS PART_DESCRIPTION, '' AS CUSTOMER, jo.ROUTER, jo.UNITS_OPEN, jo.UNITS_COMPLETE, jo.UNITS_SCRAP, jo.LMO " & _
-  "  FROM JOB_HIST_OPS jo " & _
-  "  WHERE jo.OPERATION IN ('SPOTW','FUSION') " & _
-  "    AND jo.DATE_COMPLETED > '" & startDate & "' " & _
-  "    AND jo.DATE_COMPLETED < '" & endDate & "' " & _
-  "    AND jo.SEQ < 990000 " & _
-  ") q"
-
-On Error Resume Next
-rs.Open sqlQuery, conn, 3, 1
-If Err.Number <> 0 Then
-  WScript.StdOut.Write "{""success"":false,""error"":""Query failed: " & EscapeJSON(Err.Description) & """}"
+activeRows = QueryTableRows("JOB_OPERATIONS", startDate, endDate, operationFilterSql)
+If queryError <> "" Then
+  WScript.StdOut.Write "{""success"":false,""error"":""Query failed: " & EscapeJSON(queryError) & """}"
   Cleanup rs, conn
   WScript.Quit 1
 End If
-On Error GoTo 0
+rs.Close
 
-WScript.StdOut.Write "{""success"":true,""rows"":" & RecordsetToJSON(rs) & "}"
+historyRows = QueryTableRows("JOB_HIST_OPS", startDate, endDate, operationFilterSql)
+If queryError <> "" Then
+  WScript.StdOut.Write "{""success"":false,""error"":""Query failed: " & EscapeJSON(queryError) & """}"
+  Cleanup rs, conn
+  WScript.Quit 1
+End If
+rs.Close
+
+rowsJson = "["
+If Len(activeRows) > 2 Then
+  rowsJson = rowsJson & Mid(activeRows, 2, Len(activeRows) - 2)
+End If
+If Len(historyRows) > 2 Then
+  If Len(rowsJson) > 1 Then rowsJson = rowsJson & ","
+  rowsJson = rowsJson & Mid(historyRows, 2, Len(historyRows) - 2)
+End If
+rowsJson = rowsJson & "]"
+
+WScript.StdOut.Write "{""success"":true,""rows"":" & rowsJson & "}"
 Cleanup rs, conn
+
+Function QueryTableRows(tableName, startDateValue, endDateValue, operationFilter)
+  Dim query
+  query = _
+    "SELECT '" & tableName & "' AS SOURCE_TABLE, " & _
+    "  jo.JOB, jo.SUFFIX, jo.SEQ, jo.OPERATION, jo.DESCRIPTION, jo.DATE_COMPLETED, " & _
+    "  jo.PART, '' AS PART_DESCRIPTION, '' AS CUSTOMER, jo.ROUTER, jo.UNITS_OPEN, jo.UNITS_COMPLETE, jo.UNITS_SCRAP, jo.LMO " & _
+    "FROM " & tableName & " jo " & _
+    "WHERE jo.OPERATION IN (" & operationFilter & ") " & _
+    "  AND jo.DATE_COMPLETED >= '" & startDateValue & "' " & _
+    "  AND jo.DATE_COMPLETED < '" & endDateValue & "' " & _
+    "  AND jo.SEQ < 990000"
+
+  queryError = ""
+  On Error Resume Next
+  rs.Open query, conn, 0, 1
+  If Err.Number <> 0 Then
+    queryError = Err.Description
+    Err.Clear
+    QueryTableRows = "[]"
+    On Error GoTo 0
+    Exit Function
+  End If
+  On Error GoTo 0
+
+  QueryTableRows = RecordsetToJSON(rs)
+End Function
 
 Sub Cleanup(ByRef rsObj, ByRef connObj)
   On Error Resume Next

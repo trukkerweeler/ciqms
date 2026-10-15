@@ -3,6 +3,38 @@ const path = require("path");
 const { execFile } = require("child_process");
 
 const router = express.Router();
+const REPORT_FAMILIES = {
+  weld: {
+    label: "Weld",
+    operationCodes: ["SPOTW", "FUSION"],
+  },
+  passivation: {
+    label: "Passivation",
+    operationCodes: [
+      "PASST2",
+      "PASST6",
+      "PASSM2",
+      "PA16",
+      "PA11",
+      "PA12",
+      "PA17",
+      "PA18",
+      "PM26",
+    ],
+  },
+  "chem-film": {
+    label: "Chem Film / Alodine",
+    operationCodes: [
+      "DPSCC",
+      "DPSMC",
+      "FT1C1A",
+      "FT1C3",
+      "FT1C3A",
+      "FT2C1A",
+      "FT2C3",
+    ],
+  },
+};
 
 function getCscript32() {
   return process.env.SYSTEMROOT
@@ -72,15 +104,10 @@ function getMonthWindow(monthInput) {
   const nextMonthYear = month === 12 ? year + 1 : year;
   const nextMonth = month === 12 ? 1 : month + 1;
   const endDateExclusiveYY = `${String(nextMonthYear % 100).padStart(2, "0")}${String(nextMonth).padStart(2, "0")}01`;
-  const startDateYYYY = `${year}${String(month).padStart(2, "0")}01`;
-  const endDateExclusiveYYYY = `${nextMonthYear}${String(nextMonth).padStart(2, "0")}01`;
-
   return {
     month: `${year}-${String(month).padStart(2, "0")}`,
     startDateYY,
     endDateExclusiveYY,
-    startDateYYYY,
-    endDateExclusiveYYYY,
   };
 }
 
@@ -106,8 +133,18 @@ function mapSummaryToSortedArray(summaryMap, keyName) {
     .sort((a, b) => String(a[keyName]).localeCompare(String(b[keyName])));
 }
 
-router.get("/weld-operations-report", async (req, res) => {
-  const { month: monthInput, sort = "asc" } = req.query;
+router.get(
+  ["/operations-report", "/weld-operations-report"],
+  async (req, res) => {
+  const { month: monthInput, sort = "asc", family = "weld" } = req.query;
+  const familyKey = String(family);
+  const reportFamily = REPORT_FAMILIES[familyKey];
+
+  if (!reportFamily) {
+    return res.status(400).json({
+      error: "Invalid report family. Allowed values: weld, passivation, chem-film",
+    });
+  }
 
   if (!["asc", "desc"].includes(String(sort).toLowerCase())) {
     return res.status(400).json({
@@ -123,37 +160,22 @@ router.get("/weld-operations-report", async (req, res) => {
   }
 
   try {
-    const vbsPath = path.join(__dirname, "operation-jobs-weld-ops.vbs");
-    let usedDateFormat = "YYMMDD";
-    let usedStartDate = window.startDateYY;
-    let usedEndDateExclusive = window.endDateExclusiveYY;
-    let vbsResult;
-
-    try {
-      vbsResult = await callVBS(vbsPath, [
-        window.startDateYY,
-        window.endDateExclusiveYY,
-      ]);
-    } catch (primaryErr) {
-      const message = String(primaryErr?.message || "");
-      if (!message.toUpperCase().includes("TIMEOUT")) {
-        throw primaryErr;
-      }
-
-      usedDateFormat = "YYYYMMDD";
-      usedStartDate = window.startDateYYYY;
-      usedEndDateExclusive = window.endDateExclusiveYYYY;
-      vbsResult = await callVBS(vbsPath, [
-        window.startDateYYYY,
-        window.endDateExclusiveYYYY,
-      ]);
-    }
+    const vbsPath = path.join(__dirname, "operation-jobs-report.vbs");
+    const usedDateFormat = "YYMMDD";
+    const usedStartDate = window.startDateYY;
+    const usedEndDateExclusive = window.endDateExclusiveYY;
+    const vbsResult = await callVBS(vbsPath, [
+      window.startDateYY,
+      window.endDateExclusiveYY,
+      reportFamily.operationCodes.join(","),
+    ]);
 
     if (!vbsResult.success || !Array.isArray(vbsResult.rows)) {
       return res.status(500).json({
-        error: "Unexpected VBS payload for weld report",
+        error: "Unexpected VBS payload for operations report",
         details: vbsResult,
-      });
+        },
+      );
     }
 
     const normalizedRows = vbsResult.rows
@@ -274,12 +296,14 @@ router.get("/weld-operations-report", async (req, res) => {
     res.json({
       success: true,
       criteria: {
+        family: familyKey,
+        familyLabel: reportFamily.label,
         month: window.month,
         startDateInclusive: usedStartDate,
         endDateExclusive: usedEndDateExclusive,
         dateField: "DATE_COMPLETED",
         dateFormat: usedDateFormat,
-        operationIn: ["SPOTW", "FUSION"],
+        operationIn: reportFamily.operationCodes,
         sort: sortDirection,
         includeTables: ["JOB_OPERATIONS", "JOB_HIST_OPS"],
       },
@@ -299,11 +323,11 @@ router.get("/weld-operations-report", async (req, res) => {
     });
   } catch (err) {
     console.error(
-      "[operation-jobs/weld-operations-report] Error:",
+      "[operation-jobs/operations-report] Error:",
       err.message,
     );
     res.status(500).json({
-      error: "Failed to build weld operations report",
+      error: "Failed to build operations report",
       details: err.message,
     });
   }

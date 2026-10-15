@@ -6,7 +6,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta
       name="description"
-      content="Monthly weld operations report grouped by day, operation, part, job, and customer."
+      content="Monthly special-process operations report grouped by day, operation, part, job, and customer."
     />
     <meta name="author" content="CIQMS" />
     <link
@@ -15,21 +15,28 @@
     />
     <link rel="stylesheet" href="/css/styles.css" />
     <link rel="stylesheet" href="/css/reports.css" />
-    <link rel="stylesheet" href="/css/operation-jobs-weld-report.css" />
+    <link rel="stylesheet" href="/css/operation-jobs-report.css" />
     <link rel="icon" href="images/ci-logo.png" />
-    <title>Operation Jobs - Weld Operations Report</title>
+    <title>Monthly Operations Report</title>
   </head>
   <body>
     <header id="header"></header>
 
     <main id="main" class="ops-report-main">
       <section class="ops-report-panel">
-        <h1>Weld Operations Report</h1>
+        <h1 id="report-title">Weld Operations Report</h1>
         <p class="ops-report-subtitle">
-          Monthly completed operations filtered by operation code.
+          Monthly completed operations filtered by process family.
         </p>
 
         <form id="report-form" class="ops-report-form">
+          <label for="family-input">Process Family</label>
+          <select id="family-input" name="family">
+            <option value="weld">Weld</option>
+            <option value="passivation">Passivation</option>
+            <option value="chem-film">Chem Film / Alodine</option>
+          </select>
+
           <label for="year-input">Year</label>
           <select id="year-input" name="year" required></select>
 
@@ -84,6 +91,6 @@
 
     <footer id="footer"></footer>
 
-    <script type="module" src="/js/operation-jobs-weld-report.mjs"></script>
+    <script type="module" src="/js/operation-jobs-report.mjs"></script>
   </body>
 </html>

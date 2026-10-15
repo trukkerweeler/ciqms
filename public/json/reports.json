@@ -176,7 +176,17 @@
         {
           "h2": "Weld Operations (Monthly)",
           "a": "Go to Monthly Weld Operations Report",
-          "html": "operation-jobs-weld-report.html"
+          "html": "operation-jobs-report.html?family=weld"
+        },
+        {
+          "h2": "Passivation Operations (Monthly)",
+          "a": "Go to Monthly Passivation Operations Report",
+          "html": "operation-jobs-report.html?family=passivation"
+        },
+        {
+          "h2": "Chem Film / Alodine Operations (Monthly)",
+          "a": "Go to Monthly Chem Film / Alodine Operations Report",
+          "html": "operation-jobs-report.html?family=chem-film"
         }
       ]
     },

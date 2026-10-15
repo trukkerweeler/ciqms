@@ -3,6 +3,8 @@ import { loadHeaderFooter } from "./utils.mjs";
 loadHeaderFooter();
 
 const form = document.getElementById("report-form");
+const familyInput = document.getElementById("family-input");
+const reportTitle = document.getElementById("report-title");
 const yearInput = document.getElementById("year-input");
 const monthInput = document.getElementById("month-input");
 const sortInput = document.getElementById("sort-input");
@@ -72,6 +74,12 @@ function setStatus(message, type = "info") {
   statusEl.className = `ops-report-status ${type}`;
 }
 
+function updateReportTitle() {
+  const familyLabel = familyInput.selectedOptions[0].textContent;
+  reportTitle.textContent = `${familyLabel} Operations Report`;
+  document.title = `${familyLabel} Operations Report`;
+}
+
 function clearResults() {
   criteriaEl.innerHTML = "";
   opCodesEl.innerHTML = "";
@@ -87,6 +95,7 @@ function renderPayload(payload) {
     : "";
 
   criteriaEl.innerHTML = `
+    <div><strong>Process Family:</strong> ${criteria.familyLabel}</div>
     <div><strong>Month:</strong> ${criteria.month}</div>
     <div><strong>Date Window:</strong> ${criteria.startDateInclusive} to ${criteria.endDateExclusive} (exclusive)</div>
     <div><strong>Operation Filter:</strong> ${operationFilter || "(none)"}</div>
@@ -140,9 +149,13 @@ async function runReport() {
   setStatus("Loading report...", "loading");
 
   try {
-    const params = new URLSearchParams({ month, sort });
+    const params = new URLSearchParams({
+      family: familyInput.value,
+      month,
+      sort,
+    });
     const response = await fetch(
-      `/operation-jobs/weld-operations-report?${params.toString()}`,
+      `/operation-jobs/operations-report?${params.toString()}`,
       {
         credentials: "include",
       },
@@ -158,7 +171,7 @@ async function runReport() {
 
     renderPayload(payload);
     setStatus(
-      `Loaded ${payload.rowCount} rows for ${payload.criteria.month}.`,
+      `Loaded ${payload.rowCount} ${payload.criteria.familyLabel} rows for ${payload.criteria.month}.`,
       "success",
     );
   } catch (err) {
@@ -168,6 +181,16 @@ async function runReport() {
 
 populateYearOptions();
 populateMonthOptions();
+const requestedFamily = new URLSearchParams(window.location.search).get("family");
+if (
+  Array.from(familyInput.options).some(
+    (option) => option.value === requestedFamily,
+  )
+) {
+  familyInput.value = requestedFamily;
+}
+familyInput.addEventListener("change", updateReportTitle);
+updateReportTitle();
 const initial = previousMonthParts();
 yearInput.value = initial.year;
 monthInput.value = initial.month;
