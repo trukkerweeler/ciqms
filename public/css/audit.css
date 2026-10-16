@@ -434,7 +434,7 @@ h1 {
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  margin-bottom: 1rem;
+  margin-bottom: 0.25rem;
 }
 
 .main-title h1 {
@@ -511,6 +511,11 @@ h1 {
   margin-top: 0;
   margin-bottom: 0;
   display: inline-block;
+  padding-bottom: 0.125rem;
+}
+
+.checklist {
+  margin-top: 0.5rem;
 }
 #standard {
   grid-column: span 1;
@@ -689,10 +694,15 @@ h1 {
 .details {
   margin-top: 0;
   margin-bottom: 0;
+  padding: 0.25rem;
 }
 
-.details p {
-  margin-bottom: 3px;
+.details .title-and-edit h2 {
+  padding-bottom: 0.125rem;
+}
+
+.details > p {
+  margin-bottom: 0.75px;
 }
 
 .chkdet {
@@ -1086,10 +1096,13 @@ dialog form {
     break-inside: avoid;
   }
 
-  /* ===== PREVENT WRAPPING IN NARROW GRID CELLS ===== */
-  #checklist_id,
-  #reference {
+  /* ===== KEEP CHECKLIST METADATA ON ONE LINE ===== */
+  .rowdiv .checklist-id,
+  .rowdiv .reference {
     grid-column: span 2 !important;
+    white-space: nowrap !important;
+    overflow-wrap: normal !important;
+    word-break: normal !important;
   }
 
   /* ===== TIGHTEN QUESTION SPACING ===== */

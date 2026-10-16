@@ -272,7 +272,7 @@ router.get("/", (req, res) => {
       return res.status(500).json({ error: "Database connection failed" });
     }
 
-    const query = `SELECT c.CORRECTIVE_ID, TITLE, USER_DEFINED_2, USER_DEFINED_1,
+    const query = `SELECT c.CORRECTIVE_ID, TITLE, c.SUBJECT, USER_DEFINED_2, USER_DEFINED_1,
       c.REQUEST_BY, c.ASSIGNED_TO, c.CORRECTIVE_DATE, c.REFERENCE,
       ia.CORRECTION_DATE, ia.ACTION_BY, c.CREATE_DATE, c.DUE_DATE,
       CLOSED, c.CLOSED_DATE

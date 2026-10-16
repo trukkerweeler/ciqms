@@ -9,6 +9,8 @@ loadHeaderFooter();
 let url = "";
 let apiUrl = ""; // Module-level variable for API URL
 let sortOrder = "asc";
+let correctiveData = [];
+const NO_SUBJECT_FILTER = "no-subject";
 
 // Global variables - will be initialized on DOMContentLoaded
 let dialog, addButton, cancelButton, form, user;
@@ -89,6 +91,10 @@ document.addEventListener("DOMContentLoaded", async () => {
     // Load initial data
     await loadCorrectiveData();
 
+    document
+      .getElementById("filterSubject")
+      ?.addEventListener("change", applySubjectFilter);
+
     // Setup dialog event listeners
     setupDialogHandlers();
 
@@ -112,21 +118,70 @@ async function loadCorrectiveData() {
       throw new Error(`HTTP error! status: ${response.status}`);
     }
 
-    const data = await response.json();
-    // console.log("Corrective data received:", data);
+    correctiveData = await response.json();
+    // console.log("Corrective data received:", correctiveData);
 
-    if (data && data.length > 0) {
-      createTable(data);
-    } else {
-      console.log("No corrective data found");
-      document.querySelector("main").innerHTML =
-        "<p>No corrective records found.</p>";
-    }
+    populateSubjectFilter(correctiveData);
+    applySubjectFilter();
   } catch (error) {
     console.error("Error fetching corrective data:", error);
     document.querySelector("main").innerHTML =
       "<p>Error loading corrective records.</p>";
   }
+}
+
+function populateSubjectFilter(data) {
+  const subjectFilter = document.getElementById("filterSubject");
+  if (!subjectFilter) return;
+
+  const selectedSubject = subjectFilter.value;
+  subjectFilter.innerHTML = "";
+
+  const allSubjectsOption = document.createElement("option");
+  allSubjectsOption.value = "";
+  allSubjectsOption.textContent = "All Subjects";
+  subjectFilter.appendChild(allSubjectsOption);
+
+  const noSubjectOption = document.createElement("option");
+  noSubjectOption.value = NO_SUBJECT_FILTER;
+  noSubjectOption.textContent = "(No subject)";
+  subjectFilter.appendChild(noSubjectOption);
+
+  const subjects = [
+    ...new Set(
+      data
+        .map((item) => String(item.SUBJECT ?? "").trim())
+        .filter((subject) => subject.length > 0),
+    ),
+  ].sort((a, b) => a.localeCompare(b));
+
+  subjects.forEach((subject) => {
+    const option = document.createElement("option");
+    option.value = `subject:${subject}`;
+    option.textContent = subject;
+    subjectFilter.appendChild(option);
+  });
+
+  if (
+    [...subjectFilter.options].some((option) => option.value === selectedSubject)
+  ) {
+    subjectFilter.value = selectedSubject;
+  }
+}
+
+function applySubjectFilter() {
+  const selectedSubject =
+    document.getElementById("filterSubject")?.value || "";
+  const filteredData = correctiveData.filter((item) => {
+    const subject = String(item.SUBJECT ?? "").trim();
+    if (selectedSubject === NO_SUBJECT_FILTER) return subject.length === 0;
+    if (selectedSubject.startsWith("subject:")) {
+      return subject === selectedSubject.slice("subject:".length);
+    }
+    return true;
+  });
+
+  createTable(filteredData);
 }
 
 /**
