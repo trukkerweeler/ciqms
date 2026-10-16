@@ -1,6 +1,5 @@
 import { loadHeaderFooter, getApiUrl, getSessionUser } from "./utils.mjs";
 import { calculateDaysOverdue, getRowColor } from "./escalation-utils.mjs";
-import users from "./users.mjs";
 
 // Initialize header/footer
 loadHeaderFooter();
@@ -385,8 +384,7 @@ async function handleFormSubmission() {
       // Success - send email notification after successful creation.
       let emailSendSucceeded = false;
       let emailFailureMessage = "";
-      const assignedToEmail =
-        users[dataJson.ASSIGNED_TO] ?? users.DEFAULT ?? null;
+      let assignedToEmail = null;
 
       try {
         const emailResponse = await fetch(`${url}/email`, {
@@ -396,14 +394,13 @@ async function handleFormSubmission() {
           },
           body: JSON.stringify(dataJson),
         });
-        const emailText = await emailResponse.text();
+        const emailResult = await emailResponse.json().catch(() => ({}));
 
-        // Endpoint can return HTTP 200 but still indicate no send.
-        emailSendSucceeded =
-          emailResponse.ok && !emailText.toLowerCase().includes("not sent");
+        assignedToEmail = emailResult.recipient ?? null;
+        emailSendSucceeded = emailResponse.ok && emailResult.sent === true;
         if (!emailSendSucceeded) {
           emailFailureMessage =
-            emailText ||
+            emailResult.error ||
             `HTTP ${emailResponse.status}: failed to send corrective email`;
           console.error("Corrective email failed:", emailFailureMessage);
         }
@@ -470,7 +467,7 @@ function createTable(data) {
   table.id = "correctivesTable";
 
   const headers = Object.keys(data[0]).filter(
-    (header) => header !== "CREATE_DATE",
+    (header) => header !== "CREATE_DATE" && header !== "SUBJECT",
   );
 
   // Create colgroup with resizable column support

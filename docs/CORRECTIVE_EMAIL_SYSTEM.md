@@ -2,6 +2,9 @@
 
 This document tracks Corrective module email behavior and follow-up work.
 
+New corrective assignment emails resolve the assignee's address from `PEOPLE.WORK_EMAIL_ADDRESS`.
+SMTP uses implicit TLS only on port 465; port 587 uses STARTTLS.
+
 ## TODO
 
 - [ ] Add a retry failed queue for Corrective email sends.

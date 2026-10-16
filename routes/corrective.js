@@ -477,7 +477,7 @@ router.post("/email", async (req, res) => {
     connection.connect(async function (err) {
       if (err) {
         console.error("Error connecting to DB for email lookup:", err.stack);
-        res.sendStatus(500);
+        res.status(500).json({ sent: false, error: "Database connection failed" });
         return;
       }
 
@@ -489,17 +489,18 @@ router.post("/email", async (req, res) => {
           if (err) {
             console.error("Error querying for assignee email:", err);
             connection.end();
-            res.sendStatus(500);
+            res.status(500).json({ sent: false, error: "Assignee email lookup failed" });
             return;
           }
 
           if (rows.length > 0 && rows[0].WORK_EMAIL_ADDRESS) {
             const assigneeEmail = rows[0].WORK_EMAIL_ADDRESS;
+            const smtpPort = Number(process.env.SMTP_PORT);
 
             const transporter = nodemailer.createTransport({
               host: process.env.SMTP_HOST,
-              port: process.env.SMTP_PORT,
-              secure: true,
+              port: smtpPort,
+              secure: smtpPort === 465,
               auth: {
                 user: process.env.SMTP_USER,
                 pass: process.env.SMTP_PASS,
@@ -522,17 +523,25 @@ router.post("/email", async (req, res) => {
             try {
               const info = await transporter.sendMail(mailOptions);
               console.log("Corrective action email sent to:", assigneeEmail);
-              res.status(200).send("Email sent successfully");
+              res.status(200).json({ sent: true, recipient: assigneeEmail });
             } catch (emailError) {
               console.error(
                 "Error sending corrective action email:",
                 emailError,
               );
-              res.sendStatus(500);
+              res.status(500).json({
+                sent: false,
+                recipient: assigneeEmail,
+                error: emailError.message || "Failed to send email",
+              });
             }
           } else {
             console.log("No email found for assignee:", req.body.ASSIGNED_TO);
-            res.status(200).send("Email not sent - no assignee email found");
+            res.status(200).json({
+              sent: false,
+              recipient: null,
+              error: "No email address found for assignee",
+            });
           }
 
           connection.end();
@@ -541,7 +550,7 @@ router.post("/email", async (req, res) => {
     });
   } catch (error) {
     console.error("Error in email endpoint:", error);
-    res.sendStatus(500);
+    res.status(500).json({ sent: false, error: "Unexpected server error" });
   }
 });
 
@@ -561,6 +570,7 @@ router.post("/corrective-notify", (req, res) => {
         console.error(
           "Error connecting to log corrective notification: " + err.stack,
         );
+        res.sendStatus(500);
         return;
       }
       const {
@@ -891,42 +901,6 @@ router.post("/create-folders", (req, res) => {
       success: false,
       error: "Failed to start folder creation process",
     });
-  }
-});
-
-// ==================================================
-// Send email using nodemailer
-router.post("/email", async (req, res) => {
-  try {
-    const transporter = nodemailer.createTransport({
-      host: process.env.SMTP_HOST,
-      port: process.env.SMTP_PORT,
-      secure: true, // true for 465, false for other ports
-      auth: {
-        user: process.env.SMTP_USER,
-        pass: process.env.SMTP_PASS,
-      },
-    });
-
-    const mailOptions = {
-      from: process.env.SMTP_FROM,
-      to: req.body.ASSIGNED_TO_EMAIL,
-      subject: `Corrective Action Notification: ${req.body.CORRECTIVE_ID} - ${req.body.TITLE}`,
-      text: `The following corrective action has been issued. Please review and take timely action. If you have any questions, please contact the quality manager.\n\n Title: ${
-        req.body.TITLE
-      }\n\n Description:\n${
-        req.body.USER_DEFINED_1 || "No description provided"
-      }\n\n Due Date: ${req.body.DUE_DATE}\n\n Reference: ${
-        req.body.REFERENCE || "N/A"
-      }\n\n`,
-    };
-
-    const info = await transporter.sendMail(mailOptions);
-    // console.log("Email sent:", info.response);
-    res.status(200).send("Email sent successfully");
-  } catch (error) {
-    console.log("Error sending email:", error);
-    res.status(500).send(error.toString());
   }
 });
 
@@ -1334,79 +1308,5 @@ router.put(
 
   // alert('Put not implemented yet');
 );
-
-// ==================================================
-// Log CORRECTIVE notification to centralized EMAIL_HISTORY table
-router.post("/corrective-notify", (req, res) => {
-  try {
-    const connection = mysql.createConnection({
-      host: process.env.DB_HOST,
-      user: process.env.DB_USER,
-      password: process.env.DB_PASS,
-      port: 3306,
-      database: "quality",
-    });
-    connection.connect(function (err) {
-      if (err) {
-        console.error(
-          "Error connecting to log CORRECTIVE notification: " + err.stack,
-        );
-        res.sendStatus(500);
-        return;
-      }
-      const {
-        CORRECTIVE_ID,
-        ACTION,
-        ASSIGNED_TO,
-        RECIPIENT_EMAIL,
-        EMAIL_STATUS,
-        ERROR_MESSAGE,
-      } = req.body;
-
-      // Map ACTION to EMAIL_TYPE
-      const emailTypeMap = {
-        A: "ASSIGNMENT",
-        C: "CLOSEOUT",
-        R: "REQUEST",
-        E: "ESCALATION",
-      };
-      const emailType = emailTypeMap[ACTION] || ACTION;
-      const normalizedStatus =
-        (EMAIL_STATUS || "SENT").toString().toUpperCase() === "FAILED"
-          ? "FAILED"
-          : "SENT";
-      const notes =
-        normalizedStatus === "FAILED" && ERROR_MESSAGE
-          ? `Corrective Action notification - Action: ${ACTION}\n\nError: ${ERROR_MESSAGE}`
-          : `Corrective Action notification - Action: ${ACTION}`;
-
-      const query = `INSERT INTO EMAIL_HISTORY (APP_MODULE, APP_ID, ASSIGNED_TO, RECIPIENT_EMAIL, SENT_DATE, EMAIL_STATUS, EMAIL_TYPE, NOTES) VALUES (?, ?, ?, ?, NOW(), ?, ?, ?)`;
-      const values = [
-        "CORRECTIVE",
-        CORRECTIVE_ID,
-        ASSIGNED_TO,
-        RECIPIENT_EMAIL || null,
-        normalizedStatus,
-        emailType,
-        notes,
-      ];
-
-      connection.query(query, values, (err) => {
-        if (err) {
-          console.log(
-            "Failed to log CORRECTIVE notification to EMAIL_HISTORY: " + err,
-          );
-          res.sendStatus(500);
-          return;
-        }
-        res.sendStatus(200);
-      });
-      connection.end();
-    });
-  } catch (err) {
-    console.log("Error logging CORRECTIVE notification: " + err.message);
-    res.sendStatus(500);
-  }
-});
 
 module.exports = router;
