@@ -123,9 +123,25 @@ router.post("/prod-plan-data", (req, res) => {
         ACCEPTED,
         REJECTED,
         NCM_ID,
-        CREATE_BY,
         CREATE_DATE,
       } = req.body;
+
+      // Prefer the client-supplied user, then session/IP-mapped user from server middleware
+      const CREATE_BY =
+        req.body.CREATE_BY ||
+        req.session?.user?.username ||
+        req.session?.user_id ||
+        req.user ||
+        null;
+
+      if (!CREATE_BY) {
+        connection.end();
+        return res.status(400).json({
+          success: false,
+          error:
+            "Unable to determine the current user (no session and this IP is not mapped to a user).",
+        });
+      }
 
       const query = `INSERT INTO PRODUCT_PLAN_DATA (
         PRODUCT_ID,
@@ -157,7 +173,7 @@ router.post("/prod-plan-data", (req, res) => {
         ACCEPTED || null,
         REJECTED || null,
         NCM_ID || null,
-        CREATE_BY || null,
+        CREATE_BY,
         CREATE_DATE || null,
       ];
 

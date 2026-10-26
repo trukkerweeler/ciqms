@@ -49,12 +49,6 @@ main .table-container td.col-expiry-date {
     margin: 0 !important;
   }
 
-  main {
-    height: auto !important;
-    overflow: visible !important;
-    overflow-y: visible !important;
-  }
-
   main .table-container th,
   main .table-container td {
     font-size: 1.1rem;

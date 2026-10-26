@@ -2662,6 +2662,42 @@ body.list-page #main {
   box-sizing: border-box;
 }
 
+/* Print: release the viewport-locked layout so the whole table prints */
+@media print {
+  html,
+  body.list-page {
+    display: block !important;
+    height: auto !important;
+    min-height: 0 !important;
+    padding-bottom: 0 !important;
+    overflow: visible !important;
+  }
+
+  body.list-page #main,
+  body.list-page .table-container {
+    display: block !important;
+    flex: none !important;
+    height: auto !important;
+    max-height: none !important;
+    overflow: visible !important;
+    box-shadow: none !important;
+  }
+
+  body.list-page .table-container thead {
+    position: static !important;
+    display: table-header-group;
+  }
+
+  body.list-page .table-container tr {
+    page-break-inside: avoid;
+  }
+
+  /* The global print rule hides only the last th, which misaligns columns */
+  body.list-page .table-container table th:last-child {
+    display: table-cell !important;
+  }
+}
+
 /* Standardised filter bar — flex row, consistent spacing */
 .filter-bar {
   flex-shrink: 0;
