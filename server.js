@@ -179,6 +179,7 @@ const ipUserMapping = {
   "192.168.1.60": "OGOLUBOVIC",
   "192.168.1.68": "ZEISS",
   "192.168.1.69": "TKENT",
+  "192.168.1.75": "AMIDDLETON",
   "192.168.1.76": "CHARRISON",
   "192.168.1.77": "BOBBI",
   "192.168.1.80": "QC2",
@@ -219,8 +220,39 @@ function resolveUserFromIp(req) {
   };
 }
 
+// Last-resort identity for unmapped PCs: reverse-DNS computer name, else the IP itself
+const fallbackIdentityCache = new Map();
+
+async function resolveFallbackIdentity(req) {
+  const candidates = getClientIpCandidates(req);
+  const ip =
+    candidates.find((a) => /^\d{1,3}(\.\d{1,3}){3}$/.test(a)) ||
+    candidates[0] ||
+    "UNKNOWN";
+
+  if (fallbackIdentityCache.has(ip)) return fallbackIdentityCache.get(ip);
+
+  let identity = ip.slice(0, 30);
+  try {
+    const hostnames = await Promise.race([
+      require("dns").promises.reverse(ip),
+      new Promise((_, reject) =>
+        setTimeout(() => reject(new Error("timeout")), 500),
+      ),
+    ]);
+    if (hostnames && hostnames[0]) {
+      identity = hostnames[0].split(".")[0].toUpperCase().slice(0, 30);
+    }
+  } catch {
+    // No reverse DNS entry - keep the IP
+  }
+  fallbackIdentityCache.set(ip, identity);
+  console.warn(`[IDENTITY] No mapped user for ${ip}; using "${identity}"`);
+  return identity;
+}
+
 // Middleware: Set user from session or IP mapping
-app.use((req, res, next) => {
+app.use(async (req, res, next) => {
   // Support both session formats used by the legacy and current login routes.
   const sessionUser =
     req.session?.user?.username || req.session?.user_id || null;
@@ -246,6 +278,11 @@ app.use((req, res, next) => {
   // Dev mode: Use default user if still no user identified
   if (!req.user && isDevelopment) {
     req.user = devDefaultUser;
+  }
+
+  // Final fallback: computer name / IP (not stored in session so a later mapping or login wins)
+  if (!req.user) {
+    req.user = await resolveFallbackIdentity(req);
   }
 
   if (req.path === "/user/me" || req.originalUrl.startsWith("/user/me")) {

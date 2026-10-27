@@ -133,26 +133,54 @@ document.addEventListener("DOMContentLoaded", async () => {
     "[create-product-plan-dialog]",
   );
 
-  // Setup ASSIGNED_TO field validation: no spaces, uppercase
-  const assignedToField = document.getElementById("assigned-to");
-  if (assignedToField) {
-    assignedToField.addEventListener("input", (e) => {
-      let value = e.target.value;
-      const originalValue = value;
+  // Load active people into the ASSIGNED_TO dropdown
+  async function populateAssignedToOptions() {
+    const assignedToField = document.getElementById("assigned-to");
+    if (!assignedToField) return;
 
-      // Remove spaces and convert to uppercase
-      value = value.replace(/\s+/g, "").toUpperCase();
-
-      // If spaces were removed, warn the user
-      if (value !== originalValue.toUpperCase()) {
-        alert(
-          "User IDs cannot contain spaces. Please use a valid userid (no spaces).",
-        );
+    try {
+      const response = await fetch(`${apiUrl}/person-jobs/people/active`);
+      if (!response.ok) {
+        throw new Error(`Failed to load active people: ${response.status}`);
       }
 
-      e.target.value = value;
-    });
+      const people = await response.json();
+      const placeholderOption = document.createElement("option");
+      placeholderOption.value = "";
+      placeholderOption.textContent = "-- Select Assignee --";
+      assignedToField.innerHTML = "";
+      assignedToField.appendChild(placeholderOption);
+
+      people.forEach((person) => {
+        const option = document.createElement("option");
+        option.value = person.PEOPLE_ID;
+
+        const fullName = [person.FIRST_NAME, person.LAST_NAME]
+          .filter(Boolean)
+          .join(" ")
+          .trim();
+
+        option.textContent = fullName
+          ? `${person.PEOPLE_ID} - ${fullName}`
+          : person.PEOPLE_ID;
+
+        if (person.PEOPLE_ID === user) {
+          option.selected = true;
+        }
+
+        assignedToField.appendChild(option);
+      });
+    } catch (error) {
+      console.error("Error loading active people for ASSIGNED_TO:", error);
+      const fallbackOption = document.createElement("option");
+      fallbackOption.value = "";
+      fallbackOption.textContent = "-- Select Assignee --";
+      assignedToField.innerHTML = "";
+      assignedToField.appendChild(fallbackOption);
+    }
   }
+
+  await populateAssignedToOptions();
 
   // read the id from the URL
   const urlParams = new URLSearchParams(window.location.search);
