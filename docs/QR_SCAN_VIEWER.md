@@ -43,6 +43,10 @@ The exact producer fields are owned by `FILING/autofiler2.py`. When changing tha
 
 The viewer removes the item from its local list immediately after a successful process response. Refreshing the page reloads the remaining JSONL entries from disk.
 
+## Direct-filed codes (no review)
+
+Scans whose `qrData` is `F7200-1` are not reviewed. Whenever `GET /qrscan` runs (and after **Run Autofiler** succeeds), `autoFileDirectEntries` in `routes/qrscan.js` copies each such PDF to the location in `data/filing-locations.json` (`\\fs1\Common\Quality - Records\7200 - Competency\_to-enter`), deletes the source PDF after the copy is verified, and removes the queue entry. These entries never appear in the viewer. If a copy fails, the entry stays in the queue and is retried on the next load (the error is logged). To direct-file additional codes, add them to `DIRECT_FILE_QR_CODES` and `data/filing-locations.json`.
+
 ## Missing files
 
 If a queue entry points to a PDF that no longer exists, the viewer identifies it as missing and calls `DELETE /qrscan/missing` to remove those entries from the JSONL queue.

@@ -48,10 +48,30 @@
         cursor: not-allowed;
       }
 
+      .autofiler-panel {
+        margin: 0 0 16px;
+        padding: 12px 16px;
+        background: #fff;
+        border: 1px solid #cbd5e1;
+        border-radius: 8px;
+      }
+
+      .autofiler-panel-row {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+      }
+
+      .autofiler-panel .queue-note {
+        margin: 8px 0 0;
+      }
+
       .autofiler-status {
+        flex: 1 1 auto;
         min-height: 1.25rem;
-        margin: 0 0 12px;
+        margin: 0;
         font-weight: 600;
+        overflow-wrap: anywhere;
       }
 
       .autofiler-status.success {
@@ -310,20 +330,23 @@
       <div class="header">
         <h1>QR Scan Viewer</h1>
         <div class="header-actions">
-          <button id="runAutofilerButton" class="run-autofiler-button" type="button">
-            Run Autofiler
-          </button>
           <a href="/inputs.html" class="button">Back to Inputs</a>
         </div>
       </div>
 
-      <p id="autofilerStatus" class="autofiler-status" aria-live="polite"></p>
-
-      <p class="queue-note">
-        Queue source: <strong>FILING/autofiler2.py</strong> &middot;
-        <code>qr_scan.jsonl</code> &middot; See
-        <code>docs/QR_SCAN_VIEWER.md</code> for the workflow.
-      </p>
+      <div id="autofilerPanel" class="autofiler-panel">
+        <div class="autofiler-panel-row">
+          <button id="runAutofilerButton" class="run-autofiler-button" type="button">
+            Run Autofiler
+          </button>
+          <p id="autofilerStatus" class="autofiler-status" aria-live="polite"></p>
+        </div>
+        <p class="queue-note">
+          Queue source: <strong>FILING/autofiler2.py</strong> &middot;
+          <code>qr_scan.jsonl</code> &middot; See
+          <code>docs/QR_SCAN_VIEWER.md</code> for the workflow.
+        </p>
+      </div>
 
       <div id="results" class="list"></div>
     </div>

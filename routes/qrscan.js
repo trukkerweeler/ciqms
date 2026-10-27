@@ -362,6 +362,102 @@ function copyFileToDestination(sourcePath = "", destinationPath = "") {
 }
 
 // ==================================================
+// Direct-file codes: skip review and move straight to the filing location
+// ==================================================
+
+const DIRECT_FILE_QR_CODES = new Set(["F7200-1"]);
+
+function getDefaultScanFilePath() {
+  return (
+    process.env.QR_SCAN_FILE_PATH ||
+    "C:\\Users\\TimK\\Desktop\\TKSCANS\\qr_scan.jsonl"
+  );
+}
+
+function isDirectFileEntry(entry) {
+  const code = String(entry?.qrData || "")
+    .trim()
+    .toUpperCase();
+  return DIRECT_FILE_QR_CODES.has(code);
+}
+
+// Copy each direct-file entry's PDF to its destination, delete the source once
+// the copy is verified, and drop the entry from the queue. Entries that fail
+// stay in the queue and are retried on the next call.
+function autoFileDirectEntries(scanFilePath = getDefaultScanFilePath()) {
+  const summary = { moved: [], failed: [] };
+  if (!fs.existsSync(scanFilePath)) return summary;
+
+  const entries = fs
+    .readFileSync(scanFilePath, "utf8")
+    .split(/\r?\n/)
+    .filter(Boolean)
+    .map((line) => {
+      try {
+        return JSON.parse(line);
+      } catch {
+        return null;
+      }
+    })
+    .filter(Boolean);
+
+  if (!entries.some(isDirectFileEntry)) return summary;
+
+  const remaining = [];
+  for (const entry of entries) {
+    if (!isDirectFileEntry(entry)) {
+      remaining.push(entry);
+      continue;
+    }
+
+    const sourcePath = entry.pdfPath || "";
+    const label = entry.originalFile || sourcePath;
+    const destinationDir = getFilingLocation(entry.qrData);
+
+    if (!sourcePath || !destinationDir) {
+      summary.failed.push({ file: label, error: "Missing source or destination" });
+      remaining.push(entry);
+      continue;
+    }
+
+    const normalizedSource = normalizeWindowsPath(sourcePath);
+    if (!fs.existsSync(normalizedSource)) {
+      // Source already gone; nothing left to file
+      continue;
+    }
+
+    const copyResult = copyFileToDestination(sourcePath, destinationDir);
+    if (!copyResult.copiedFile) {
+      summary.failed.push({ file: label, error: copyResult.error });
+      remaining.push(entry);
+      continue;
+    }
+
+    try {
+      fs.unlinkSync(normalizedSource);
+      summary.moved.push({ file: label, target: copyResult.targetPath });
+    } catch (delErr) {
+      // Copy is safe at the destination; drop the entry to avoid re-copying duplicates
+      summary.failed.push({
+        file: label,
+        error: `Copied to ${copyResult.targetPath} but could not delete source: ${delErr.message}`,
+      });
+    }
+  }
+
+  fs.writeFileSync(
+    scanFilePath,
+    remaining.map((e) => JSON.stringify(e)).join("\n") +
+      (remaining.length ? "\n" : ""),
+  );
+
+  summary.failed.forEach((f) =>
+    console.error(`QR auto-file failed for ${f.file}: ${f.error}`),
+  );
+  return summary;
+}
+
+// ==================================================
 // POST /qrscan/run-autofiler — run the FILING queue producer
 // ==================================================
 router.post("/run-autofiler", (req, res) => {
@@ -421,6 +517,13 @@ router.post("/run-autofiler", (req, res) => {
     responseSent = true;
     autofilerProcessRunning = false;
     const success = code === 0;
+    if (success) {
+      try {
+        autoFileDirectEntries();
+      } catch (autoErr) {
+        console.error("QR auto-file after autofiler failed:", autoErr.message);
+      }
+    }
     res.status(success ? 200 : 500).json({
       success,
       exitCode: code,
@@ -438,15 +541,19 @@ router.post("/run-autofiler", (req, res) => {
 // ==================================================
 router.get("/", (req, res) => {
   try {
-    const scanFilePath =
-      process.env.QR_SCAN_FILE_PATH ||
-      "C:\\Users\\TimK\\Desktop\\TKSCANS\\qr_scan.jsonl";
+    const scanFilePath = getDefaultScanFilePath();
 
     if (!fs.existsSync(scanFilePath)) {
       res
         .status(404)
         .json({ error: "QR scan file not found", path: scanFilePath });
       return;
+    }
+
+    try {
+      autoFileDirectEntries(scanFilePath);
+    } catch (autoErr) {
+      console.error("QR auto-file failed:", autoErr.message);
     }
 
     const rawContent = fs.readFileSync(scanFilePath, "utf8");
@@ -460,7 +567,8 @@ router.get("/", (req, res) => {
           return null;
         }
       })
-      .filter(Boolean);
+      .filter(Boolean)
+      .filter((entry) => !isDirectFileEntry(entry));
     const seenQueueEntries = new Set();
     const uniqueEntries = entries.filter((entry) => {
       const sourceKey = String(
