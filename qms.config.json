@@ -23,5 +23,28 @@
   },
   "ncm": {
     "enableRowColors": false
+  },
+  "permissions": {
+    "enabled": false,
+    "defaultDeny": true,
+    "pages": {
+      "home": {
+        "view": ["*"]
+      },
+      "people": {
+        "view": ["*"],
+        "add": ["TKENT", "AMIDDLETON"],
+        "edit": ["TKENT", "AMIDDLETON"],
+        "delete": ["TKENT"],
+        "other": ["TKENT"]
+      },
+      "suppliers": {
+        "view": ["*"],
+        "add": ["TKENT"],
+        "edit": ["TKENT"],
+        "delete": ["TKENT"],
+        "other": ["TKENT"]
+      }
+    }
   }
 }

@@ -1,0 +1,222 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="People Maintenance" />
+    <meta name="author" content="Tim Kent" />
+    <link rel="stylesheet" href="/css/styles.css" />
+    <link rel="icon" href="images/ci-logo.png" />
+    <title>People (CIQMS)</title>
+  </head>
+  <body>
+    <header id="header"></header>
+    <div class="recordsaddrecordheading">
+      <h1>People</h1>
+      <button
+        class="addrecordheadingbutton button"
+        id="addPersonBtn"
+        title="Add Person"
+      >
+        +
+      </button>
+    </div>
+
+    <main id="main">
+      <dialog id="personDialog" class="dialog">
+        <form id="personForm" class="form">
+          <div class="form-header">
+            <h2 id="dialogTitle">Add Person</h2>
+          </div>
+
+          <div class="form-grid">
+            <div class="form-group">
+              <label for="PEOPLE_ID" class="required">People ID</label>
+              <input
+                type="text"
+                id="PEOPLE_ID"
+                name="PEOPLE_ID"
+                maxlength="16"
+                required
+                style="text-transform: uppercase"
+              />
+            </div>
+
+            <div class="form-group">
+              <label for="LAST_NAME" class="required">Last Name</label>
+              <input type="text" id="LAST_NAME" name="LAST_NAME" required />
+            </div>
+
+            <div class="form-group">
+              <label for="FIRST_NAME" class="required">First Name</label>
+              <input type="text" id="FIRST_NAME" name="FIRST_NAME" required />
+            </div>
+
+            <div class="form-group">
+              <label for="MIDDLE_INITIAL">Middle Initial</label>
+              <input type="text" id="MIDDLE_INITIAL" name="MIDDLE_INITIAL" maxlength="1" />
+            </div>
+
+            <div class="form-group">
+              <label for="FUNCTION_CODE">Function Code</label>
+              <input type="text" id="FUNCTION_CODE" name="FUNCTION_CODE" />
+            </div>
+
+            <div class="form-group">
+              <label for="JOB_CODE">Job Code</label>
+              <input type="text" id="JOB_CODE" name="JOB_CODE" />
+            </div>
+
+            <div class="form-group">
+              <label for="STATUS">Status</label>
+              <select id="STATUS" name="STATUS">
+                <option value="A">Active</option>
+                <option value="I">Inactive</option>
+              </select>
+            </div>
+
+            <div class="form-group">
+              <label for="PAY_TYPE">Pay Type</label>
+              <input type="text" id="PAY_TYPE" name="PAY_TYPE" maxlength="1" />
+            </div>
+
+            <div class="form-group">
+              <label for="DEPARTMENT">Department</label>
+              <input type="text" id="DEPARTMENT" name="DEPARTMENT" />
+            </div>
+
+            <div class="form-group">
+              <label for="LOCATION">Location</label>
+              <input type="text" id="LOCATION" name="LOCATION" />
+            </div>
+
+            <div class="form-group">
+              <label for="EMP_LEVEL">Emp Level</label>
+              <input type="text" id="EMP_LEVEL" name="EMP_LEVEL" maxlength="3" />
+            </div>
+
+            <div class="form-group">
+              <label for="SHIFT">Shift</label>
+              <input type="text" id="SHIFT" name="SHIFT" />
+            </div>
+
+            <div class="form-group">
+              <label for="SUPERVISOR_ID">Supervisor ID</label>
+              <input type="text" id="SUPERVISOR_ID" name="SUPERVISOR_ID" style="text-transform: uppercase" />
+            </div>
+
+            <div class="form-group">
+              <label for="WORK_PHONE">Work Phone</label>
+              <input type="tel" id="WORK_PHONE" name="WORK_PHONE" />
+            </div>
+
+            <div class="form-group">
+              <label for="OTHER_NUMBER">Other Number</label>
+              <input type="tel" id="OTHER_NUMBER" name="OTHER_NUMBER" />
+            </div>
+
+            <div class="form-group">
+              <label for="HOME_PHONE">Home Phone</label>
+              <input type="tel" id="HOME_PHONE" name="HOME_PHONE" />
+            </div>
+
+            <div class="form-group">
+              <label for="WORK_EMAIL_ADDRESS">Work Email</label>
+              <input type="email" id="WORK_EMAIL_ADDRESS" name="WORK_EMAIL_ADDRESS" />
+            </div>
+
+            <div class="form-group">
+              <label for="HOME_EMAIL_ADDRESS">Home Email</label>
+              <input type="email" id="HOME_EMAIL_ADDRESS" name="HOME_EMAIL_ADDRESS" />
+            </div>
+
+            <div class="form-group">
+              <label for="ADDRESS_LINE_1">Address 1</label>
+              <input type="text" id="ADDRESS_LINE_1" name="ADDRESS_LINE_1" />
+            </div>
+
+            <div class="form-group">
+              <label for="ADDRESS_LINE_2">Address 2</label>
+              <input type="text" id="ADDRESS_LINE_2" name="ADDRESS_LINE_2" />
+            </div>
+
+            <div class="form-group">
+              <label for="CITY">City</label>
+              <input type="text" id="CITY" name="CITY" />
+            </div>
+
+            <div class="form-group">
+              <label for="STATE">State</label>
+              <input type="text" id="STATE" name="STATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="ZIP">ZIP</label>
+              <input type="text" id="ZIP" name="ZIP" />
+            </div>
+
+            <div class="form-group">
+              <label for="SALARY">Salary</label>
+              <input type="number" id="SALARY" name="SALARY" step="0.01" />
+            </div>
+
+            <div class="form-group">
+              <label for="HOURLY_COST">Hourly Cost</label>
+              <input type="number" id="HOURLY_COST" name="HOURLY_COST" step="0.001" />
+            </div>
+
+            <div class="form-group">
+              <label for="START_DATE">Start Date</label>
+              <input type="date" id="START_DATE" name="START_DATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="END_DATE">End Date</label>
+              <input type="date" id="END_DATE" name="END_DATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="BIRTH_DATE">Birth Date</label>
+              <input type="date" id="BIRTH_DATE" name="BIRTH_DATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="SENORITY_DATE">Senority Date</label>
+              <input type="date" id="SENORITY_DATE" name="SENORITY_DATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="SPECIAL_DATE">Special Date</label>
+              <input type="date" id="SPECIAL_DATE" name="SPECIAL_DATE" />
+            </div>
+
+            <div class="form-group">
+              <label for="SOCIAL_SECURITY">Social Security</label>
+              <input type="text" id="SOCIAL_SECURITY" name="SOCIAL_SECURITY" />
+            </div>
+
+            <div class="form-group">
+              <label for="ENTITY_ID">Entity ID</label>
+              <input type="text" id="ENTITY_ID" name="ENTITY_ID" />
+            </div>
+          </div>
+
+          <div class="dialog-actions">
+            <button type="submit" id="submitBtn" class="btn btn-primary">
+              Save Person
+            </button>
+            <button type="button" id="cancelBtn" class="btn btn-cancel">
+              Cancel
+            </button>
+          </div>
+        </form>
+      </dialog>
+
+      <div id="peopleContainer" class="table-container"></div>
+    </main>
+
+    <footer id="footer"></footer>
+    <script type="module" src="/js/people.mjs"></script>
+  </body>
+</html>

@@ -112,6 +112,7 @@ const browserMetaPaths = [
 ];
 
 const capsNotice = require("./middleware/capsNotice");
+const permissions = require("./middleware/permissions");
 app.use(express.json());
 app.use(capsNotice); // Add after body parser
 
@@ -298,6 +299,8 @@ app.use(async (req, res, next) => {
 
   next();
 });
+
+app.use(permissions.attachPermissions);
 
 // Set CORS headers for requests WITH credentials support
 app.use((req, res, next) => {

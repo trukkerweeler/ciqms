@@ -2,6 +2,7 @@ const express = require("express");
 const router = express.Router();
 const mysql = require("mysql2");
 const bcrypt = require("bcrypt");
+const { buildPermissionState } = require("../middleware/permissions");
 
 // Return the authenticated username for frontend record attribution.
 router.get("/me", (req, res) => {
@@ -13,6 +14,19 @@ router.get("/me", (req, res) => {
   }
 
   res.json({ username });
+});
+
+router.get("/me/permissions", (req, res) => {
+  const username = req.session?.user?.username || req.session?.user_id || req.user;
+
+  if (!username) {
+    return res.status(401).json({ error: "Not authenticated" });
+  }
+
+  res.json({
+    username,
+    permissions: buildPermissionState(req),
+  });
 });
 
 // Create a record
